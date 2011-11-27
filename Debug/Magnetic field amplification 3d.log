@@ -1,16 +1,42 @@
-﻿Build started 20.11.2011 22:29:54.
+﻿Build started 27.11.2011 23:45:52.
      1>Project "C:\Users\Вадик\Documents\Visual Studio 2010\Projects\Magnetic field amplification 3d\Magnetic field amplification 3d\Magnetic field amplification 3d.vcxproj" on node 2 (build target(s)).
      1>InitializeBuildStatus:
          Creating "Debug\Magnetic field amplification 3d.unsuccessfulbuild" because "AlwaysCreate" was specified.
        ClCompile:
          All outputs are up-to-date.
-         All outputs are up-to-date.
+         C:\Program Files\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Yu"StdAfx.h" /Fp"Debug\Magnetic field amplification 3d.pch" /Fo"Debug\\" /Fd"Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt simulation.cpp
+         simulation.cpp
+     1>c:\users\вадик\documents\visual studio 2010\projects\magnetic field amplification 3d\magnetic field amplification 3d\simulation.cpp(88): warning C4244: 'argument' : conversion from 'time_t' to 'unsigned int', possible loss of data
+     1>c:\users\вадик\documents\visual studio 2010\projects\magnetic field amplification 3d\magnetic field amplification 3d\simulation.cpp(93): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+                 c:\program files\microsoft visual studio 10.0\vc\include\stdio.h(234) : see declaration of 'fopen'
+     1>c:\users\вадик\documents\visual studio 2010\projects\magnetic field amplification 3d\magnetic field amplification 3d\simulation.cpp(94): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+                 c:\program files\microsoft visual studio 10.0\vc\include\stdio.h(234) : see declaration of 'fopen'
+     1>c:\users\вадик\documents\visual studio 2010\projects\magnetic field amplification 3d\magnetic field amplification 3d\simulation.cpp(159): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+                 c:\program files\microsoft visual studio 10.0\vc\include\stdio.h(234) : see declaration of 'fopen'
+     1>c:\users\вадик\documents\visual studio 2010\projects\magnetic field amplification 3d\magnetic field amplification 3d\simulation.cpp(160): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+                 c:\program files\microsoft visual studio 10.0\vc\include\stdio.h(234) : see declaration of 'fopen'
        ManifestResourceCompile:
          All outputs are up-to-date.
        Link:
-         All outputs are up-to-date.
+         C:\Program Files\Microsoft Visual Studio 10.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\Вадик\Documents\Visual Studio 2010\Projects\Magnetic field amplification 3d\Debug\Magnetic field amplification 3d.exe" /INCREMENTAL /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /ManifestFile:"Debug\Magnetic field amplification 3d.exe.intermediate.manifest" /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /DEBUG /PDB:"C:\Users\Вадик\Documents\Visual Studio 2010\Projects\Magnetic field amplification 3d\Debug\Magnetic field amplification 3d.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\Вадик\Documents\Visual Studio 2010\Projects\Magnetic field amplification 3d\Debug\Magnetic field amplification 3d.lib" /MACHINE:X86 "Debug\Magnetic field amplification 3d.exe.embed.manifest.res"
+         Debug\BinFlux.obj
+         Debug\input.obj
+         Debug\main.obj
+         Debug\matrix3d.obj
+         Debug\output.obj
+         Debug\particle.obj
+         Debug\random.obj
+         Debug\simulation.obj
+         Debug\stdafx.obj
+         Debug\util.obj
+         Debug\SpaceBin.obj
+         Debug\vector3d.obj
        Manifest:
+         C:\Program Files\Microsoft SDKs\Windows\v7.0A\bin\mt.exe /nologo /verbose /out:"Debug\Magnetic field amplification 3d.exe.embed.manifest" /manifest "Debug\Magnetic field amplification 3d.exe.intermediate.manifest"
          All outputs are up-to-date.
+       LinkEmbedManifest:
+         All outputs are up-to-date.
+         Magnetic field amplification 3d.vcxproj -> C:\Users\Вадик\Documents\Visual Studio 2010\Projects\Magnetic field amplification 3d\Debug\Magnetic field amplification 3d.exe
        FinalizeBuildStatus:
          Deleting file "Debug\Magnetic field amplification 3d.unsuccessfulbuild".
          Touching "Debug\Magnetic field amplification 3d.lastbuildstate".
@@ -18,4 +44,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:00.30
+Time Elapsed 00:00:10.97

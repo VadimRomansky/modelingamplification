@@ -4,6 +4,7 @@
 #include "particle.h"
 #include "output.h"
 #include "util.h"
+#include <omp.h>
 
 Simulation::Simulation(){
 	partOfCosmicRay = 0;
@@ -63,6 +64,7 @@ void Simulation::initializeProfile(){
 					u = U0*sqr((upstreamR + deltaR/2)/R)/Rtot;
 					//density = density0*sqr((upstreamR + deltaR/2)/R)/Rtot;
 				}
+				//u = U0;
 				bins[i][j][k] = new SpaceBin(R,Theta,Phi,deltaR,deltaTheta,deltaPhi,u,density,Theta,Phi,temperature,B0,i,j,k);
 				Phi = Phi + deltaPhi;
 			}
@@ -97,59 +99,63 @@ void Simulation::simulate(){
 		int j = 0;
 		int l = 0;
 		printf("%s", "Iteration started\n");
-		printf("%s", "Particle propagation\n");
-		std::list<Particle*>::iterator it = introducedParticles.begin();
-		while( it != introducedParticles.end()){
-			Particle* particle = *it;
-			printf("%d %s",l,"\n");
-			++l;
-			bool side = false;
-			double r = sqrt(particle->absoluteX*particle->absoluteX + particle->absoluteY*particle->absoluteY + particle->absoluteZ*particle->absoluteZ);
-			double theta = acos(particle->absoluteZ/r);
-			double phi =atan2(particle->absoluteY, particle->absoluteX);
-			if(phi < 0){
-				phi = phi + 2*pi;
-			}
-			int* index = SpaceBin::binByCoordinates(r, theta, phi,upstreamR,deltaR,deltaTheta,deltaPhi);
-			double time = 0;
-			while((index[0] >= 0)&&(index[0] < rgridNumber)){
-				j++;
-				//if(j > 100){
-					//printf("%d \n",number);
-				//}
-				//printf("%d",number);
-				//printf("%s","\n");
-				//cout>>number>>"\n";
-				//std::cout<<number<<"\n";
-				SpaceBin* bin = bins[index[0]][index[1]][index[2]];
-				if(time != time){
-					printf("aaa");
+		if(itNumber == 0){
+			printf("%s","First iteration");
+		} else {
+			printf("%s", "Particle propagation\n");
+			std::list<Particle*>::iterator it = introducedParticles.begin();
+			while( it != introducedParticles.end()){
+				Particle* particle = *it;
+				printf("%d %s",l,"\n");
+				++l;
+				bool side = false;
+				double r = sqrt(particle->absoluteX*particle->absoluteX + particle->absoluteY*particle->absoluteY + particle->absoluteZ*particle->absoluteZ);
+				double theta = acos(particle->absoluteZ/r);
+				double phi =atan2(particle->absoluteY, particle->absoluteX);
+				if(phi < 0){
+					phi = phi + 2*pi;
 				}
-				int* tempIndex = bin->propagateParticle(particle,time, timeStep);
-				delete[] index;
-				index = tempIndex;
-				if (time >= timeStep){
-					break;
+				int* index = SpaceBin::binByCoordinates(r, theta, phi,upstreamR,deltaR,deltaTheta,deltaPhi);
+				double time = 0;
+				while((index[0] >= 0)&&(index[0] < rgridNumber)){
+					j++;
+					//if(j > 100){
+						//printf("%d \n",number);
+					//}
+					//printf("%d",number);
+					//printf("%s","\n");
+					//cout>>number>>"\n";
+					//std::cout<<number<<"\n";
+					SpaceBin* bin = bins[index[0]][index[1]][index[2]];
+					if(time != time){
+						printf("aaa");
+					}
+					int* tempIndex = bin->propagateParticle(particle,time, timeStep);
+					delete[] index;
+					index = tempIndex;
+					if (time >= timeStep){
+						break;
+					}
 				}
-			}
 			++it;
-		}
-		/*printf("%s", "Fluxes updating\n");
-		for (int i = 0; i < rgridNumber; ++i){
-			for (int j = 0; j < phigridNumber; ++j){
-				for (int k = 0; k < thetagridNumber; ++k){
-					bins[i][j][k]->updateFluxes();
-				}
 			}
-		}*/
-		printf("%s", "Reseting profile\n");
-		resetProfile();
-		printf("%s", "magnetic Field updating\n");
-		//updateMagneticField();
-		output(*this);
-		resetDetectors();
-		printf("%s","iteration № ");
-		printf("%d\n",itNumber);
+			/*printf("%s", "Fluxes updating\n");
+			for (int i = 0; i < rgridNumber; ++i){
+				for (int j = 0; j < phigridNumber; ++j){
+					for (int k = 0; k < thetagridNumber; ++k){
+						bins[i][j][k]->updateFluxes();
+					}
+				}
+			}*/
+			printf("%s", "Reseting profile\n");
+			resetProfile();
+			printf("%s", "magnetic Field updating\n");
+			//updateMagneticField();
+			output(*this);
+			resetDetectors();
+			printf("%s","iteration № ");
+			printf("%d\n",itNumber);
+		}
 		outIteration = fopen("./output/tamc_iteration.dat","a");
 		radialFile = fopen("./output/tamc_radial_profile.dat","a");
 		fprintf(outIteration,"%s %d \n","iteration number ",itNumber);
@@ -198,6 +204,9 @@ void Simulation::resetProfile(){
 			//TODO знак U!
 			double p = bins[i][0][0]->density*bins[i][0][0]->volume*bins[i][0][0]->U/(sqrt(1 - sqr(bins[i][0][0]->U/speed_of_light)));
 			p = p + deltaP;
+			if(abs(deltaP) > abs(p)){
+				printf("aaaaaaaaa");
+			}
 			double m = bins[i][0][0]->density*bins[i][0][0]->volume;
 			bins[i][0][0]->density += deltaM/(bins[i][0][0]->volume);
 			/*if(bins[i][0][0]->density < 0){
@@ -208,8 +217,8 @@ void Simulation::resetProfile(){
 				}
 			}*/
 			bins[i][0][0]->U = p/sqrt(sqr(m) + sqr(p/speed_of_light));
-			if(bins[i][0][0]->U > speed_of_light){
-				if(bins[i][0][0]->U < (1 + epsilon)*speed_of_light){
+			if(abs(bins[i][0][0]->U) > speed_of_light){
+				if(abs(bins[i][0][0]->U) < (1 + epsilon)*speed_of_light){
 					bins[i][0][0]->U = (1 - epsilon)*speed_of_light;
 				}
 				printf("aaa");
