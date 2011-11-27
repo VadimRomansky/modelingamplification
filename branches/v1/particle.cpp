@@ -23,6 +23,7 @@ Particle::Particle(const Particle& p){
 	absoluteMomentumPhi = p.absoluteMomentumPhi;
 
 	localMomentum = p.localMomentum;
+	initialLocalMomentum = p.initialLocalMomentum;
 	localMomentumX = p.localMomentumX;
 	localMomentumY = p.localMomentumY;
 	localMomentumZ = p.localMomentumZ;
@@ -55,6 +56,7 @@ Particle::Particle(double r, double temperature, int a, int znumber){
 	double pz = randomMaxwell(temperature, A*(massProton));
 
 	localMomentum = sqrt(px*px+py*py+pz*pz);
+	initialLocalMomentum = localMomentum;
 	localMomentumX = px;
 	localMomentumY = py;
 	localMomentumZ = pz;
@@ -79,6 +81,7 @@ Particle::Particle(double x, double y, double z, double temperature, int a, int 
 	double pz = randomMaxwell(temperature, A*(massProton));
 
 	localMomentum = sqrt(px*px+py*py+pz*pz);
+	initialLocalMomentum = localMomentum;
 	localMomentumX = px;
 	localMomentumY = py;
 	localMomentumZ = pz;
@@ -102,6 +105,7 @@ Particle::Particle(double x, double y, double z, double temperature, int a, int 
 	double pz = randomMaxwell(temperature, A*(massProton));
 
 	localMomentum = sqrt(px*px+py*py+pz*pz);
+	initialLocalMomentum = localMomentum;
 	localMomentumX = px;
 	localMomentumY = py;
 	localMomentumZ = pz;
@@ -125,6 +129,7 @@ Particle::Particle(double x, double y, double z, double temperature, int a, int 
 	double pz = randomMaxwell(temperature, A*(massProton));
 
 	localMomentum = sqrt(px*px+py*py+pz*pz);
+	initialLocalMomentum = localMomentum;
 	localMomentumX = px;
 	localMomentumY = py;
 	localMomentumZ = pz;
@@ -144,6 +149,7 @@ Particle::Particle(double x, double y, double z, double temperature, int a, int 
 	mass = A*massProton;
 	weight = 1;
 	localMomentum = sqrt(px*px + py*py + pz*pz);
+	initialLocalMomentum = localMomentum;
 	localMomentumX = px;
 	localMomentumY = py;
 	localMomentumZ = pz;
@@ -164,6 +170,7 @@ Particle::Particle(double x, double y, double z, double temperature, int a, int 
 	mass = A*massProton;
 	weight = 1;
 	localMomentum = sqrt(px*px + py*py + pz*pz);
+	initialLocalMomentum = localMomentum;
 	localMomentumX = px;
 	localMomentumY = py;
 	localMomentumZ = pz;
@@ -210,6 +217,7 @@ Particle::Particle(int a, int znumber, SpaceBin* bin, bool wpath){
 	double pz = randomMaxwell(bin->temperature, mass);
 
 	localMomentum = sqrt(px*px+py*py+pz*pz);
+	initialLocalMomentum = localMomentum;
 	localMomentumX = px;
 	localMomentumY = py;
 	localMomentumZ = pz;
@@ -289,9 +297,11 @@ void Particle::setAbsoluteMomentum(double U, double Utheta, double Uphi){
 
 	Matrix3d* invertMatrix = matrix->Inverse();
 
-	particleAbsoluteV = invertMatrix->multiply(particleAbsoluteV);
-
 	double absoluteV = particleAbsoluteV.getNorm();
+
+	particleAbsoluteV = matrix->multiply(particleAbsoluteV);
+
+	absoluteV = particleAbsoluteV.getNorm();
 
 	if(absoluteV > speed_of_light){
 		if(absoluteV < (1 + epsilon)*speed_of_light){
@@ -327,15 +337,27 @@ void Particle::setLocalMomentum(double U, double Utheta,double Uphi){
 	double uy = U*sin(Utheta)*sin(Uphi);
 	double uz = U*cos(Utheta);
 
+	double localV1 = getLocalV();
+
 	Matrix3d* matrix = Matrix3d::createBasisByOneVector(vector3d(ux,uy,uz));
 
 	vector3d particleAbsoluteV = vector3d(V*sin(theta)*cos(phi),V*sin(theta)*sin(phi),V*cos(theta));
 
 	Matrix3d* invertMatrix = matrix->Inverse();
 
+	double absoluteV1 = particleAbsoluteV.getNorm();
+
 	particleAbsoluteV = invertMatrix->multiply(particleAbsoluteV);
 
+	double absoluteV = particleAbsoluteV.getNorm();
+
 	vector3d particleLocalV = summVelocity(particleAbsoluteV,U);
+
+	//for debug with U = const only!!!!!!!!!!!!!!
+	//if(abs(localMomentum - initialLocalMomentum) > epsilon*localMomentum){
+		//printf("aaa");
+	//}
+
 
 	double localV = particleLocalV.getNorm();
 	if(localV > speed_of_light){
@@ -347,6 +369,11 @@ void Particle::setLocalMomentum(double U, double Utheta,double Uphi){
 	}
 
 	localMomentum = mass*localV/sqrt(1 - localV*localV/c2);
+
+	//if(abs(localMomentum - initialLocalMomentum) > epsilon*localMomentum){
+		//printf("aaa");
+	//}
+
 	if(localMomentum != localMomentum){
 		printf("aaa");
 	}
