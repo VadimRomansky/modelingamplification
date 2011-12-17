@@ -4,6 +4,7 @@
 #include "particle.h"
 #include "output.h"
 #include "util.h"
+#include <omp.h>
 
 Simulation::Simulation(){
 	partOfCosmicRay = 0;
@@ -57,12 +58,15 @@ void Simulation::initializeProfile(){
 				double density = density0;
 				double u;
 				if(i < shockWavePoint){
-					u = U0*sqr((upstreamR + deltaR/2)/R);
+					//u = U0*sqr((upstreamR + deltaR/2)/R);
+					u = U0;
 					//density = density0*sqr((upstreamR + deltaR/2)/R);
 				} else {
-					u = U0*sqr((upstreamR + deltaR/2)/R)/Rtot;
+					u = U0/R;
+					//u = U0*sqr((upstreamR + deltaR/2)/R)/Rtot;
 					//density = density0*sqr((upstreamR + deltaR/2)/R)/Rtot;
 				}
+				//u = U0;
 				bins[i][j][k] = new SpaceBin(R,Theta,Phi,deltaR,deltaTheta,deltaPhi,u,density,Theta,Phi,temperature,B0,i,j,k);
 				Phi = Phi + deltaPhi;
 			}
@@ -82,68 +86,80 @@ void Simulation::initializeProfile(){
 }
 ///// главная функция программы.
 void Simulation::simulate(){
-	FILE* outIteration = fopen("./output/tamc_iteration.dat","w");
-	fclose(outIteration);
+	FILE* outIteration;
 	srand ( time(NULL) );
 	initializeProfile();
 	//FILE* outIteration = fopen("./output/tamc_iteration.dat","w");
 	introducedParticles = getParticles();
+	FILE* radialFile;
+	outIteration = fopen("./output/tamc_iteration.dat","w");
+	radialFile = fopen("./output/tamc_radial_profile.dat","w");
+	fclose(outIteration);
+	fclose(radialFile);
 	for (int itNumber  = 0; itNumber < iterationNumber; ++itNumber){ 
 		printf("%s", "\n");
 		int j = 0;
 		int l = 0;
 		printf("%s", "Iteration started\n");
-		printf("%s", "Particle propagation\n");
-		std::list<Particle*>::iterator it = introducedParticles.begin();
-		while( it != introducedParticles.end()){
-			Particle* particle = *it;
-			printf("%d %s",l,"\n");
-			++l;
-			bool side = false;
-			double r = sqrt(particle->absoluteX*particle->absoluteX + particle->absoluteY*particle->absoluteY + particle->absoluteZ*particle->absoluteZ);
-			double theta = acos(particle->absoluteZ/r);
-			double phi =atan2(particle->absoluteY, particle->absoluteX);
-			if(phi < 0){
-				phi = phi + 2*pi;
-			}
-			int* index = SpaceBin::binByCoordinates(r, theta, phi,upstreamR,deltaR,deltaTheta,deltaPhi);
-			double time = 0;
-			while((index[0] >= 0)&&(index[0] < rgridNumber)){
-				j++;
-				//if(j > 100){
-					//printf("%d \n",number);
-				//}
-				//printf("%d",number);
-				//printf("%s","\n");
-				//cout>>number>>"\n";
-				//std::cout<<number<<"\n";
-				SpaceBin* bin = bins[index[0]][index[1]][index[2]];
-				int* tempIndex = bin->propagateParticle(particle,time, timeStep);
-				delete[] index;
-				index = tempIndex;
-				if (time >= timeStep){
-					break;
+		if(itNumber == 0){
+			printf("%s","First iteration");
+		} else {
+			printf("%s", "Particle propagation\n");
+			std::list<Particle*>::iterator it = introducedParticles.begin();
+			while( it != introducedParticles.end()){
+				Particle* particle = *it;
+				printf("%d %s",l,"\n");
+				++l;
+				bool side = false;
+				double r = sqrt(particle->absoluteX*particle->absoluteX + particle->absoluteY*particle->absoluteY + particle->absoluteZ*particle->absoluteZ);
+				double theta = acos(particle->absoluteZ/r);
+				double phi =atan2(particle->absoluteY, particle->absoluteX);
+				if(phi < 0){
+					phi = phi + 2*pi;
 				}
-			}
+				int* index = SpaceBin::binByCoordinates(r, theta, phi,upstreamR,deltaR,deltaTheta,deltaPhi);
+				double time = 0;
+				while((index[0] >= 0)&&(index[0] < rgridNumber)){
+					j++;
+					//if(j > 100){
+						//printf("%d \n",number);
+					//}
+					//printf("%d",number);
+					//printf("%s","\n");
+					//cout>>number>>"\n";
+					//std::cout<<number<<"\n";
+					SpaceBin* bin = bins[index[0]][index[1]][index[2]];
+					if(time != time){
+						printf("aaa");
+					}
+					int* tempIndex = bin->propagateParticle(particle,time, timeStep);
+					delete[] index;
+					index = tempIndex;
+					if (time >= timeStep){
+						break;
+					}
+				}
 			++it;
-		}
-		/*printf("%s", "Fluxes updating\n");
-		for (int i = 0; i < rgridNumber; ++i){
-			for (int j = 0; j < phigridNumber; ++j){
-				for (int k = 0; k < thetagridNumber; ++k){
-					bins[i][j][k]->updateFluxes();
-				}
 			}
-		}*/
-		printf("%s", "Reseting profile\n");
-		resetProfile();
-		printf("%s", "magnetic Field updating\n");
-		//updateMagneticField();
-		output(*this);
-		resetDetectors();
-		printf("%s","iteration № ");
-		printf("%d\n",itNumber);
+			/*printf("%s", "Fluxes updating\n");
+			for (int i = 0; i < rgridNumber; ++i){
+				for (int j = 0; j < phigridNumber; ++j){
+					for (int k = 0; k < thetagridNumber; ++k){
+						bins[i][j][k]->updateFluxes();
+					}
+				}
+			}*/
+			printf("%s", "Reseting profile\n");
+			resetProfile();
+			printf("%s", "magnetic Field updating\n");
+			//updateMagneticField();
+			output(*this);
+			resetDetectors();
+			printf("%s","iteration № ");
+			printf("%d\n",itNumber);
+		}
 		outIteration = fopen("./output/tamc_iteration.dat","a");
+		radialFile = fopen("./output/tamc_radial_profile.dat","a");
 		fprintf(outIteration,"%s %d \n","iteration number ",itNumber);
 		fclose(outIteration);
 		double maxp;
@@ -157,8 +173,9 @@ void Simulation::simulate(){
 		}
 		outputPDF(list,"./output/tamc_pdf_down.dat",*this,minp,maxp);
 		outputStartPDF(list,"./output/tamc_pdf_start.dat",*this,minp,maxp);
-		outputRadialProfile(bins,0,0);
-	}	
+		outputRadialProfile(bins,0,0,radialFile);
+		fclose(radialFile);
+	}
 }
 
 void Simulation::resetProfile(){
@@ -171,15 +188,55 @@ void Simulation::resetProfile(){
 	}*/
 	if((thetagridNumber == 1) && (phigridNumber == 1)){
 		//TODO what do with i = 0
-		for(int i = 1; i < rgridNumber; i++){
-			double massFlux1 = bins[i - 1][0][0]->particleMassFlux.fluxR2;
+		for(int i = 0; i < rgridNumber; i++){
+			double massFlux1 = 0;
+			double momentaFlux1 = 0;
+			if(i > 0){
+				massFlux1 = bins[i - 1][0][0]->particleMassFlux.fluxR2;
+				momentaFlux1 = bins[i - 1][0][0]->particleMassFlux.fluxR2;
+			}
 			double massFlux2 = 0;
-			if ( i < rgridNumber){
+			double momentaFlux2 = 0;
+			if ( i < rgridNumber - 1){
 				massFlux2 = bins[i + 1][0][0]->particleMassFlux.fluxR1;
+				momentaFlux2 = bins[i + 1][0][0]->particleMassFlux.fluxR2;
 			}
 			double deltaM = massFlux2 + massFlux1 - bins[i][0][0]->particleMassFlux.fluxR1 - bins[i][0][0]->particleMassFlux.fluxR2;
+			double deltaP = momentaFlux2 + momentaFlux1 - bins[i][0][0]->particleMomentaFlux.fluxR1 - bins[i][0][0]->particleMomentaFlux.fluxR2;
+			//TODO знак U!
+			double p = bins[i][0][0]->density*bins[i][0][0]->volume*bins[i][0][0]->U/(sqrt(1 - sqr(bins[i][0][0]->U/speed_of_light)));
+			p = p + deltaP;
+			if(abs(deltaP) > abs(p)){
+				printf("aaaaaaaaa");
+			}
+			double m = bins[i][0][0]->density*bins[i][0][0]->volume;
 			bins[i][0][0]->density += deltaM/(bins[i][0][0]->volume);
+			/*if(bins[i][0][0]->density < 0){
+				if(abs(bins[i][0][0]->density) < epsilon){
+					bins[i][0][0]->density = 0;
+				} else {
+					printf("aaa");
+				}
+			}*/
+			bins[i][0][0]->U = p/sqrt(sqr(m) + sqr(p/speed_of_light));
+			if(abs(bins[i][0][0]->U) > speed_of_light){
+				if(abs(bins[i][0][0]->U) < (1 + epsilon)*speed_of_light){
+					bins[i][0][0]->U = (1 - epsilon)*speed_of_light;
+				}
+				printf("aaa");
+			}
 		}
+	}
+
+	std::list<Particle*>::iterator it = introducedParticles.begin();
+	while(it != introducedParticles.end()){
+		Particle* particle = *it;
+		int* index = SpaceBin::binByCoordinates(particle->absoluteZ, particle->getAbsoluteTheta(), particle->getAbsolutePhi(), upstreamR, deltaR, deltaTheta, deltaPhi);
+		if((index[0] > 0)&&(index[0] < rgridNumber)&&(index[1] > 0)&&(index[1] < thetagridNumber)&&(index[2] > 0)&&(index[2] < phigridNumber)){
+			SpaceBin* bin = bins[index[0]][index[1]][index[2]];
+			particle->setLocalMomentum(bin->U, bin->UTheta, bin->UPhi);
+		}
+		++it;
 	}
 }
 
@@ -542,6 +599,8 @@ std::list <Particle*> Simulation::getParticles(){
 			for(int k = 0; k < phigridNumber; ++k){
 				particleBinNumber = 0;
 				SpaceBin* bin = bins[i][j][k];
+				bin->initialMomentum = 0;
+				//double c2 = speed_of_light*speed_of_light;
 				for( int l = 0; l < particlesNumber; ++l){
 					//if(order(bin->phi1, phi, bin->phi2) && order(bin->theta1, theta, bin->theta2) && order(bin->r1, r, bin->r2)){
 						++allParticlesNumber;
@@ -551,6 +610,9 @@ std::list <Particle*> Simulation::getParticles(){
 						particle->weight /= particlesNumber;
 						startPDF.push_front(particle);
 						list.push_front(particle);
+						double v = particle->getAbsoluteV();
+						double vr = particle->getRadialSpeed(); 
+						bin->initialMomentum += vr*particle->mass*particle->weight/sqrt(1 - (v*v)/c2);
 					//}
 				}
 			}
@@ -562,8 +624,8 @@ std::list <Particle*> Simulation::getParticles(){
 SpaceBin* Simulation::getStartBin(double theta, double phi){
 	double deltaTheta = pi/thetagridNumber;
 	double deltaPhi = 2*pi/phigridNumber;
-	int j = trunc(theta / deltaTheta);
-	int k = trunc(phi / deltaPhi);
+	int j = lowerInt(theta / deltaTheta);
+	int k = lowerInt(phi / deltaPhi);
 	return bins[0][j][k];
 }
 

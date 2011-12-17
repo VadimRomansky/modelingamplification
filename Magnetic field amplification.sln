@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Magnetic field amplification 3d", "Magnetic field amplification 3d\Magnetic field amplification 3d.vcxproj", "{44A03627-10EB-44DF-9318-24A73EE82C2E}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Magnetic field amplification 1d", "Magnetic field amplification 1d\Magnetic field amplification 1d.vcxproj", "{F83DEADD-D52B-4FC1-90DE-33492D30212B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{44A03627-10EB-44DF-9318-24A73EE82C2E}.Debug|Win32.ActiveCfg = Debug|Win32
+		{44A03627-10EB-44DF-9318-24A73EE82C2E}.Debug|Win32.Build.0 = Debug|Win32
+		{44A03627-10EB-44DF-9318-24A73EE82C2E}.Release|Win32.ActiveCfg = Release|Win32
+		{44A03627-10EB-44DF-9318-24A73EE82C2E}.Release|Win32.Build.0 = Release|Win32
+		{F83DEADD-D52B-4FC1-90DE-33492D30212B}.Debug|Win32.ActiveCfg = Debug|Win32
+		{F83DEADD-D52B-4FC1-90DE-33492D30212B}.Debug|Win32.Build.0 = Debug|Win32
+		{F83DEADD-D52B-4FC1-90DE-33492D30212B}.Release|Win32.ActiveCfg = Release|Win32
+		{F83DEADD-D52B-4FC1-90DE-33492D30212B}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
