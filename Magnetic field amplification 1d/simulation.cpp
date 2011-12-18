@@ -118,13 +118,14 @@ void Simulation::simulate(){
 					if(index[0] == rgridNumber){
 						//bin = bins[rgridNumber - 1][index[1]][index[2]];
 						index[0] = rgridNumber - 1;
+						bin->detectParticleR2(particle);
 						particle->absoluteMomentumTheta = pi - particle->absoluteMomentumTheta;
 						particle->absoluteMomentumPhi = 2*pi - particle->absoluteMomentumPhi;
 						if(particle->absoluteMomentumPhi > 2*pi){
 							particle->absoluteMomentumPhi -= 2*pi;
 						}
 						particle->moveToBinRight(bin);
-						bin->detectParticleR2(particle);
+						//bin->detectParticleR2(particle);
 					}
 					if (time >= timeStep){
 						break;
