@@ -11,7 +11,7 @@ double sqr(double v){
 	return v*v;
 }
 
-int trunc(double v){
+int lowerInt(double v){
 	int i = (int) v;
 
 	if(1.0*i > v){

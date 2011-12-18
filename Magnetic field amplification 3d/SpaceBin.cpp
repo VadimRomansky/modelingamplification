@@ -59,16 +59,23 @@ SpaceBin::~SpaceBin(){
 }
 
 int* SpaceBin::propagateParticle(Particle* particle ,double& time, double timeStep){
+	if(time != time){
+		printf("aaa");
+	}
 	particle->setLocalMomentum(U,UTheta,UPhi);
 	double lambda = getFreePath(particle);
+	if(lambda != lambda){
+		printf("aaa");
+	}
 	if(lambda == 0){
 		printf("bbbbbbb");
 	}
-	double c2 = speed_of_light*speed_of_light;
+	//double c2 = speed_of_light*speed_of_light;
 	double gammaFactor = 1/sqrt(1 - U*U/c2);
 	double colisionTime = lambda/particle->getLocalV();
 	int l = 0;
 	while(isInBin(particle) && (time < timeStep)){
+		//падает где-то здесь
 		l++;
 		if(l > 1000){
 			//printf("%d \n",l);
@@ -78,6 +85,12 @@ int* SpaceBin::propagateParticle(Particle* particle ,double& time, double timeSt
 			colisionTime = gammaFactor*(timeStep - time);
 		}
 		time += colisionTime/gammaFactor;
+		if(time != time){
+			printf("aaa");
+		}
+		if(colisionTime != colisionTime){
+			printf("aaa");
+		}
 		makeOneStep(particle, colisionTime);
 	}
 	/*if(particle.absoluteTheta < 0){
@@ -107,9 +120,9 @@ int* SpaceBin::propagateParticle(Particle* particle ,double& time, double timeSt
 }
 
 int* SpaceBin::binByCoordinates(double r, double theta, double phi, double r0, double deltar, double deltatheta, double deltaphi){
-	int i = trunc((r - r0)/deltar);
-	int j = trunc(theta/deltatheta);
-	int k = trunc(phi/deltaphi);
+	int i = lowerInt((r - r0)/deltar);
+	int j = lowerInt(theta/deltatheta);
+	int k = lowerInt(phi/deltaphi);
 	if(i > rgridNumber - 1){
 		//printf("aaa");
 	}
@@ -117,7 +130,7 @@ int* SpaceBin::binByCoordinates(double r, double theta, double phi, double r0, d
 		//printf("aaa");
 	}
 	if(j > thetagridNumber - 1){
-		j = trunc((theta - epsilon)/deltatheta);
+		j = lowerInt((theta - epsilon)/deltatheta);
 		if(j > thetagridNumber - 1){
 			printf("aaa");
 		}
@@ -134,7 +147,14 @@ int* SpaceBin::binByCoordinates(double r, double theta, double phi, double r0, d
 
 double SpaceBin::getFreePath(Particle* particle){
 	//return speed_of_light*particle.localMomentum/(particle.Z*electron_charge*B);
-	return speed_of_light*particle->localMomentum/(particle->Z*electron_charge*B0);
+	double lambda = speed_of_light*particle->localMomentum/(particle->Z*electron_charge*B0);
+	if( lambda != lambda){
+		printf("aaa");
+	}
+	if( 0*lambda != 0*lambda){
+		printf("aaa");
+	}
+	return lambda;
 }
 
 void SpaceBin::makeOneStep(Particle* particle, double colisionTime){
@@ -143,7 +163,7 @@ void SpaceBin::makeOneStep(Particle* particle, double colisionTime){
 	double localMomentum = particle->localMomentum;
 	double localMomentumZ = particle->localMomentumZ;
 
-	double r = particle->getAbsoluteR();
+	double r = particle->absoluteZ;
 	double theta = particle->getAbsoluteTheta();
 	double phi = particle->getAbsolutePhi();
 
@@ -162,9 +182,9 @@ void SpaceBin::makeOneStep(Particle* particle, double colisionTime){
 		tempphi = tempphi + 2*pi;
 	}
 
-	double Ur = (sin(particle->getAbsoluteTheta())*sin(particle->absoluteMomentumTheta)*cos(particle->getAbsolutePhi())*cos(particle->absoluteMomentumPhi) + 
+	/*double Ur = (sin(particle->getAbsoluteTheta())*sin(particle->absoluteMomentumTheta)*cos(particle->getAbsolutePhi())*cos(particle->absoluteMomentumPhi) + 
 		sin(particle->getAbsoluteTheta())*sin(particle->absoluteMomentumTheta)*sin(particle->getAbsolutePhi())*sin(particle->absoluteMomentumPhi) +
-		cos(particle->absoluteMomentumTheta)*cos(particle->getAbsoluteTheta()))*particleU;
+		cos(particle->absoluteMomentumTheta)*cos(particle->getAbsoluteTheta()))*particleU;*/
 	/*double Utheta = ( cos(particle.absoluteTheta)*sin(particle.absoluteMomentumTheta)*cos(particle.absolutePhi)*cos(particle.absoluteMomentumPhi) +
 		cos(particle.absoluteTheta)*sin(particle.absoluteMomentumTheta)*sin(particle.absolutePhi)*sin(particle.absoluteMomentumPhi) -
 		sin(particle.absoluteTheta)*cos(particle.absoluteMomentumTheta))*particleU;
@@ -250,7 +270,7 @@ void SpaceBin::updateCosmicRayFluxes(){
 	//particleMomentaFlux.reset();
 	//particleEnergyFlux.reset();
 	//crMassFlux.reset();
-	double c2 = speed_of_light*speed_of_light;
+	//double c2 = speed_of_light*speed_of_light;
 	if((thetagridNumber == 1) && (phigridNumber == 1)){
 		std::list<Particle*>::iterator it = detectedParticlesR1.begin();
 		/*if(number < zeroPoint){
@@ -353,6 +373,30 @@ void SpaceBin::resetDetectors(){
 	energyFlux.fluxTheta2 = 0;
 	energyFlux.fluxPhi1 = 0;
 	energyFlux.fluxPhi2 = 0;
+	particleMassFlux.fluxR1 = 0;
+	particleMassFlux.fluxR2 = 0;
+	particleMassFlux.fluxTheta1 = 0;
+	particleMassFlux.fluxTheta2 = 0;
+	particleMassFlux.fluxPhi1 = 0;
+	particleMassFlux.fluxPhi2 = 0;
+	particleMomentaFlux.fluxR1 = 0;
+	particleMomentaFlux.fluxR2 = 0;
+	particleMomentaFlux.fluxTheta1 = 0;
+	particleMomentaFlux.fluxTheta2 = 0;
+	particleMomentaFlux.fluxPhi1 = 0;
+	particleMomentaFlux.fluxPhi2 = 0;
+	particleEnergyFlux.fluxR1 = 0;
+	particleEnergyFlux.fluxR2 = 0;
+	particleEnergyFlux.fluxTheta1 = 0;
+	particleEnergyFlux.fluxTheta2 = 0;
+	particleEnergyFlux.fluxPhi1 = 0;
+	particleEnergyFlux.fluxPhi2 = 0;
+	crMassFlux.fluxR1 = 0;
+	crMassFlux.fluxR2 = 0;
+	crMassFlux.fluxTheta1 = 0;
+	crMassFlux.fluxTheta2 = 0;
+	crMassFlux.fluxPhi1 = 0;
+	crMassFlux.fluxPhi2 = 0;
 	//momentaFlux.reset();
 	//energyFlux.reset();
 }
@@ -782,7 +826,7 @@ void SpaceBin::sortParticles(double minK, double maxK){
 }
 
 bool SpaceBin::isInBin(Particle* particle){
-	double r = particle->getAbsoluteR();
+	double r = particle->absoluteZ;
 	double theta = particle->getAbsoluteTheta();
 	double phi = particle->getAbsolutePhi();
 	if(r > r2) {
@@ -840,7 +884,8 @@ bool SpaceBin::isInThisOrNear(double r, double theta, double phi){
 }
 
 void SpaceBin::detectParticleR1(Particle* particle){
-	double c2 = speed_of_light*speed_of_light;
+	detectedParticlesR1.push_back(new Particle(*particle));
+	//double c2 = speed_of_light*speed_of_light;
 	if(particle->isCosmicRay){
 		crMassFlux.fluxR1 += particle->mass*particle->weight;
 	}
@@ -852,14 +897,15 @@ void SpaceBin::detectParticleR1(Particle* particle){
 }
 
 void SpaceBin::detectParticleR2(Particle* particle){
-	double c2 = speed_of_light*speed_of_light;
+	detectedParticlesR2.push_back(new Particle(*particle));
+	//double c2 = speed_of_light*speed_of_light;
 	if(particle->isCosmicRay){
 		crMassFlux.fluxR2 += particle->mass*particle->weight;
 	}
 	particleMassFlux.fluxR2 += particle->mass*particle->weight;
 	double v = particle->getAbsoluteV();
 	double vr = particle->getRadialSpeed(); 
-	particleMomentaFlux.fluxR2 += vr*vr*particle->mass*particle->weight/sqrt(1 - (v*v)/c2);
+	particleMomentaFlux.fluxR2 += vr*particle->mass*particle->weight/sqrt(1 - (v*v)/c2);
 	particleEnergyFlux.fluxR2 += particle->weight*particle->getEnergy();
 }
 

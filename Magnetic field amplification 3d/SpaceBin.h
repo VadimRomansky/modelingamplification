@@ -33,6 +33,9 @@ public:
 	double B;
 	double B0;
 	double W;
+
+	double initialMomentum;
+
 	int numberR;
 	int numberPhi;
 	int numberTheta;
