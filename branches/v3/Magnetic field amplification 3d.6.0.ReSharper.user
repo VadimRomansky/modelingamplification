@@ -1,0 +1,67 @@
+<Configuration>
+  <RecentFiles>
+    <RecentFiles>
+      <File id="44A03627-10EB-44DF-9318-24A73EE82C2E/f:SpaceBin.h" caret="558" fromTop="15" />
+      <File id="44A03627-10EB-44DF-9318-24A73EE82C2E/f:output.h" caret="0" fromTop="0" />
+      <File id="44A03627-10EB-44DF-9318-24A73EE82C2E/f:simulation.h" caret="0" fromTop="0" />
+      <File id="44A03627-10EB-44DF-9318-24A73EE82C2E/f:matrix3d.cpp" caret="2963" fromTop="15" />
+      <File id="44A03627-10EB-44DF-9318-24A73EE82C2E/f:util.cpp" caret="348" fromTop="13" />
+      <File id="44A03627-10EB-44DF-9318-24A73EE82C2E/f:main.cpp" caret="184" fromTop="10" />
+      <File id="44A03627-10EB-44DF-9318-24A73EE82C2E/f:particle.h" caret="1373" fromTop="12" />
+      <File id="44A03627-10EB-44DF-9318-24A73EE82C2E/f:SpaceBin.cpp" caret="1826" fromTop="17" />
+      <File id="44A03627-10EB-44DF-9318-24A73EE82C2E/f:constants.h" caret="156" fromTop="5" />
+      <File id="44A03627-10EB-44DF-9318-24A73EE82C2E/f:simulation.cpp" caret="1757" fromTop="0" />
+      <File id="44A03627-10EB-44DF-9318-24A73EE82C2E/f:particle.cpp" caret="8914" fromTop="26" />
+    </RecentFiles>
+    <RecentEdits>
+      <File id="44A03627-10EB-44DF-9318-24A73EE82C2E/f:particle.cpp" caret="7989" fromTop="12" />
+      <File id="44A03627-10EB-44DF-9318-24A73EE82C2E/f:particle.cpp" caret="9534" fromTop="12" />
+      <File id="44A03627-10EB-44DF-9318-24A73EE82C2E/f:SpaceBin.cpp" caret="25890" fromTop="8" />
+      <File id="44A03627-10EB-44DF-9318-24A73EE82C2E/f:SpaceBin.cpp" caret="26446" fromTop="6" />
+      <File id="44A03627-10EB-44DF-9318-24A73EE82C2E/f:simulation.cpp" caret="148" fromTop="6" />
+      <File id="44A03627-10EB-44DF-9318-24A73EE82C2E/f:simulation.cpp" caret="4688" fromTop="10" />
+      <File id="44A03627-10EB-44DF-9318-24A73EE82C2E/f:simulation.cpp" caret="2957" fromTop="11" />
+      <File id="44A03627-10EB-44DF-9318-24A73EE82C2E/f:particle.cpp" caret="8733" fromTop="19" />
+      <File id="44A03627-10EB-44DF-9318-24A73EE82C2E/f:particle.h" caret="491" fromTop="9" />
+      <File id="44A03627-10EB-44DF-9318-24A73EE82C2E/f:particle.cpp" caret="6080" fromTop="17" />
+      <File id="44A03627-10EB-44DF-9318-24A73EE82C2E/f:particle.cpp" caret="4747" fromTop="10" />
+      <File id="44A03627-10EB-44DF-9318-24A73EE82C2E/f:particle.cpp" caret="4147" fromTop="11" />
+      <File id="44A03627-10EB-44DF-9318-24A73EE82C2E/f:particle.cpp" caret="3533" fromTop="13" />
+      <File id="44A03627-10EB-44DF-9318-24A73EE82C2E/f:particle.cpp" caret="2795" fromTop="8" />
+      <File id="44A03627-10EB-44DF-9318-24A73EE82C2E/f:particle.cpp" caret="2142" fromTop="18" />
+      <File id="44A03627-10EB-44DF-9318-24A73EE82C2E/f:particle.cpp" caret="1526" fromTop="21" />
+      <File id="44A03627-10EB-44DF-9318-24A73EE82C2E/f:particle.cpp" caret="570" fromTop="16" />
+      <File id="44A03627-10EB-44DF-9318-24A73EE82C2E/f:simulation.cpp" caret="6719" fromTop="13" />
+      <File id="44A03627-10EB-44DF-9318-24A73EE82C2E/f:particle.cpp" caret="10043" fromTop="3" />
+      <File id="44A03627-10EB-44DF-9318-24A73EE82C2E/f:particle.cpp" caret="10153" fromTop="7" />
+      <File id="44A03627-10EB-44DF-9318-24A73EE82C2E/f:particle.cpp" caret="9792" fromTop="9" />
+      <File id="44A03627-10EB-44DF-9318-24A73EE82C2E/f:simulation.cpp" caret="7023" fromTop="9" />
+      <File id="44A03627-10EB-44DF-9318-24A73EE82C2E/f:particle.cpp" caret="10408" fromTop="13" />
+      <File id="44A03627-10EB-44DF-9318-24A73EE82C2E/f:particle.cpp" caret="10779" fromTop="20" />
+      <File id="44A03627-10EB-44DF-9318-24A73EE82C2E/f:simulation.cpp" caret="1750" fromTop="16" />
+      <File id="44A03627-10EB-44DF-9318-24A73EE82C2E/f:constants.h" caret="584" fromTop="15" />
+      <File id="44A03627-10EB-44DF-9318-24A73EE82C2E/f:simulation.cpp" caret="1630" fromTop="12" />
+      <File id="44A03627-10EB-44DF-9318-24A73EE82C2E/f:simulation.cpp" caret="1621" fromTop="13" />
+      <File id="44A03627-10EB-44DF-9318-24A73EE82C2E/f:particle.cpp" caret="8572" fromTop="12" />
+      <File id="44A03627-10EB-44DF-9318-24A73EE82C2E/f:particle.cpp" caret="9266" fromTop="17" />
+    </RecentEdits>
+  </RecentFiles>
+  <NAntValidationSettings>
+    <NAntPath value="" />
+  </NAntValidationSettings>
+  <UnitTestRunner>
+    <Providers />
+  </UnitTestRunner>
+  <UnitTestRunnerNUnit>
+    <NUnitInstallDir IsNull="False">
+    </NUnitInstallDir>
+    <UseAddins>Never</UseAddins>
+  </UnitTestRunnerNUnit>
+  <SettingsComponent>
+    <string />
+    <integer />
+    <boolean>
+      <setting name="SolutionAnalysisEnabled">False</setting>
+    </boolean>
+  </SettingsComponent>
+</Configuration>
