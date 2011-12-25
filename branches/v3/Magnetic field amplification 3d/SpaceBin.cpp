@@ -163,7 +163,7 @@ void SpaceBin::makeOneStep(Particle* particle, double colisionTime){
 	double localMomentum = particle->localMomentum;
 	double localMomentumZ = particle->localMomentumZ;
 
-	double r = particle->absoluteZ;
+	double r = particle->getAbsoluteR();
 	double theta = particle->getAbsoluteTheta();
 	double phi = particle->getAbsolutePhi();
 
@@ -826,7 +826,7 @@ void SpaceBin::sortParticles(double minK, double maxK){
 }
 
 bool SpaceBin::isInBin(Particle* particle){
-	double r = particle->absoluteZ;
+	double r = particle->getAbsoluteR();
 	double theta = particle->getAbsoluteTheta();
 	double phi = particle->getAbsolutePhi();
 	if(r > r2) {

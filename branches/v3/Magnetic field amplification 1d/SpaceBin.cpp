@@ -344,6 +344,18 @@ void SpaceBin::updateThermalFluxes(){
 	//thEnergyFlux = 0;
 }
 void SpaceBin::resetDetectors(){
+	std::list<Particle*>::iterator it = detectedParticlesR2.begin();
+	while(it != detectedParticlesR2.end()){
+		Particle* particle = *it;
+		delete particle;
+		++it;
+	}
+	it = detectedParticlesR1.begin();
+	while(it != detectedParticlesR1.end()){
+		Particle* particle = *it;
+		delete particle;
+		++it;
+	}
 	detectedParticlesR1.clear();
 	detectedParticlesR2.clear();
 	detectedParticlesTheta1.clear();
