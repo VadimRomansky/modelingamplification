@@ -45,6 +45,8 @@ public:
 	double getAbsoluteV();
 	void setAbsoluteMomentum(double U, double Utheta, double Uphi);
 	void setLocalMomentum(double U, double Utheta,double Uphi);
+	void setAbsoluteMomentum(SpaceBin* bin);
+	void setLocalMomentum(SpaceBin* bin);
 	double getLocalV();
 	double getAbsoluteR();
 	double getAbsoluteTheta();

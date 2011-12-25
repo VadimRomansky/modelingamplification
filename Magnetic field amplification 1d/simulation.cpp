@@ -149,6 +149,7 @@ void Simulation::simulate(){
 			printf("%s", "magnetic Field updating\n");
 			//updateMagneticField();
 			//output(*this);
+			removeEscapedParticles();
 			resetDetectors();
 			printf("%s","iteration ¹ ");
 			printf("%d\n",itNumber);
@@ -497,4 +498,20 @@ void Simulation::introduceNewParticles(){
 	}
 	list.clear();
 
+}
+
+void Simulation::removeEscapedParticles(){
+	std::list<Particle*> list = std::list<Particle*>();
+	std::list<Particle*>::iterator it = introducedParticles.begin();
+	while(it != introducedParticles.end()){
+		Particle* particle = *it;
+		++it;
+		if(particle->absoluteZ < 0){
+			delete particle;
+		} else {
+			list.push_back(particle);
+		}
+	}
+	introducedParticles.clear();
+	introducedParticles = list;
 }

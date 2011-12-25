@@ -74,6 +74,7 @@ public:
 	Particle* getAnyParticle();
 	void resetProfile();
 	void introduceNewParticles();
+	void removeEscapedParticles();
 private:
 	static const int particleMultiply = 20;
 };

@@ -56,6 +56,26 @@ SpaceBin::SpaceBin(double R, double Theta, double Phi, double deltar, double del
 	particleMassFlux.reset();
 	particleMomentaFlux.reset();
 	particleEnergyFlux.reset();
+
+	double ux;
+	double uy;
+	double uz;
+	if((thetagridNumber == 1)&&(phigridNumber == 1)){
+		ux = 0;
+		uy = 0;
+		uz = U;		
+	} else {
+		//double c2 = speed_of_light*speed_of_light;
+
+		ux = U*sin(UTheta)*cos(UPhi);
+		uy = U*sin(UTheta)*sin(UPhi);
+		uz = U*cos(UTheta);
+	}	
+	
+	//u - скорость плазмы в абсолютной СО. Локальная ось z направлена по скорости плазмы
+	matrix = Matrix3d::createBasisByOneVector(vector3d(ux,uy,uz));
+	invertMatrix = matrix->Inverse();
+
 }
 
 SpaceBin::~SpaceBin(){
@@ -66,7 +86,8 @@ int* SpaceBin::propagateParticle(Particle* particle ,double& time, double timeSt
 	if(time != time){
 		printf("aaa");
 	}
-	particle->setLocalMomentum(U,UTheta,UPhi);
+	//particle->setLocalMomentum(U,UTheta,UPhi);
+	particle->setLocalMomentum(this);
 	double lambda = getFreePath(particle);
 	if(lambda != lambda){
 		printf("aaa");
@@ -119,7 +140,8 @@ int* SpaceBin::propagateParticle(Particle* particle ,double& time, double timeSt
 		phi = phi + 2*pi;
 	}
 
-
+	//particle->setAbsoluteMomentum(U,UTheta,UPhi);
+	particle->setAbsoluteMomentum(this);
 	return binByCoordinates(particle->absoluteZ, theta, phi,0, r2 - r1, theta2 - theta1, phi2 - phi1);
 }
 
@@ -245,7 +267,7 @@ void SpaceBin::scattering(Particle* particle, double maxTheta){
 	particle->localMomentumZ = particle->localMomentum*cos(localTheta);
 	particle->localMomentumX = particle->localMomentum*sinLocalTheta*cos(localPhi);
 	particle->localMomentumY = particle->localMomentum*sinLocalTheta*sin(localPhi);
-	particle->setAbsoluteMomentum(U,UTheta,UPhi);
+	//particle->setAbsoluteMomentum(U,UTheta,UPhi);
 }
 
 void SpaceBin::updateFluxes(){
@@ -379,6 +401,27 @@ void SpaceBin::resetDetectors(){
 	particleEnergyFlux.fluxR2 = 0;
 	crMassFlux.fluxR1 = 0;
 	crMassFlux.fluxR2 = 0;
+
+	double ux;
+	double uy;
+	double uz;
+	if((thetagridNumber == 1)&&(phigridNumber == 1)){
+		ux = 0;
+		uy = 0;
+		uz = U;		
+	} else {
+		//double c2 = speed_of_light*speed_of_light;
+
+		ux = U*sin(UTheta)*cos(UPhi);
+		uy = U*sin(UTheta)*sin(UPhi);
+		uz = U*cos(UTheta);
+	}	
+	
+	//u - скорость плазмы в абсолютной СО. Локальная ось z направлена по скорости плазмы
+	delete matrix;
+	delete invertMatrix;
+	matrix = Matrix3d::createBasisByOneVector(vector3d(ux,uy,uz));
+	invertMatrix = matrix->Inverse();
 	//momentaFlux.reset();
 	//energyFlux.reset();
 }
