@@ -46,6 +46,7 @@ public:
 	double** pressureSpectralDensity;
 	std::list <Particle*> startPDF;
 	std::list <Particle*> introducedParticles;
+	double* averageVelocity;
 
 	Simulation();
 	~Simulation();
@@ -75,6 +76,7 @@ public:
 	void resetProfile();
 	void introduceNewParticles();
 	void removeEscapedParticles();
+	void collectAverageVelocity();
 private:
 	static const int particleMultiply = 20;
 };

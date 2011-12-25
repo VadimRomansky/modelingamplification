@@ -22,6 +22,7 @@ Simulation::Simulation(){
 	startPDF = std::list <Particle*>();
 	timeStep = defaultTimeStep;
 	zeroBin = NULL;
+	averageVelocity = new double[rgridNumber];
 }
 
 Simulation::~Simulation(){
@@ -33,6 +34,7 @@ Simulation::~Simulation(){
 	gamma = 1;
 	delta = 1;
 	epsilon = 0.1;
+	delete[] averageVelocity;
 }
 
 void Simulation::initializeProfile(){
@@ -146,6 +148,7 @@ void Simulation::simulate(){
 
 			printf("%s", "Reseting profile\n");
 			resetProfile();
+			collectAverageVelocity();
 			printf("%s", "magnetic Field updating\n");
 			//updateMagneticField();
 			//output(*this);
@@ -169,7 +172,7 @@ void Simulation::simulate(){
 		}
 		outputPDF(list,"./output/tamc_pdf_down.dat",*this,minp,maxp);
 		outputStartPDF(list,"./output/tamc_pdf_start.dat",*this,minp,maxp);
-		outputRadialProfile(bins,0,0,radialFile);
+		outputRadialProfile(bins,0,0,radialFile,averageVelocity);
 		fclose(radialFile);
 	}
 }
@@ -514,4 +517,36 @@ void Simulation::removeEscapedParticles(){
 	}
 	introducedParticles.clear();
 	introducedParticles = list;
+}
+
+void Simulation::collectAverageVelocity(){
+	int* count = new int[rgridNumber];
+	for(int i = 0; i < rgridNumber; ++i){
+		count[i] = 0;
+		averageVelocity[i] = 0;
+	}
+
+	std::list<Particle*>::iterator it = introducedParticles.begin();
+	while(it != introducedParticles.end()){
+		Particle* particle = *it;
+		++it;
+		double r = particle->getAbsoluteR();
+		double theta = acos(particle->absoluteZ/r);
+		double phi =atan2(particle->absoluteY, particle->absoluteX);
+		if(phi < 0){
+			phi = phi + 2*pi;
+		}
+		int* index = SpaceBin::binByCoordinates(particle->absoluteZ, theta, phi,upstreamR,deltaR,deltaTheta,deltaPhi);
+		if(index[0] >= 0){
+			count[index[0]] += 1;
+			averageVelocity[index[0]] += particle->getAbsoluteV()*cos(particle->absoluteMomentumTheta);
+		}
+		delete[] index;
+	}
+
+	for(int i = 0; i < rgridNumber; ++i){
+		averageVelocity[i] /= count[i];
+	}
+
+	delete[] count;
 }
