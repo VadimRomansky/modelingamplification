@@ -95,7 +95,7 @@ void Simulation::simulate(){
 				//printf("%d %s",l,"\n");
 				++l;
 				bool side = false;
-				double r = sqrt(particle->absoluteX*particle->absoluteX + particle->absoluteY*particle->absoluteY + particle->absoluteZ*particle->absoluteZ);
+				double r = particle->getAbsoluteR();
 				double theta = acos(particle->absoluteZ/r);
 				double phi =atan2(particle->absoluteY, particle->absoluteX);
 				if(phi < 0){
@@ -131,6 +131,7 @@ void Simulation::simulate(){
 						break;
 					}
 				}
+				delete[] index;
 			}
 			/*printf("%s", "Fluxes updating\n");
 			for (int i = 0; i < rgridNumber; ++i){
@@ -147,7 +148,7 @@ void Simulation::simulate(){
 			resetProfile();
 			printf("%s", "magnetic Field updating\n");
 			//updateMagneticField();
-			output(*this);
+			//output(*this);
 			resetDetectors();
 			printf("%s","iteration ¹ ");
 			printf("%d\n",itNumber);
@@ -443,7 +444,7 @@ void Simulation::introduceNewParticles(){
 		Particle* particle = *it;
 		++it;
 		bool side = false;
-		double r = sqrt(particle->absoluteX*particle->absoluteX + particle->absoluteY*particle->absoluteY + particle->absoluteZ*particle->absoluteZ);
+		double r = particle->getAbsoluteR();
 		double theta = acos(particle->absoluteZ/r);
 		double phi =atan2(particle->absoluteY, particle->absoluteX);
 		if(phi < 0){
@@ -477,14 +478,23 @@ void Simulation::introduceNewParticles(){
 					break;
 				}
 			}
+			delete[] index;
 		}
 	}
 
 	it = zeroBin->detectedParticlesR2.begin();
 	while(it != zeroBin->detectedParticlesR2.end()){
 		Particle* particle = *it;
-		introducedParticles.push_front(particle);
+		introducedParticles.push_front(new Particle(*particle));
 		++it;
 	}
+
+	it = list.begin();
+	while(it != list.end()){
+		Particle* particle = *it;
+		delete particle;
+		++it;
+	}
+	list.clear();
 
 }
