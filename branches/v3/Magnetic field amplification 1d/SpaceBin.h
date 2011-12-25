@@ -5,6 +5,7 @@
 #include "constants.h"
 #include "random.h"
 #include "BinFlux.h"
+#include "matrix3d.h"
 //#include "particle2.h"
 #include <list>
 
@@ -35,6 +36,9 @@ public:
 	double W;
 
 	double initialMomentum;
+
+	Matrix3d* matrix;
+	Matrix3d* invertMatrix;
 
 	int numberR;
 	int numberPhi;
