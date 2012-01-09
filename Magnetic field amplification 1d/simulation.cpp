@@ -89,6 +89,9 @@ void Simulation::simulate(){
 		printf("%s", "Iteration started\n");
 		if(itNumber == 0){
 			printf("%s","First iteration");
+			prevPoint = downstreamR;
+			shockWavePoints.push_back(prevPoint);
+			shockWaveVelocity.push_back(0.0);
 		} else {
 			printf("%s", "Particle propagation\n");
 			std::list<Particle*>::iterator it = introducedParticles.begin();
@@ -151,6 +154,7 @@ void Simulation::simulate(){
 			resetProfile();
 			collectAverageVelocity();
 			resetVelocity();
+			findShockWavePoint();
 			printf("%s", "magnetic Field updating\n");
 			//updateMagneticField();
 			//output(*this);
@@ -172,9 +176,10 @@ void Simulation::simulate(){
 				list.insert(list.end(),bins[rgridNumber - 1][j][k]->detectedParticlesR2.begin(),bins[rgridNumber - 1][j][k]->detectedParticlesR2.end());
 			}
 		}
-		outputPDF(list,"./output/tamc_pdf_down.dat",*this,minp,maxp);
-		outputStartPDF(list,"./output/tamc_pdf_start.dat",*this,minp,maxp);
+		//outputPDF(list,"./output/tamc_pdf_down.dat",*this,minp,maxp);
+		//outputStartPDF(list,"./output/tamc_pdf_start.dat",*this,minp,maxp);
 		outputRadialProfile(bins,0,0,radialFile,averageVelocity);
+		outputShockWave(shockWavePoints, shockWaveVelocity);
 		fclose(radialFile);
 	}
 }
@@ -549,6 +554,7 @@ void Simulation::collectAverageVelocity(){
 	for(int i = 0; i < rgridNumber; ++i){
 		averageVelocity[i] /= count[i];
 		bins[i][0][0]->averageVelocity = averageVelocity[i];
+		bins[i][0][0]->U = averageVelocity[i];
 	}
 
 	delete[] count;
@@ -587,4 +593,39 @@ void Simulation::resetVelocity(){
 	}
 
 	delete[] particles;
+}
+
+int Simulation::maxVelocityDerivativeIndex(){
+	int result = 1;
+	double maxDerivative = (bins[2][0][0]->U - bins[0][0][0]->U);
+	for(int i = 2; i < rgridNumber - 1; ++i){
+		//< because derivative must be < 0
+		if(bins[i + 1][0][0]->U - bins[i - 1][0][0]->U < maxDerivative) {
+			maxDerivative = bins[i+1][0][0] - bins[i - 1][0][0];
+			result = i;
+		}
+	}
+	return result;
+}
+
+double Simulation::secondVelocityDerivative(int i){
+	return (bins[i - 1][0][0]->U + bins[i + 1][0][0]->U - 2*bins[i][0][0]->U)/(deltaR*deltaR);
+}
+
+double Simulation::thirdVelocityDerivative(int i){
+	return (secondVelocityDerivative(i) - secondVelocityDerivative(i - 1))/deltaR;
+}
+
+double Simulation::solveSecondDerivativeZero(int i){
+	double derivative2 = secondVelocityDerivative(i);
+	double derivative3 = thirdVelocityDerivative(i);
+	return (bins[i][0][0]->r - derivative2/derivative3);
+}
+
+void Simulation::findShockWavePoint(){
+	int i = maxVelocityDerivativeIndex();
+	double nextPoint = solveSecondDerivativeZero(i);
+	shockWavePoints.push_back(nextPoint);
+	shockWaveVelocity.push_back((nextPoint - prevPoint)/timeStep);
+	prevPoint = nextPoint;
 }

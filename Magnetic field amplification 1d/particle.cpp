@@ -229,58 +229,11 @@ Particle::Particle(int a, int znumber, SpaceBin* bin, bool wpath){
 
 }
 
-/*void Particle::LorentzTransition(double v1,double vtheta1, double vphi1, double v2,double vtheta2, double vphi2){
-
-	double v1z = v1*cos(vtheta1);
-	double v1x = v1*sin(vtheta1)*cos(vphi1);
-	double v1y = v1*sin(vtheta1)*sin(vphi1);
-
-	double v2z = v2*cos(vtheta1);
-	double v2x = v2*sin(vtheta1)*cos(vphi1);
-	double v2y = v2*sin(vtheta1)*sin(vphi1);
-
-	Matrix3d matrix = Matrix3d::createBasisByOneVector(vector3d(v1x,v1y,v1z));
-
-	vector3d v2rot = matrix.multiply(vector3d(v2x,v2y,v2z));
-
-
-	vector3d u = summVelocity(v2rot,v1);
-
-	Matrix3d invertMatrix = matrix.Inverse();
-
-	u = invertMatrix.multiply(u);
-
-	matrix = Matrix3d.createBasisByOneVector(u);
-
-	double sqrm = mass*mass;
-	double sqrc = speed_of_light*speed_of_light;
-	double sqrp = localMomentum*localMomentum;
-
-	double v = sqrt(sqrp/(sqrm+sqrp/sqrc));
-	double sqrv = v*v;
-
-	vector3d particleV = vector3d(v*sin(localMomentumTheta)*cos(localMomentumPhi),v*sin(localMomentumTheta)*sin(localMomentumPhi),v*cos(localMomentumTheta));
-
-	particleV = matrix.multiply(particleV);
-
-
-
-	double vx2 = (vx1-u)/(1-vx1*u/sqrc);
-	double vy2 = vy1*sqrt(1-u*u/sqrc)/(1-vx1*u/sqrc);
-	localPitchAngle = atan2(vy2,vx2);
-	v = sqrt(vx2*vx2+vy2*vy2);
-	localMomentum = mass*v/sqrt(1 - v*v/sqrc);
-	//double localMomentumX = vx2*mass/sqrt(1-vx2*vx2/(sqrc*cos(localPitchAngle)*cos(localPitchAngle)));
-	/////////////for debug;
-	setAbsoluteMomentum(v2);
-}*/
-
 void Particle::setAbsoluteMomentum(double U, double Utheta, double Uphi){
 	double sqrm = mass*mass;
 	double sqrc = speed_of_light*speed_of_light;
 	double sqrp = localMomentum*localMomentum;
 	double V = sqrt(sqrp/(sqrm+sqrp/sqrc));
-	//double c2 = speed_of_light*speed_of_light;
 	double theta = acos(localMomentumZ/localMomentum);
 	double phi = atan2(localMomentumY,localMomentumX);
 
@@ -293,7 +246,6 @@ void Particle::setAbsoluteMomentum(double U, double Utheta, double Uphi){
 		uy = 0;
 		uz = U;		
 	} else {
-		//double c2 = speed_of_light*speed_of_light;
 
 		ux = U*sin(Utheta)*cos(Uphi);
 		uy = U*sin(Utheta)*sin(Uphi);

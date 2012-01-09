@@ -213,6 +213,22 @@ void outputPhiProfile(SpaceBin**** bins, int rNumber, int thetaNumber){
 	fclose(outProfile);
 }
 
+void outputShockWave(std::list<double> points, std::list<double> velocity){
+	FILE* outWave = fopen("./output/tamc_shock_wave.dat", "w");
+	std::list<double>::iterator it1 = points.begin();
+	std::list<double>::iterator it2 = velocity.begin();
+	int i = 0;
+	while( (it1 != points.end()) && (it2 != velocity.end())){
+		double velocity = *it2;
+		double point = *it1;
+		fprintf(outWave,"%d %lf %lf \n",i, point, velocity); 
+		++it1;
+		++it2;
+		++i;
+	}
+	fclose(outWave);
+}
+
 /*void outputPartclesCount(Xbin** bins, const char* fileName){
 	FILE* outParticles = fopen(fileName,"w");
 	for(int i = 0; i < xgridNumber; ++i){

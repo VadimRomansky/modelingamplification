@@ -8,6 +8,8 @@
 #include "vector3d.h"
 
 class Simulation{
+private:
+	double prevPoint;
 public:
 	double timeStep;
 	int iterationNumber;
@@ -47,6 +49,8 @@ public:
 	std::list <Particle*> startPDF;
 	std::list <Particle*> introducedParticles;
 	double* averageVelocity;
+	std::list<double> shockWavePoints;
+	std::list<double> shockWaveVelocity;
 
 	Simulation();
 	~Simulation();
@@ -78,8 +82,12 @@ public:
 	void removeEscapedParticles();
 	void collectAverageVelocity();
 	void resetVelocity();
-private:
-	static const int particleMultiply = 20;
+	int maxVelocityDerivativeIndex();
+	double secondVelocityDerivative(int i);
+	double thirdVelocityDerivative(int i);
+
+	double solveSecondDerivativeZero(int i);
+	void findShockWavePoint();
 };
 
 
