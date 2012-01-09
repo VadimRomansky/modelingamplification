@@ -186,6 +186,11 @@ double SpaceBin::getFreePath(Particle* particle){
 	return lambda;
 }
 
+double SpaceBin::getFreeTime(Particle* particle){
+	double lambda = getFreePath(particle);
+	return lambda/particle->getLocalV();
+}
+
 void SpaceBin::makeOneStep(Particle* particle, double colisionTime){
 	double deltat = colisionTime/defaultTimeRelation;
 	double particleU = particle->getAbsoluteV();
@@ -811,20 +816,31 @@ void SpaceBin::detectParticlePhi2(Particle* particle){
 }
 
 void SpaceBin::resetVelocity(std::list<Particle*>& particles){
+	//if(averageVelocity < 0){
+	//	averageVelocity = averageVelocity;
+	//}
 	resetVelocity(particles, -2*abs(averageVelocity), 2*abs(averageVelocity));
 }
 
 void SpaceBin::resetVelocity(std::list<Particle*>& particles, double u1, double u2){
 	if(abs(u1-u2) < epsilon*abs(u2)){
-		//U = (u1 + u2)/2;
+		U = (u1 + u2)/2;
 		return;
 	}
 	double u = (u1 + u2)/2;
 
-	if( evaluateMomentumFlux(particles, u) > 0){
-		resetVelocity(particles,u,u2);
+	if(u >= 0){
+		if( evaluateMomentumFlux(particles, u) > 0){
+			resetVelocity(particles,u,u2);
+		} else {
+			resetVelocity(particles, u1, u);
+		}
 	} else {
-		resetVelocity(particles, u1, u);
+		if( evaluateMomentumFlux(particles, u) > 0){
+			resetVelocity(particles,u1,u);
+		} else {
+			resetVelocity(particles, u, u2);
+		}
 	}
 }
 
@@ -834,7 +850,7 @@ double SpaceBin::evaluateMomentumFlux(std::list<Particle*>& particles, double u)
 	while(it != particles.end()){
 		Particle* particle = *it;
 		particle->setLocalMomentum(u,0,0);
-		result += particle->localMomentumZ*particle->weight;
+		result += particle->localMomentumZ*particle->weight/getFreeTime(particle);
 		++it;
 	}
 	return result;

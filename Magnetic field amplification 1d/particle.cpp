@@ -301,6 +301,9 @@ void Particle::setLocalMomentum(double U, double Utheta,double Uphi){
 		ux = 0;
 		uy = 0;
 		uz = U;		
+		//if( U < 0){
+		//	U = U;
+		//}
 	} else {
 		//double c2 = speed_of_light*speed_of_light;
 
