@@ -79,6 +79,7 @@ public:
 	~SpaceBin();
 	int* propagateParticle(Particle* particle ,double& time, double timeStep);
 	double getFreePath(Particle* particle);
+	double getFreeTime(Particle* particle);
 	void makeOneStep(Particle* particle, double deltat);
 	bool isInBin(Particle* particle);
 	bool isInThisOrNear(double r, double theta, double phi);
