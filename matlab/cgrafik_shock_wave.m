@@ -1,0 +1,16 @@
+clear;
+load tamc_shock_wave.dat;
+N1=1;
+N2=50;
+figure(1);
+plot (tamc_shock_wave(1:N2,1),tamc_shock_wave(1:N2,2),'blue');
+title ('shock wawe r');
+xlabel ('iteration');
+ylabel ('r');
+grid ;
+figure(2);
+plot (tamc_shock_wave(1:N2,1),tamc_shock_wave(1:N2,3),'blue');
+title ('shock wawe velocity');
+xlabel ('iteration');
+ylabel ('U');
+grid ;
