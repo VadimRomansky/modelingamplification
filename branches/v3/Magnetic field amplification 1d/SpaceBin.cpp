@@ -816,7 +816,7 @@ void SpaceBin::resetVelocity(std::list<Particle*>& particles){
 
 void SpaceBin::resetVelocity(std::list<Particle*>& particles, double u1, double u2){
 	if(abs(u1-u2) < epsilon*abs(u2)){
-		U = (u1 + u2)/2;
+		//U = (u1 + u2)/2;
 		return;
 	}
 	double u = (u1 + u2)/2;

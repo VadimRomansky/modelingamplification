@@ -12,6 +12,7 @@ void outputParticlePath(std::list<Particle*> list,const char* cosmicRayFileName,
 void outputRadialProfile(SpaceBin**** bins, int thetaNumber, int phiNumber, FILE* outProfile, double* averageVelocity);
 void outputPhiProfile(SpaceBin**** bins, int rNumber, int thetaNumber);
 void outputThetaProfile(SpaceBin**** bins, int rNumber, int phiNumber);
+void outputShockWave(std::list<double> points, std::list<double> velocity);
 //void outputParticlesCount(Xbin** bins, const char* fileName);
 
 #endif
