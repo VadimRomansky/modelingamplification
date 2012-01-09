@@ -13,6 +13,7 @@ SpaceBin::SpaceBin(){
 		magneticField[i] = 0;
 	}
 	sortedParticles = new std::list<Particle*>[kgridNumber];
+	averageVelocity = 0;
 }
 SpaceBin::SpaceBin(double R, double Theta, double Phi, double deltar, double deltatheta, double deltaphi, double u, double rho, double utheta,double uphi, double t, double b, int i, int j, int k){
 	r = R;
@@ -28,6 +29,8 @@ SpaceBin::SpaceBin(double R, double Theta, double Phi, double deltar, double del
 	volume = r2 - r1;
 
 	U = u;
+	massVelocity = u;
+	averageVelocity = u;
 	UTheta = utheta;
 	UPhi = uphi;
 
@@ -805,6 +808,36 @@ void SpaceBin::detectParticlePhi1(Particle* particle){
 }
 
 void SpaceBin::detectParticlePhi2(Particle* particle){
+}
+
+void SpaceBin::resetVelocity(std::list<Particle*>& particles){
+	resetVelocity(particles, -2*abs(averageVelocity), 2*abs(averageVelocity));
+}
+
+void SpaceBin::resetVelocity(std::list<Particle*>& particles, double u1, double u2){
+	if(abs(u1-u2) < epsilon*abs(u2)){
+		U = (u1 + u2)/2;
+		return;
+	}
+	double u = (u1 + u2)/2;
+
+	if( evaluateMomentumFlux(particles, u) > 0){
+		resetVelocity(particles,u,u2);
+	} else {
+		resetVelocity(particles, u1, u);
+	}
+}
+
+double SpaceBin::evaluateMomentumFlux(std::list<Particle*>& particles, double u){
+	double result = 0;
+	std::list<Particle*>::iterator it = particles.begin();
+	while(it != particles.end()){
+		Particle* particle = *it;
+		particle->setLocalMomentum(u,0,0);
+		result += particle->localMomentumZ*particle->weight;
+		++it;
+	}
+	return result;
 }
 
 	

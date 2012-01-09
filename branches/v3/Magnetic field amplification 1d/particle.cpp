@@ -357,7 +357,7 @@ void Particle::setLocalMomentum(double U, double Utheta,double Uphi){
 		uz = U*cos(Utheta);
 	}
 
-	double localV1 = getLocalV();
+	//double localV1 = getLocalV();
 
 	Matrix3d* matrix = Matrix3d::createBasisByOneVector(vector3d(ux,uy,uz));
 

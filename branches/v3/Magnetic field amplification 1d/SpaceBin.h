@@ -71,6 +71,8 @@ public:
 
 	double minK;
 	double maxK;
+	double averageVelocity;
+	double massVelocity;
 
 	SpaceBin();
 	SpaceBin(double r, double theta, double phi, double deltar, double deltatheta, double deltaphi, double u, double rho, double utheta,double uphi, double temperature, double b, int i, int j, int k);
@@ -105,6 +107,10 @@ public:
 	void detectParticleTheta2(Particle* particle);
 	void detectParticlePhi1(Particle* particle);
 	void detectParticlePhi2(Particle* particle);
+
+	void resetVelocity(std::list<Particle*>& particles);
+	void resetVelocity(std::list<Particle*>& particles, double u1, double u2);
+	double evaluateMomentumFlux(std::list<Particle*>& particles, double u);
 
 	//void operator=(Xbin bin);
 
