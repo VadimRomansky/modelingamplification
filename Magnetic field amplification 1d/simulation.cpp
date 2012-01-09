@@ -67,6 +67,7 @@ void Simulation::initializeProfile(){
 			}
 			Theta = Theta + deltaTheta;
 		}
+		averageVelocity[i] = U0;
 		R = R + deltaR;
 	}
 }
@@ -149,6 +150,7 @@ void Simulation::simulate(){
 			printf("%s", "Reseting profile\n");
 			resetProfile();
 			collectAverageVelocity();
+			resetVelocity();
 			printf("%s", "magnetic Field updating\n");
 			//updateMagneticField();
 			//output(*this);
@@ -217,10 +219,10 @@ void Simulation::resetProfile(){
 					printf("aaa");
 				}
 			}*/
-			bins[i][0][0]->U = p/sqrt(sqr(m) + sqr(p/speed_of_light));
-			if(abs(bins[i][0][0]->U) > speed_of_light){
-				if(abs(bins[i][0][0]->U) < (1 + epsilon)*speed_of_light){
-					bins[i][0][0]->U = (1 - epsilon)*speed_of_light;
+			bins[i][0][0]->massVelocity = p/sqrt(sqr(m) + sqr(p/speed_of_light));
+			if(abs(bins[i][0][0]->massVelocity) > speed_of_light){
+				if(abs(bins[i][0][0]->massVelocity) < (1 + epsilon)*speed_of_light){
+					bins[i][0][0]->massVelocity = (1 - epsilon)*speed_of_light;
 				}
 				printf("aaa");
 			}
@@ -546,7 +548,43 @@ void Simulation::collectAverageVelocity(){
 
 	for(int i = 0; i < rgridNumber; ++i){
 		averageVelocity[i] /= count[i];
+		bins[i][0][0]->averageVelocity = averageVelocity[i];
 	}
 
 	delete[] count;
+}
+
+void Simulation::resetVelocity(){
+	std::list<Particle*>* particles = new std::list<Particle*>[rgridNumber];
+
+
+	std::list<Particle*>::iterator it = introducedParticles.begin();
+	while(it != introducedParticles.end()){
+		Particle* particle = *it;
+		++it;
+		double r = particle->getAbsoluteR();
+		double theta = acos(particle->absoluteZ/r);
+		double phi =atan2(particle->absoluteY, particle->absoluteX);
+		if(phi < 0){
+			phi = phi + 2*pi;
+		}
+		int* index = SpaceBin::binByCoordinates(particle->absoluteZ, theta, phi,upstreamR,deltaR,deltaTheta,deltaPhi);
+		if(index[0] >= 0){
+			particles[index[0]].push_back(new Particle(*particle));
+		}
+		delete[] index;
+	}
+
+	for(int i = 0; i < rgridNumber; ++i){
+		bins[i][0][0]->resetVelocity(particles[i]);
+		it = particles[i].begin();
+		while( it != particles[i].end()){
+			Particle* particle = *it;
+			delete particle;
+			++it;
+		}
+		particles[i].clear();
+	}
+
+	delete[] particles;
 }

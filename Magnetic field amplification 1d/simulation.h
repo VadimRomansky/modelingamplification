@@ -77,6 +77,7 @@ public:
 	void introduceNewParticles();
 	void removeEscapedParticles();
 	void collectAverageVelocity();
+	void resetVelocity();
 private:
 	static const int particleMultiply = 20;
 };

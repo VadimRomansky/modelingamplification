@@ -7,7 +7,7 @@ public:
 	double y;
 	double z;
 	vector3d(double vx, double vy, double vz);
-	double getNorm();
+	double getNorm() const;
 };
 
 #endif
