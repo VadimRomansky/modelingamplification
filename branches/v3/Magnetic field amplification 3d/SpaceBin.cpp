@@ -122,7 +122,13 @@ int* SpaceBin::propagateParticle(Particle* particle ,double& time, double timeSt
 int* SpaceBin::binByCoordinates(double r, double theta, double phi, double r0, double deltar, double deltatheta, double deltaphi){
 	int i = lowerInt((r - r0)/deltar);
 	int j = lowerInt(theta/deltatheta);
+	if( theta == pi ){
+		theta = thetagridNumber - 1;
+	}
 	int k = lowerInt(phi/deltaphi);
+	if (phi == 2*pi){
+		k = 0;
+	}
 	if(i > rgridNumber - 1){
 		//printf("aaa");
 	}

@@ -93,6 +93,9 @@ void Simulation::simulate(){
 			shockWavePoints.push_back(prevPoint);
 			shockWaveVelocity.push_back(0.0);
 		} else {
+			if(itNumber == 218){
+				printf("aaa");
+			}
 			printf("%s", "Particle propagation\n");
 			std::list<Particle*>::iterator it = introducedParticles.begin();
 			while( it != introducedParticles.end()){
@@ -113,13 +116,13 @@ void Simulation::simulate(){
 					j++;
 					SpaceBin* bin = bins[index[0]][index[1]][index[2]];
 					if(time != time){
-						printf("aaa");
+						printf("time != time");
 					}
 					int* tempIndex = bin->propagateParticle(particle,time, timeStep);
 					delete[] index;
 					index = tempIndex;
 					if(index[0] > rgridNumber){
-						printf("aaa");
+						printf("index[0] > rgridNumber");
 					}
 					if(index[0] == rgridNumber){
 						//bin = bins[rgridNumber - 1][index[1]][index[2]];
@@ -229,7 +232,7 @@ void Simulation::resetProfile(){
 				if(abs(bins[i][0][0]->massVelocity) < (1 + epsilon)*speed_of_light){
 					bins[i][0][0]->massVelocity = (1 - epsilon)*speed_of_light;
 				}
-				printf("aaa");
+				printf("abs(bins[i][0][0]->massVelocity) > speed_of_light");
 			}
 		}
 	}
@@ -467,13 +470,13 @@ void Simulation::introduceNewParticles(){
 			while((index[0] >= 0)){
 				SpaceBin* bin = bins[index[0]][index[1]][index[2]];
 				if(time != time){
-					printf("aaa");
+					printf("time != time");
 				}
 				int* tempIndex = bin->propagateParticle(particle,time, timeStep);
 				delete[] index;
 				index = tempIndex;
 				if(index[0] > rgridNumber){
-					printf("aaa");
+					printf("index[0] > rgridNumber");
 				}
 				if(index[0] == rgridNumber){
 					index[0] = rgridNumber - 1;

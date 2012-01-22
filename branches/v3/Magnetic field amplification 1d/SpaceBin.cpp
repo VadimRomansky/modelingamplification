@@ -87,16 +87,16 @@ SpaceBin::~SpaceBin(){
 
 int* SpaceBin::propagateParticle(Particle* particle ,double& time, double timeStep){
 	if(time != time){
-		printf("aaa");
+		printf("time != time");
 	}
 	//particle->setLocalMomentum(U,UTheta,UPhi);
 	particle->setLocalMomentum(this);
 	double lambda = getFreePath(particle);
 	if(lambda != lambda){
-		printf("aaa");
+		printf("lambda != lambda");
 	}
 	if(lambda == 0){
-		printf("bbbbbbb");
+		printf("lambda == 0");
 	}
 	//double c2 = speed_of_light*speed_of_light;
 	double gammaFactor = 1/sqrt(1 - U*U/c2);
@@ -114,10 +114,10 @@ int* SpaceBin::propagateParticle(Particle* particle ,double& time, double timeSt
 		}
 		time += colisionTime/gammaFactor;
 		if(time != time){
-			printf("aaa");
+			printf("time != time");
 		}
 		if(colisionTime != colisionTime){
-			printf("aaa");
+			printf("colisionTime != colisionTime");
 		}
 		makeOneStep(particle, colisionTime);
 	}
@@ -151,7 +151,13 @@ int* SpaceBin::propagateParticle(Particle* particle ,double& time, double timeSt
 int* SpaceBin::binByCoordinates(double r, double theta, double phi, double r0, double deltar, double deltatheta, double deltaphi){
 	int i = lowerInt((r - r0)/deltar);
 	int j = lowerInt(theta/deltatheta);
+	if( theta == pi ){
+		theta = thetagridNumber - 1;
+	}
 	int k = lowerInt(phi/deltaphi);
+	if (phi == 2*pi){
+		k = 0;
+	}
 	if(i > rgridNumber - 1){
 		//printf("aaa");
 	}
@@ -161,11 +167,12 @@ int* SpaceBin::binByCoordinates(double r, double theta, double phi, double r0, d
 	if(j > thetagridNumber - 1){
 		j = lowerInt((theta - epsilon)/deltatheta);
 		if(j > thetagridNumber - 1){
-			printf("aaa");
+			printf("j > thetagridNumber - 1");
 		}
 	}
 	if(k > phigridNumber - 1){
-		printf("aaa");
+		printf("k > phigridNumber - 1");
+		k = lowerInt(phi/deltaphi);
 	}
 	int* result = new int[3];
 	result[0] = i;
@@ -178,10 +185,10 @@ double SpaceBin::getFreePath(Particle* particle){
 	//return speed_of_light*particle.localMomentum/(particle.Z*electron_charge*B);
 	double lambda = speed_of_light*particle->localMomentum/(particle->Z*electron_charge*B0);
 	if( lambda != lambda){
-		printf("aaa");
+		printf("lambda != lambda");
 	}
 	if( 0*lambda != 0*lambda){
-		printf("aaa");
+		printf("0*lambda != 0*lambda");
 	}
 	return lambda;
 }
