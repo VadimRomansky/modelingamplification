@@ -272,13 +272,13 @@ void Particle::setAbsoluteMomentum(double U, double Utheta, double Uphi){
 			absoluteV = (1 - epsilon)*speed_of_light;
 			printf("v = c");
 		} else {
-			printf("aaa");
+			printf("v > c");
 		}
 	}
 
 	absoluteMomentum = mass*absoluteV/sqrt(1 - absoluteV*absoluteV/c2);
 	if(absoluteMomentum != absoluteMomentum){
-		printf("aaa");
+		printf("absoluteMomentum != absoluteMomentum");
 	}
 
 	absoluteMomentumTheta = acos(particleAbsoluteV.z/absoluteV);
@@ -339,7 +339,7 @@ void Particle::setLocalMomentum(double U, double Utheta,double Uphi){
 		if(localV < (1 + epsilon)*speed_of_light){
 			localV = (1 - epsilon)*speed_of_light;
 		} else {
-			printf("aaa");
+			printf("v > c");
 		}
 	}
 
@@ -350,7 +350,7 @@ void Particle::setLocalMomentum(double U, double Utheta,double Uphi){
 	//}
 
 	if(localMomentum != localMomentum){
-		printf("aaa");
+		printf("localMomentum != localMomentum");
 	}
 	localMomentumX = mass*particleLocalV.x/sqrt(1 - localV*localV/c2);
 	localMomentumY = mass*particleLocalV.y/sqrt(1 - localV*localV/c2);
@@ -406,13 +406,13 @@ void Particle::setAbsoluteMomentum(SpaceBin* bin){
 			absoluteV = (1 - epsilon)*speed_of_light;
 			printf("v = c");
 		} else {
-			printf("aaa");
+			printf("v > c");
 		}
 	}
 
 	absoluteMomentum = mass*absoluteV/sqrt(1 - absoluteV*absoluteV/c2);
 	if(absoluteMomentum != absoluteMomentum){
-		printf("aaa");
+		printf("absoluteMomentum != absoluteMomentum");
 	}
 
 	absoluteMomentumTheta = acos(particleAbsoluteV.z/absoluteV);
@@ -470,7 +470,7 @@ void Particle::setLocalMomentum(SpaceBin* bin){
 		if(localV < (1 + epsilon)*speed_of_light){
 			localV = (1 - epsilon)*speed_of_light;
 		} else {
-			printf("aaa");
+			printf("localV > c");
 		}
 	}
 
@@ -481,7 +481,7 @@ void Particle::setLocalMomentum(SpaceBin* bin){
 	//}
 
 	if(localMomentum != localMomentum){
-		printf("aaa");
+		printf("localMomentum != localMomentum");
 	}
 	localMomentumX = mass*particleLocalV.x/sqrt(1 - localV*localV/c2);
 	localMomentumY = mass*particleLocalV.y/sqrt(1 - localV*localV/c2);
@@ -497,7 +497,7 @@ double Particle::getAbsoluteV(){
 	double sqrp = absoluteMomentum*absoluteMomentum;
 	double v = sqrt(sqrp/(sqrm+sqrp/sqrc));
 	if( v != v){
-		printf("aaa");
+		printf("v != v");
 	}
 	return v;
 }
@@ -508,7 +508,7 @@ double Particle::getLocalV(){
 	double sqrp = localMomentum*localMomentum;
 	double v = sqrt(sqrp/(sqrm+sqrp/sqrc));
 	if( v != v){
-		printf("aaa");
+		printf("v != v");
 	}
 	return v;
 }
