@@ -47,7 +47,7 @@ void Simulation::initializeProfile(){
 	double Theta = deltaTheta/2;
 	double Phi = deltaPhi/2;
 	bins = new SpaceBin***[rgridNumber];
-	zeroBin = new SpaceBin(R - deltaR,Theta,Phi,deltaR,deltaTheta,deltaPhi,U0,density0,Theta,Phi,temperature,B0,-1,0,0);
+	zeroBin = new SpaceBin(-zeroBinScale*deltaR/2,Theta,Phi,zeroBinScale*deltaR,deltaTheta,deltaPhi,U0,density0,Theta,Phi,temperature,B0,-1,0,0);
     for(int i = 0; i < rgridNumber; ++i){
 		bins[i] = new SpaceBin**[thetagridNumber];
 		Theta = deltaTheta/2;
@@ -463,9 +463,9 @@ void Simulation::introduceNewParticles(){
 	std::list<Particle*> list = std::list<Particle*>();
 
 	zeroBin->initialMomentum = 0;
-	for( int l = 0; l < particlesNumber; ++l){
+	for( int l = 0; l < zeroBinScale*particlesNumber; ++l){
 		Particle* particle = new Particle( A, Z,zeroBin, true);
-		particle->weight /= particlesNumber;
+		particle->weight /= zeroBinScale*particlesNumber;
 		startPDF.push_front(particle);
 		list.push_front(particle);
 		double v = particle->getAbsoluteV();
@@ -498,8 +498,13 @@ void Simulation::introduceNewParticles(){
 			printf("out of bound in introduceNewParticles()\n");
 		}
 		if(time < timeStep){
-			while((index[0] >= 0)){
-				SpaceBin* bin = bins[index[0]][index[1]][index[2]];
+			while((index[0] >= -zeroBinScale)){
+				SpaceBin* bin;
+				if(index[0] < 0){
+					bin = zeroBin;
+				} else {
+					bin = bins[index[0]][index[1]][index[2]];
+				}
 				if(time != time){
 					printf("time != time\n");
 				}
@@ -527,16 +532,19 @@ void Simulation::introduceNewParticles(){
 		}
 	}
 
-	it = zeroBin->detectedParticlesR2.begin();
+	/*it = zeroBin->detectedParticlesR2.begin();
 	while(it != zeroBin->detectedParticlesR2.end()){
 		Particle* particle = *it;
 		introducedParticles.push_front(new Particle(*particle));
 		++it;
-	}
+	}*/
 
 	it = list.begin();
 	while(it != list.end()){
 		Particle* particle = *it;
+		if(particle->absoluteZ > 0){
+			introducedParticles.push_front(new Particle(*particle));
+		}
 		delete particle;
 		++it;
 	}

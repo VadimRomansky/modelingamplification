@@ -12,7 +12,7 @@ class Particle;
 
 class SpaceBin{
 public:
-	static const int defaultTimeRelation = 200;
+	static const int defaultTimeRelation = 5;
 
 	double r;
 	double r1;
@@ -73,7 +73,7 @@ public:
 	~SpaceBin();
 	int* propagateParticle(Particle* particle ,double& time, double timeStep);
 	double getFreePath(Particle* particle);
-	void makeOneStep(Particle* particle, double deltat);
+	void makeOneStep(Particle* particle, double deltat, double& time);
 	bool isInBin(Particle* particle);
 	bool isInThisOrNear(double r, double theta, double phi);
 	static int* binByCoordinates(double r, double theta, double phi, double r0, double deltar, double deltatheta, double deltaphi); 
