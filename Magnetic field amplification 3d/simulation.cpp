@@ -102,7 +102,7 @@ void Simulation::simulate(){
 		int l = 0;
 		printf("%s", "Iteration started\n");
 		if(itNumber == 0){
-			printf("%s","First iteration");
+			printf("%s","First iteration\n");
 		} else {
 			printf("%s", "Particle propagation\n");
 			std::list<Particle*>::iterator it = introducedParticles.begin();
@@ -114,6 +114,9 @@ void Simulation::simulate(){
 				bool side = false;
 				double r = sqrt(particle->absoluteX*particle->absoluteX + particle->absoluteY*particle->absoluteY + particle->absoluteZ*particle->absoluteZ);
 				double theta = acos(particle->absoluteZ/r);
+				if(abs(r) < DBL_EPSILON){
+					theta = pi/2;
+				}
 				double phi =atan2(particle->absoluteY, particle->absoluteX);
 				if(phi < 0){
 					phi = phi + 2*pi;
@@ -131,7 +134,7 @@ void Simulation::simulate(){
 					//std::cout<<number<<"\n";
 					SpaceBin* bin = bins[index[0]][index[1]][index[2]];
 					if(time != time){
-						printf("aaa");
+						printf("time != time\n");
 					}
 					int* tempIndex = bin->propagateParticle(particle,time, timeStep);
 					delete[] index;
@@ -164,7 +167,7 @@ void Simulation::simulate(){
 		fclose(outIteration);
 		double maxp;
 		double minp;
-		updateMaxMinP(minp, maxp);
+		//updateMaxMinP(minp, maxp);
 		std::list<Particle*> list = std::list<Particle*>();
 		for(int j = 0; j < thetagridNumber; ++j){
 			for(int k = 0; k < phigridNumber; ++k){
@@ -207,7 +210,7 @@ void Simulation::resetProfile(){
 			double p = bins[i][0][0]->density*bins[i][0][0]->volume*bins[i][0][0]->U/(sqrt(1 - sqr(bins[i][0][0]->U/speed_of_light)));
 			p = p + deltaP;
 			if(abs(deltaP) > abs(p)){
-				printf("aaaaaaaaa");
+				printf("deltaP > p\n");
 			}
 			double m = bins[i][0][0]->density*bins[i][0][0]->volume;
 			bins[i][0][0]->density += deltaM/(bins[i][0][0]->volume);
@@ -228,7 +231,7 @@ void Simulation::resetProfile(){
 		}
 	}
 
-	std::list<Particle*>::iterator it = introducedParticles.begin();
+	/*std::list<Particle*>::iterator it = introducedParticles.begin();
 	while(it != introducedParticles.end()){
 		Particle* particle = *it;
 		int* index = SpaceBin::binByCoordinates(particle->absoluteZ, particle->getAbsoluteTheta(), particle->getAbsolutePhi(), upstreamR, deltaR, deltaTheta, deltaPhi);
@@ -237,7 +240,7 @@ void Simulation::resetProfile(){
 			particle->setLocalMomentum(bin->U, bin->UTheta, bin->UPhi);
 		}
 		++it;
-	}
+	}*/
 }
 
 ////обнуляет счётчики зарегистрированных частиц
@@ -276,6 +279,9 @@ std::list <Particle> Simulation::getParticleGaussDistribution(int number){
 		double y = uniRandom() - 0.5;
 		double z = uniRandom() - 0.5;
 		double theta = acos(z/sqrt(x*x + y*y +z*z));
+		if( abs(x*x + y*y +z*z) < DBL_EPSILON){
+			theta = pi/2;
+		}
 		double phi = atan2(y,x);
 		Particle particle = Particle(upstreamR*sin(theta)*cos(phi),upstreamR*sin(theta)*sin(phi),upstreamR*cos(theta),temperature,A,Z, U0, theta, phi);
 		particle.weight = 1.0/number;
@@ -624,8 +630,14 @@ std::list <Particle*> Simulation::getParticles(){
 SpaceBin* Simulation::getStartBin(double theta, double phi){
 	double deltaTheta = pi/thetagridNumber;
 	double deltaPhi = 2*pi/phigridNumber;
-	int j = lowerInt(theta / deltaTheta);
-	int k = lowerInt(phi / deltaPhi);
+	int j = lowerInt(theta/deltaTheta);
+	if( theta == pi ){
+		theta = thetagridNumber - 1;
+	}
+	int k = lowerInt(phi/deltaPhi);
+	if (phi == 2*pi){
+		k = 0;
+	}
 	return bins[0][j][k];
 }
 

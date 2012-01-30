@@ -60,15 +60,15 @@ SpaceBin::~SpaceBin(){
 
 int* SpaceBin::propagateParticle(Particle* particle ,double& time, double timeStep){
 	if(time != time){
-		printf("aaa");
+		printf("aaa\n");
 	}
 	particle->setLocalMomentum(U,UTheta,UPhi);
 	double lambda = getFreePath(particle);
 	if(lambda != lambda){
-		printf("aaa");
+		printf("aaa\n");
 	}
 	if(lambda == 0){
-		printf("bbbbbbb");
+		printf("lambda == 0\n");
 	}
 	//double c2 = speed_of_light*speed_of_light;
 	double gammaFactor = 1/sqrt(1 - U*U/c2);
@@ -86,10 +86,10 @@ int* SpaceBin::propagateParticle(Particle* particle ,double& time, double timeSt
 		}
 		time += colisionTime/gammaFactor;
 		if(time != time){
-			printf("aaa");
+			printf("aaa\n");
 		}
 		if(colisionTime != colisionTime){
-			printf("aaa");
+			printf("aaa\n");
 		}
 		makeOneStep(particle, colisionTime);
 	}
@@ -110,6 +110,9 @@ int* SpaceBin::propagateParticle(Particle* particle ,double& time, double timeSt
 
 	double r = sqrt(particle->absoluteX*particle->absoluteX + particle->absoluteY*particle->absoluteY + particle->absoluteZ*particle->absoluteZ);
 	double theta = acos(particle->absoluteZ/r);
+	if( abs(r) < DBL_EPSILON){
+		theta = pi/2;
+	}
 	double phi = atan2(particle->absoluteY, particle->absoluteX);
 	if(phi < 0) {
 		phi = phi + 2*pi;
@@ -183,8 +186,11 @@ void SpaceBin::makeOneStep(Particle* particle, double colisionTime){
 
 	double tempr = sqrt(tempx*tempx + tempy*tempy +tempz*tempz);
 	double temptheta = acos(tempz/tempr);
+	if(abs(tempr) < DBL_EPSILON){
+		temptheta = theta;
+	}
 	double tempphi = atan2(tempy, tempx);
-	if(tempphi < 0){
+	if(tempphi < 0.0){
 		tempphi = tempphi + 2*pi;
 	}
 
@@ -220,6 +226,9 @@ void SpaceBin::makeOneStep(Particle* particle, double colisionTime){
 
 		tempr = sqrt(tempx*tempx + tempy*tempy +tempz*tempz);
 		temptheta = acos(tempz/tempr);
+		if(abs(tempr) < DBL_EPSILON){
+			temptheta = theta;
+		}
 		tempphi = atan2(tempy, tempx);
 		if(tempphi < 0){
 			tempphi = tempphi + 2*pi;
@@ -244,12 +253,35 @@ void SpaceBin::makeOneStep(Particle* particle, double colisionTime){
 
 void SpaceBin::scattering(Particle* particle, double maxTheta){
 	double localTheta = acos(particle->localMomentumZ/particle->localMomentum);
+	if(abs(particle->localMomentum) < DBL_EPSILON){
+		localTheta = pi/2;
+	}
 	double localPhi = atan2(particle->localMomentumY, particle->localMomentumX);
-	double deltaTheta = acos(1-uniRandom()*(1-cos(maxTheta)));
+	double cosDeltaTheta = 1-uniRandom()*(1-cos(maxTheta));
+	if(abs(cosDeltaTheta > 1)){
+		printf("cosDeltaTheta > 1\n");
+	}
+	double deltaTheta = acos(cosDeltaTheta);
 	double deltaPhi = uniRandom()*2*pi;
-	localTheta = acos(cos(localTheta)*cos(deltaTheta)+sin(localTheta)*sin(deltaTheta)*cos(deltaPhi));
+	double cosLocalTheta = cos(localTheta)*cosDeltaTheta+sin(localTheta)*sin(deltaTheta)*cos(deltaPhi);
+	localTheta = acos(cosLocalTheta);
+	if( cosLocalTheta > 1){
+		printf("cosLocalTheta > 1\n");
+		localTheta = 0;
+	}
+	if( cosLocalTheta < -1){
+		printf("cosLocalTheta < -1\n");
+		localTheta = pi;
+	}
 	double sinLocalTheta = sin(localTheta);
-	localPhi = localPhi - asin(sin(deltaPhi)*sin(deltaTheta)/sinLocalTheta);
+	double sinDeltaPhi = sin(deltaPhi)*sin(deltaTheta)/sinLocalTheta;
+	if(abs(sinDeltaPhi > 1)){
+		printf("sinDeltaPhi > 1\n");
+	}
+	localPhi = localPhi - asin(sinDeltaPhi);
+	if(abs(sinLocalTheta) < DBL_EPSILON){
+		localPhi = 0;
+	}
 	particle->localMomentumZ = particle->localMomentum*cos(localTheta);
 	particle->localMomentumX = particle->localMomentum*sinLocalTheta*cos(localPhi);
 	particle->localMomentumY = particle->localMomentum*sinLocalTheta*sin(localPhi);

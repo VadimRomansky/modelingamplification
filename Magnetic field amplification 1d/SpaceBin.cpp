@@ -138,6 +138,9 @@ int* SpaceBin::propagateParticle(Particle* particle ,double& time, double timeSt
 
 	double r = sqrt(particle->absoluteX*particle->absoluteX + particle->absoluteY*particle->absoluteY + particle->absoluteZ*particle->absoluteZ);
 	double theta = acos(particle->absoluteZ/r);
+	if( abs(r) < DBL_EPSILON){
+		theta = pi/2;
+	}
 	double phi = atan2(particle->absoluteY, particle->absoluteX);
 	if(phi < 0) {
 		phi = phi + 2*pi;
@@ -273,12 +276,35 @@ void SpaceBin::makeOneStep(Particle* particle, double colisionTime){
 
 void SpaceBin::scattering(Particle* particle, double maxTheta){
 	double localTheta = acos(particle->localMomentumZ/particle->localMomentum);
+	if(particle->localMomentum == 0.0){
+		localTheta = pi/2;
+	}
 	double localPhi = atan2(particle->localMomentumY, particle->localMomentumX);
-	double deltaTheta = acos(1-uniRandom()*(1-cos(maxTheta)));
+	double cosDeltaTheta = 1-uniRandom()*(1-cos(maxTheta));
+	if(abs(cosDeltaTheta > 1)){
+		printf("cosDeltaTheta > 1\n");
+	}
+	double deltaTheta = acos(cosDeltaTheta);
 	double deltaPhi = uniRandom()*2*pi;
-	localTheta = acos(cos(localTheta)*cos(deltaTheta)+sin(localTheta)*sin(deltaTheta)*cos(deltaPhi));
+	double cosLocalTheta = cos(localTheta)*cosDeltaTheta+sin(localTheta)*sin(deltaTheta)*cos(deltaPhi);
+	localTheta = acos(cosLocalTheta);
+	if( cosLocalTheta > 1){
+		printf("cosLocalTheta > 1\n");
+		localTheta = 0;
+	}
+	if( cosLocalTheta < -1){
+		printf("cosLocalTheta < -1\n");
+		localTheta = pi;
+	}
 	double sinLocalTheta = sin(localTheta);
-	localPhi = localPhi - asin(sin(deltaPhi)*sin(deltaTheta)/sinLocalTheta);
+	double sinDeltaPhi = sin(deltaPhi)*sin(deltaTheta)/sinLocalTheta;
+	if(abs(sinDeltaPhi > 1)){
+		printf("sinDeltaPhi > 1\n");
+	}
+	localPhi = localPhi - asin(sinDeltaPhi);
+	if(abs(sinLocalTheta) < DBL_EPSILON){
+		localPhi = 0;
+	}
 	particle->localMomentumZ = particle->localMomentum*cos(localTheta);
 	particle->localMomentumX = particle->localMomentum*sinLocalTheta*cos(localPhi);
 	particle->localMomentumY = particle->localMomentum*sinLocalTheta*sin(localPhi);
@@ -436,6 +462,17 @@ void SpaceBin::resetDetectors(){
 	delete matrix;
 	delete invertMatrix;
 	matrix = Matrix3d::createBasisByOneVector(vector3d(ux,uy,uz));
+	if((0*matrix->matrix[0][0] != 0*matrix->matrix[0][0])
+		||(0*matrix->matrix[0][1] != 0*matrix->matrix[0][1])
+		||(0*matrix->matrix[0][2] != 0*matrix->matrix[0][2])
+		||(0*matrix->matrix[1][0] != 0*matrix->matrix[1][0])
+		||(0*matrix->matrix[1][1] != 0*matrix->matrix[1][1])
+		||(0*matrix->matrix[1][2] != 0*matrix->matrix[1][2])
+		||(0*matrix->matrix[2][0] != 0*matrix->matrix[2][0])
+		||(0*matrix->matrix[2][1] != 0*matrix->matrix[2][1])
+		||(0*matrix->matrix[2][2] != 0*matrix->matrix[2][2])){
+		printf("NaN matrix\n");
+	}
 	invertMatrix = matrix->Inverse();
 	//momentaFlux.reset();
 	//energyFlux.reset();
