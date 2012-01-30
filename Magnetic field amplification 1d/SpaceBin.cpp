@@ -109,17 +109,17 @@ int* SpaceBin::propagateParticle(Particle* particle ,double& time, double timeSt
 			//printf("%d \n",l);
 		}
 	//while(((particle.absoluteR > r1)&&(particle.absoluteR < r2))&&((particle.absoluteTheta > theta1)&&(particle.absoluteTheta < theta2))&&((particle.absolutePhi > phi1)&&(particle.absolutePhi < phi2))){
-		if(colisionTime > gammaFactor*(timeStep - time)){
-			colisionTime = gammaFactor*(timeStep - time);
+		if(colisionTime > defaultTimeRelation*gammaFactor*(timeStep - time)){
+			colisionTime = defaultTimeRelation*gammaFactor*(timeStep - time);
 		}
-		time += colisionTime/gammaFactor;
+		//time += colisionTime/(defaultTimeRelation*gammaFactor);
 		if(time != time){
 			printf("time != time");
 		}
 		if(colisionTime != colisionTime){
 			printf("colisionTime != colisionTime");
 		}
-		makeOneStep(particle, colisionTime);
+		makeOneStep(particle, colisionTime, time);
 	}
 	/*if(particle.absoluteTheta < 0){
 		particle.absoluteTheta = -particle.absoluteTheta;
@@ -201,7 +201,7 @@ double SpaceBin::getFreeTime(Particle* particle){
 	return lambda/particle->getLocalV();
 }
 
-void SpaceBin::makeOneStep(Particle* particle, double colisionTime){
+void SpaceBin::makeOneStep(Particle* particle, double colisionTime, double& time){
 	double deltat = colisionTime/defaultTimeRelation;
 	double particleU = particle->getAbsoluteV();
 	double localMomentum = particle->localMomentum;
@@ -264,6 +264,7 @@ void SpaceBin::makeOneStep(Particle* particle, double colisionTime){
 			//printf("bbb");
 		}
 	}
+	time += deltat;
 
 	double maxTheta = sqrt(6*deltat/colisionTime);
 

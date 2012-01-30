@@ -13,7 +13,7 @@ const double relativistic_gamma = 1.3333333333;
 const double maxMomentum = 5.0E-19;
 const double weight = 0.05;
 const int pgridNumber = 50;
-const double defaultTimeStep = 10;
+const double defaultTimeStep = 1;
 const int rgridNumber = 600;
 const int phigridNumber = 1;
 const int thetagridNumber = 1;
@@ -25,5 +25,6 @@ const int shockWavePoint = 5;
 const int generationSize = 10;
 const double startX = 100;
 const double startY = 100;
+const double zeroBinScale = 100;
 
 #endif
