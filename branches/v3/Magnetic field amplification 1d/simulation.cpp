@@ -88,14 +88,14 @@ void Simulation::simulate(){
 		int l = 0;
 		printf("%s", "Iteration started\n");
 		if(itNumber == 0){
-			printf("%s","First iteration");
+			printf("%s","First iteration\n");
 			prevPoint = downstreamR;
 			shockWavePoints.push_back(prevPoint);
 			shockWaveVelocity.push_back(0.0);
 		} else {
-			if(itNumber == 218){
+			/*if(itNumber == 218){
 				printf("aaa");
-			}
+			}*/
 			printf("%s", "Particle propagation\n");
 			std::list<Particle*>::iterator it = introducedParticles.begin();
 			while( it != introducedParticles.end()){
@@ -106,23 +106,33 @@ void Simulation::simulate(){
 				bool side = false;
 				double r = particle->getAbsoluteR();
 				double theta = acos(particle->absoluteZ/r);
+				if( abs(r) < DBL_EPSILON){
+					printf("r < epsilon\n");
+					theta = pi/2;
+				}
+				if(r == 0.0){
+					theta = pi/2;
+				}
 				double phi =atan2(particle->absoluteY, particle->absoluteX);
 				if(phi < 0){
 					phi = phi + 2*pi;
 				}
 				int* index = SpaceBin::binByCoordinates(particle->absoluteZ, theta, phi,upstreamR,deltaR,deltaTheta,deltaPhi);
+				if((index[1] >= thetagridNumber) || (index[1] < 0) || (index[2] >= phigridNumber) || (index[2] < 0)){
+					printf("out of bound in simulate()\n");
+				}
 				double time = 0;
 				while((index[0] >= 0)){
 					j++;
 					SpaceBin* bin = bins[index[0]][index[1]][index[2]];
 					if(time != time){
-						printf("time != time");
+						printf("time != time\n");
 					}
 					int* tempIndex = bin->propagateParticle(particle,time, timeStep);
 					delete[] index;
 					index = tempIndex;
 					if(index[0] > rgridNumber){
-						printf("index[0] > rgridNumber");
+						printf("index[0] > rgridNumber\n");
 					}
 					if(index[0] == rgridNumber){
 						//bin = bins[rgridNumber - 1][index[1]][index[2]];
@@ -156,8 +166,8 @@ void Simulation::simulate(){
 			printf("%s", "Reseting profile\n");
 			resetProfile();
 			collectAverageVelocity();
-			resetVelocity();
-			findShockWavePoint();
+			//resetVelocity();
+			//findShockWavePoint();
 			printf("%s", "magnetic Field updating\n");
 			//updateMagneticField();
 			//output(*this);
@@ -172,7 +182,7 @@ void Simulation::simulate(){
 		fclose(outIteration);
 		double maxp;
 		double minp;
-		updateMaxMinP(minp, maxp);
+		//updateMaxMinP(minp, maxp);
 		std::list<Particle*> list = std::list<Particle*>();
 		for(int j = 0; j < thetagridNumber; ++j){
 			for(int k = 0; k < phigridNumber; ++k){
@@ -181,8 +191,10 @@ void Simulation::simulate(){
 		}
 		//outputPDF(list,"./output/tamc_pdf_down.dat",*this,minp,maxp);
 		//outputStartPDF(list,"./output/tamc_pdf_start.dat",*this,minp,maxp);
-		outputRadialProfile(bins,0,0,radialFile,averageVelocity);
-		outputShockWave(shockWavePoints, shockWaveVelocity);
+		//if(itNumber % 10 == 0){
+			outputRadialProfile(bins,0,0,radialFile,averageVelocity);
+		//}
+		//outputShockWave(shockWavePoints, shockWaveVelocity);
 		fclose(radialFile);
 	}
 }
@@ -232,12 +244,12 @@ void Simulation::resetProfile(){
 				if(abs(bins[i][0][0]->massVelocity) < (1 + epsilon)*speed_of_light){
 					bins[i][0][0]->massVelocity = (1 - epsilon)*speed_of_light;
 				}
-				printf("abs(bins[i][0][0]->massVelocity) > speed_of_light");
+				printf("abs(bins[i][0][0]->massVelocity) > speed_of_light\n");
 			}
 		}
 	}
 
-	std::list<Particle*>::iterator it = introducedParticles.begin();
+	/*std::list<Particle*>::iterator it = introducedParticles.begin();
 	while(it != introducedParticles.end()){
 		Particle* particle = *it;
 		int* index = SpaceBin::binByCoordinates(particle->absoluteZ, particle->getAbsoluteTheta(), particle->getAbsolutePhi(), upstreamR, deltaR, deltaTheta, deltaPhi);
@@ -246,7 +258,7 @@ void Simulation::resetProfile(){
 			particle->setLocalMomentum(bin->U, bin->UTheta, bin->UPhi);
 		}
 		++it;
-	}
+	}*/
 }
 
 ////обнуляет счётчики зарегистрированных частиц
@@ -273,6 +285,9 @@ std::list <Particle> Simulation::getParticleGaussDistribution(int number){
 		double y = uniRandom() - 0.5;
 		double z = uniRandom() - 0.5;
 		double theta = acos(z/sqrt(x*x + y*y +z*z));
+		if( abs(x*x + y*y +z*z) < DBL_EPSILON){
+			theta = pi/2;
+		}
 		double phi = atan2(y,x);
 		Particle particle = Particle(upstreamR*sin(theta)*cos(phi),upstreamR*sin(theta)*sin(phi),upstreamR*cos(theta),temperature,A,Z, U0, theta, phi);
 		particle.weight = 1.0/number;
@@ -322,7 +337,7 @@ double Simulation::cascadingDerivativeK(double w,double k,double rho){
 		double result =  (5.0/3.0)*power(w,3.0/2.0)*power(k,2.0/3.0)*power(rho,-1.0/2.0);
 		double x = result*0;
 		if((x != x)||(result != result)){
-			printf("%s","NaN cDK");
+			printf("%s","NaN cDK\n");
 		}
 		return result;
 	} else {
@@ -405,8 +420,14 @@ std::list <Particle*> Simulation::getParticles(){
 SpaceBin* Simulation::getStartBin(double theta, double phi){
 	double deltaTheta = pi/thetagridNumber;
 	double deltaPhi = 2*pi/phigridNumber;
-	int j = lowerInt(theta / deltaTheta);
-	int k = lowerInt(phi / deltaPhi);
+	int j = lowerInt(theta/deltaTheta);
+	if( theta == pi ){
+		theta = thetagridNumber - 1;
+	}
+	int k = lowerInt(phi/deltaPhi);
+	if (phi == 2*pi){
+		k = 0;
+	}
 	return bins[0][j][k];
 }
 
@@ -460,23 +481,33 @@ void Simulation::introduceNewParticles(){
 		bool side = false;
 		double r = particle->getAbsoluteR();
 		double theta = acos(particle->absoluteZ/r);
+		if( abs(r) < DBL_EPSILON){
+			printf("r < epsilon\n");
+			theta = pi/2;
+		}
+		if( r == 0.0){
+			theta = pi/2;
+		}
 		double phi =atan2(particle->absoluteY, particle->absoluteX);
 		if(phi < 0){
 			phi = phi + 2*pi;
 		}
 		double time = 0;
 		int* index = zeroBin->propagateParticle(particle, time, timeStep);
+		if((index[1] >= thetagridNumber) || (index[1] < 0) || (index[2] >= phigridNumber) || (index[2] < 0)){
+			printf("out of bound in introduceNewParticles()\n");
+		}
 		if(time < timeStep){
 			while((index[0] >= 0)){
 				SpaceBin* bin = bins[index[0]][index[1]][index[2]];
 				if(time != time){
-					printf("time != time");
+					printf("time != time\n");
 				}
 				int* tempIndex = bin->propagateParticle(particle,time, timeStep);
 				delete[] index;
 				index = tempIndex;
 				if(index[0] > rgridNumber){
-					printf("index[0] > rgridNumber");
+					printf("index[0] > rgridNumber\n");
 				}
 				if(index[0] == rgridNumber){
 					index[0] = rgridNumber - 1;
@@ -542,6 +573,9 @@ void Simulation::collectAverageVelocity(){
 		++it;
 		double r = particle->getAbsoluteR();
 		double theta = acos(particle->absoluteZ/r);
+		if( abs(r) < DBL_EPSILON){
+			theta = pi/2;
+		}
 		double phi =atan2(particle->absoluteY, particle->absoluteX);
 		if(phi < 0){
 			phi = phi + 2*pi;
@@ -555,9 +589,13 @@ void Simulation::collectAverageVelocity(){
 	}
 
 	for(int i = 0; i < rgridNumber; ++i){
-		averageVelocity[i] /= count[i];
-		bins[i][0][0]->averageVelocity = averageVelocity[i];
-		bins[i][0][0]->U = averageVelocity[i];
+		if(count[i] != 0){
+			averageVelocity[i] /= count[i];
+			bins[i][0][0]->averageVelocity = averageVelocity[i];
+			bins[i][0][0]->U = averageVelocity[i];
+		} else {
+			printf("0 particles in bin\n");
+		}
 	}
 
 	delete[] count;
@@ -573,6 +611,13 @@ void Simulation::resetVelocity(){
 		++it;
 		double r = particle->getAbsoluteR();
 		double theta = acos(particle->absoluteZ/r);
+		if( abs(r) < DBL_EPSILON){
+			printf("r < epsilon");
+			theta = pi/2;
+		}
+		if( r == 0.0){
+			theta = pi/2;
+		}
 		double phi =atan2(particle->absoluteY, particle->absoluteX);
 		if(phi < 0){
 			phi = phi + 2*pi;

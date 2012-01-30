@@ -88,6 +88,9 @@ vector3d Matrix3d::multiply(const vector3d& v){
 }
 
 Matrix3d* Matrix3d::createBasisByOneVector(const vector3d& v){
+	if (abs(v.z*v.z + v.y*v.y + v.x*v.x) < DBL_EPSILON){
+		return new Matrix3d(1,0,0,0,1,0,0,0,1);
+	}
 	double theta = acos(v.z/sqrt(v.z*v.z + v.y*v.y + v.x*v.x));
 	double phi = atan2(v.y,v.x);
 	return new Matrix3d(sin(phi),cos(theta)*cos(phi),sin(theta)*cos(phi),-cos(phi),cos(theta)*sin(phi),sin(theta)*sin(phi),0,-sin(theta),cos(theta));

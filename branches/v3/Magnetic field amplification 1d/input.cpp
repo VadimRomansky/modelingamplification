@@ -18,11 +18,10 @@ Simulation* readInput(){
 		//fscanf(infile,"%lf",&simulation->freeEscapeBoundary);
 		fscanf(infile,"%lf",&simulation->upstreamR);
 		fscanf(infile,"%lf",&simulation->downstreamR);
-		fscanf(infile,"%lf",&simulation->gridParameter);		
+		fclose(infile);
 		return simulation;
 	} else {
 		return NULL;
 	}
-	fclose(infile);
 }
 	

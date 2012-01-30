@@ -2,6 +2,7 @@
 //
 
 #include "stdafx.h"
+#include <crtdbg.h>
 #include "input.h"
 #include "simulation.h"
 
@@ -12,6 +13,7 @@ int main()
 {
 	//printf("Hello, world!");
 	/*const Constant::massProton = 1;*/
+	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF | _CRTDBG_CHECK_ALWAYS_DF);
 	srand ( time(NULL) );
 	Simulation* simulation = readInput();
 	simulation->simulate();
