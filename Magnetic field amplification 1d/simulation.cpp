@@ -172,10 +172,13 @@ void Simulation::simulate(){
 			//updateMagneticField();
 			//output(*this);
 			removeEscapedParticles();
+			sortParticlesIntoBins();
+			updateCosmicRayBoundMomentum();
 			resetDetectors();
 			printf("%s","iteration ¹ ");
 			printf("%d\n",itNumber);
 		}
+		outputPDF(introducedParticles,"./output/tamc_pdf.dat");
 		outIteration = fopen("./output/tamc_iteration.dat","a");
 		radialFile = fopen("./output/tamc_radial_profile.dat","a");
 		fprintf(outIteration,"%s %d \n","iteration number ",itNumber);
@@ -408,6 +411,9 @@ std::list <Particle*> Simulation::getParticles(){
 						list.push_front(particle);
 						double v = particle->getAbsoluteV();
 						double vr = v*cos(particle->absoluteMomentumTheta); 
+						if(abs(v*v/c2 - 1) < DBL_EPSILON){
+							printf("v = c\n in getParticles");
+						}
 						bin->initialMomentum += vr*particle->mass*particle->weight/sqrt(1 - (v*v)/c2);
 					//}
 				}
@@ -470,6 +476,9 @@ void Simulation::introduceNewParticles(){
 		list.push_front(particle);
 		double v = particle->getAbsoluteV();
 		double vr = v*cos(particle->absoluteMomentumTheta); 
+		if(abs(v*v/c2 - 1) < DBL_EPSILON){
+			printf("v = c\n in introdeceNewParticles");
+		}
 		zeroBin->initialMomentum += vr*particle->mass*particle->weight/sqrt(1 - (v*v)/c2);
 	}
 
@@ -684,4 +693,35 @@ void Simulation::findShockWavePoint(){
 	shockWavePoints.push_back(nextPoint);
 	shockWaveVelocity.push_back((nextPoint - prevPoint)/timeStep);
 	prevPoint = nextPoint;
+}
+
+void Simulation::sortParticlesIntoBins(){
+	std::list<Particle*>::iterator it = introducedParticles.begin();
+	while( it != introducedParticles.end()){
+		Particle* particle = *it;
+		double r = particle->getAbsoluteR();
+		double theta = acos(particle->absoluteZ/r);
+		if( abs(r) < DBL_EPSILON){
+			printf("r < epsilon");
+			theta = pi/2;
+		}
+		if( r == 0.0){
+			theta = pi/2;
+		}
+		double phi =atan2(particle->absoluteY, particle->absoluteX);
+		if(phi < 0){
+			phi = phi + 2*pi;
+		}
+		int* index = SpaceBin::binByCoordinates(particle->absoluteZ, theta, phi,upstreamR,deltaR,deltaTheta,deltaPhi);
+		if((index[0] >= 0) && (index[0] < rgridNumber) && (index[1] >= 0) && (index[1] < thetagridNumber) && (index[2] >= 0) && (index[2] < phigridNumber)){
+			bins[index[0]][index[1]][index[2]]->particles.push_back(new Particle(*particle));
+		}
+		++it;
+	}
+}
+
+void Simulation::updateCosmicRayBoundMomentum(){
+	for(int i = 0; i < rgridNumber; ++i){
+		bins[i][0][0]->updateCosmicRayBoundMomentum();
+	}
 }

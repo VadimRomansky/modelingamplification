@@ -82,9 +82,11 @@ public:
 	void removeEscapedParticles();
 	void collectAverageVelocity();
 	void resetVelocity();
+	void updateCosmicRayBoundMomentum();
 	int maxVelocityDerivativeIndex();
 	double secondVelocityDerivative(int i);
 	double thirdVelocityDerivative(int i);
+	void sortParticlesIntoBins();
 
 	double solveSecondDerivativeZero(int i);
 	void findShockWavePoint();

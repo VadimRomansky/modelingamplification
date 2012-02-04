@@ -14,6 +14,7 @@ SpaceBin::SpaceBin(){
 	}
 	sortedParticles = new std::list<Particle*>[kgridNumber];
 	averageVelocity = 0;
+	cosmicRayBoundMomentum = 0;
 }
 SpaceBin::SpaceBin(double R, double Theta, double Phi, double deltar, double deltatheta, double deltaphi, double u, double rho, double utheta,double uphi, double t, double b, int i, int j, int k){
 	r = R;
@@ -78,7 +79,7 @@ SpaceBin::SpaceBin(double R, double Theta, double Phi, double deltar, double del
 	//u - скорость плазмы в абсолютной СО. Локальная ось z направлена по скорости плазмы
 	matrix = Matrix3d::createBasisByOneVector(vector3d(ux,uy,uz));
 	invertMatrix = matrix->Inverse();
-
+	cosmicRayBoundMomentum = 0;
 }
 
 SpaceBin::~SpaceBin(){
@@ -99,11 +100,13 @@ int* SpaceBin::propagateParticle(Particle* particle ,double& time, double timeSt
 		printf("lambda == 0");
 	}
 	//double c2 = speed_of_light*speed_of_light;
+	if(abs(1 - U*U/c2) < DBL_EPSILON){
+		printf("u = c in propageteParticle\n");
+	}
 	double gammaFactor = 1/sqrt(1 - U*U/c2);
-	double colisionTime = lambda/particle->getLocalV();
+	double colisionTime = getFreeTime(particle);
 	int l = 0;
 	while(isInBin(particle) && (time < timeStep)){
-		//падает где-то здесь
 		l++;
 		if(l > 1000){
 			//printf("%d \n",l);
@@ -198,7 +201,12 @@ double SpaceBin::getFreePath(Particle* particle){
 
 double SpaceBin::getFreeTime(Particle* particle){
 	double lambda = getFreePath(particle);
-	return lambda/particle->getLocalV();
+	if(abs(particle->getLocalV()) > DBL_EPSILON){
+		return lambda/particle->getLocalV();
+	} else {
+		printf("particle localv = 0 in getFreeTime\n");
+		return speed_of_light*particle->mass/(particle->Z*electron_charge*B0);
+	}
 }
 
 void SpaceBin::makeOneStep(Particle* particle, double colisionTime, double& time){
@@ -299,10 +307,11 @@ void SpaceBin::scattering(Particle* particle, double maxTheta){
 	}
 	double sinLocalTheta = sin(localTheta);
 	double sinDeltaPhi = sin(deltaPhi)*sin(deltaTheta)/sinLocalTheta;
-	if(abs(sinDeltaPhi > 1)){
-		printf("sinDeltaPhi > 1\n");
-	}
 	localPhi = localPhi - asin(sinDeltaPhi);
+	if(abs(sinDeltaPhi) > 1){
+		printf("%s %lf\n","sinDeltaPhi > 1",sinDeltaPhi);
+		localPhi = 0;
+	}
 	if(abs(sinLocalTheta) < DBL_EPSILON){
 		localPhi = 0;
 	}
@@ -350,6 +359,9 @@ void SpaceBin::updateCosmicRayFluxes(){
 			particleMassFlux.fluxR1 += particle.mass*particle.weight;
 			double v = particle.getAbsoluteV();
 			double vr = particle.getRadialSpeed(); 
+			if(abs(1 - (v*v)/c2) < DBL_EPSILON){
+				printf("v = c in updateCosmicRayFluxes\n");
+			}
 			particleMomentaFlux.fluxR1 += vr*particle.mass*particle.weight/sqrt(1 - (v*v)/c2);
 			particleEnergyFlux.fluxR1 += particle.weight*particle.getEnergy();
 		}
@@ -362,6 +374,9 @@ void SpaceBin::updateCosmicRayFluxes(){
 			particleMassFlux.fluxR2 += particle.mass*particle.weight;
 			double v = particle.getAbsoluteV();
 			double vr = particle.getRadialSpeed(); 
+			if(abs(1 - (v*v)/c2) < DBL_EPSILON){
+				printf("v = c in updateCosmicRayFluxes\n");
+			}
 			particleMomentaFlux.fluxR2 += vr*vr*particle.mass*particle.weight/sqrt(1 - (v*v)/c2);
 			particleEnergyFlux.fluxR2 += particle.weight*particle.getEnergy();
 		}
@@ -420,6 +435,13 @@ void SpaceBin::resetDetectors(){
 		delete particle;
 		++it;
 	}
+	it = particles.begin();
+	while(it != particles.end()){
+		Particle* particle = *it;
+		delete particle;
+		++it;
+	}
+	particles.clear();
 	detectedParticlesR1.clear();
 	detectedParticlesR2.clear();
 	detectedParticlesTheta1.clear();
@@ -832,6 +854,9 @@ void SpaceBin::detectParticleR1(Particle* particle){
 	double v = particle->getAbsoluteV();
 	double vr = v*cos(particle->absoluteMomentumTheta); 
 	particleMomentaFlux.fluxR1 += vr*particle->mass*particle->weight/sqrt(1 - (v*v)/c2);
+	if(abs(1 - (v*v)/c2) < DBL_EPSILON){
+		printf("v = c in detectParticleR1\n");
+	}
 	particleEnergyFlux.fluxR1 += particle->weight*particle->getEnergy();
 }
 
@@ -844,6 +869,9 @@ void SpaceBin::detectParticleR2(Particle* particle){
 	particleMassFlux.fluxR2 += particle->mass*particle->weight;
 	double v = particle->getAbsoluteV();
 	double vr = v*cos(particle->absoluteMomentumTheta);
+	if(abs(1 - (v*v)/c2) < DBL_EPSILON){
+		printf("v = c in detectParticleR2\n");
+	}
 	particleMomentaFlux.fluxR2 += vr*particle->mass*particle->weight/sqrt(1 - (v*v)/c2);
 	particleEnergyFlux.fluxR2 += particle->weight*particle->getEnergy();
 }
@@ -899,6 +927,72 @@ double SpaceBin::evaluateMomentumFlux(std::list<Particle*>& particles, double u)
 		++it;
 	}
 	return result;
+}
+
+void SpaceBin::updateCosmicRayBoundMomentum(){
+	double particleAverageVz = 0;
+
+	std::list<Particle*>::iterator it = particles.begin();
+
+	if(it == particles.end()){
+		return;
+	}
+
+	double tempMomentum;
+	double* averageVz = new double[pgridNumber];
+	
+	for(int i = 0; i < pgridNumber; ++i){
+		averageVz[i] = 0.0;
+	}
+
+	Particle* particle = *it;
+
+	double minp = particle->localMomentum;
+	double maxp = minp;
+
+	while( it != particles.end()){
+		particle = *it;
+		if(maxp < particle->localMomentum){
+			maxp = particle->localMomentum;
+		}
+		if(minp > particle->localMomentum){
+			minp = particle->localMomentum;
+		}
+		++it;
+	}
+
+	double deltap = (maxp - minp)/(pgridNumber );
+
+	it = particles.begin();
+	while( it != particles.end()){
+		Particle* particle = *it;
+		double p = particle->localMomentum;
+		int i = lowerInt((p - minp)/deltap);
+		if(( i < 0) || (i >= pgridNumber)){
+			//printf("index out of bound in updateCosmicRayBoundMomentum\n");
+			if(i >= pgridNumber){
+				i = pgridNumber - 1;
+			}
+		}
+		if(particle->localMomentum > DBL_EPSILON*sqrt(massProton*kBoltzman*temperature)){
+			averageVz[i] += particle->getLocalV()*particle->localMomentumZ/particle->localMomentum;
+		} else {
+			printf("localMomentum = 0\n");
+		}
+		++it;
+	}
+
+	tempMomentum = 0;
+	double Vz = 0;
+	for(int i = pgridNumber - 1; i >=0; --i){
+		Vz += averageVz[i];
+		if(Vz > 0){
+			tempMomentum = minp + (i + 1)*deltap;
+			break;
+		}
+	}
+	
+	cosmicRayBoundMomentum = tempMomentum;
 }
 
 	
