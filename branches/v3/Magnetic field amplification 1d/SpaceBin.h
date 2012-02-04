@@ -66,6 +66,9 @@ public:
 	std::list <Particle*> detectedParticlesTheta1;
 	std::list <Particle*> detectedParticlesPhi2;
 	std::list <Particle*> detectedParticlesPhi1;
+
+	std::list <Particle*> particles;
+
 	double* magneticField;
 	std::list <Particle*>* sortedParticles;
 
@@ -101,6 +104,10 @@ public:
 	double getMinP();
 	double getMaxLocalP();
 	double getMinLocalP();
+
+	double cosmicRayBoundMomentum;
+
+	void updateCosmicRayBoundMomentum();
 
 	void detectParticleR1(Particle* particle);
 	void detectParticleR2(Particle* particle);

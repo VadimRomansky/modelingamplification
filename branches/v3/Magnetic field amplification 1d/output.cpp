@@ -20,14 +20,14 @@ void output(Simulation& simulation){
 	fclose(outProfile);*/
     SpaceBin* bin = simulation.bins[0][0][0];
 	simulation.updateMaxMinP(maxp,minp);
-	outputPDF(simulation.startPDF,"./output/tamc_pdf_start.dat",simulation,maxp,minp);
-	outputPDF(bin->detectedParticlesR2,"./output/tamc_pdf_FEB.dat",simulation,maxp,minp);
+	outputPDF(simulation.startPDF,"./output/tamc_pdf_start.dat");
+	outputPDF(bin->detectedParticlesR2,"./output/tamc_pdf_FEB.dat");
 	//outputTurbulenceSpectrum(bin->magneticField,"./output/tamc_turb_FEB.dat",simulation.minK,simulation.maxK);
 	bin = simulation.bins[shockWavePoint][0][0];
-	outputPDF(bin->detectedParticlesR2,"./output/tamc_pdf_zero.dat",simulation,maxp,minp);
+	outputPDF(bin->detectedParticlesR2,"./output/tamc_pdf_zero.dat");
 	//outputTurbulenceSpectrum(bin->magneticField,"./output/tamc_turb_zero.dat",simulation.minK,simulation.maxK);
 	bin = simulation.bins[rgridNumber-1][0][0];
-	outputPDF(bin->detectedParticlesR2,"./output/tamc_pdf_down.dat",simulation,maxp,minp);
+	outputPDF(bin->detectedParticlesR2,"./output/tamc_pdf_down.dat");
 	//outputTurbulenceSpectrum(bin->magneticField,"./output/tamc_turb_down.dat",simulation.minK,simulation.maxK);
 	//outputMagneticField(simulation.xbins,"./output/tamc_field.dat");
 	//outputParticlePath(simulation.xbins[xgridNumber - 1]->detectedParticlesRight,"./output/tamc_cosmic_ray_path.dat","./output/tamc_not_cosmic_ray_path.dat");
@@ -41,37 +41,68 @@ void output(Simulation& simulation){
 	//fclose(outParticles);
 }
 
-void outputPDF(std::list< Particle*> l,const char* fileName, Simulation& simulation,double minp,double maxp){
+void outputPDF(std::list< Particle*> list,const char* fileName){
 	FILE* outPDF = fopen(fileName,"w");
-	std::list<Particle*>::iterator it = l.begin();
-	double deltap = (maxp - minp)/(pgridNumber - 1);
+	std::list<Particle*>::iterator it = list.begin();
+	double minp;
+	double maxp;
+	minp = (*it)->absoluteMomentum;
+	maxp = minp;
+	++it;
+	while(it != list.end()){
+		Particle* particle = *it;
+		if(maxp < particle->absoluteMomentum){
+			maxp = particle->absoluteMomentum;
+		}
+		if(maxp < particle->initialMomentum){
+			maxp = particle->initialMomentum;
+		}
+		if(minp > particle->absoluteMomentum){
+			minp = particle->absoluteMomentum;
+		}
+		if(minp > particle->initialMomentum){
+			minp = particle->initialMomentum;
+		}
+		++it;
+	}
 	double* distribution = new double[pgridNumber];
+	double* startDistribution = new double[pgridNumber];
 	for (int i = 0; i < pgridNumber; ++i){
 		distribution[i] = 0;
+		startDistribution[i] = 0;
 	}
 	int particleNumber = 0;
 	double mass;
-	while(it != l.end()){
+	double deltap = (maxp - minp)/(pgridNumber - 1);
+	it = list.begin();
+	while(it != list.end()){
 		particleNumber++;
 		Particle* particle = *it;
 		mass = particle->mass;
 		++it;
-		//double p = particle.momentum - particle.mass*simulation.U0;
 		double p = particle->absoluteMomentum;
-		//if (p >= maxMomentum){
 		if (p >= maxp){
 			distribution[pgridNumber-1]+=particle->weight;
 		}
 		for(int i =0; i< pgridNumber-1; ++i){
-			//if (p < maxMomentum*(i+1)/(pgridNumber-2))	{
 			if (p <minp + deltap*(i + 1)){
 				distribution[i] += particle->weight;
 				break;
 			}
 		}
+		p = particle->initialMomentum;
+		if (p >= maxp){
+			startDistribution[pgridNumber-1]+=particle->weight;
+		}
+		for(int i =0; i< pgridNumber-1; ++i){
+			if (p <minp + deltap*(i + 1)){
+				startDistribution[i] += particle->weight;
+				break;
+			}
+		}
 	}
 	for(int i = 0; i < pgridNumber; ++i){
-		fprintf(outPDF,"%lf %lf\n", 10000000000000*(minp + i*deltap), (distribution[i]/particleNumber));
+		fprintf(outPDF,"%lf %lf %lf\n", 10000000000000*(minp + i*deltap), (distribution[i]/particleNumber), (startDistribution[i]/particleNumber));
 	}
 	fclose(outPDF); 
 }

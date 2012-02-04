@@ -277,10 +277,11 @@ void SpaceBin::scattering(Particle* particle, double maxTheta){
 	}
 	double sinLocalTheta = sin(localTheta);
 	double sinDeltaPhi = sin(deltaPhi)*sin(deltaTheta)/sinLocalTheta;
-	if(abs(sinDeltaPhi > 1)){
-		printf("sinDeltaPhi > 1\n");
-	}
 	localPhi = localPhi - asin(sinDeltaPhi);
+	if(abs(sinDeltaPhi > 1)){
+		printf("%s %lf\n","sinDeltaPhi > 1",sinDeltaPhi);
+		localPhi = 0;
+	}
 	if(abs(sinLocalTheta) < DBL_EPSILON){
 		localPhi = 0;
 	}

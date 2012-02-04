@@ -5,14 +5,29 @@
 #include "random.h"
 
 double randomMaxwell(double temperature, double mass){
-	//srand ( time(NULL) );
-	////TODO найти ошибку!
-	double summ = 0;
+	/*double summ = 0;
 	for(int i = 0; i < randomSeed; i++){
 	    summ = summ + (rand()%randomSeed - randomSeed/2)*12*sqrt(mass*kBoltzman*temperature)/(randomSeed);
 	}
 	summ = summ/sqrt(randomSeed*1.0);
-    return summ;
+    return summ;*/
+	return randomGauss(0.0, sqrt(2*mass*kBoltzman*temperature));
+}
+
+double randomGauss(double a, double sigma){
+	double x = uniRandom();
+	double y = uniRandom();
+	double t = x*x + y*y;
+	while((t > 1) || (abs(t) < DBL_EPSILON)){
+		x = uniRandom();
+		t = x*x + y*y;
+		if( t <= 1){
+			break;
+		}
+		y = uniRandom();
+		t = x*x + y*y;
+	}
+	return a + sigma*sqrt(-2*log(t)/t);
 }
 
 double uniRandom(){

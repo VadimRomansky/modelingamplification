@@ -4,7 +4,7 @@
 #include <list>
 
 void output(Simulation& simulation);
-void outputPDF(std::list <Particle*> l,const char* fileName, Simulation& simulation,double minp,double maxp);
+void outputPDF(std::list <Particle*> list,const char* fileName);
 void outputStartPDF(std::list <Particle*> l,const char* fileName, Simulation& simulation,double minp,double maxp);
 void outputTurbulenceSpectrum(double* w, const char* fileName,double minK, double maxK);
 void outputMagneticField(SpaceBin**** bins, const char* fileName);

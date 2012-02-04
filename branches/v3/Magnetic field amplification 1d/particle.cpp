@@ -224,9 +224,24 @@ Particle::Particle(int a, int znumber, SpaceBin* bin, bool wpath){
 
 	localMomentum = sqrt(px*px+py*py+pz*pz);
 	initialLocalMomentum = localMomentum;
-	localMomentumX = px;
-	localMomentumY = py;
-	localMomentumZ = pz;
+
+	double localMomentumPhi = 2*pi*uniRandom();
+	if(localMomentumPhi >= 2*pi){
+		localMomentumPhi -=2*pi;
+	}
+	double localMomentumCosTheta = 2*(uniRandom() - 0.5);
+	if( localMomentumCosTheta > 1){
+		localMomentumCosTheta = 1;
+	}
+	if( localMomentumCosTheta < -1){
+		localMomentumCosTheta = -1;
+	}
+	double localMomentumSinTheta = sqrt(1 - localMomentumCosTheta*localMomentumCosTheta);
+
+	localMomentumX = localMomentum*localMomentumSinTheta*cos(localMomentumPhi);
+	localMomentumY = localMomentum*localMomentumSinTheta*sin(localMomentumPhi);
+	localMomentumZ = localMomentum*localMomentumCosTheta;
+
 	isCosmicRay = false;
 	setAbsoluteMomentum(bin->U,bin->UTheta,bin->UPhi);
 	initialMomentum = absoluteMomentum;
@@ -285,6 +300,9 @@ void Particle::setAbsoluteMomentum(double U, double Utheta, double Uphi){
 		}
 	}
 
+	if(abs(1 - absoluteV*absoluteV/c2) < DBL_EPSILON){
+		printf("absluteV = c in setAbsoluteMmentum\n");
+	}
 	absoluteMomentum = mass*absoluteV/sqrt(1 - absoluteV*absoluteV/c2);
 	if(absoluteMomentum != absoluteMomentum){
 		printf("absoluteMomentum != absoluteMomentum\n");
@@ -355,6 +373,9 @@ void Particle::setLocalMomentum(double U, double Utheta,double Uphi){
 		}
 	}
 
+	if(abs(1 - localV*localV/c2) < DBL_EPSILON){
+		printf("localV = c in setLocalMomentum\n");
+	}
 	localMomentum = mass*localV/sqrt(1 - localV*localV/c2);
 
 	//if(abs(localMomentum - initialLocalMomentum) > epsilon*localMomentum){
@@ -425,6 +446,9 @@ void Particle::setAbsoluteMomentum(SpaceBin* bin){
 		}
 	}
 
+	if(abs(1 - absoluteV*absoluteV/c2) < DBL_EPSILON){
+		printf("absoluteV = c in setAbsoluteMomentum\n");
+	}
 	absoluteMomentum = mass*absoluteV/sqrt(1 - absoluteV*absoluteV/c2);
 	if(absoluteMomentum != absoluteMomentum){
 		printf("absoluteMomentum != absoluteMomentum\n");
@@ -492,6 +516,10 @@ void Particle::setLocalMomentum(SpaceBin* bin){
 		}
 	}
 
+
+	if(abs(1 - localV*localV/c2) < DBL_EPSILON){
+		printf("localV = c in setLocalMomentum\n");
+	}
 	localMomentum = mass*localV/sqrt(1 - localV*localV/c2);
 
 	//if(abs(localMomentum - initialLocalMomentum) > epsilon*localMomentum){
@@ -554,6 +582,9 @@ double Particle::getAbsolutePhi(){
 double Particle::getEnergy(){
 	double v = getAbsoluteV();
 	//double c2 = speed_of_light*speed_of_light;
+	if( (v*v)/c2 >= 1){
+		printf(" v > c in getEnergy()\n");
+	}
 	return (mass*c2/(sqrt(1 - (v*v)/c2)) - mass*c2);
 }
 
