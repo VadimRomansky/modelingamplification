@@ -21,6 +21,7 @@ Simulation::Simulation(){
 	Z = 1;
 	startPDF = std::list <Particle*>();
 	timeStep = defaultTimeStep;
+	averageVelocity = new double[rgridNumber];
 }
 
 Simulation::~Simulation(){
@@ -32,6 +33,7 @@ Simulation::~Simulation(){
 	gamma = 1;
 	delta = 1;
 	epsilon = 0.1;
+	delete[] averageVelocity;
 	/*for(int i = 0; i < xgridNumber; ++i){
 		delete[] pressureSpectralDensity[i];
 	}
@@ -109,7 +111,7 @@ void Simulation::simulate(){
 			while( it != introducedParticles.end()){
 				Particle* particle = *it;
 				++it;
-				printf("%d %s",l,"\n");
+				//printf("%d %s",l,"\n");
 				++l;
 				bool side = false;
 				double r = sqrt(particle->absoluteX*particle->absoluteX + particle->absoluteY*particle->absoluteY + particle->absoluteZ*particle->absoluteZ);
@@ -154,6 +156,7 @@ void Simulation::simulate(){
 			}*/
 			printf("%s", "Reseting profile\n");
 			resetProfile();
+			collectAverageVelocity();
 			printf("%s", "magnetic Field updating\n");
 			//updateMagneticField();
 			output(*this);
@@ -174,8 +177,8 @@ void Simulation::simulate(){
 				list.insert(list.end(),bins[rgridNumber - 1][j][k]->detectedParticlesR2.begin(),bins[rgridNumber - 1][j][k]->detectedParticlesR2.end());
 			}
 		}
-		outputPDF(list,"./output/tamc_pdf_down.dat",*this,minp,maxp);
-		outputStartPDF(list,"./output/tamc_pdf_start.dat",*this,minp,maxp);
+		//outputPDF(list,"./output/tamc_pdf_down.dat",*this,minp,maxp);
+		//outputStartPDF(list,"./output/tamc_pdf_start.dat",*this,minp,maxp);
 		outputRadialProfile(bins,0,0,radialFile);
 		fclose(radialFile);
 	}
@@ -207,12 +210,12 @@ void Simulation::resetProfile(){
 			double deltaM = massFlux2 + massFlux1 - bins[i][0][0]->particleMassFlux.fluxR1 - bins[i][0][0]->particleMassFlux.fluxR2;
 			double deltaP = momentaFlux2 + momentaFlux1 - bins[i][0][0]->particleMomentaFlux.fluxR1 - bins[i][0][0]->particleMomentaFlux.fluxR2;
 			//TODO знак U!
-			double p = bins[i][0][0]->density*bins[i][0][0]->volume*bins[i][0][0]->U/(sqrt(1 - sqr(bins[i][0][0]->U/speed_of_light)));
+			/*double p = bins[i][0][0]->density*bins[i][0][0]->volume*bins[i][0][0]->U/(sqrt(1 - sqr(bins[i][0][0]->U/speed_of_light)));
 			p = p + deltaP;
 			if(abs(deltaP) > abs(p)){
 				printf("deltaP > p\n");
 			}
-			double m = bins[i][0][0]->density*bins[i][0][0]->volume;
+			double m = bins[i][0][0]->density*bins[i][0][0]->volume;*/
 			bins[i][0][0]->density += deltaM/(bins[i][0][0]->volume);
 			/*if(bins[i][0][0]->density < 0){
 				if(abs(bins[i][0][0]->density) < epsilon){
@@ -221,13 +224,13 @@ void Simulation::resetProfile(){
 					printf("aaa");
 				}
 			}*/
-			bins[i][0][0]->U = p/sqrt(sqr(m) + sqr(p/speed_of_light));
+			/*bins[i][0][0]->U = p/sqrt(sqr(m) + sqr(p/speed_of_light));
 			if(abs(bins[i][0][0]->U) > speed_of_light){
 				if(abs(bins[i][0][0]->U) < (1 + epsilon)*speed_of_light){
 					bins[i][0][0]->U = (1 - epsilon)*speed_of_light;
 				}
 				printf("aaa");
-			}
+			}*/
 		}
 	}
 
@@ -686,4 +689,78 @@ Particle* Simulation::getAnyParticle(){
 		}
 	}
 	return NULL;
+
+}
+
+void Simulation::collectAverageVelocity(){
+	int* count = new int[rgridNumber];
+	for(int i = 0; i < rgridNumber; ++i){
+		count[i] = 0;
+		averageVelocity[i] = 0;
+	}
+
+	std::list<Particle*>::iterator it = introducedParticles.begin();
+	while(it != introducedParticles.end()){
+		Particle* particle = *it;
+		++it;
+		double r = particle->getAbsoluteR();
+		double theta = acos(particle->absoluteZ/r);
+		if( abs(r) < DBL_EPSILON){
+			theta = pi/2;
+		}
+		double phi =atan2(particle->absoluteY, particle->absoluteX);
+		if(phi < 0){
+			phi = phi + 2*pi;
+		}
+		int* index = SpaceBin::binByCoordinates(r, theta, phi,upstreamR,deltaR,deltaTheta,deltaPhi);
+		if(index[0] >= 0){
+			count[index[0]] += 1;
+			averageVelocity[index[0]] += particle->getRadialSpeed();
+		}
+		delete[] index;
+	}
+
+	for(int i = 0; i < rgridNumber; ++i){
+		if(count[i] != 0){
+			averageVelocity[i] /= count[i];
+			//bins[i][0][0]->averageVelocity = averageVelocity[i];
+			bins[i][0][0]->U = averageVelocity[i];
+		} else {
+			printf("0 particles in bin\n");
+		}
+	}
+
+	delete[] count;
+}
+
+void Simulation::sortParticlesIntoBins(){
+	std::list<Particle*>::iterator it = introducedParticles.begin();
+	while( it != introducedParticles.end()){
+		Particle* particle = *it;
+		double r = particle->getAbsoluteR();
+		double theta = acos(particle->absoluteZ/r);
+		if( abs(r) < DBL_EPSILON){
+			printf("r < epsilon");
+			theta = pi/2;
+		}
+		if( r == 0.0){
+			theta = pi/2;
+		}
+		double phi =atan2(particle->absoluteY, particle->absoluteX);
+		if(phi < 0){
+			phi = phi + 2*pi;
+		}
+		for(int i = 0; i < rgridNumber; ++i){
+			bins[i][0][0]->density = 0.0;
+		}
+		int* index = SpaceBin::binByCoordinates(r, theta, phi,upstreamR,deltaR,deltaTheta,deltaPhi);
+		if((index[0] >= 0) && (index[0] < rgridNumber) && (index[1] >= 0) && (index[1] < thetagridNumber) && (index[2] >= 0) && (index[2] < phigridNumber)){
+			bins[index[0]][index[1]][index[2]]->particles.push_back(new Particle(*particle));
+			bins[index[0]][index[1]][index[2]]->density += particle->mass*particle->weight;
+		}
+		for(int i = 0; i < rgridNumber; ++i){
+			bins[i][0][0]->density /= bins[i][0][0]->volume;
+		}
+		++it;
+	}
 }

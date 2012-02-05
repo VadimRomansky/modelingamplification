@@ -164,7 +164,7 @@ void Simulation::simulate(){
 			introduceNewParticles();
 
 			printf("%s", "Reseting profile\n");
-			resetProfile();
+			//resetProfile();
 			collectAverageVelocity();
 			//resetVelocity();
 			//findShockWavePoint();
@@ -712,9 +712,16 @@ void Simulation::sortParticlesIntoBins(){
 		if(phi < 0){
 			phi = phi + 2*pi;
 		}
+		for(int i = 0; i < rgridNumber; ++i){
+			bins[i][0][0]->density = 0.0;
+		}
 		int* index = SpaceBin::binByCoordinates(particle->absoluteZ, theta, phi,upstreamR,deltaR,deltaTheta,deltaPhi);
 		if((index[0] >= 0) && (index[0] < rgridNumber) && (index[1] >= 0) && (index[1] < thetagridNumber) && (index[2] >= 0) && (index[2] < phigridNumber)){
 			bins[index[0]][index[1]][index[2]]->particles.push_back(new Particle(*particle));
+			bins[index[0]][index[1]][index[2]]->density += particle->mass*particle->weight;
+		}
+		for(int i = 0; i < rgridNumber; ++i){
+			bins[i][0][0]->density /= bins[i][0][0]->volume;
 		}
 		++it;
 	}

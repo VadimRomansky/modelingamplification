@@ -227,9 +227,23 @@ Particle::Particle(int a, int znumber, SpaceBin* bin, bool wpath){
 
 	localMomentum = sqrt(px*px+py*py+pz*pz);
 	initialLocalMomentum = localMomentum;
-	localMomentumX = px;
-	localMomentumY = py;
-	localMomentumZ = pz;
+	double localMomentumPhi = 2*pi*uniRandom();
+	if(localMomentumPhi >= 2*pi){
+		localMomentumPhi -=2*pi;
+	}
+	double localMomentumCosTheta = 2*(uniRandom() - 0.5);
+	if( localMomentumCosTheta > 1){
+		localMomentumCosTheta = 1;
+	}
+	if( localMomentumCosTheta < -1){
+		localMomentumCosTheta = -1;
+	}
+	double localMomentumSinTheta = sqrt(1 - localMomentumCosTheta*localMomentumCosTheta);
+
+	localMomentumX = localMomentum*localMomentumSinTheta*cos(localMomentumPhi);
+	localMomentumY = localMomentum*localMomentumSinTheta*sin(localMomentumPhi);
+	localMomentumZ = localMomentum*localMomentumCosTheta;
+
 	isCosmicRay = false;
 	setAbsoluteMomentum(bin->U,bin->UTheta,bin->UPhi);
 	initialMomentum = absoluteMomentum;
