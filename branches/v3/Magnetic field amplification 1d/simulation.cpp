@@ -174,6 +174,11 @@ void Simulation::simulate(){
 			removeEscapedParticles();
 			sortParticlesIntoBins();
 			updateCosmicRayBoundMomentum();
+			FILE* cosmicRayMomentum = fopen("./output/tamc_cosmic_ray_momentum.dat","w");
+			for(int i = 0; i < rgridNumber; ++i){
+				fprintf(cosmicRayMomentum, "%lf %lf %lf\n", bins[i][0][0]->r, 10000000000000000*bins[i][0][0]->cosmicRayBoundMomentum, bins[i][0][0]->crFlux);
+			}
+			fclose(cosmicRayMomentum);
 			resetDetectors();
 			printf("%s","iteration ¹ ");
 			printf("%d\n",itNumber);

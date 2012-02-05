@@ -993,6 +993,19 @@ void SpaceBin::updateCosmicRayBoundMomentum(){
 	}
 	
 	cosmicRayBoundMomentum = tempMomentum;
+
+	double j  = 0;
+
+	it = particles.begin();
+	while(it != particles.end()){
+		Particle* particle = *it;
+		if(particle->localMomentum > cosmicRayBoundMomentum){
+			j += electron_charge*particle->Z*particle->weight*particle->getLocalV()*particle->localMomentumZ/(particle->localMomentum*particle->mass);
+		}
+		++it;
+	}
+
+	crFlux = j;
 }
 
 	
