@@ -46,6 +46,8 @@ public:
 	std::list <Particle*> startPDF;
 	std::list <Particle*> introducedParticles;
 
+	double* averageVelocity;
+
 	Simulation();
 	~Simulation();
 
@@ -72,6 +74,8 @@ public:
 	void multiplyParticleWeights(double v);
 	Particle* getAnyParticle();
 	void resetProfile();
+	void collectAverageVelocity();
+	void sortParticlesIntoBins();
 private:
 	static const int particleMultiply = 20;
 };

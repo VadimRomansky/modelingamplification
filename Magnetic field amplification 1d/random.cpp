@@ -5,13 +5,13 @@
 #include "random.h"
 
 double randomMaxwell(double temperature, double mass){
-	/*double summ = 0;
+	double summ = 0;
 	for(int i = 0; i < randomSeed; i++){
 	    summ = summ + (rand()%randomSeed - randomSeed/2)*12*sqrt(mass*kBoltzman*temperature)/(randomSeed);
 	}
 	summ = summ/sqrt(randomSeed*1.0);
-    return summ;*/
-	return randomGauss(0.0, sqrt(2*mass*kBoltzman*temperature));
+    return summ;
+	//return randomGauss(0.0, sqrt(2*mass*kBoltzman*temperature));
 }
 
 double randomGauss(double a, double sigma){

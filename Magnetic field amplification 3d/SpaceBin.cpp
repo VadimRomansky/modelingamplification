@@ -180,6 +180,11 @@ void SpaceBin::makeOneStep(Particle* particle, double colisionTime, double& time
 	double uy = particleU*sin(particle->absoluteMomentumTheta)*sin(particle->absoluteMomentumPhi);
 	double uz = particleU*cos(particle->absoluteMomentumTheta);
 
+	//deltat = min4(deltat, abs(particle->absoluteX/ux), abs(particle->absoluteY/uy), abs(particle->absoluteZ/uz));
+	if(deltat < epsilon){
+		deltat = epsilon;
+	}
+
 	double tempx = particle->absoluteX + ux*deltat;
 	double tempy = particle->absoluteY + uy*deltat;
 	double tempz = particle->absoluteZ + uz*deltat;
@@ -218,7 +223,7 @@ void SpaceBin::makeOneStep(Particle* particle, double colisionTime, double& time
 		printf("aaaa");
 	}
 
-	while( (abs(deltaPhi) > pi/(10*phigridNumber)) || (abs(deltaTheta) > pi/(2*10*thetagridNumber)) || (abs(deltaR) > (r2 - r1)/10) || (!(isInThisOrNear(tempr, temptheta, tempphi))) || ( temptheta > pi) || (temptheta < 0)){
+	while( ((phigridNumber > 1)&&(abs(deltaPhi) > pi/(10*phigridNumber))) || ((thetagridNumber > 1)&&(abs(deltaTheta) > pi/(2*10*thetagridNumber))) || (abs(deltaR) > (r2 - r1)/10) || (!(isInThisOrNear(tempr, temptheta, tempphi))) || ( temptheta > pi) || (temptheta < 0)){
 		deltat = deltat/10;
 		tempx = particle->absoluteX + ux*deltat;
 		tempy = particle->absoluteY + uy*deltat;
@@ -393,6 +398,15 @@ void SpaceBin::resetDetectors(){
 	detectedParticlesTheta2.clear();
 	detectedParticlesPhi1.clear();
 	detectedParticlesPhi2.clear();
+
+	std::list<Particle*>::iterator it = particles.begin();
+	while(it != particles.end()){
+		Particle* particle = *it;
+		delete particle;
+		++it;
+	}
+	particles.clear();
+
 	for(int j = 0; j < kgridNumber; ++j){
 		sortedParticles[j].clear();
 	}
@@ -517,53 +531,7 @@ void SpaceBin::multiplyParticleWeights(double value){
 }
 
 void SpaceBin::resetProfile(double massFlux0, double momentaFlux0, double energyFlux0, double density0, double U0){
-	/*double u;
-	double t;
-	double rho;
 
-	if (number < zeroPoint){
-		//double discriminant = (crMomentaFlux - momentaFlux0)*(crMomentaFlux - momentaFlux0)-4*(energyFlux0 - crEnergyFlux)*(massFlux0 - crMassFlux)*(1-1/gamma)*(1-(gamma-1)/(2*gamma));
-		//if (discriminant > 0){
-			///u = (momentaFlux0 - crMomentaFlux + sqrt(discriminant))/(2*(massFlux0 - crMassFlux)*(1-(gamma-1)/(2*gamma)));
-			//Вопрос + или -?
-			//u = (momentaFlux0 - crMomentaFlux + sqrt(discriminant))/(2*(massFlux0 - crMassFlux)*(1-(gamma-1)/(2*gamma)));
-			u = -(momentaFlux - momentaFlux0)/(density0*U0);
-			//if (u < 0){
-				//printf("u < 0");
-			//}
-			u = (1-weight)*U+weight*u;
-			//t = (energyFlux0 - crEnergyFlux- (massFlux0 - crMassFlux)*u*u/2)/((massFlux0 - crMassFlux)*(1-1/gamma)*kBoltzman/massProton);
-			rho = particleMassFlux/u;
-
-		//U = (1-weight)*U+weight*u;
-		//temperature = (1-weight)*temperature+weight*t;
-		//density= (1-weight)*density+weight*rho;
-			if ((u > 0)&&(u < speed_of_light)){
-				if(abs(U-u) < 0.2*U){
-					U=u;
-				} else {
-					if(u > U){
-						U = 1.2*U;
-					} else {
-						U = 0.8*U;
-					}
-				}
-			} else {
-				U = 0.8*U;
-			}
-			//if (t > 0){
-				//temperature = t;
-			//}
-			if (rho > 0){
-				//TODO!
-				//density = rho;
-			}
-		//} else {
-			//printf("%s", "warning! discriminant < 0, do nothing\n");
-		//}
-	//} else {
-
-	}*/
 }
 ////интегрирует спектральную плотность и вычисляет эффективное поле 
 void SpaceBin::updateMagneticField(){

@@ -62,6 +62,8 @@ public:
 	std::list <Particle*> detectedParticlesTheta1;
 	std::list <Particle*> detectedParticlesPhi2;
 	std::list <Particle*> detectedParticlesPhi1;
+
+	std::list <Particle*> particles;
 	double* magneticField;
 	std::list <Particle*>* sortedParticles;
 
