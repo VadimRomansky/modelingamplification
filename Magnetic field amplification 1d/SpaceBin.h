@@ -77,6 +77,8 @@ public:
 	double averageVelocity;
 	double massVelocity;
 
+	double crFlux;
+
 	SpaceBin();
 	SpaceBin(double r, double theta, double phi, double deltar, double deltatheta, double deltaphi, double u, double rho, double utheta,double uphi, double temperature, double b, int i, int j, int k);
 	~SpaceBin();
