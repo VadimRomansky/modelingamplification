@@ -102,7 +102,7 @@ void outputPDF(std::list< Particle*> list,const char* fileName){
 		}
 	}
 	for(int i = 0; i < pgridNumber; ++i){
-		fprintf(outPDF,"%lf %lf %lf\n", 10000000000000*(minp + i*deltap), (distribution[i]/particleNumber), (startDistribution[i]/particleNumber));
+		fprintf(outPDF,"%lf %lf %lf\n", 10000000000000000000.0*(minp + i*deltap), (distribution[i]/particleNumber), (startDistribution[i]/particleNumber));
 	}
 	fclose(outPDF); 
 }

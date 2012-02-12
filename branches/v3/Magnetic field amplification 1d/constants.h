@@ -25,6 +25,6 @@ const int shockWavePoint = 10;
 const int generationSize = 10;
 const double startX = 100;
 const double startY = 100;
-const double zeroBinScale = 100;
+const double zeroBinScale = 2;
 
 #endif
