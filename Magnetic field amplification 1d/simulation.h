@@ -87,6 +87,8 @@ public:
 	double secondVelocityDerivative(int i);
 	double thirdVelocityDerivative(int i);
 	void sortParticlesIntoBins();
+	void smoothProfile();
+	void smoothProfile(std::list<SpaceBin*> bins);
 
 	double solveSecondDerivativeZero(int i);
 	void findShockWavePoint();

@@ -173,12 +173,16 @@ void Simulation::simulate(){
 			//output(*this);
 			removeEscapedParticles();
 			sortParticlesIntoBins();
+			smoothProfile();
 			updateCosmicRayBoundMomentum();
 			FILE* cosmicRayMomentum = fopen("./output/tamc_cosmic_ray_momentum.dat","w");
 			for(int i = 0; i < rgridNumber; ++i){
 				fprintf(cosmicRayMomentum, "%lf %lf %lf\n", bins[i][0][0]->r, 10000000000000000*bins[i][0][0]->cosmicRayBoundMomentum, bins[i][0][0]->crFlux);
 			}
 			fclose(cosmicRayMomentum);
+			if(bins[0][0][0]->particles.size() > 0){
+				outputPDF(bins[0][0][0]->particles,"./output/tamc_pdf0.dat");
+			}
 			resetDetectors();
 			printf("%s","iteration ¹ ");
 			printf("%d\n",itNumber);
@@ -701,7 +705,10 @@ void Simulation::findShockWavePoint(){
 }
 
 void Simulation::sortParticlesIntoBins(){
-	std::list<Particle*>::iterator it = introducedParticles.begin();
+	std::list<Particle*>::iterator it = introducedParticles.begin();\
+	for(int i = 0; i < rgridNumber; ++i){
+		bins[i][0][0]->density = 0.0;
+	}
 	while( it != introducedParticles.end()){
 		Particle* particle = *it;
 		double r = particle->getAbsoluteR();
@@ -717,23 +724,79 @@ void Simulation::sortParticlesIntoBins(){
 		if(phi < 0){
 			phi = phi + 2*pi;
 		}
-		for(int i = 0; i < rgridNumber; ++i){
-			bins[i][0][0]->density = 0.0;
-		}
 		int* index = SpaceBin::binByCoordinates(particle->absoluteZ, theta, phi,upstreamR,deltaR,deltaTheta,deltaPhi);
 		if((index[0] >= 0) && (index[0] < rgridNumber) && (index[1] >= 0) && (index[1] < thetagridNumber) && (index[2] >= 0) && (index[2] < phigridNumber)){
 			bins[index[0]][index[1]][index[2]]->particles.push_back(new Particle(*particle));
 			bins[index[0]][index[1]][index[2]]->density += particle->mass*particle->weight;
 		}
-		for(int i = 0; i < rgridNumber; ++i){
-			bins[i][0][0]->density /= bins[i][0][0]->volume;
-		}
 		++it;
+	}
+	for(int i = 0; i < rgridNumber; ++i){
+		bins[i][0][0]->density /= bins[i][0][0]->volume;
 	}
 }
 
 void Simulation::updateCosmicRayBoundMomentum(){
 	for(int i = 0; i < rgridNumber; ++i){
 		bins[i][0][0]->updateCosmicRayBoundMomentum();
+	}
+}
+
+void Simulation::smoothProfile(){
+	printf("smoothing profile\n");
+	for(int i = 0; i < rgridNumber - 1; ++i){
+		//if((abs(bins[i][0][0]->U - bins[i + 1][0][0]->U) > 0.4*abs(bins[i][0][0]->U + bins[i + 1][0][0]->U)) || (abs(bins[i][0][0]->density - bins[i + 1][0][0]->density) > 0.4*abs(bins[i][0][0]->density + bins[i + 1][0][0]->density))){
+		if(abs(bins[i][0][0]->U - bins[i + 1][0][0]->U) > 0.4*abs(bins[i][0][0]->U + bins[i + 1][0][0]->U)){
+			std::list<SpaceBin*> list;
+			list.push_back(bins[i][0][0]);
+			list.push_back(bins[i + 1][0][0]);
+			smoothProfile(list);
+		}
+	}
+}
+
+void Simulation::smoothProfile(std::list<SpaceBin*> bins){
+	std::list<SpaceBin*>::iterator it = bins.begin();
+
+	double volume = 0;
+	double u = 0;
+	double mass = 0;
+	double count = 0;
+	double density = 0;
+
+	while(it != bins.end()){
+		SpaceBin* bin = *it;
+		volume += bin->volume;
+		
+		mass += bin->density*bin->volume;
+
+		count += bin->particles.size();
+
+		u += bin->U*bin->particles.size();
+
+		++it;
+	}
+
+
+	if( count > 0){
+		u /= count;
+	} else {
+		u = 0;
+	}
+
+	if(bins.size() > 0){
+		density = mass/volume;
+	} else {
+		density = 0;
+	}
+
+	it = bins.begin();
+	while(it != bins.end()){
+		SpaceBin* bin = *it;
+		
+		bin->U = u;
+		bin->density = density;
+
+		++it;
 	}
 }

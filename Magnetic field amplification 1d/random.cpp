@@ -21,7 +21,7 @@ double randomGauss(double a, double sigma){
 	while((t > 1) || (abs(t) < DBL_EPSILON)){
 		x = uniRandom();
 		t = x*x + y*y;
-		if( t <= 1){
+		if(( t <= 1) && (t > DBL_EPSILON)){
 			break;
 		}
 		y = uniRandom();
