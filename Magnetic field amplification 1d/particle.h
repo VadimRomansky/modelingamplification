@@ -30,7 +30,7 @@ public:
 	double initialMomentum;
 	double initialLocalMomentum;
 	double weight;
-	std::list <double> path;
+	//std::list <double> path;
 	bool writePath;
 	Particle();
 	Particle(const Particle& p);
@@ -41,6 +41,7 @@ public:
 	Particle(double x, double y, double z, double temperature, int a, int znumber, double Ur, double Utheta, double Uphi, double px, double py, double pz, bool wPath);
 	Particle(double x, double y, double z, double temperature, int a, int znumber, double Ur, double Utheta, double Uphi, double px,double py, double pz, double ptheta, double pphi);
 	Particle(int a, int znumber, SpaceBin* bin, bool wpath); 
+	~Particle();
 	void LorentzTransition(double v1, double v2);
 	double getAbsoluteV();
 	void setAbsoluteMomentum(double U, double Utheta, double Uphi);

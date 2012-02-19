@@ -137,7 +137,7 @@ void Simulation::simulate(){
 					if(index[0] == rgridNumber){
 						//bin = bins[rgridNumber - 1][index[1]][index[2]];
 						index[0] = rgridNumber - 1;
-						bin->detectParticleR2(particle);
+						//bin->detectParticleR2(particle);
 						particle->absoluteMomentumTheta = pi - particle->absoluteMomentumTheta;
 						particle->absoluteMomentumPhi = 2*pi - particle->absoluteMomentumPhi;
 						if(particle->absoluteMomentumPhi > 2*pi){
@@ -192,20 +192,7 @@ void Simulation::simulate(){
 		radialFile = fopen("./output/tamc_radial_profile.dat","a");
 		fprintf(outIteration,"%s %d \n","iteration number ",itNumber);
 		fclose(outIteration);
-		double maxp;
-		double minp;
-		//updateMaxMinP(minp, maxp);
-		std::list<Particle*> list = std::list<Particle*>();
-		for(int j = 0; j < thetagridNumber; ++j){
-			for(int k = 0; k < phigridNumber; ++k){
-				list.insert(list.end(),bins[rgridNumber - 1][j][k]->detectedParticlesR2.begin(),bins[rgridNumber - 1][j][k]->detectedParticlesR2.end());
-			}
-		}
-		//outputPDF(list,"./output/tamc_pdf_down.dat",*this,minp,maxp);
-		//outputStartPDF(list,"./output/tamc_pdf_start.dat",*this,minp,maxp);
-		//if(itNumber % 10 == 0){
-			outputRadialProfile(bins,0,0,radialFile,averageVelocity);
-		//}
+		outputRadialProfile(bins,0,0,radialFile,averageVelocity);
 		//outputShockWave(shockWavePoints, shockWaveVelocity);
 		fclose(radialFile);
 	}
@@ -481,7 +468,7 @@ void Simulation::introduceNewParticles(){
 	for( int l = 0; l < zeroBinScale*particlesNumber; ++l){
 		Particle* particle = new Particle( A, Z,zeroBin, true);
 		particle->weight /= zeroBinScale*particlesNumber;
-		startPDF.push_front(particle);
+		//startPDF.push_front(particle);
 		list.push_front(particle);
 		double v = particle->getAbsoluteV();
 		double vr = v*cos(particle->absoluteMomentumTheta); 
@@ -561,6 +548,7 @@ void Simulation::introduceNewParticles(){
 	while(it != list.end()){
 		Particle* particle = *it;
 		if(particle->absoluteZ > 0){
+			//startPDF.push_front(new Particle(*particle));
 			introducedParticles.push_front(new Particle(*particle));
 		}
 		delete particle;
@@ -729,6 +717,7 @@ void Simulation::sortParticlesIntoBins(){
 			bins[index[0]][index[1]][index[2]]->particles.push_back(new Particle(*particle));
 			bins[index[0]][index[1]][index[2]]->density += particle->mass*particle->weight;
 		}
+		delete[] index;
 		++it;
 	}
 	for(int i = 0; i < rgridNumber; ++i){
@@ -746,11 +735,12 @@ void Simulation::smoothProfile(){
 	printf("smoothing profile\n");
 	for(int i = 0; i < rgridNumber - 1; ++i){
 		//if((abs(bins[i][0][0]->U - bins[i + 1][0][0]->U) > 0.4*abs(bins[i][0][0]->U + bins[i + 1][0][0]->U)) || (abs(bins[i][0][0]->density - bins[i + 1][0][0]->density) > 0.4*abs(bins[i][0][0]->density + bins[i + 1][0][0]->density))){
-		if(abs(bins[i][0][0]->U - bins[i + 1][0][0]->U) > 0.4*abs(bins[i][0][0]->U + bins[i + 1][0][0]->U)){
+		if(abs(bins[i][0][0]->U - bins[i + 1][0][0]->U) > 0.3*abs(bins[i][0][0]->U + bins[i + 1][0][0]->U)){
 			std::list<SpaceBin*> list;
 			list.push_back(bins[i][0][0]);
 			list.push_back(bins[i + 1][0][0]);
 			smoothProfile(list);
+			list.clear();
 		}
 	}
 }

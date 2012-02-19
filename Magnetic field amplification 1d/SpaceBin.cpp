@@ -83,6 +83,8 @@ SpaceBin::SpaceBin(double R, double Theta, double Phi, double deltar, double del
 }
 
 SpaceBin::~SpaceBin(){
+	resetDetectors();
+	delete sortedParticles;
 	delete[] magneticField;
 }
 
@@ -449,6 +451,12 @@ void SpaceBin::resetDetectors(){
 	detectedParticlesPhi1.clear();
 	detectedParticlesPhi2.clear();
 	for(int j = 0; j < kgridNumber; ++j){
+		it = sortedParticles[j].begin();
+		while(it != sortedParticles[j].end()){
+			Particle* particle = *it;
+			delete particle;
+			++it;
+		}
 		sortedParticles[j].clear();
 	}
 	massFlux.fluxR1 = 0;
@@ -845,7 +853,7 @@ bool SpaceBin::isInThisOrNear(double r, double theta, double phi){
 }
 
 void SpaceBin::detectParticleR1(Particle* particle){
-	detectedParticlesR1.push_back(new Particle(*particle));
+	//detectedParticlesR1.push_back(new Particle(*particle));
 	//double c2 = speed_of_light*speed_of_light;
 	if(particle->isCosmicRay){
 		crMassFlux.fluxR1 += particle->mass*particle->weight;
@@ -861,7 +869,7 @@ void SpaceBin::detectParticleR1(Particle* particle){
 }
 
 void SpaceBin::detectParticleR2(Particle* particle){
-	detectedParticlesR2.push_back(new Particle(*particle));
+	//detectedParticlesR2.push_back(new Particle(*particle));
 	//double c2 = speed_of_light*speed_of_light;
 	if(particle->isCosmicRay){
 		crMassFlux.fluxR2 += particle->mass*particle->weight;
@@ -1006,6 +1014,8 @@ void SpaceBin::updateCosmicRayBoundMomentum(){
 	}
 
 	crFlux = j;
+
+	delete[] averageVz;
 }
 
 	

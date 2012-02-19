@@ -41,7 +41,7 @@ void output(Simulation& simulation){
 	//fclose(outParticles);
 }
 
-void outputPDF(std::list< Particle*> list,const char* fileName){
+void outputPDF(std::list< Particle*>& list,const char* fileName){
 	FILE* outPDF = fopen(fileName,"w");
 	std::list<Particle*>::iterator it = list.begin();
 	double minp;
@@ -104,10 +104,12 @@ void outputPDF(std::list< Particle*> list,const char* fileName){
 	for(int i = 0; i < pgridNumber; ++i){
 		fprintf(outPDF,"%lf %lf %lf\n", 10000000000000000000.0*(minp + i*deltap), (distribution[i]/particleNumber), (startDistribution[i]/particleNumber));
 	}
+	delete[] distribution;
+	delete[] startDistribution;
 	fclose(outPDF); 
 }
 
-void outputStartPDF(std::list< Particle*> l,const char* fileName, Simulation& simulation,double minp,double maxp){
+void outputStartPDF(std::list< Particle*>& l,const char* fileName, Simulation& simulation,double minp,double maxp){
 	FILE* outPDF = fopen(fileName,"w");
 	std::list<Particle*>::iterator it = l.begin();
 	double deltap = (maxp - minp)/(pgridNumber - 1);
@@ -139,6 +141,7 @@ void outputStartPDF(std::list< Particle*> l,const char* fileName, Simulation& si
 	for(int i = 0; i < pgridNumber; ++i){
 		fprintf(outPDF,"%lf %lf\n", 100000000000*(minp + i*deltap), (distribution[i]/particleNumber));
 	}
+	delete[] distribution;
 	fclose(outPDF); 
 }
 
@@ -158,8 +161,8 @@ void outputMagneticField(SpaceBin**** bins, const char* fileName){
 	fclose(outField);
 }
 
-void outputParticlePath(std::list<Particle*> list,const char* cosmicRayFileName,const char* notCosmicRayFileName){
-	FILE* file1 = fopen(cosmicRayFileName,"w");
+void outputParticlePath(std::list<Particle*>& list,const char* cosmicRayFileName,const char* notCosmicRayFileName){
+	/*FILE* file1 = fopen(cosmicRayFileName,"w");
 	FILE* file2 = fopen(notCosmicRayFileName,"w");
 	std::list<Particle*>::iterator it = list.begin();
 	Particle cosmicRayParticle;
@@ -200,7 +203,7 @@ void outputParticlePath(std::list<Particle*> list,const char* cosmicRayFileName,
 		fprintf(file2,"%lf %s",*pathIterator,"\n");
 		++pathIterator;
 	}
-	fclose(file2);
+	fclose(file2);*/
 }
 
 void outputRadialProfile(SpaceBin**** bins, int thetaNumber, int phiNumber, FILE* outProfile, double* averageVelocity){
