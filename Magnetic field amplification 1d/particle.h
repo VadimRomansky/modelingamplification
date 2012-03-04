@@ -29,6 +29,7 @@ public:
 	bool  isCosmicRay;
 	double initialMomentum;
 	double initialLocalMomentum;
+	double previousAbsoluteMomentum;
 	double weight;
 	//std::list <double> path;
 	bool writePath;

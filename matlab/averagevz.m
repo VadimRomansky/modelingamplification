@@ -1,0 +1,10 @@
+clear;
+load averageVz.dat;
+N1=1;
+N2=100;
+figure(1);
+plot (averageVz(1:N2,1),averageVz(1:N2,2),'blue');
+title ('average vz p > p0');
+xlabel ('p');
+ylabel ('Vz');
+grid ;

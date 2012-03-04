@@ -47,7 +47,7 @@ public:
 	SpaceBin* zeroBin;
 	double** pressureSpectralDensity;
 	std::list <Particle*> startPDF;
-	std::list <Particle*> introducedParticles;
+	std::vector <Particle*> introducedParticles;
 	double* averageVelocity;
 	std::list<double> shockWavePoints;
 	std::list<double> shockWaveVelocity;
@@ -60,7 +60,7 @@ public:
 	void resetDetectors();
 	//std::list <Particle> getParticleUniformDistribution(double pmax,int pnumber,int thetanumber); 
 	std::list <Particle> getParticleGaussDistribution(int number);
-	std::list <Particle*> getParticles();
+	std::vector <Particle*> getParticles();
 	double maxwell(double p, double temperature,double mass);
 	void updateMagneticField();
 	vector3d gradientSpeed(int i, int j, int k);

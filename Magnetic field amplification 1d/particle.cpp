@@ -30,6 +30,7 @@ Particle::Particle(const Particle& p){
 
 	isCosmicRay = p.isCosmicRay;
 	initialMomentum = p.initialMomentum;
+	previousAbsoluteMomentum = p.previousAbsoluteMomentum;
 	weight = p.weight;
 	//path = std::list<double>(p.path);
 	writePath = p.writePath;
@@ -60,6 +61,7 @@ Particle::Particle(double r, double temperature, int a, int znumber){
 
 	localMomentum = sqrt(px*px+py*py+pz*pz);
 	initialLocalMomentum = localMomentum;
+	previousAbsoluteMomentum = initialMomentum;
 	localMomentumX = px;
 	localMomentumY = py;
 	localMomentumZ = pz;
@@ -85,6 +87,7 @@ Particle::Particle(double x, double y, double z, double temperature, int a, int 
 
 	localMomentum = sqrt(px*px+py*py+pz*pz);
 	initialLocalMomentum = localMomentum;
+	previousAbsoluteMomentum = initialMomentum;
 	localMomentumX = px;
 	localMomentumY = py;
 	localMomentumZ = pz;
@@ -115,6 +118,7 @@ Particle::Particle(double x, double y, double z, double temperature, int a, int 
 	isCosmicRay = false;
 	setAbsoluteMomentum(Ur,Utheta,Uphi);
 	initialMomentum = absoluteMomentum;
+	previousAbsoluteMomentum = initialMomentum;
 	//path = std::list<double>();
 	writePath = false;
 }
@@ -139,6 +143,7 @@ Particle::Particle(double x, double y, double z, double temperature, int a, int 
 	isCosmicRay = false;
 	setAbsoluteMomentum(Ur,Utheta,Uphi);
 	initialMomentum = absoluteMomentum;
+	previousAbsoluteMomentum = initialMomentum;
 	//path = std::list<double>();
 	writePath = wPath;
 }
@@ -160,6 +165,7 @@ Particle::Particle(double x, double y, double z, double temperature, int a, int 
 	isCosmicRay = false;
 	setAbsoluteMomentum(Ur,Utheta,Uphi);
 	initialMomentum = absoluteMomentum;
+	previousAbsoluteMomentum = initialMomentum;
 	//path = std::list<double>();
 	writePath = false;
 }
@@ -181,6 +187,7 @@ Particle::Particle(double x, double y, double z, double temperature, int a, int 
 	isCosmicRay = false;
 	setAbsoluteMomentum(U,Utheta,Uphi);
 	initialMomentum = absoluteMomentum;
+	previousAbsoluteMomentum = initialMomentum;
 	//path = std::list<double>();
 	writePath = wPath;
 }
@@ -245,6 +252,7 @@ Particle::Particle(int a, int znumber, SpaceBin* bin, bool wpath){
 	isCosmicRay = false;
 	setAbsoluteMomentum(bin->U,bin->UTheta,bin->UPhi);
 	initialMomentum = absoluteMomentum;
+	previousAbsoluteMomentum = initialMomentum;
 	//path = std::list<double>();
 	writePath = wpath;
 

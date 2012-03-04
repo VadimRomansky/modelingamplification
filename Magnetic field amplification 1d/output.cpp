@@ -102,7 +102,75 @@ void outputPDF(std::list< Particle*>& list,const char* fileName){
 		}
 	}
 	for(int i = 0; i < pgridNumber; ++i){
-		fprintf(outPDF,"%lf %lf %lf\n", 10000000000000000000.0*(minp + i*deltap), (distribution[i]/particleNumber), (startDistribution[i]/particleNumber));
+		fprintf(outPDF,"%lf %lf %lf\n", 10000000000000000000.0*(minp + i*deltap), (distribution[i]), (startDistribution[i]));
+	}
+	delete[] distribution;
+	delete[] startDistribution;
+	fclose(outPDF); 
+}
+
+void outputPDF(std::vector< Particle*>& list,const char* fileName){
+	FILE* outPDF = fopen(fileName,"w");
+	std::vector<Particle*>::iterator it = list.begin();
+	double minp;
+	double maxp;
+	minp = (*it)->absoluteMomentum;
+	maxp = minp;
+	++it;
+	while(it != list.end()){
+		Particle* particle = *it;
+		if(maxp < particle->absoluteMomentum){
+			maxp = particle->absoluteMomentum;
+		}
+		if(maxp < particle->initialMomentum){
+			maxp = particle->initialMomentum;
+		}
+		if(minp > particle->absoluteMomentum){
+			minp = particle->absoluteMomentum;
+		}
+		if(minp > particle->initialMomentum){
+			minp = particle->initialMomentum;
+		}
+		++it;
+	}
+	double* distribution = new double[pgridNumber];
+	double* startDistribution = new double[pgridNumber];
+	for (int i = 0; i < pgridNumber; ++i){
+		distribution[i] = 0;
+		startDistribution[i] = 0;
+	}
+	int particleNumber = 0;
+	double mass;
+	double deltap = (maxp - minp)/(pgridNumber - 1);
+	it = list.begin();
+	while(it != list.end()){
+		particleNumber++;
+		Particle* particle = *it;
+		mass = particle->mass;
+		++it;
+		double p = particle->absoluteMomentum;
+		if (p >= maxp){
+			distribution[pgridNumber-1]+=particle->weight;
+		}
+		for(int i =0; i< pgridNumber-1; ++i){
+			if (p <minp + deltap*(i + 1)){
+				distribution[i] += particle->weight;
+				break;
+			}
+		}
+		p = particle->initialMomentum;
+		if (p >= maxp){
+			startDistribution[pgridNumber-1]+=particle->weight;
+		}
+		for(int i =0; i< pgridNumber-1; ++i){
+			if (p <minp + deltap*(i + 1)){
+				startDistribution[i] += particle->weight;
+				break;
+			}
+		}
+	}
+	for(int i = 0; i < pgridNumber; ++i){
+		fprintf(outPDF,"%lf %lf %lf\n", 10000000000000000000.0*(minp + i*deltap), (distribution[i]), (startDistribution[i]));
 	}
 	delete[] distribution;
 	delete[] startDistribution;
@@ -139,7 +207,7 @@ void outputStartPDF(std::list< Particle*>& l,const char* fileName, Simulation& s
 		}
 	}
 	for(int i = 0; i < pgridNumber; ++i){
-		fprintf(outPDF,"%lf %lf\n", 100000000000*(minp + i*deltap), (distribution[i]/particleNumber));
+		fprintf(outPDF,"%lf %lf\n", 100000000000*(minp + i*deltap), (distribution[i]));
 	}
 	delete[] distribution;
 	fclose(outPDF); 
@@ -261,6 +329,15 @@ void outputShockWave(std::list<double> points, std::list<double> velocity){
 		++i;
 	}
 	fclose(outWave);
+}
+
+void outputAverageVz(double minp, double maxp, double* averageVz, const char* fileName){
+	FILE* outVz = fopen(fileName, "w");
+	double deltap = (maxp - minp)/pgridNumber;
+	for(int i = 0; i < pgridNumber; ++i){
+		fprintf(outVz,"%lf %lf \n",1000000000000000000000000.0*(minp + i *deltap), averageVz[i]);
+	}
+	fclose(outVz);
 }
 
 /*void outputPartclesCount(Xbin** bins, const char* fileName){
