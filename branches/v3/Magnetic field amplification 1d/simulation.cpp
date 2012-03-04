@@ -463,7 +463,9 @@ std::vector <Particle*> Simulation::getParticles(){
 				SpaceBin* bin = bins[i][j][k];
 				bin->initialMomentum = 0;
 				//double c2 = speed_of_light*speed_of_light;
-				for( int l = 0; l < particlesNumber; ++l){
+				int l;
+				//#pragma omp parallel for private(l) shared(list, bin)
+				for(l = 0; l < particlesNumber; ++l){
 					//if(order(bin->phi1, phi, bin->phi2) && order(bin->theta1, theta, bin->theta2) && order(bin->r1, r, bin->r2)){
 						++allParticlesNumber;
 						printf("%d",allParticlesNumber);
@@ -529,14 +531,14 @@ void Simulation::introduceNewParticles(){
 	double R = upstreamR - deltaR/2;
 	double Theta = deltaTheta/2;
 	double Phi = deltaPhi/2;
-	std::list<Particle*> list = std::list<Particle*>();
+	std::vector<Particle*> list = std::vector<Particle*>();
 
 	zeroBin->initialMomentum = 0;
 	for( int l = 0; l < zeroBinScale*particlesNumber; ++l){
 		Particle* particle = new Particle( A, Z,zeroBin, true);
 		particle->weight /= zeroBinScale*particlesNumber;
 		//startPDF.push_front(particle);
-		list.push_front(particle);
+		list.push_back(particle);
 		double v = particle->getAbsoluteV();
 		double vr = v*cos(particle->absoluteMomentumTheta); 
 		if(abs(v*v/c2 - 1) < DBL_EPSILON){
@@ -545,11 +547,10 @@ void Simulation::introduceNewParticles(){
 		zeroBin->initialMomentum += vr*particle->mass*particle->weight/sqrt(1 - (v*v)/c2);
 	}
 
-	
-	std::list<Particle*>::iterator it = list.begin();
-	while( it != list.end()){
-		Particle* particle = *it;
-		++it;
+	int i;
+	#pragma omp parallel for private(i)
+	for(i = 0; i < list.size(); ++i){
+		Particle* particle = list[i];
 		bool side = false;
 		double r = particle->getAbsoluteR();
 		double theta = acos(particle->absoluteZ/r);
@@ -611,7 +612,7 @@ void Simulation::introduceNewParticles(){
 		++it;
 	}*/
 
-	it = list.begin();
+	std::vector<Particle*>::iterator it = list.begin();
 	while(it != list.end()){
 		Particle* particle = *it;
 		if(particle->absoluteZ > 0){
