@@ -97,10 +97,14 @@ void Simulation::simulate(){
 				printf("aaa");
 			}*/
 			printf("%s", "Particle propagation\n");
-			std::list<Particle*>::iterator it = introducedParticles.begin();
-			while( it != introducedParticles.end()){
-				Particle* particle = *it;
-				++it;
+			//std::list<Particle*>::iterator it; // = introducedParticles.begin();
+			//while( it != introducedParticles.end()){
+			int it;
+			#pragma omp parallel for private(it) shared(l)
+			//for(it = introducedParticles.begin(); it != introducedParticles.end(); ++it){
+			for(it = 0; it < introducedParticles.size(); ++it){
+				Particle* particle = introducedParticles[it];
+				//++it;
 				//printf("%d %s",l,"\n");
 				++l;
 				bool side = false;
@@ -186,6 +190,69 @@ void Simulation::simulate(){
 			resetDetectors();
 			printf("%s","iteration ¹ ");
 			printf("%d\n",itNumber);
+
+			/////////////////////////////////////////
+
+			/*std::list<Particle*>::iterator it1 = introducedParticles.begin();
+
+			double tempMomentum;
+			double* averageVz = new double[pgridNumber];
+			double* count = new double[pgridNumber];
+	
+			for(int i = 0; i < pgridNumber; ++i){
+				averageVz[i] = 0.0;
+				count[i] = 0;
+			}
+
+			Particle* particle = *it1;
+
+			double minp = particle->localMomentum;
+			double maxp = minp;
+
+			while( it1 != introducedParticles.end()){
+				particle = *it1;
+				if(maxp < particle->localMomentum){
+					maxp = particle->localMomentum;
+				}
+				if(minp > particle->localMomentum){
+					minp = particle->localMomentum;
+				}
+				++it1;
+			}
+
+			double deltap = (maxp - minp)/(pgridNumber );
+
+			it1 = introducedParticles.begin();
+			while( it1 != introducedParticles.end()){
+				Particle* particle = *it1;
+				double p = particle->localMomentum;
+				int i = lowerInt((p - minp)/deltap);
+				if(( i < 0) || (i >= pgridNumber)){
+					//printf("index out of bound in updateCosmicRayBoundMomentum\n");
+					if(i >= pgridNumber){
+						i = pgridNumber - 1;
+					}
+				}
+				if(particle->localMomentum > DBL_EPSILON*sqrt(massProton*kBoltzman*temperature)){
+					averageVz[i] += particle->getLocalV()*particle->weight*particle->localMomentumZ/particle->localMomentum;
+					count[i] += particle->weight;
+				} else {
+					printf("localMomentum = 0\n");
+				}
+				++it1;
+			}
+
+			for(int i = pgridNumber - 1; i >=0; --i){
+				if(count[i] > 0){
+					averageVz[i] /= count[i];
+				}
+			}
+
+			outputAverageVz(minp, maxp, averageVz, "./output/averageVz.dat");
+			delete[] averageVz;
+			delete[] count;*/
+
+			////////////////////////////////////////////
 		}
 		outputPDF(introducedParticles,"./output/tamc_pdf.dat");
 		outIteration = fopen("./output/tamc_iteration.dat","a");
@@ -384,8 +451,8 @@ void Simulation::evaluateMagneticField(double* startField,double* endField,doubl
 void Simulation::updatePressureSpectralDensity(){
 }
 
-std::list <Particle*> Simulation::getParticles(){
-	std::list<Particle*> list = std::list<Particle*>();
+std::vector <Particle*> Simulation::getParticles(){
+	std::vector<Particle*> list = std::vector<Particle*>();
 	int cosmicRayNumber = 0;
 	int particleBinNumber = 0;
 	allParticlesNumber = 0;
@@ -404,7 +471,7 @@ std::list <Particle*> Simulation::getParticles(){
 						Particle* particle = new Particle( A, Z,bin, true);
 						particle->weight /= particlesNumber;
 						startPDF.push_front(particle);
-						list.push_front(particle);
+						list.push_back(particle);
 						double v = particle->getAbsoluteV();
 						double vr = v*cos(particle->absoluteMomentumTheta); 
 						if(abs(v*v/c2 - 1) < DBL_EPSILON){
@@ -503,7 +570,7 @@ void Simulation::introduceNewParticles(){
 			printf("out of bound in introduceNewParticles()\n");
 		}
 		if(time < timeStep){
-			while((index[0] >= -zeroBinScale)){
+			while(index[0] >= -1){
 				SpaceBin* bin;
 				if(index[0] < 0){
 					bin = zeroBin;
@@ -549,7 +616,7 @@ void Simulation::introduceNewParticles(){
 		Particle* particle = *it;
 		if(particle->absoluteZ > 0){
 			//startPDF.push_front(new Particle(*particle));
-			introducedParticles.push_front(new Particle(*particle));
+			introducedParticles.push_back(new Particle(*particle));
 		}
 		delete particle;
 		++it;
@@ -559,15 +626,25 @@ void Simulation::introduceNewParticles(){
 }
 
 void Simulation::removeEscapedParticles(){
-	std::list<Particle*> list = std::list<Particle*>();
-	std::list<Particle*>::iterator it = introducedParticles.begin();
+	std::vector<Particle*> list = std::vector<Particle*>();
+	std::vector<Particle*>::iterator it = introducedParticles.begin();
 	while(it != introducedParticles.end()){
 		Particle* particle = *it;
 		++it;
 		if(particle->absoluteZ < 0){
 			delete particle;
 		} else {
-			list.push_back(particle);
+			if(particle->absoluteMomentum > 5*particle->previousAbsoluteMomentum){
+				for(int i = 0; i < generationSize; ++i){
+					Particle* particle1 = new Particle(*particle);
+					particle1->weight /= generationSize;
+					particle1->previousAbsoluteMomentum = particle1->absoluteMomentum;
+					list.push_back(particle1);
+				}
+				delete particle;
+			} else {
+				list.push_back(particle);
+			}
 		}
 	}
 	introducedParticles.clear();
@@ -581,7 +658,7 @@ void Simulation::collectAverageVelocity(){
 		averageVelocity[i] = 0;
 	}
 
-	std::list<Particle*>::iterator it = introducedParticles.begin();
+	std::vector<Particle*>::iterator it = introducedParticles.begin();
 	while(it != introducedParticles.end()){
 		Particle* particle = *it;
 		++it;
@@ -619,7 +696,7 @@ void Simulation::resetVelocity(){
 	std::list<Particle*>* particles = new std::list<Particle*>[rgridNumber];
 
 
-	std::list<Particle*>::iterator it = introducedParticles.begin();
+	std::vector<Particle*>::iterator it = introducedParticles.begin();
 	while(it != introducedParticles.end()){
 		Particle* particle = *it;
 		++it;
@@ -645,11 +722,11 @@ void Simulation::resetVelocity(){
 
 	for(int i = 0; i < rgridNumber; ++i){
 		bins[i][0][0]->resetVelocity(particles[i]);
-		it = particles[i].begin();
-		while( it != particles[i].end()){
-			Particle* particle = *it;
+		std::list<Particle*>::iterator it1 = particles[i].begin();
+		while( it1 != particles[i].end()){
+			Particle* particle = *it1;
 			delete particle;
-			++it;
+			++it1;
 		}
 		particles[i].clear();
 	}
@@ -693,7 +770,7 @@ void Simulation::findShockWavePoint(){
 }
 
 void Simulation::sortParticlesIntoBins(){
-	std::list<Particle*>::iterator it = introducedParticles.begin();\
+	std::vector<Particle*>::iterator it = introducedParticles.begin();\
 	for(int i = 0; i < rgridNumber; ++i){
 		bins[i][0][0]->density = 0.0;
 	}

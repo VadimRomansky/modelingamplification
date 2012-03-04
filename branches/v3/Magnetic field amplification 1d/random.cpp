@@ -18,10 +18,10 @@ double randomGauss(double a, double sigma){
 	double x = uniRandom();
 	double y = uniRandom();
 	double t = x*x + y*y;
-	while((t > 1) || (abs(t) < DBL_EPSILON)){
+	while((t > 1) || (abs(t) < 100000000000000*DBL_EPSILON)){
 		x = uniRandom();
 		t = x*x + y*y;
-		if(( t <= 1) && (t > DBL_EPSILON)){
+		if(( t <= 1) && (t > 100000000000000*DBL_EPSILON)){
 			break;
 		}
 		y = uniRandom();

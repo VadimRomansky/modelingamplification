@@ -5,6 +5,7 @@
 #include "simulation.h"
 #include "util.h"
 #include "BinFlux.h"
+#include "output.h"
 
 
 SpaceBin::SpaceBin(){
@@ -938,7 +939,6 @@ double SpaceBin::evaluateMomentumFlux(std::list<Particle*>& particles, double u)
 }
 
 void SpaceBin::updateCosmicRayBoundMomentum(){
-	double particleAverageVz = 0;
 
 	std::list<Particle*>::iterator it = particles.begin();
 
@@ -948,9 +948,11 @@ void SpaceBin::updateCosmicRayBoundMomentum(){
 
 	double tempMomentum;
 	double* averageVz = new double[pgridNumber];
+	double* count = new double[pgridNumber];
 	
 	for(int i = 0; i < pgridNumber; ++i){
 		averageVz[i] = 0.0;
+		count[i] = 0.0;
 	}
 
 	Particle* particle = *it;
@@ -983,7 +985,8 @@ void SpaceBin::updateCosmicRayBoundMomentum(){
 			}
 		}
 		if(particle->localMomentum > DBL_EPSILON*sqrt(massProton*kBoltzman*temperature)){
-			averageVz[i] += particle->getLocalV()*particle->localMomentumZ/particle->localMomentum;
+			averageVz[i] += particle->getLocalV()*particle->weight*particle->localMomentumZ/particle->localMomentum;
+			count[i] += particle->weight;
 		} else {
 			printf("localMomentum = 0\n");
 		}
@@ -995,8 +998,15 @@ void SpaceBin::updateCosmicRayBoundMomentum(){
 	for(int i = pgridNumber - 1; i >=0; --i){
 		Vz += averageVz[i];
 		if(Vz > 0){
+		//if(averageVz[i] > 0){
 			tempMomentum = minp + (i + 1)*deltap;
 			break;
+		}
+	}
+
+	for(int i = 0; i < pgridNumber; ++i){
+		if(count[i] > 0){
+			averageVz[i] /= count[i];
 		}
 	}
 	
@@ -1008,14 +1018,47 @@ void SpaceBin::updateCosmicRayBoundMomentum(){
 	while(it != particles.end()){
 		Particle* particle = *it;
 		if(particle->localMomentum > cosmicRayBoundMomentum){
-			j += electron_charge*particle->Z*particle->weight*particle->getLocalV()*particle->localMomentumZ/(particle->localMomentum*particle->mass);
+			j += electron_charge*particle->Z*(particle->weight/volume)*particle->getLocalV()*particle->localMomentumZ/(particle->localMomentum*particle->mass);
 		}
 		++it;
 	}
 
 	crFlux = j;
 
+	//const char* name = "./output/averageVz" + numberR;
+
+	if(numberR == 10){
+		outputAverageVz(minp, maxp, averageVz, "./output/averageVz1.dat");
+	}
+	if(numberR == 20){
+		outputAverageVz(minp, maxp, averageVz, "./output/averageVz2.dat");
+	}
+	if(numberR == 30){
+		outputAverageVz(minp, maxp, averageVz, "./output/averageVz3.dat");
+	}
+	if(numberR == 40){
+		outputAverageVz(minp, maxp, averageVz, "./output/averageVz4.dat");
+	}
+	if(numberR == 50){
+		outputAverageVz(minp, maxp, averageVz, "./output/averageVz5.dat");
+	}
+	if(numberR == 60){
+		outputAverageVz(minp, maxp, averageVz, "./output/averageVz6.dat");
+	}
+	if(numberR == 70){
+		outputAverageVz(minp, maxp, averageVz, "./output/averageVz7.dat");
+	}
+	if(numberR == 80){
+		outputAverageVz(minp, maxp, averageVz, "./output/averageVz8.dat");
+	}
+	if(numberR == 90){
+		outputAverageVz(minp, maxp, averageVz, "./output/averageVz9.dat");
+	}
+	if(numberR == 0){
+		outputAverageVz(minp, maxp, averageVz, "./output/averageVz0.dat");
+	}
 	delete[] averageVz;
+	delete[] count;
 }
 
 	
