@@ -51,3 +51,7 @@ double angleDelta(double phi1, double phi2){
 		}
 	}
 }
+
+double maxwell(double momentum, double mass, double temperature){
+	return exp(-momentum*momentum/(2*mass*kBoltzman*temperature))/sqrt(2*pi*mass*kBoltzman*temperature);
+}

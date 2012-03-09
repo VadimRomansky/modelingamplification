@@ -4,6 +4,7 @@
 #include "simulation.h"
 #include "constants.h"
 #include "particle.h"
+#include "util.h"
 
 void output(Simulation& simulation){
 	double maxp, minp;
@@ -171,6 +172,72 @@ void outputPDF(std::vector< Particle*>& list,const char* fileName){
 	}
 	for(int i = 0; i < pgridNumber; ++i){
 		fprintf(outPDF,"%lf %lf %lf\n", 10000000000000000000.0*(minp + i*deltap), (distribution[i]), (startDistribution[i]));
+	}
+	delete[] distribution;
+	delete[] startDistribution;
+	fclose(outPDF); 
+}
+
+void outputZPDF(std::list< Particle*>& list,const char* fileName){
+	FILE* outPDF = fopen(fileName,"w");
+	std::list<Particle*>::iterator it = list.begin();
+	double maxp;
+	maxp = (*it)->localMomentumZ;
+	++it;
+	double weight = 0;
+	weight += (*it)->weight;
+	while(it != list.end()){
+		Particle* particle = *it;
+		weight += particle->weight;
+		if(maxp < abs(particle->localMomentumZ)){
+			maxp = abs(particle->localMomentumZ);
+		}
+		++it;
+	}
+	double* distribution = new double[pgridNumber];
+	double* startDistribution = new double[pgridNumber];
+	for (int i = 0; i < pgridNumber; ++i){
+		distribution[i] = 0;
+		startDistribution[i] = 0;
+	}
+	int particleNumber = 0;
+	double mass;
+	double deltap = (2*maxp)/(pgridNumber);
+	it = list.begin();
+	while(it != list.end()){
+		particleNumber++;
+		Particle* particle = *it;
+		mass = particle->mass;
+		++it;
+		double p = particle->localMomentumZ;
+		if (abs(p) >= maxp){
+			continue;
+		}
+		for(int i =0; i< pgridNumber; ++i){
+			if (p <-maxp + deltap*(i + 1)){
+				distribution[i] += particle->weight/(weight*deltap);
+				break;
+			}
+		}
+	}
+	double temperature;
+	double sigma;
+	int zeroP = pgridNumber/2;
+	int sigmaIndex;
+	double maxDistribution = (distribution[zeroP] + distribution[zeroP + 1])/2;
+	for(int i = zeroP;i < pgridNumber; ++i){
+		if(distribution[i] < maxDistribution/exp(0.5)){
+			sigmaIndex = i - 1;
+			break;
+		}
+	}
+	double d1 = distribution[sigmaIndex];
+	double d2 = distribution[sigmaIndex + 1];
+
+	sigma =  (maxDistribution/exp(0.5) - d1)*deltap/(d2 - d1) + (sigmaIndex + 0.5 - zeroP)*deltap;
+	temperature = sigma*sigma/(massProton*kBoltzman);
+	for(int i = 0; i < pgridNumber; ++i){
+		fprintf(outPDF,"%lf %lf %lf\n", 10000000000000000000.0*(-maxp + i*deltap), distribution[i], maxwell(-maxp + (i + 1/2)*deltap, massProton, temperature));
 	}
 	delete[] distribution;
 	delete[] startDistribution;

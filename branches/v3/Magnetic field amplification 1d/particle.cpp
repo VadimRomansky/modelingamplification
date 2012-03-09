@@ -224,6 +224,7 @@ Particle::Particle(int a, int znumber, SpaceBin* bin, bool wpath){
 	Z = znumber;
 	mass = A*massProton;
 	weight = bin->density*bin->volume/mass;
+	//weight = 1.0;
 
 	double px = randomMaxwell(bin->temperature, mass);
 	double py = randomMaxwell(bin->temperature, mass);

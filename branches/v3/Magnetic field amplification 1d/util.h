@@ -8,5 +8,6 @@ int lowerInt(double v);
 vector3d summVelocity(vector3d v, double u);
 bool order(double a, double b, double c);
 double angleDelta(double phi1, double phi2);
+double maxwell(double momentum, double mass, double temperature);
 
 #endif
