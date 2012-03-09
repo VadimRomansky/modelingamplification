@@ -177,6 +177,7 @@ void Simulation::simulate(){
 			//output(*this);
 			removeEscapedParticles();
 			sortParticlesIntoBins();
+			outputZPDF(bins[rgridNumber/2][0][0]->particles,"./output/zpdf.dat");
 			smoothProfile();
 			updateCosmicRayBoundMomentum();
 			FILE* cosmicRayMomentum = fopen("./output/tamc_cosmic_ray_momentum.dat","w");
@@ -792,7 +793,8 @@ void Simulation::sortParticlesIntoBins(){
 		}
 		int* index = SpaceBin::binByCoordinates(particle->absoluteZ, theta, phi,upstreamR,deltaR,deltaTheta,deltaPhi);
 		if((index[0] >= 0) && (index[0] < rgridNumber) && (index[1] >= 0) && (index[1] < thetagridNumber) && (index[2] >= 0) && (index[2] < phigridNumber)){
-			bins[index[0]][index[1]][index[2]]->particles.push_back(new Particle(*particle));
+			//bins[index[0]][index[1]][index[2]]->particles.push_back(new Particle(*particle));
+			bins[index[0]][index[1]][index[2]]->particles.push_back(particle);
 			bins[index[0]][index[1]][index[2]]->density += particle->mass*particle->weight;
 		}
 		delete[] index;
