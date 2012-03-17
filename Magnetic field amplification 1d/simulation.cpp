@@ -177,7 +177,7 @@ void Simulation::simulate(){
 			//output(*this);
 			removeEscapedParticles();
 			sortParticlesIntoBins();
-			outputZPDF(bins[rgridNumber/2][0][0]->particles,"./output/zpdf.dat");
+			//outputZPDF(bins[rgridNumber/2][0][0]->particles,"./output/zpdf.dat");
 			smoothProfile();
 			updateCosmicRayBoundMomentum();
 			FILE* cosmicRayMomentum = fopen("./output/tamc_cosmic_ray_momentum.dat","w");
@@ -187,6 +187,26 @@ void Simulation::simulate(){
 			fclose(cosmicRayMomentum);
 			if(bins[0][0][0]->particles.size() > 0){
 				outputPDF(bins[0][0][0]->particles,"./output/tamc_pdf0.dat");
+			}
+			for(int i = 0; i < rgridNumber; ++i){
+				if(i == 0){
+					outputEnergyPDF(bins[i][0][0]->particles,"./output/tamc_energy_pdf0.dat");
+				}
+				if(i == 10){
+					outputEnergyPDF(bins[i][0][0]->particles,"./output/tamc_energy_pdf1.dat");
+				}
+				if(i == 20){
+					outputEnergyPDF(bins[i][0][0]->particles,"./output/tamc_energy_pdf2.dat");
+				}
+				if(i == 30){
+					outputEnergyPDF(bins[i][0][0]->particles,"./output/tamc_energy_pdf3.dat");
+				}
+				if(i == 45){
+					outputEnergyPDF(bins[i][0][0]->particles,"./output/tamc_energy_pdf4.dat");
+				}
+				if(i == 50){
+					outputEnergyPDF(bins[i][0][0]->particles,"./output/tamc_energy_pdf5.dat");
+				}
 			}
 			resetDetectors();
 			printf("%s","iteration ¹ ");
@@ -256,6 +276,7 @@ void Simulation::simulate(){
 			////////////////////////////////////////////
 		}
 		outputPDF(introducedParticles,"./output/tamc_pdf.dat");
+		outputEnergyPDF(introducedParticles,"./output/tamc_energy_pdf.dat");
 		outIteration = fopen("./output/tamc_iteration.dat","a");
 		radialFile = fopen("./output/tamc_radial_profile.dat","a");
 		fprintf(outIteration,"%s %d \n","iteration number ",itNumber);

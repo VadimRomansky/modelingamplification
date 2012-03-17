@@ -593,12 +593,21 @@ double Particle::getAbsolutePhi(){
 }
 
 double Particle::getEnergy(){
-	double v = getAbsoluteV();
+	/*double v = getAbsoluteV();
 	//double c2 = speed_of_light*speed_of_light;
 	if( (v*v)/c2 >= 1){
 		printf(" v > c in getEnergy()\n");
-	}
-	return (mass*c2/(sqrt(1 - (v*v)/c2)) - mass*c2);
+	}*/
+	return sqrt(mass*mass*c2*c2 + absoluteMomentum*absoluteMomentum*c2) - mass*c2;
+}
+
+double Particle::getInitialEnergy(){
+	/*double v = getAbsoluteV();
+	//double c2 = speed_of_light*speed_of_light;
+	if( (v*v)/c2 >= 1){
+		printf(" v > c in getEnergy()\n");
+	}*/
+	return sqrt(mass*mass*c2*c2 + initialMomentum*initialMomentum*c2) - mass*c2;
 }
 
 double Particle::getRadialSpeed(){
