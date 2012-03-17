@@ -1059,151 +1059,151 @@ void SpaceBin::updateCosmicRayBoundMomentum(){
 	}
 	delete[] averageVz;
 	delete[] count;*/
-
-	std::list<Particle*>::iterator it = particles.begin();
-	double maxp;
-	maxp = (*it)->localMomentumZ;
-	++it;
-	double weight = 0;
-	weight += (*it)->weight;
-	while(it != particles.end()){
-		Particle* particle = *it;
-		weight += particle->weight;
-		if(maxp < abs(particle->localMomentumZ)){
-			maxp = abs(particle->localMomentumZ);
-		}
+	if( particles.size() > 0){
+		std::list<Particle*>::iterator it = particles.begin();
+		double maxp;
+		maxp = (*it)->localMomentumZ;
 		++it;
-	}
-	double* distribution = new double[pgridNumber];
-	for (int i = 0; i < pgridNumber; ++i){
-		distribution[i] = 0;
-	}
-	int particleNumber = 0;
-	double mass;
-	double deltap = (2*maxp)/(pgridNumber);
-	it = particles.begin();
-	while(it != particles.end()){
-		particleNumber++;
-		Particle* particle = *it;
-		mass = particle->mass;
-		++it;
-		double p = particle->localMomentumZ;
-		if (abs(p) >= maxp){
-			continue;
+		double weight = 0;
+		weight += (*it)->weight;
+		while(it != particles.end()){
+			Particle* particle = *it;
+			weight += particle->weight;
+			if(maxp < abs(particle->localMomentumZ)){
+				maxp = abs(particle->localMomentumZ);
+			}
+			++it;
 		}
-		for(int i =0; i< pgridNumber; ++i){
-			if (p <-maxp + deltap*(i + 1)){
-				distribution[i] += particle->weight/(weight*deltap);
+		double* distribution = new double[pgridNumber];
+		for (int i = 0; i < pgridNumber; ++i){
+			distribution[i] = 0;
+		}
+		int particleNumber = 0;
+		double mass;
+		double deltap = (2*maxp)/(pgridNumber);
+		it = particles.begin();
+		while(it != particles.end()){
+			particleNumber++;
+			Particle* particle = *it;
+			mass = particle->mass;
+			++it;
+			double p = particle->localMomentumZ;
+			if (abs(p) >= maxp){
+				continue;
+			}
+			for(int i =0; i< pgridNumber; ++i){
+				if (p <-maxp + deltap*(i + 1)){
+					distribution[i] += particle->weight/(weight*deltap);
+					break;
+				}
+			}
+		}
+		double temperature;
+		double sigma;
+		int zeroP = pgridNumber/2;
+		int sigmaIndex;
+		double maxDistribution = (distribution[zeroP] + distribution[zeroP + 1])/2;
+		for(int i = zeroP;i < pgridNumber; ++i){
+			if(distribution[i] < maxDistribution/exp(0.5)){
+				sigmaIndex = i - 1;
 				break;
 			}
 		}
-	}
-	double temperature;
-	double sigma;
-	int zeroP = pgridNumber/2;
-	int sigmaIndex;
-	double maxDistribution = (distribution[zeroP] + distribution[zeroP + 1])/2;
-	for(int i = zeroP;i < pgridNumber; ++i){
-		if(distribution[i] < maxDistribution/exp(0.5)){
-			sigmaIndex = i - 1;
-			break;
-		}
-	}
-	double d1 = distribution[sigmaIndex];
-	double d2 = distribution[sigmaIndex + 1];
+		double d1 = distribution[sigmaIndex];
+		double d2 = distribution[sigmaIndex + 1];
 
-	sigma =  (maxDistribution/exp(0.5) - d1)*deltap/(d2 - d1) + (sigmaIndex + 0.5 - zeroP)*deltap;
-	temperature = sigma*sigma/(massProton*kBoltzman);
+		sigma =  (maxDistribution/exp(0.5) - d1)*deltap/(d2 - d1) + (sigmaIndex + 0.5 - zeroP)*deltap;
+		temperature = sigma*sigma/(massProton*kBoltzman);
 
-	if(numberR == 10){
-		FILE* outPDF = fopen("./output/zpdf1.dat","w");
-		for(int i = 0; i < pgridNumber; ++i){
-			fprintf(outPDF,"%lf %lf %lf\n", 10000000000000000000.0*(-maxp + i*deltap), distribution[i], maxwell(-maxp + (i + 1/2)*deltap, massProton, temperature));
+		if(numberR == 10){
+			FILE* outPDF = fopen("./output/zpdf1.dat","w");
+			for(int i = 0; i < pgridNumber; ++i){
+				fprintf(outPDF,"%lf %lf %lf\n", 10000000000000000000.0*(-maxp + i*deltap), distribution[i], maxwell(-maxp + (i + 1/2)*deltap, massProton, temperature));
+			}
+			fclose(outPDF);
 		}
-		fclose(outPDF);
-	}
-	if(numberR == 20){
-		FILE* outPDF = fopen("./output/zpdf2.dat","w");
-		for(int i = 0; i < pgridNumber; ++i){
-			fprintf(outPDF,"%lf %lf %lf\n", 10000000000000000000.0*(-maxp + i*deltap), distribution[i], maxwell(-maxp + (i + 1/2)*deltap, massProton, temperature));
+		if(numberR == 20){
+			FILE* outPDF = fopen("./output/zpdf2.dat","w");
+			for(int i = 0; i < pgridNumber; ++i){
+				fprintf(outPDF,"%lf %lf %lf\n", 10000000000000000000.0*(-maxp + i*deltap), distribution[i], maxwell(-maxp + (i + 1/2)*deltap, massProton, temperature));
+			}
+			fclose(outPDF);
 		}
-		fclose(outPDF);
-	}
-	if(numberR == 30){
-		FILE* outPDF = fopen("./output/zpdf3.dat","w");
-		for(int i = 0; i < pgridNumber; ++i){
-			fprintf(outPDF,"%lf %lf %lf\n", 10000000000000000000.0*(-maxp + i*deltap), distribution[i], maxwell(-maxp + (i + 1/2)*deltap, massProton, temperature));
+		if(numberR == 30){
+			FILE* outPDF = fopen("./output/zpdf3.dat","w");
+			for(int i = 0; i < pgridNumber; ++i){
+				fprintf(outPDF,"%lf %lf %lf\n", 10000000000000000000.0*(-maxp + i*deltap), distribution[i], maxwell(-maxp + (i + 1/2)*deltap, massProton, temperature));
+			}
+			fclose(outPDF);
 		}
-		fclose(outPDF);
-	}
-	if(numberR == 40){
-		FILE* outPDF = fopen("./output/zpdf4.dat","w");
-		for(int i = 0; i < pgridNumber; ++i){
-			fprintf(outPDF,"%lf %lf %lf\n", 10000000000000000000.0*(-maxp + i*deltap), distribution[i], maxwell(-maxp + (i + 1/2)*deltap, massProton, temperature));
+		if(numberR == 40){
+			FILE* outPDF = fopen("./output/zpdf4.dat","w");
+			for(int i = 0; i < pgridNumber; ++i){
+				fprintf(outPDF,"%lf %lf %lf\n", 10000000000000000000.0*(-maxp + i*deltap), distribution[i], maxwell(-maxp + (i + 1/2)*deltap, massProton, temperature));
+			}
+			fclose(outPDF);
 		}
-		fclose(outPDF);
-	}
-	if(numberR == 50){
-		FILE* outPDF = fopen("./output/zpdf5.dat","w");
-		for(int i = 0; i < pgridNumber; ++i){
-			fprintf(outPDF,"%lf %lf %lf\n", 10000000000000000000.0*(-maxp + i*deltap), distribution[i], maxwell(-maxp + (i + 1/2)*deltap, massProton, temperature));
+		if(numberR == 50){
+			FILE* outPDF = fopen("./output/zpdf5.dat","w");
+			for(int i = 0; i < pgridNumber; ++i){
+				fprintf(outPDF,"%lf %lf %lf\n", 10000000000000000000.0*(-maxp + i*deltap), distribution[i], maxwell(-maxp + (i + 1/2)*deltap, massProton, temperature));
+			}
+			fclose(outPDF);
 		}
-		fclose(outPDF);
-	}
-	if(numberR == 60){
-		FILE* outPDF = fopen("./output/zpdf6.dat","w");
-		for(int i = 0; i < pgridNumber; ++i){
-			fprintf(outPDF,"%lf %lf %lf\n", 10000000000000000000.0*(-maxp + i*deltap), distribution[i], maxwell(-maxp + (i + 1/2)*deltap, massProton, temperature));
+		if(numberR == 60){
+			FILE* outPDF = fopen("./output/zpdf6.dat","w");
+			for(int i = 0; i < pgridNumber; ++i){
+				fprintf(outPDF,"%lf %lf %lf\n", 10000000000000000000.0*(-maxp + i*deltap), distribution[i], maxwell(-maxp + (i + 1/2)*deltap, massProton, temperature));
+			}
+			fclose(outPDF);
 		}
-		fclose(outPDF);
-	}
-	if(numberR == 70){
-		FILE* outPDF = fopen("./output/zpdf7.dat","w");
-		for(int i = 0; i < pgridNumber; ++i){
-			fprintf(outPDF,"%lf %lf %lf\n", 10000000000000000000.0*(-maxp + i*deltap), distribution[i], maxwell(-maxp + (i + 1/2)*deltap, massProton, temperature));
+		if(numberR == 70){
+			FILE* outPDF = fopen("./output/zpdf7.dat","w");
+			for(int i = 0; i < pgridNumber; ++i){
+				fprintf(outPDF,"%lf %lf %lf\n", 10000000000000000000.0*(-maxp + i*deltap), distribution[i], maxwell(-maxp + (i + 1/2)*deltap, massProton, temperature));
+			}
+			fclose(outPDF);
 		}
-		fclose(outPDF);
-	}
-	if(numberR == 80){
-		FILE* outPDF = fopen("./output/zpdf8.dat","w");
-		for(int i = 0; i < pgridNumber; ++i){
-			fprintf(outPDF,"%lf %lf %lf\n", 10000000000000000000.0*(-maxp + i*deltap), distribution[i], maxwell(-maxp + (i + 1/2)*deltap, massProton, temperature));
+		if(numberR == 80){
+			FILE* outPDF = fopen("./output/zpdf8.dat","w");
+			for(int i = 0; i < pgridNumber; ++i){
+				fprintf(outPDF,"%lf %lf %lf\n", 10000000000000000000.0*(-maxp + i*deltap), distribution[i], maxwell(-maxp + (i + 1/2)*deltap, massProton, temperature));
+			}
+			fclose(outPDF);
 		}
-		fclose(outPDF);
-	}
-	if(numberR == 90){
-		FILE* outPDF = fopen("./output/zpdf9.dat","w");
-		for(int i = 0; i < pgridNumber; ++i){
-			fprintf(outPDF,"%lf %lf %lf\n", 10000000000000000000.0*(-maxp + i*deltap), distribution[i], maxwell(-maxp + (i + 1/2)*deltap, massProton, temperature));
+		if(numberR == 90){
+			FILE* outPDF = fopen("./output/zpdf9.dat","w");
+			for(int i = 0; i < pgridNumber; ++i){
+				fprintf(outPDF,"%lf %lf %lf\n", 10000000000000000000.0*(-maxp + i*deltap), distribution[i], maxwell(-maxp + (i + 1/2)*deltap, massProton, temperature));
+			}
+			fclose(outPDF);
 		}
-		fclose(outPDF);
-	}
-	if(numberR == 0){
-		FILE* outPDF = fopen("./output/zpdf0.dat","w");
-		for(int i = 0; i < pgridNumber; ++i){
-			fprintf(outPDF,"%lf %lf %lf\n", 10000000000000000000.0*(-maxp + i*deltap), distribution[i], maxwell(-maxp + (i + 1/2)*deltap, massProton, temperature));
+		if(numberR == 0){
+			FILE* outPDF = fopen("./output/zpdf0.dat","w");
+			for(int i = 0; i < pgridNumber; ++i){
+				fprintf(outPDF,"%lf %lf %lf\n", 10000000000000000000.0*(-maxp + i*deltap), distribution[i], maxwell(-maxp + (i + 1/2)*deltap, massProton, temperature));
+			}
+			fclose(outPDF);
 		}
-		fclose(outPDF);
-	}
 
-	/*FILE* outPDF = fopen(fileName,"w");
-	for(int i = 0; i < pgridNumber; ++i){
-		fprintf(outPDF,"%lf %lf %lf\n", 10000000000000000000.0*(-maxp + i*deltap), distribution[i], maxwell(-maxp + (i + 1/2)*deltap, massProton, temperature));
-	}
-	fclose(outPDF);*/
+		/*FILE* outPDF = fopen(fileName,"w");
+		for(int i = 0; i < pgridNumber; ++i){
+			fprintf(outPDF,"%lf %lf %lf\n", 10000000000000000000.0*(-maxp + i*deltap), distribution[i], maxwell(-maxp + (i + 1/2)*deltap, massProton, temperature));
+		}
+		fclose(outPDF);*/
 
 
-	double j = 0;
+		double j = 0;
 
-	for(int i = 0; i < pgridNumber; ++i){
-		distribution[i] -= maxwell(-maxp + (i + 1/2)*deltap, massProton, temperature);
-		j += weight*((-maxp + (i + 1/2)*deltap)/massProton*volume)*electron_charge*distribution[i];
+		for(int i = 0; i < pgridNumber; ++i){
+			distribution[i] -= maxwell(-maxp + (i + 1/2)*deltap, massProton, temperature);
+			j += weight*((-maxp + (i + 1/2)*deltap)/massProton*volume)*electron_charge*distribution[i];
+		}
+
+		crFlux = j;
+
+		delete[] distribution;
 	}
-
-	crFlux = j;
-
-	delete[] distribution;
-
 }
 
 	

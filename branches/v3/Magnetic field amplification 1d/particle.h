@@ -54,6 +54,7 @@ public:
 	double getAbsoluteTheta();
 	double getAbsolutePhi();
 	double getEnergy();
+	double getInitialEnergy();
 	double getRadialSpeed();
 	void moveToBinRight(SpaceBin* bin);
 };

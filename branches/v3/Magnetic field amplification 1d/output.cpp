@@ -178,6 +178,148 @@ void outputPDF(std::vector< Particle*>& list,const char* fileName){
 	fclose(outPDF); 
 }
 
+void outputEnergyPDF(std::vector< Particle*>& list,const char* fileName){
+	FILE* outPDF = fopen(fileName,"w");
+	std::vector<Particle*>::iterator it = list.begin();
+	double mine;
+	double maxe;
+	mine = (*it)->getEnergy();
+	maxe = mine;
+	++it;
+	while(it != list.end()){
+		Particle* particle = *it;
+		if(maxe < particle->getEnergy()){
+			maxe = particle->getEnergy();
+		}
+		if(maxe < particle->getInitialEnergy()){
+			maxe = particle->getInitialEnergy();
+		}
+		if(mine > particle->getEnergy()){
+			mine = particle->getEnergy();
+		}
+		if(mine > particle->getInitialEnergy()){
+			mine = particle->getInitialEnergy();
+		}
+		++it;
+	}
+	if(mine < 0){
+		mine = epsilon*maxe;
+	}
+	double* distribution = new double[pgridNumber];
+	double* startDistribution = new double[pgridNumber];
+	for (int i = 0; i < pgridNumber; ++i){
+		distribution[i] = 0;
+		startDistribution[i] = 0;
+	}
+	int particleNumber = 0;
+	double mass;
+	double deltae = (log(maxe) - log(mine))/(pgridNumber - 1);
+	it = list.begin();
+	while(it != list.end()){
+		particleNumber++;
+		Particle* particle = *it;
+		mass = particle->mass;
+		++it;
+		double p = particle->getEnergy();
+		if (log(p) >= log(maxe)){
+			distribution[pgridNumber-1]+=particle->weight;
+		}
+		for(int i =0; i< pgridNumber-1; ++i){
+			if (log(p) <log(mine) + deltae*(i + 1)){
+				distribution[i] += particle->weight;
+				break;
+			}
+		}
+		p = particle->getInitialEnergy();
+		if (log(p) >= log(maxe)){
+			startDistribution[pgridNumber-1]+=particle->weight;
+		}
+		for(int i =0; i< pgridNumber-1; ++i){
+			if (log(p) <log(mine) + deltae*(i + 1)){
+				startDistribution[i] += particle->weight;
+				break;
+			}
+		}
+	}
+	for(int i = 0; i < pgridNumber; ++i){
+		fprintf(outPDF,"%lf %lf %lf\n", 10000000000000000000.0*(log(mine) + i*deltae), (distribution[i]), (startDistribution[i]));
+	}
+	delete[] distribution;
+	delete[] startDistribution;
+	fclose(outPDF); 
+}
+
+void outputEnergyPDF(std::list< Particle*>& list,const char* fileName){
+	FILE* outPDF = fopen(fileName,"w");
+	std::list<Particle*>::iterator it = list.begin();
+	double mine;
+	double maxe;
+	mine = (*it)->getEnergy();
+	maxe = mine;
+	++it;
+	while(it != list.end()){
+		Particle* particle = *it;
+		if(maxe < particle->getEnergy()){
+			maxe = particle->getEnergy();
+		}
+		if(maxe < particle->getInitialEnergy()){
+			maxe = particle->getInitialEnergy();
+		}
+		if(mine > particle->getEnergy()){
+			mine = particle->getEnergy();
+		}
+		if(mine > particle->getInitialEnergy()){
+			mine = particle->getInitialEnergy();
+		}
+		++it;
+	}
+	if(mine < 0){
+		mine = epsilon*maxe;
+	}
+	double* distribution = new double[pgridNumber];
+	double* startDistribution = new double[pgridNumber];
+	for (int i = 0; i < pgridNumber; ++i){
+		distribution[i] = 0;
+		startDistribution[i] = 0;
+	}
+	int particleNumber = 0;
+	double mass;
+	double deltae = (log(maxe) - log(mine))/(pgridNumber - 1);
+	it = list.begin();
+	while(it != list.end()){
+		particleNumber++;
+		Particle* particle = *it;
+		mass = particle->mass;
+		++it;
+		double p = particle->getEnergy();
+		if (log(p) >= log(maxe)){
+			distribution[pgridNumber-1]+=particle->weight;
+		}
+		for(int i =0; i< pgridNumber-1; ++i){
+			if (log(p) <log(mine) + deltae*(i + 1)){
+				distribution[i] += particle->weight;
+				break;
+			}
+		}
+		p = particle->getInitialEnergy();
+		if (log(p) >= log(maxe)){
+			startDistribution[pgridNumber-1]+=particle->weight;
+		}
+		for(int i =0; i< pgridNumber-1; ++i){
+			if (log(p) <log(mine) + deltae*(i + 1)){
+				startDistribution[i] += particle->weight;
+				break;
+			}
+		}
+	}
+	for(int i = 0; i < pgridNumber; ++i){
+		fprintf(outPDF,"%lf %lf %lf\n", 10000000000000000000.0*(log(mine) + i*deltae), (distribution[i]), (startDistribution[i]));
+	}
+	delete[] distribution;
+	delete[] startDistribution;
+	fclose(outPDF); 
+}
+
 void outputZPDF(std::list< Particle*>& list,const char* fileName){
 	FILE* outPDF = fopen(fileName,"w");
 	std::list<Particle*>::iterator it = list.begin();
