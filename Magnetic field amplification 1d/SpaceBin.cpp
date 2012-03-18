@@ -1101,7 +1101,7 @@ void SpaceBin::updateCosmicRayBoundMomentum(){
 		double temperature;
 		double sigma;
 		int zeroP = pgridNumber/2;
-		int sigmaIndex;
+		int sigmaIndex = zeroP;
 		double maxDistribution = (distribution[zeroP] + distribution[zeroP + 1])/2;
 		for(int i = zeroP;i < pgridNumber; ++i){
 			if(distribution[i] < maxDistribution/exp(0.5)){

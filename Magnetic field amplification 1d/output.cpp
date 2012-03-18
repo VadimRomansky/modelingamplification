@@ -242,7 +242,7 @@ void outputEnergyPDF(std::vector< Particle*>& list,const char* fileName){
 		}
 	}
 	for(int i = 0; i < pgridNumber; ++i){
-		fprintf(outPDF,"%lf %lf %lf\n", 10000000000000000000.0*(log(mine) + i*deltae), (distribution[i]), (startDistribution[i]));
+		fprintf(outPDF,"%lf %lf %lf\n", 10000000000000000000.0*(log(mine) + i*deltae), (distribution[i])/exp(log(mine) + i*deltae), (startDistribution[i])/exp(log(mine) + i*deltae));
 	}
 	delete[] distribution;
 	delete[] startDistribution;
@@ -313,11 +313,11 @@ void outputEnergyPDF(std::list< Particle*>& list,const char* fileName){
 		}
 	}
 	for(int i = 0; i < pgridNumber; ++i){
-		fprintf(outPDF,"%lf %lf %lf\n", 10000000000000000000.0*(log(mine) + i*deltae), (distribution[i]), (startDistribution[i]));
+		fprintf(outPDF,"%lf %lf %lf\n", 10000000000000000000.0*(log(mine) + i*deltae), (distribution[i]/exp(log(mine) + i*deltae)), (startDistribution[i])/exp(log(mine) + i*deltae));
 	}
 	delete[] distribution;
 	delete[] startDistribution;
-	fclose(outPDF); 
+	fclose(outPDF);
 }
 
 void outputZPDF(std::list< Particle*>& list,const char* fileName){
@@ -493,7 +493,7 @@ void outputRadialProfile(SpaceBin**** bins, int thetaNumber, int phiNumber, FILE
 		fprintf(outProfile, "%lf %lf %lf %lf %lf %lf",bin->r, bin->U, bin->averageVelocity, bin->massVelocity, 100000*bin->density, bin->temperature);
 		fprintf(outProfile,"%s","\n");
 	}
-	fclose(outProfile);
+	//fclose(outProfile);
 }
 
 void outputThetaProfile(SpaceBin**** bins, int rNumber, int phiNumber){
