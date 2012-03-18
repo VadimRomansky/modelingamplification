@@ -93,19 +93,11 @@ void Simulation::simulate(){
 			shockWavePoints.push_back(prevPoint);
 			shockWaveVelocity.push_back(0.0);
 		} else {
-			/*if(itNumber == 218){
-				printf("aaa");
-			}*/
 			printf("%s", "Particle propagation\n");
-			//std::list<Particle*>::iterator it; // = introducedParticles.begin();
-			//while( it != introducedParticles.end()){
 			int it;
 			#pragma omp parallel for private(it) shared(l)
-			//for(it = introducedParticles.begin(); it != introducedParticles.end(); ++it){
 			for(it = 0; it < introducedParticles.size(); ++it){
 				Particle* particle = introducedParticles[it];
-				//++it;
-				//printf("%d %s",l,"\n");
 				++l;
 				bool side = false;
 				double r = particle->getAbsoluteR();
@@ -139,7 +131,6 @@ void Simulation::simulate(){
 						printf("index[0] > rgridNumber\n");
 					}
 					if(index[0] == rgridNumber){
-						//bin = bins[rgridNumber - 1][index[1]][index[2]];
 						index[0] = rgridNumber - 1;
 						//bin->detectParticleR2(particle);
 						particle->absoluteMomentumTheta = pi - particle->absoluteMomentumTheta;
@@ -156,14 +147,7 @@ void Simulation::simulate(){
 				}
 				delete[] index;
 			}
-			/*printf("%s", "Fluxes updating\n");
-			for (int i = 0; i < rgridNumber; ++i){
-				for (int j = 0; j < phigridNumber; ++j){
-					for (int k = 0; k < thetagridNumber; ++k){
-						bins[i][j][k]->updateFluxes();
-					}
-				}
-			}*/
+
 			printf("%s", "Introducing new particles from left boundary\n");
 			introduceNewParticles();
 
@@ -208,72 +192,10 @@ void Simulation::simulate(){
 					outputEnergyPDF(bins[i][0][0]->particles,"./output/tamc_energy_pdf5.dat");
 				}
 			}
+			outputEnergyPDF(introducedParticles,"./output/tamc_energy_pdf.dat");
 			resetDetectors();
 			printf("%s","iteration ¹ ");
 			printf("%d\n",itNumber);
-
-			/////////////////////////////////////////
-
-			/*std::list<Particle*>::iterator it1 = introducedParticles.begin();
-
-			double tempMomentum;
-			double* averageVz = new double[pgridNumber];
-			double* count = new double[pgridNumber];
-	
-			for(int i = 0; i < pgridNumber; ++i){
-				averageVz[i] = 0.0;
-				count[i] = 0;
-			}
-
-			Particle* particle = *it1;
-
-			double minp = particle->localMomentum;
-			double maxp = minp;
-
-			while( it1 != introducedParticles.end()){
-				particle = *it1;
-				if(maxp < particle->localMomentum){
-					maxp = particle->localMomentum;
-				}
-				if(minp > particle->localMomentum){
-					minp = particle->localMomentum;
-				}
-				++it1;
-			}
-
-			double deltap = (maxp - minp)/(pgridNumber );
-
-			it1 = introducedParticles.begin();
-			while( it1 != introducedParticles.end()){
-				Particle* particle = *it1;
-				double p = particle->localMomentum;
-				int i = lowerInt((p - minp)/deltap);
-				if(( i < 0) || (i >= pgridNumber)){
-					//printf("index out of bound in updateCosmicRayBoundMomentum\n");
-					if(i >= pgridNumber){
-						i = pgridNumber - 1;
-					}
-				}
-				if(particle->localMomentum > DBL_EPSILON*sqrt(massProton*kBoltzman*temperature)){
-					averageVz[i] += particle->getLocalV()*particle->weight*particle->localMomentumZ/particle->localMomentum;
-					count[i] += particle->weight;
-				} else {
-					printf("localMomentum = 0\n");
-				}
-				++it1;
-			}
-
-			for(int i = pgridNumber - 1; i >=0; --i){
-				if(count[i] > 0){
-					averageVz[i] /= count[i];
-				}
-			}
-
-			outputAverageVz(minp, maxp, averageVz, "./output/averageVz.dat");
-			delete[] averageVz;
-			delete[] count;*/
-
-			////////////////////////////////////////////
 		}
 		outputPDF(introducedParticles,"./output/tamc_pdf.dat");
 		outputEnergyPDF(introducedParticles,"./output/tamc_energy_pdf.dat");
@@ -484,25 +406,21 @@ std::vector <Particle*> Simulation::getParticles(){
 				particleBinNumber = 0;
 				SpaceBin* bin = bins[i][j][k];
 				bin->initialMomentum = 0;
-				//double c2 = speed_of_light*speed_of_light;
 				int l;
-				//#pragma omp parallel for private(l) shared(list, bin)
 				for(l = 0; l < particlesNumber; ++l){
-					//if(order(bin->phi1, phi, bin->phi2) && order(bin->theta1, theta, bin->theta2) && order(bin->r1, r, bin->r2)){
-						++allParticlesNumber;
-						printf("%d",allParticlesNumber);
-						printf("%s","\n");
-						Particle* particle = new Particle( A, Z,bin, true);
-						particle->weight /= particlesNumber;
-						startPDF.push_front(particle);
-						list.push_back(particle);
-						double v = particle->getAbsoluteV();
-						double vr = v*cos(particle->absoluteMomentumTheta); 
-						if(abs(v*v/c2 - 1) < DBL_EPSILON){
-							printf("v = c\n in getParticles");
-						}
-						bin->initialMomentum += vr*particle->mass*particle->weight/sqrt(1 - (v*v)/c2);
-					//}
+					++allParticlesNumber;
+					printf("%d",allParticlesNumber);
+					printf("%s","\n");
+					Particle* particle = new Particle( A, Z,bin, true);
+					particle->weight /= particlesNumber;
+					startPDF.push_front(particle);
+					list.push_back(particle);
+					double v = particle->getAbsoluteV();
+					double vr = v*cos(particle->absoluteMomentumTheta); 
+					if(abs(v*v/c2 - 1) < DBL_EPSILON){
+						printf("v = c\n in getParticles");
+					}
+					bin->initialMomentum += vr*particle->mass*particle->weight/sqrt(1 - (v*v)/c2);
 				}
 			}
 		}
