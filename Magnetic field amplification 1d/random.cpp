@@ -33,6 +33,7 @@ double randomGauss(double a, double sigma){
 double uniRandom(){
 	//srand ( time(NULL) );
 	double a = (rand()%randomSeed);
+	//double a = randomSeed/2;
 	a = a/randomSeed;
 	return a;
 	//return (rand()%randomSeed)/randomSeed;

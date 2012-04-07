@@ -4,7 +4,7 @@
 #include "particle.h"
 #include "output.h"
 #include "util.h"
-#include <omp.h>
+//#include <omp.h>
 
 Simulation::Simulation(){
 	partOfCosmicRay = 0;
@@ -95,7 +95,7 @@ void Simulation::simulate(){
 		} else {
 			printf("%s", "Particle propagation\n");
 			int it;
-			#pragma omp parallel for private(it) shared(l)
+			//#pragma omp parallel for private(it) shared(l)
 			for(it = 0; it < introducedParticles.size(); ++it){
 				Particle* particle = introducedParticles[it];
 				++l;
@@ -190,6 +190,9 @@ void Simulation::simulate(){
 				}
 				if(i == 50){
 					outputEnergyPDF(bins[i][0][0]->particles,"./output/tamc_energy_pdf5.dat");
+				}
+				if(i == febNumber){
+					outputEnergyPDF(bins[febNumber][0][0]->detectedParticlesR1,"./output/feb_energy_pdf.dat");
 				}
 			}
 			outputEnergyPDF(introducedParticles,"./output/tamc_energy_pdf.dat");
@@ -488,7 +491,7 @@ void Simulation::introduceNewParticles(){
 	}
 
 	int i;
-	#pragma omp parallel for private(i)
+	//#pragma omp parallel for private(i)
 	for(i = 0; i < list.size(); ++i){
 		Particle* particle = list[i];
 		bool side = false;
@@ -575,7 +578,7 @@ void Simulation::removeEscapedParticles(){
 		if(particle->absoluteZ < 0){
 			delete particle;
 		} else {
-			if(particle->absoluteMomentum > 5*particle->previousAbsoluteMomentum){
+			if(particle->absoluteMomentum > 1.1*particle->previousAbsoluteMomentum){
 				for(int i = 0; i < generationSize; ++i){
 					Particle* particle1 = new Particle(*particle);
 					particle1->weight /= generationSize;
@@ -584,6 +587,9 @@ void Simulation::removeEscapedParticles(){
 				}
 				delete particle;
 			} else {
+				if(1.1*particle->absoluteMomentum < particle->previousAbsoluteMomentum){
+					particle->previousAbsoluteMomentum = particle->absoluteMomentum;
+				}
 				list.push_back(particle);
 			}
 		}
