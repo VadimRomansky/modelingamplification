@@ -17,6 +17,14 @@ Simulation::Simulation(){
 	gamma = 1;
 	delta = 1;
 	epsilon = 0.1;
+	energy = 0;
+	theorEnergy = 0;
+	momentumZ = 0;
+	theorMomentumZ = 0;
+	momentumX = 0;
+	theorMomentumX = 0;
+	momentumY = 0;
+	theorMomentumY = 0;
 	A = 1;
 	Z = 1;
 	startPDF = std::list <Particle*>();
@@ -95,7 +103,7 @@ void Simulation::simulate(){
 		} else {
 			printf("%s", "Particle propagation\n");
 			int it;
-			//#pragma omp parallel for private(it) shared(l)
+			#pragma omp parallel for private(it) shared(l)
 			for(it = 0; it < introducedParticles.size(); ++it){
 				Particle* particle = introducedParticles[it];
 				++l;
@@ -134,11 +142,12 @@ void Simulation::simulate(){
 						index[0] = rgridNumber - 1;
 						//bin->detectParticleR2(particle);
 						particle->absoluteMomentumTheta = pi - particle->absoluteMomentumTheta;
-						particle->absoluteMomentumPhi = 2*pi - particle->absoluteMomentumPhi;
-						if(particle->absoluteMomentumPhi > 2*pi){
-							particle->absoluteMomentumPhi -= 2*pi;
-						}
+						//particle->absoluteMomentumPhi = 2*pi - particle->absoluteMomentumPhi;
+						//if(particle->absoluteMomentumPhi > 2*pi){
+							//particle->absoluteMomentumPhi -= 2*pi;
+						//}
 						particle->moveToBinRight(bin);
+						theorMomentumZ += 2*particle->absoluteMomentum*cos(particle->absoluteMomentumTheta);
 						//bin->detectParticleR2(particle);
 					}
 					if (time >= timeStep){
@@ -204,7 +213,8 @@ void Simulation::simulate(){
 		outputEnergyPDF(introducedParticles,"./output/tamc_energy_pdf.dat");
 		outIteration = fopen("./output/tamc_iteration.dat","a");
 		radialFile = fopen("./output/tamc_radial_profile.dat","a");
-		fprintf(outIteration,"%s %d \n","iteration number ",itNumber);
+		updateEnergy();
+		fprintf(outIteration,"%d %lf %lf %lf %lf %lf %lf %lf %lf %d %lf\n",itNumber, energy, theorEnergy, momentumZ, theorMomentumZ, momentumX, theorMomentumX, momentumY, theorMomentumY, introducedParticles.size(), particlesWeight);
 		fclose(outIteration);
 		outputRadialProfile(bins,0,0,radialFile,averageVelocity);
 		//outputShockWave(shockWavePoints, shockWaveVelocity);
@@ -424,10 +434,18 @@ std::vector <Particle*> Simulation::getParticles(){
 						printf("v = c\n in getParticles");
 					}
 					bin->initialMomentum += vr*particle->mass*particle->weight/sqrt(1 - (v*v)/c2);
+					energy += particle->getEnergy()*particle->weight;
+					momentumZ += particle->absoluteMomentum*cos(particle->absoluteMomentumTheta)*particle->weight;
+					momentumY += particle->absoluteMomentum*sin(particle->absoluteMomentumTheta)*cos(particle->absoluteMomentumPhi)*particle->weight;
+					momentumX += particle->absoluteMomentum*sin(particle->absoluteMomentumTheta)*sin(particle->absoluteMomentumPhi)*particle->weight;
 				}
 			}
 		}
 	}
+	theorEnergy = energy;
+	theorMomentumZ = momentumZ;
+	theorMomentumX = momentumX;
+	theorMomentumY = momentumY;
 	return list;
 }
 
@@ -491,7 +509,7 @@ void Simulation::introduceNewParticles(){
 	}
 
 	int i;
-	//#pragma omp parallel for private(i)
+	#pragma omp parallel for private(i)
 	for(i = 0; i < list.size(); ++i){
 		Particle* particle = list[i];
 		bool side = false;
@@ -534,11 +552,12 @@ void Simulation::introduceNewParticles(){
 					index[0] = rgridNumber - 1;
 					bin->detectParticleR2(particle);
 					particle->absoluteMomentumTheta = pi - particle->absoluteMomentumTheta;
-					particle->absoluteMomentumPhi = 2*pi - particle->absoluteMomentumPhi;
-					if(particle->absoluteMomentumPhi > 2*pi){
-						particle->absoluteMomentumPhi -= 2*pi;
-					}
+					//particle->absoluteMomentumPhi = 2*pi - particle->absoluteMomentumPhi;
+					//if(particle->absoluteMomentumPhi > 2*pi){
+						//particle->absoluteMomentumPhi -= 2*pi;
+					//}
 					particle->moveToBinRight(bin);
+					//theorMomentumZ += 2*particle->absoluteMomentum*cos(particle->absoluteMomentumTheta);
 				}
 				if (time >= timeStep){
 					break;
@@ -561,6 +580,10 @@ void Simulation::introduceNewParticles(){
 		if(particle->absoluteZ > 0){
 			//startPDF.push_front(new Particle(*particle));
 			introducedParticles.push_back(new Particle(*particle));
+			theorEnergy += particle->getEnergy()*particle->weight;
+			theorMomentumZ += particle->absoluteMomentum*cos(particle->absoluteMomentumTheta)*particle->weight;
+			theorMomentumY += particle->absoluteMomentum*sin(particle->absoluteMomentumTheta)*cos(particle->absoluteMomentumPhi)*particle->weight;
+			theorMomentumX += particle->absoluteMomentum*sin(particle->absoluteMomentumTheta)*sin(particle->absoluteMomentumPhi)*particle->weight;
 		}
 		delete particle;
 		++it;
@@ -576,6 +599,10 @@ void Simulation::removeEscapedParticles(){
 		Particle* particle = *it;
 		++it;
 		if(particle->absoluteZ < 0){
+			theorEnergy -= particle->getEnergy()*particle->weight;
+			theorMomentumZ -= particle->absoluteMomentum*cos(particle->absoluteMomentumTheta)*particle->weight;
+			theorMomentumY -= particle->absoluteMomentum*sin(particle->absoluteMomentumTheta)*cos(particle->absoluteMomentumPhi)*particle->weight;
+			theorMomentumX -= particle->absoluteMomentum*sin(particle->absoluteMomentumTheta)*sin(particle->absoluteMomentumPhi)*particle->weight;
 			delete particle;
 		} else {
 			if(particle->absoluteMomentum > 1.1*particle->previousAbsoluteMomentum){
@@ -812,6 +839,24 @@ void Simulation::smoothProfile(std::list<SpaceBin*> bins){
 		bin->U = u;
 		bin->density = density;
 
+		++it;
+	}
+}
+
+void Simulation::updateEnergy(){
+	std::vector<Particle*>::iterator it = introducedParticles.begin();
+	energy = 0;
+	momentumZ = 0;
+	momentumX = 0;
+	momentumY = 0;
+	particlesWeight = 0;
+	while(it != introducedParticles.end()){
+		Particle* particle = *it;
+		energy += particle->getEnergy()*particle->weight;
+		momentumZ += particle->absoluteMomentum*cos(particle->absoluteMomentumTheta)*particle->weight;
+		momentumY += particle->absoluteMomentum*sin(particle->absoluteMomentumTheta)*cos(particle->absoluteMomentumPhi)*particle->weight;
+		momentumX += particle->absoluteMomentum*sin(particle->absoluteMomentumTheta)*sin(particle->absoluteMomentumPhi)*particle->weight;
+		particlesWeight += particle->weight;
 		++it;
 	}
 }
