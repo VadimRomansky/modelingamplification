@@ -42,6 +42,17 @@ public:
 	double minK;
 	double maxK;
 
+	double energy;
+	double theorEnergy;
+
+	double momentumZ;
+	double theorMomentumZ;
+	double momentumX;
+	double theorMomentumX;
+	double momentumY;
+	double theorMomentumY;
+	double particlesWeight;
+
 	Particle* Particles;
 	SpaceBin**** bins;
 	SpaceBin* zeroBin;
@@ -92,6 +103,7 @@ public:
 
 	double solveSecondDerivativeZero(int i);
 	void findShockWavePoint();
+	void updateEnergy();
 };
 
 
