@@ -53,6 +53,8 @@ public:
 	double theorMomentumY;
 	double particlesWeight;
 
+	bool smallAngleScattering;
+
 	Particle* Particles;
 	SpaceBin**** bins;
 	SpaceBin* zeroBin;

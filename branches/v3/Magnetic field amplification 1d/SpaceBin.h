@@ -44,6 +44,8 @@ public:
 	int numberPhi;
 	int numberTheta;
 
+	bool smallAngleScattering;
+
 	BinFlux crMassFlux;
 	BinFlux particleMassFlux;
 	BinFlux bulkMassFlux;
@@ -80,7 +82,7 @@ public:
 	double crFlux;
 
 	SpaceBin();
-	SpaceBin(double r, double theta, double phi, double deltar, double deltatheta, double deltaphi, double u, double rho, double utheta,double uphi, double temperature, double b, int i, int j, int k);
+	SpaceBin(double r, double theta, double phi, double deltar, double deltatheta, double deltaphi, double u, double rho, double utheta,double uphi, double temperature, double b, int i, int j, int k, bool scattering);
 	~SpaceBin();
 	int* propagateParticle(Particle* particle ,double& time, double timeStep);
 	double getFreePath(Particle* particle);

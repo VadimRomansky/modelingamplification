@@ -18,6 +18,7 @@ void outputPhiProfile(SpaceBin**** bins, int rNumber, int thetaNumber);
 void outputThetaProfile(SpaceBin**** bins, int rNumber, int phiNumber);
 void outputShockWave(std::list<double> points, std::list<double> velocity);
 void outputAverageVz(double minp, double maxp, double* averageVz, const char* fileName);
+void outputParticles(std::vector<Particle*>& particles, const char* fileName);
 //void outputParticlesCount(Xbin** bins, const char* fileName);
 
 #endif

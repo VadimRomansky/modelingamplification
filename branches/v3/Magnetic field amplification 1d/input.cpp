@@ -18,6 +18,9 @@ Simulation* readInput(){
 		//fscanf(infile,"%lf",&simulation->freeEscapeBoundary);
 		fscanf(infile,"%lf",&simulation->upstreamR);
 		fscanf(infile,"%lf",&simulation->downstreamR);
+		int a;
+		fscanf(infile,"%d", &a);
+		simulation->smallAngleScattering = (a == 1);
 		fclose(infile);
 		return simulation;
 	} else {

@@ -553,6 +553,16 @@ void outputAverageVz(double minp, double maxp, double* averageVz, const char* fi
 	fclose(outVz);
 }
 
+void outputParticles(std::vector<Particle*>& particles, const char* fileName){
+	FILE* outParticles = fopen(fileName, "w");
+	std::vector<Particle*>::iterator it = particles.begin();
+	while(it != particles.end()){
+		fprintf(outParticles ,"%lf %lf \n",(*it)->absoluteZ, (*it)->absoluteMomentum*1000000000000000000000000.0);
+		++it;
+	}
+	fclose(outParticles );
+}
+
 /*void outputPartclesCount(Xbin** bins, const char* fileName){
 	FILE* outParticles = fopen(fileName,"w");
 	for(int i = 0; i < xgridNumber; ++i){
