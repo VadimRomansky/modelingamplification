@@ -17,7 +17,7 @@ SpaceBin::SpaceBin(){
 	averageVelocity = 0;
 	cosmicRayBoundMomentum = 0;
 }
-SpaceBin::SpaceBin(double R, double Theta, double Phi, double deltar, double deltatheta, double deltaphi, double u, double rho, double utheta,double uphi, double t, double b, int i, int j, int k){
+SpaceBin::SpaceBin(double R, double Theta, double Phi, double deltar, double deltatheta, double deltaphi, double u, double rho, double utheta,double uphi, double t, double b, int i, int j, int k, bool smallAngle){
 	r = R;
 	theta = Theta;
 	phi = Phi;
@@ -44,6 +44,8 @@ SpaceBin::SpaceBin(double R, double Theta, double Phi, double deltar, double del
 	numberR = i;
 	numberTheta = j;
 	numberPhi = k;
+
+	smallAngleScattering = smallAngle;
 
 	//TODO!!!!!!!!!!!!!!!!
 	/*magneticField = new double[kgridNumber];
@@ -108,6 +110,7 @@ int* SpaceBin::propagateParticle(Particle* particle ,double& time, double timeSt
 	}
 	double gammaFactor = 1/sqrt(1 - U*U/c2);
 	double colisionTime = getFreeTime(particle);
+	if(smallAngleScattering){
 	int l = 0;
 	while(isInBin(particle) && (time < timeStep)){
 		l++;
@@ -142,8 +145,8 @@ int* SpaceBin::propagateParticle(Particle* particle ,double& time, double timeSt
 		particle.absolutePhi -= 2*pi;
 	}*/
 
-	double r = sqrt(particle->absoluteX*particle->absoluteX + particle->absoluteY*particle->absoluteY + particle->absoluteZ*particle->absoluteZ);
-	double theta = acos(particle->absoluteZ/r);
+	double particleR = sqrt(particle->absoluteX*particle->absoluteX + particle->absoluteY*particle->absoluteY + particle->absoluteZ*particle->absoluteZ);
+	double theta = acos(particle->absoluteZ/particleR);
 	if( abs(r) < DBL_EPSILON){
 		theta = pi/2;
 	}
@@ -155,6 +158,64 @@ int* SpaceBin::propagateParticle(Particle* particle ,double& time, double timeSt
 	//particle->setAbsoluteMomentum(U,UTheta,UPhi);
 	particle->setAbsoluteMomentum(this);
 	return binByCoordinates(particle->absoluteZ, theta, phi,0, r2 - r1, theta2 - theta1, phi2 - phi1);
+	} else {
+		//double v = particle->getLocalV()*particle->localMomentumZ/particle->localMomentum;
+		//if(particle->localMomentum < epsilon*sqrt(particle->mass*temperature*kBoltzman)){
+			double absoluteV = particle->getAbsoluteV()*cos(particle->absoluteMomentumTheta);
+			double deltat;
+			if(absoluteV > 0){
+				deltat = (r2 - particle->absoluteZ)/absoluteV; 
+				if(deltat < gammaFactor*(timeStep - time)){
+					particle->absoluteZ = r2*(1 + epsilon);
+					time += deltat/gammaFactor;
+				} else {
+					particle->absoluteZ += absoluteV*(timeStep - time)*gammaFactor;
+					deltat = (timeStep - time)*gammaFactor;
+					time = timeStep;
+				}
+			} else {
+				deltat = (r1 - particle->absoluteZ)/absoluteV;
+				if(deltat < gammaFactor*(timeStep - time)){
+					particle->absoluteZ = r1*(1 - epsilon);
+					if(r1 < epsilon){
+						particle->absoluteZ = -epsilon;
+					}
+					time += deltat/gammaFactor;
+				} else {
+					particle->absoluteZ += absoluteV*(timeStep - time)*gammaFactor;
+					deltat = (timeStep - time)*gammaFactor;
+					time = timeStep;
+				}
+			}
+			particle->absoluteX += particle->getAbsoluteV()*sin(particle->absoluteMomentumTheta)*cos(particle->absoluteMomentumPhi);
+			particle->absoluteY += particle->getAbsoluteV()*sin(particle->absoluteMomentumTheta)*sin(particle->absoluteMomentumPhi);
+			double probability;
+			if(deltat > colisionTime){
+				probability = 1;
+			} else {
+				probability = deltat/colisionTime;
+			}
+			if(uniRandom() <= probability){
+				double cosLocalTheta = uniRandom();
+				double phi = 2*pi*uniRandom();
+				double theta = acos(cosLocalTheta);
+				particle->localMomentumZ = particle->localMomentum*cos(theta);
+				particle->localMomentumX = particle->localMomentum*sin(theta)*cos(phi);
+				particle->localMomentumY = particle->localMomentum*sin(theta)*sin(phi);
+				particle->setAbsoluteMomentum(this);
+			}
+			double particleR = sqrt(particle->absoluteX*particle->absoluteX + particle->absoluteY*particle->absoluteY + particle->absoluteZ*particle->absoluteZ);
+			double theta = acos(particle->absoluteZ/particleR);
+			if( abs(r) < DBL_EPSILON){
+				theta = pi/2;
+			}
+			double phi = atan2(particle->absoluteY, particle->absoluteX);
+			if(phi < 0) {
+				phi = phi + 2*pi;
+			}
+			return binByCoordinates(particle->absoluteZ, theta, phi,0, r2 - r1, theta2 - theta1, phi2 - phi1);
+		//}
+	}
 }
 
 int* SpaceBin::binByCoordinates(double r, double theta, double phi, double r0, double deltar, double deltatheta, double deltaphi){
@@ -321,7 +382,7 @@ void SpaceBin::scattering(Particle* particle, double maxTheta){
 	particle->localMomentumZ = particle->localMomentum*cos(localTheta);
 	particle->localMomentumX = particle->localMomentum*sinLocalTheta*cos(localPhi);
 	particle->localMomentumY = particle->localMomentum*sinLocalTheta*sin(localPhi);
-	//particle->setAbsoluteMomentum(U,UTheta,UPhi);
+	particle->setAbsoluteMomentum(this);
 }
 
 void SpaceBin::updateFluxes(){

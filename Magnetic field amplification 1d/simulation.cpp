@@ -55,7 +55,7 @@ void Simulation::initializeProfile(){
 	double Theta = deltaTheta/2;
 	double Phi = deltaPhi/2;
 	bins = new SpaceBin***[rgridNumber];
-	zeroBin = new SpaceBin(-zeroBinScale*deltaR/2,Theta,Phi,zeroBinScale*deltaR,deltaTheta,deltaPhi,U0,density0,Theta,Phi,temperature,B0,-1,0,0);
+	zeroBin = new SpaceBin(-zeroBinScale*deltaR/2,Theta,Phi,zeroBinScale*deltaR,deltaTheta,deltaPhi,U0,density0,Theta,Phi,temperature,B0,-1,0,0, smallAngleScattering);
     for(int i = 0; i < rgridNumber; ++i){
 		bins[i] = new SpaceBin**[thetagridNumber];
 		Theta = deltaTheta/2;
@@ -70,7 +70,7 @@ void Simulation::initializeProfile(){
 				} else {
 					u = U0;
 				}
-				bins[i][j][k] = new SpaceBin(R,Theta,Phi,deltaR,deltaTheta,deltaPhi,u,density,Theta,Phi,temperature,B0,i,j,k);
+				bins[i][j][k] = new SpaceBin(R,Theta,Phi,deltaR,deltaTheta,deltaPhi,u,density,Theta,Phi,temperature,B0,i,j,k, smallAngleScattering);
 				Phi = Phi + deltaPhi;
 			}
 			Theta = Theta + deltaTheta;
@@ -209,6 +209,7 @@ void Simulation::simulate(){
 			printf("%s","iteration ¹ ");
 			printf("%d\n",itNumber);
 		}
+		outputParticles(introducedParticles,"./output/particles.dat");
 		outputPDF(introducedParticles,"./output/tamc_pdf.dat");
 		outputEnergyPDF(introducedParticles,"./output/tamc_energy_pdf.dat");
 		outIteration = fopen("./output/tamc_iteration.dat","a");
