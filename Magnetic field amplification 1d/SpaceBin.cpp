@@ -855,7 +855,7 @@ bool SpaceBin::isInThisOrNear(double r, double theta, double phi){
 
 void SpaceBin::detectParticleR1(Particle* particle){
 	if(numberR == febNumber){
-		detectedParticlesR1.push_back(new Particle(*particle));
+		//detectedParticlesR1.push_back(new Particle(*particle));
 	}
 	//double c2 = speed_of_light*speed_of_light;
 	if(particle->isCosmicRay){
@@ -872,7 +872,7 @@ void SpaceBin::detectParticleR1(Particle* particle){
 }
 
 void SpaceBin::detectParticleR2(Particle* particle){
-	detectedParticlesR2.push_back(new Particle(*particle));
+	//detectedParticlesR2.push_back(new Particle(*particle));
 	//double c2 = speed_of_light*speed_of_light;
 	if(particle->isCosmicRay){
 		crMassFlux.fluxR2 += particle->mass*particle->weight;
