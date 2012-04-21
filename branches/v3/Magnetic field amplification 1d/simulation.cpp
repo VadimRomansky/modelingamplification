@@ -4,7 +4,7 @@
 #include "particle.h"
 #include "output.h"
 #include "util.h"
-//#include <omp.h>
+#include <omp.h>
 
 Simulation::Simulation(){
 	partOfCosmicRay = 0;
@@ -147,7 +147,7 @@ void Simulation::simulate(){
 							//particle->absoluteMomentumPhi -= 2*pi;
 						//}
 						particle->moveToBinRight(bin);
-						theorMomentumZ += 2*particle->absoluteMomentum*cos(particle->absoluteMomentumTheta);
+						theorMomentumZ += 2*particle->absoluteMomentum*cos(particle->absoluteMomentumTheta)*particle->weight;
 						//bin->detectParticleR2(particle);
 					}
 					if (time >= timeStep){
@@ -605,7 +605,7 @@ void Simulation::removeEscapedParticles(){
 			theorMomentumX -= particle->absoluteMomentum*sin(particle->absoluteMomentumTheta)*sin(particle->absoluteMomentumPhi)*particle->weight;
 			delete particle;
 		} else {
-			if(particle->absoluteMomentum > 1.1*particle->previousAbsoluteMomentum){
+			if(particle->absoluteMomentum > momentumParameter*particle->previousAbsoluteMomentum){
 				for(int i = 0; i < generationSize; ++i){
 					Particle* particle1 = new Particle(*particle);
 					particle1->weight /= generationSize;
@@ -614,7 +614,7 @@ void Simulation::removeEscapedParticles(){
 				}
 				delete particle;
 			} else {
-				if(1.1*particle->absoluteMomentum < particle->previousAbsoluteMomentum){
+				if(momentumParameter*particle->absoluteMomentum < particle->previousAbsoluteMomentum){
 					particle->previousAbsoluteMomentum = particle->absoluteMomentum;
 				}
 				list.push_back(particle);
@@ -853,6 +853,9 @@ void Simulation::updateEnergy(){
 	while(it != introducedParticles.end()){
 		Particle* particle = *it;
 		energy += particle->getEnergy()*particle->weight;
+		if(particle->absoluteMomentum < 0){
+			printf("particle->absoluteMomentum < 0\n");
+		}
 		momentumZ += particle->absoluteMomentum*cos(particle->absoluteMomentumTheta)*particle->weight;
 		momentumY += particle->absoluteMomentum*sin(particle->absoluteMomentumTheta)*cos(particle->absoluteMomentumPhi)*particle->weight;
 		momentumX += particle->absoluteMomentum*sin(particle->absoluteMomentumTheta)*sin(particle->absoluteMomentumPhi)*particle->weight;
