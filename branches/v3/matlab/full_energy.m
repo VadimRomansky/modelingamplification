@@ -1,6 +1,6 @@
 clear;
 load tamc_iteration.dat;
-N=70;
+N=size(tamc_iteration,1);
 
 figure(1);
 plot (tamc_iteration(1:N,1),tamc_iteration(1:N,2),'blue',tamc_iteration(1:N,1),tamc_iteration(1:N,3),'red');

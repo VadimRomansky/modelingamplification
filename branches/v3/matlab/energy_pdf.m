@@ -1,6 +1,6 @@
 clear;
 load tamc_energy_pdf.dat;
-N=100;
+N=size(tamc_energy_pdf);
 pdf(1:N,1:3)=0;
 for j=1:N,
     pdf(j,1)=tamc_energy_pdf(j,1);

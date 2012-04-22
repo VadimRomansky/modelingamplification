@@ -13,8 +13,8 @@ const double relativistic_gamma = 1.3333333333;
 const double maxMomentum = 5.0E-19;
 const double weight = 0.05;
 const int pgridNumber = 1000;
-const double defaultTimeStep = 0.5;
-const int rgridNumber = 50;
+const double defaultTimeStep = 0.1;
+const int rgridNumber = 300;
 const int febNumber = 30;
 const int phigridNumber = 1;
 const int thetagridNumber = 1;
@@ -27,6 +27,6 @@ const int generationSize = 2;
 const double startX = 100;
 const double startY = 100;
 const double zeroBinScale = 2;
-const double momentumParameter = 1.2;
+const double momentumParameter = 10;
 
 #endif
