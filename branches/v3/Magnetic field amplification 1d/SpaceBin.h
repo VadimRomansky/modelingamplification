@@ -101,6 +101,9 @@ public:
 	void multiplyParticleWeights(double value);
 	void sortParticles(double minK, double maxK);
 	void resetDetectors();
+	void updateTemperature(double* distribution, double deltap);
+	double findTemperature(double minT, double maxT, double* distribution, double deltap);
+	double getError(double* distribution, double deltap, double T);
 
 	void resetProfile(double massFlux0, double momentaFlux0, double energyFlux0,double density0, double U0);
 	double pressureSpectralDensity(int j, double density0, double U0, int Z, int A);

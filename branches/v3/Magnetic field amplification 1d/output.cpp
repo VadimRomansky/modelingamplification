@@ -243,7 +243,7 @@ void outputEnergyPDF(std::vector< Particle*>& list,const char* fileName){
 			}
 		}
 		for(int i = 0; i < pgridNumber; ++i){
-			fprintf(outPDF,"%lf %lf %lf\n", 10000000000000000000.0*(log(mine) + i*deltae), (distribution[i])/exp(log(mine) + i*deltae), (startDistribution[i])/exp(log(mine) + i*deltae));
+			fprintf(outPDF,"%lf %lf %lf\n", (log(mine) + i*deltae), (distribution[i])/exp(log(mine) + i*deltae), (startDistribution[i])/exp(log(mine) + i*deltae));
 		}
 		delete[] distribution;
 		delete[] startDistribution;
@@ -316,7 +316,7 @@ void outputEnergyPDF(std::list< Particle*>& list,const char* fileName){
 			}
 		}
 		for(int i = 0; i < pgridNumber; ++i){
-			fprintf(outPDF,"%lf %lf %lf\n", 10000000000000000000.0*(log(mine) + i*deltae), (distribution[i])/exp(log(mine) + i*deltae), (startDistribution[i])/exp(log(mine) + i*deltae));
+			fprintf(outPDF,"%lf %lf %lf\n", (log(mine) + i*deltae), (distribution[i])/exp(log(mine) + i*deltae), (startDistribution[i])/exp(log(mine) + i*deltae));
 		}
 		delete[] distribution;
 		delete[] startDistribution;
