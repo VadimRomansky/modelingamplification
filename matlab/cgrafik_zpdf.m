@@ -4,7 +4,7 @@ load zpdf2.dat;
 load zpdf3.dat;
 load zpdf4.dat;
 load zpdf0.dat;
-N=500;
+N=size(zpdf1,1);
 
 figure(1);
 plot (zpdf0(1:N,1),zpdf0(1:N,2),'blue',zpdf0(1:N,1),zpdf0(1:N,3),'red');

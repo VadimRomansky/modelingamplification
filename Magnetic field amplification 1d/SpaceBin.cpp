@@ -1161,7 +1161,6 @@ void SpaceBin::updateCosmicRayBoundMomentum(){
 				}
 			}
 		}
-		double temperature;
 		double sigma;
 		int zeroP = pgridNumber/2;
 		int sigmaIndex = zeroP;

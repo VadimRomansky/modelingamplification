@@ -4,7 +4,7 @@ load tamc_energy_pdf1.dat;
 load tamc_energy_pdf2.dat;
 load tamc_energy_pdf3.dat;
 load tamc_energy_pdf4.dat;
-N=500;
+N=size(tamc_energy_pdf0,1);
 
 figure(1);
 plot (tamc_energy_pdf0(1:N,1),tamc_energy_pdf0(1:N,2),'blue',tamc_energy_pdf0(1:N,1),tamc_energy_pdf0(1:N,3),'red');

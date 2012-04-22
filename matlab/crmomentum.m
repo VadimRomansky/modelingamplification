@@ -1,7 +1,7 @@
 clear;
 load tamc_cosmic_ray_momentum.dat;
 N1=1;
-N2=100;
+N2=size(tamc_cosmic_ray_momentum,1);
 figure(1);
 plot (tamc_cosmic_ray_momentum(1:N2,1),tamc_cosmic_ray_momentum(1:N2,2),'blue');
 title ('cosmic ray bound momentum');
