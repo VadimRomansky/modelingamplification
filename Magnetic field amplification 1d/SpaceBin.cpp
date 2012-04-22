@@ -196,7 +196,7 @@ int* SpaceBin::propagateParticle(Particle* particle ,double& time, double timeSt
 				probability = deltat/colisionTime;
 			}
 			if(uniRandom() <= probability){
-				double cosLocalTheta = uniRandom();
+				double cosLocalTheta = 2*(uniRandom() - 0.5);
 				double phi = 2*pi*uniRandom();
 				double theta = acos(cosLocalTheta);
 				particle->localMomentumZ = particle->localMomentum*cos(theta);
@@ -1161,12 +1161,14 @@ void SpaceBin::updateCosmicRayBoundMomentum(){
 				}
 			}
 		}
-		double sigma;
+
+
+		/*double sigma;
 		int zeroP = pgridNumber/2;
 		int sigmaIndex = zeroP;
 		double maxDistribution = (distribution[zeroP] + distribution[zeroP + 1])/2;
-		for(int i = zeroP;i < pgridNumber; ++i){
-			if(distribution[i] < maxDistribution/exp(0.5)){
+		for(int i = zeroP;i < pgridNumber-2; ++i){
+			if((distribution[i - 1] + distribution[i] + distribution[i + 1])/3< maxDistribution/exp(0.5)){
 				sigmaIndex = i - 1;
 				break;
 			}
@@ -1175,7 +1177,10 @@ void SpaceBin::updateCosmicRayBoundMomentum(){
 		double d2 = distribution[sigmaIndex + 1];
 
 		sigma =  (maxDistribution/exp(0.5) - d1)*deltap/(d2 - d1) + (sigmaIndex + 0.5 - zeroP)*deltap;
-		temperature = sigma*sigma/(massProton*kBoltzman);
+		temperature = sigma*sigma/(massProton*kBoltzman);*/
+
+
+		updateTemperature(distribution, deltap);
 
 		if(numberR == 10){
 			FILE* outPDF = fopen("./output/zpdf1.dat","w");
@@ -1266,6 +1271,58 @@ void SpaceBin::updateCosmicRayBoundMomentum(){
 
 		delete[] distribution;
 	}
+}
+
+void SpaceBin::updateTemperature(double* distribution, double deltap){
+	double sigma;
+	int zeroP = pgridNumber/2;
+	int sigmaIndex = zeroP;
+	double maxDistribution = (distribution[zeroP] + distribution[zeroP + 1])/2;
+	for(int i = zeroP;i < pgridNumber-2; ++i){
+		if((distribution[i - 1] + distribution[i] + distribution[i + 1])/3< maxDistribution/exp(0.5)){
+			sigmaIndex = i - 1;
+			break;
+		}
+	}
+	double d1 = distribution[sigmaIndex];
+	double d2 = distribution[sigmaIndex + 1];
+
+
+	sigma =  (maxDistribution/exp(0.5) - d1)*deltap/(d2 - d1) + (sigmaIndex + 0.5 - zeroP)*deltap;
+	temperature = sigma*sigma/(massProton*kBoltzman);
+
+	double minT = 0;
+	double maxT = (deltap*pgridNumber)*(deltap*pgridNumber)/(8*kBoltzman*massProton);
+	double T = findTemperature(minT,maxT,distribution, deltap);
+	temperature = T;
+}
+
+double SpaceBin::findTemperature(double minT, double maxT, double* distribution, double deltap){
+	double tempT = (minT + maxT)/2;
+	double T1 = (minT + tempT)/2;
+	double T2 = (tempT + maxT)/2;
+
+	if((T1 - T2) < 100){
+		return tempT;
+	}
+
+	double delta1 = getError(distribution, deltap, T1);
+	double delta2 = getError(distribution, deltap, T2);
+
+	if(delta1 < delta2){
+		return findTemperature(minT, tempT, distribution, deltap);
+	} else {
+		return findTemperature(tempT,maxT, distribution, deltap);
+	}
+}
+
+double SpaceBin::getError(double* distribution, double deltap, double T){
+	double error = 0;
+	for(int i = 0; i < pgridNumber/2 - 2; ++i){
+		double p = i*deltap;
+		error += abs((distribution[pgridNumber/2 + i - 1] + distribution[pgridNumber/2 + i] + distribution[pgridNumber/2 + i + 1])/3 - maxwell((i + 1/2)*deltap, massProton, T));
+	}
+	return error;
 }
 
 	

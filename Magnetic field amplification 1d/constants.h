@@ -27,6 +27,6 @@ const int generationSize = 2;
 const double startX = 100;
 const double startY = 100;
 const double zeroBinScale = 2;
-const double momentumParameter = 10;
+const double momentumParameter = 5;
 
 #endif
