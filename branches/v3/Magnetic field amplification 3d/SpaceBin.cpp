@@ -96,7 +96,7 @@ int* SpaceBin::propagateParticle(Particle* particle ,double& time, double timeSt
 	if(time != time){
 		printf("aaa\n");
 	}
-	particle->setLocalMomentum(U,UTheta,UPhi);
+	particle->setLocalMomentum(this);
 	double lambda = getFreePath(particle);
 	if(lambda != lambda){
 		printf("aaa\n");
