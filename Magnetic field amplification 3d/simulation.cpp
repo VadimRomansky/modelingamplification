@@ -689,9 +689,9 @@ Particle* Simulation::getAnyParticle(){
 }
 
 void Simulation::collectAverageVelocity(){
-	int* count = new int[rgridNumber];
+	double* weights = new double[rgridNumber];
 	for(int i = 0; i < rgridNumber; ++i){
-		count[i] = 0;
+		weights[i] = 0;
 		averageVelocity[i] = 0;
 	}
 
@@ -710,15 +710,15 @@ void Simulation::collectAverageVelocity(){
 		}
 		int* index = SpaceBin::binByCoordinates(r, theta, phi,upstreamR,deltaR,deltaTheta,deltaPhi);
 		if(index[0] >= 0){
-			count[index[0]] += 1;
-			averageVelocity[index[0]] += particle->getRadialSpeed();
+			weights[index[0]] += particle->weight;
+			averageVelocity[index[0]] += particle->getRadialSpeed()*particle->weight;
 		}
 		delete[] index;
 	}
 
 	for(int i = 0; i < rgridNumber; ++i){
-		if(count[i] != 0){
-			averageVelocity[i] /= count[i];
+		if(weights[i] > epsilon){
+			averageVelocity[i] /= weights[i];
 			//bins[i][0][0]->averageVelocity = averageVelocity[i];
 			bins[i][0][0]->U = averageVelocity[i];
 			bins[i][0][0]->averageVelocity = averageVelocity[i];
@@ -727,7 +727,7 @@ void Simulation::collectAverageVelocity(){
 		}
 	}
 
-	delete[] count;
+	delete[] weights;
 }
 
 void Simulation::sortParticlesIntoBins(){
