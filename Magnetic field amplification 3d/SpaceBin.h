@@ -5,6 +5,7 @@
 #include "constants.h"
 #include "random.h"
 #include "BinFlux.h"
+#include "matrix3d.h"
 //#include "particle2.h"
 #include <list>
 
@@ -36,9 +37,14 @@ public:
 
 	double initialMomentum;
 
+	Matrix3d* matrix;
+	Matrix3d* invertMatrix;
+
 	int numberR;
 	int numberPhi;
 	int numberTheta;
+
+	bool smallAngleScattering;
 
 	BinFlux crMassFlux;
 	BinFlux particleMassFlux;
@@ -69,9 +75,10 @@ public:
 
 	double minK;
 	double maxK;
+	double averageVelocity;
 
 	SpaceBin();
-	SpaceBin(double r, double theta, double phi, double deltar, double deltatheta, double deltaphi, double u, double rho, double utheta,double uphi, double temperature, double b, int i, int j, int k);
+	SpaceBin(double r, double theta, double phi, double deltar, double deltatheta, double deltaphi, double u, double rho, double utheta,double uphi, double temperature, double b, int i, int j, int k, bool scattering);
 	~SpaceBin();
 	int* propagateParticle(Particle* particle ,double& time, double timeStep);
 	double getFreePath(Particle* particle);
@@ -103,6 +110,8 @@ public:
 	void detectParticleTheta2(Particle* particle);
 	void detectParticlePhi1(Particle* particle);
 	void detectParticlePhi2(Particle* particle);
+
+	void largeAngleScattering(Particle* particle, double& time, double timeStep);
 
 	//void operator=(Xbin bin);
 

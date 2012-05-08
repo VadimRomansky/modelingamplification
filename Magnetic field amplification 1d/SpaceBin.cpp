@@ -111,53 +111,53 @@ int* SpaceBin::propagateParticle(Particle* particle ,double& time, double timeSt
 	double gammaFactor = 1/sqrt(1 - U*U/c2);
 	double colisionTime = getFreeTime(particle);
 	if(smallAngleScattering){
-	int l = 0;
-	while(isInBin(particle) && (time < timeStep)){
-		l++;
-		if(l > 1000){
-			//printf("%d \n",l);
+		int l = 0;
+		while(isInBin(particle) && (time < timeStep)){
+			l++;
+			if(l > 1000){
+				//printf("%d \n",l);
+			}
+		//while(((particle.absoluteR > r1)&&(particle.absoluteR < r2))&&((particle.absoluteTheta > theta1)&&(particle.absoluteTheta < theta2))&&((particle.absolutePhi > phi1)&&(particle.absolutePhi < phi2))){
+			if(colisionTime > defaultTimeRelation*gammaFactor*(timeStep - time)){
+				colisionTime = defaultTimeRelation*gammaFactor*(timeStep - time);
+			}
+			//time += colisionTime/(defaultTimeRelation*gammaFactor);
+			if(time != time){
+				printf("time != time");
+			}
+			if(colisionTime != colisionTime){
+				printf("colisionTime != colisionTime");
+			}
+			makeOneStep(particle, colisionTime, time);
 		}
-	//while(((particle.absoluteR > r1)&&(particle.absoluteR < r2))&&((particle.absoluteTheta > theta1)&&(particle.absoluteTheta < theta2))&&((particle.absolutePhi > phi1)&&(particle.absolutePhi < phi2))){
-		if(colisionTime > defaultTimeRelation*gammaFactor*(timeStep - time)){
-			colisionTime = defaultTimeRelation*gammaFactor*(timeStep - time);
+		/*if(particle.absoluteTheta < 0){
+			particle.absoluteTheta = -particle.absoluteTheta;
+			particle.absolutePhi += pi;
+		} 
+		if(particle.absoluteTheta > pi){
+			particle.absoluteTheta = 2*pi - particle.absoluteTheta;
+			particle.absolutePhi += pi;
 		}
-		//time += colisionTime/(defaultTimeRelation*gammaFactor);
-		if(time != time){
-			printf("time != time");
+		while(particle.absolutePhi < 0){
+			particle.absolutePhi += 2*pi;
 		}
-		if(colisionTime != colisionTime){
-			printf("colisionTime != colisionTime");
-		}
-		makeOneStep(particle, colisionTime, time);
-	}
-	/*if(particle.absoluteTheta < 0){
-		particle.absoluteTheta = -particle.absoluteTheta;
-		particle.absolutePhi += pi;
-	} 
-	if(particle.absoluteTheta > pi){
-		particle.absoluteTheta = 2*pi - particle.absoluteTheta;
-		particle.absolutePhi += pi;
-	}
-	while(particle.absolutePhi < 0){
-		particle.absolutePhi += 2*pi;
-	}
-	while(particle.absolutePhi > 2*pi){
-		particle.absolutePhi -= 2*pi;
-	}*/
+		while(particle.absolutePhi > 2*pi){
+			particle.absolutePhi -= 2*pi;
+		}*/
 
-	double particleR = sqrt(particle->absoluteX*particle->absoluteX + particle->absoluteY*particle->absoluteY + particle->absoluteZ*particle->absoluteZ);
-	double theta = acos(particle->absoluteZ/particleR);
-	if( abs(r) < DBL_EPSILON){
-		theta = pi/2;
-	}
-	double phi = atan2(particle->absoluteY, particle->absoluteX);
-	if(phi < 0) {
-		phi = phi + 2*pi;
-	}
+		double particleR = sqrt(particle->absoluteX*particle->absoluteX + particle->absoluteY*particle->absoluteY + particle->absoluteZ*particle->absoluteZ);
+		double theta = acos(particle->absoluteZ/particleR);
+		if( abs(r) < DBL_EPSILON){
+			theta = pi/2;
+		}
+		double phi = atan2(particle->absoluteY, particle->absoluteX);
+		if(phi < 0) {
+			phi = phi + 2*pi;
+		}
 
-	//particle->setAbsoluteMomentum(U,UTheta,UPhi);
-	particle->setAbsoluteMomentum(this);
-	return binByCoordinates(particle->absoluteZ, theta, phi,0, r2 - r1, theta2 - theta1, phi2 - phi1);
+		//particle->setAbsoluteMomentum(U,UTheta,UPhi);
+		particle->setAbsoluteMomentum(this);
+		return binByCoordinates(particle->absoluteZ, theta, phi,0, r2 - r1, theta2 - theta1, phi2 - phi1);
 	} else {
 		//double v = particle->getLocalV()*particle->localMomentumZ/particle->localMomentum;
 		//if(particle->localMomentum < epsilon*sqrt(particle->mass*temperature*kBoltzman)){

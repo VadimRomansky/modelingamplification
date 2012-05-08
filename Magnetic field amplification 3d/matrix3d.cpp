@@ -44,7 +44,7 @@ Matrix3d* Matrix3d::Inverse(){
   Matrix3d* inv = new Matrix3d();
   double det;
   det=matrix[0][0]*(matrix[1][1]*matrix[2][2]-matrix[1][2]*matrix[2][1])-matrix[0][1]*(matrix[1][0]*matrix[2][2]-matrix[1][2]*matrix[2][0])+matrix[0][2]*(matrix[1][0]*matrix[2][1]-matrix[1][1]*matrix[2][0]);
-  if (det!=0){
+  if (abs(det > DBL_EPSILON)){
 	inv->matrix[0][0]=(1/det)*(matrix[1][1]*matrix[2][2]-matrix[1][2]*matrix[2][1]);
 	inv->matrix[0][1]=-(1/det)*(matrix[0][1]*matrix[2][2]-matrix[0][2]*matrix[2][1]);
 	inv->matrix[0][2]=(1/det)*(matrix[0][1]*matrix[1][2]-matrix[0][2]*matrix[1][1]);
@@ -54,6 +54,8 @@ Matrix3d* Matrix3d::Inverse(){
 	inv->matrix[2][0]=(1/det)*(matrix[1][0]*matrix[2][1]-matrix[1][1]*matrix[2][0]);
 	inv->matrix[2][1]=-(1/det)*(matrix[0][0]*matrix[2][1]-matrix[0][1]*matrix[2][0]);
 	inv->matrix[2][2]=(1/det)*(matrix[0][0]*matrix[1][1]-matrix[1][0]*matrix[0][1]);
+  } else {
+	  printf("det = 0\n");
   }
   return inv;
 }
@@ -88,7 +90,7 @@ vector3d Matrix3d::multiply(const vector3d& v){
 }
 
 Matrix3d* Matrix3d::createBasisByOneVector(const vector3d& v){
-	if (abs(v.z*v.z + v.y*v.y + v.x*v.x) < DBL_EPSILON){
+	if ((v.z*v.z + v.y*v.y + v.x*v.x) < DBL_EPSILON){
 		return new Matrix3d(1,0,0,0,1,0,0,0,1);
 	}
 	double theta = acos(v.z/sqrt(v.z*v.z + v.y*v.y + v.x*v.x));

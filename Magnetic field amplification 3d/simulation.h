@@ -40,11 +40,24 @@ public:
 	double minK;
 	double maxK;
 
+	bool smallAngleScattering;
+
+	double energy;
+	double theorEnergy;
+
+	double momentumZ;
+	double theorMomentumZ;
+	double momentumX;
+	double theorMomentumX;
+	double momentumY;
+	double theorMomentumY;
+	double particlesWeight;
+
 	Particle* Particles;
 	SpaceBin**** bins;
 	double** pressureSpectralDensity;
 	std::list <Particle*> startPDF;
-	std::list <Particle*> introducedParticles;
+	std::vector<Particle*> introducedParticles;
 
 	double* averageVelocity;
 
@@ -55,8 +68,8 @@ public:
 	void simulate();
 	void resetDetectors();
 	//std::list <Particle> getParticleUniformDistribution(double pmax,int pnumber,int thetanumber); 
-	std::list <Particle> getParticleGaussDistribution(int number);
-	std::list <Particle*> getParticles();
+	std::list<Particle> getParticleGaussDistribution(int number);
+	std::vector<Particle*> getParticles();
 	double maxwell(double p, double temperature,double mass);
 	void updateMagneticField();
 	vector3d gradientSpeed(int i, int j, int k);
@@ -76,6 +89,8 @@ public:
 	void resetProfile();
 	void collectAverageVelocity();
 	void sortParticlesIntoBins();
+	void removeEscapedParticles();
+	void updateEnergy();
 private:
 	static const int particleMultiply = 20;
 };

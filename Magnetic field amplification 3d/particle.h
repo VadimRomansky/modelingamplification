@@ -29,6 +29,7 @@ public:
 	bool  isCosmicRay;
 	double initialMomentum;
 	double initialLocalMomentum;
+	double previousAbsoluteMomentum;
 	double weight;
 	std::list <double> path;
 	bool writePath;
@@ -43,13 +44,19 @@ public:
 	Particle(int a, int znumber, SpaceBin* bin, bool wpath); 
 	void LorentzTransition(double v1, double v2);
 	double getAbsoluteV();
+	double getAbsoluteVR();
+	double getAbsoluteVTheta();
+	double getAbsoluteVPhi();
 	void setAbsoluteMomentum(double U, double Utheta, double Uphi);
 	void setLocalMomentum(double U, double Utheta,double Uphi);
+	void setAbsoluteMomentum(SpaceBin* bin);
+	void setLocalMomentum(SpaceBin* bin);
 	double getLocalV();
 	double getAbsoluteR();
 	double getAbsoluteTheta();
 	double getAbsolutePhi();
 	double getEnergy();
+	double getInitialEnergy();
 	double getRadialSpeed();
 };
 #endif

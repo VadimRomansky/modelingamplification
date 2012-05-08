@@ -115,6 +115,7 @@ Particle::Particle(double x, double y, double z, double temperature, int a, int 
 	isCosmicRay = false;
 	setAbsoluteMomentum(Ur,Utheta,Uphi);
 	initialMomentum = absoluteMomentum;
+	previousAbsoluteMomentum = initialMomentum;
 	path = std::list<double>();
 	writePath = false;
 }
@@ -160,6 +161,7 @@ Particle::Particle(double x, double y, double z, double temperature, int a, int 
 	isCosmicRay = false;
 	setAbsoluteMomentum(Ur,Utheta,Uphi);
 	initialMomentum = absoluteMomentum;
+	previousAbsoluteMomentum = initialMomentum;
 	path = std::list<double>();
 	writePath = false;
 }
@@ -181,6 +183,7 @@ Particle::Particle(double x, double y, double z, double temperature, int a, int 
 	isCosmicRay = false;
 	setAbsoluteMomentum(U,Utheta,Uphi);
 	initialMomentum = absoluteMomentum;
+	previousAbsoluteMomentum = initialMomentum;
 	path = std::list<double>();
 	writePath = wPath;
 }
@@ -247,6 +250,7 @@ Particle::Particle(int a, int znumber, SpaceBin* bin, bool wpath){
 	isCosmicRay = false;
 	setAbsoluteMomentum(bin->U,bin->UTheta,bin->UPhi);
 	initialMomentum = absoluteMomentum;
+	previousAbsoluteMomentum = initialMomentum;
 	path = std::list<double>();
 	writePath = wpath;
 
@@ -433,6 +437,150 @@ void Particle::setLocalMomentum(double U, double Utheta,double Uphi){
 	delete matrix;
 	delete invertMatrix;
 }
+
+void Particle::setAbsoluteMomentum(SpaceBin* bin){
+	double sqrm = mass*mass;
+	double sqrc = speed_of_light*speed_of_light;
+	double sqrp = localMomentum*localMomentum;
+	double V = sqrt(sqrp/(sqrm+sqrp/sqrc));
+	//double c2 = speed_of_light*speed_of_light;
+	double theta = acos(localMomentumZ/localMomentum);
+	if(abs(localMomentum) < DBL_EPSILON){
+		theta = pi/2;
+	}
+	double phi = atan2(localMomentumY,localMomentumX);
+
+	double ux;
+	double uy;
+	double uz;
+
+	if((thetagridNumber == 1)&&(phigridNumber == 1)){
+		ux = 0;
+		uy = 0;
+		uz = bin->U;		
+	} else {
+		//double c2 = speed_of_light*speed_of_light;
+
+		ux = bin->U*sin(bin->UTheta)*cos(bin->UPhi);
+		uy = bin->U*sin(bin->UTheta)*sin(bin->UPhi);
+		uz = bin->U*cos(bin->UTheta);
+	}	
+	
+	//u - скорость плазмы в абсолютной СО. Локальная ось z направлена по скорости плазмы
+	Matrix3d* matrix = bin->matrix;
+
+	vector3d particleV = vector3d(V*sin(theta)*cos(phi),V*sin(theta)*sin(phi),V*cos(theta));
+
+	vector3d particleAbsoluteV = summVelocity(particleV,-bin->U);
+
+	//Matrix3d* invertMatrix = matrix->Inverse();
+
+	double absoluteV = particleAbsoluteV.getNorm();
+
+	particleAbsoluteV = matrix->multiply(particleAbsoluteV);
+
+	absoluteV = particleAbsoluteV.getNorm();
+
+	if(absoluteV > speed_of_light){
+		if(absoluteV < (1 + epsilon)*speed_of_light){
+			absoluteV = (1 - epsilon)*speed_of_light;
+			printf("v = c\n");
+		} else {
+			printf("v > c\n");
+		}
+	}
+
+	if(abs(1 - absoluteV*absoluteV/c2) < DBL_EPSILON){
+		printf("absoluteV = c in setAbsoluteMomentum\n");
+	}
+	absoluteMomentum = mass*absoluteV/sqrt(1 - absoluteV*absoluteV/c2);
+	if(absoluteMomentum != absoluteMomentum){
+		printf("absoluteMomentum != absoluteMomentum\n");
+	}
+
+	absoluteMomentumTheta = acos(particleAbsoluteV.z/absoluteV);
+	if(abs(absoluteV) < DBL_EPSILON){
+		absoluteMomentumTheta = pi/2;
+	}
+	absoluteMomentumPhi = atan2(particleAbsoluteV.y, particleAbsoluteV.x);
+	
+	//delete matrix;
+	//delete invertMatrix;
+}
+
+void Particle::setLocalMomentum(SpaceBin* bin){
+	double sqrm = mass*mass;
+	double sqrp = absoluteMomentum*absoluteMomentum;
+	double V = sqrt(sqrp/(sqrm+sqrp/c2));
+	double theta = absoluteMomentumTheta;
+	double phi = absoluteMomentumPhi;
+	double ux;
+	double uy;
+	double uz;
+	if((thetagridNumber == 1)&&(phigridNumber == 1)){
+		ux = 0;
+		uy = 0;
+		uz = bin->U;		
+	} else {
+		//double c2 = speed_of_light*speed_of_light;
+
+		ux = bin->U*sin(bin->UTheta)*cos(bin->UPhi);
+		uy = bin->U*sin(bin->UTheta)*sin(bin->UPhi);
+		uz = bin->U*cos(bin->UTheta);
+	}
+
+	double localV1 = getLocalV();
+
+	Matrix3d* matrix =bin->matrix;
+
+	vector3d particleAbsoluteV = vector3d(V*sin(theta)*cos(phi),V*sin(theta)*sin(phi),V*cos(theta));
+
+	Matrix3d* invertMatrix = bin->invertMatrix;
+
+	double absoluteV1 = particleAbsoluteV.getNorm();
+
+	particleAbsoluteV = invertMatrix->multiply(particleAbsoluteV);
+
+	double absoluteV = particleAbsoluteV.getNorm();
+
+	vector3d particleLocalV = summVelocity(particleAbsoluteV,bin->U);
+
+	//for debug with U = const only!!!!!!!!!!!!!!
+	//if(abs(localMomentum - initialLocalMomentum) > epsilon*localMomentum){
+		//printf("aaa");
+	//}
+
+
+	double localV = particleLocalV.getNorm();
+	if(localV > speed_of_light){
+		if(localV < (1 + epsilon)*speed_of_light){
+			localV = (1 - epsilon)*speed_of_light;
+		} else {
+			printf("localV > c\n");
+		}
+	}
+
+
+	if(abs(1 - localV*localV/c2) < DBL_EPSILON){
+		printf("localV = c in setLocalMomentum\n");
+	}
+	localMomentum = mass*localV/sqrt(1 - localV*localV/c2);
+
+	//if(abs(localMomentum - initialLocalMomentum) > epsilon*localMomentum){
+		//printf("aaa");
+	//}
+
+	if(localMomentum != localMomentum){
+		printf("localMomentum != localMomentum\n");
+	}
+	localMomentumX = mass*particleLocalV.x/sqrt(1 - localV*localV/c2);
+	localMomentumY = mass*particleLocalV.y/sqrt(1 - localV*localV/c2);
+	localMomentumZ = mass*particleLocalV.z/sqrt(1 - localV*localV/c2);
+
+	//delete matrix;
+	//delete invertMatrix;
+}
+
 double Particle::getAbsoluteV(){
 	double sqrm = mass*mass;
 	double sqrc = speed_of_light*speed_of_light;
@@ -483,4 +631,23 @@ double Particle::getEnergy(){
 
 double Particle::getRadialSpeed(){
 	return getAbsoluteV()*(cos(absoluteMomentumPhi)*sin(absoluteMomentumTheta)*cos(getAbsolutePhi())*sin(getAbsoluteTheta()) + sin(absoluteMomentumPhi)*sin(absoluteMomentumTheta)*sin(getAbsolutePhi())*sin(getAbsoluteTheta()) + cos(absoluteMomentumTheta)*cos(getAbsoluteTheta()));
+}
+
+double Particle::getAbsoluteVR(){
+	return getAbsoluteV()*(cos(absoluteMomentumPhi)*sin(absoluteMomentumTheta)*cos(getAbsolutePhi())*sin(getAbsoluteTheta()) + sin(absoluteMomentumPhi)*sin(absoluteMomentumTheta)*sin(getAbsolutePhi())*sin(getAbsoluteTheta()) + cos(absoluteMomentumTheta)*cos(getAbsoluteTheta()));
+}
+
+double Particle::getAbsoluteVPhi(){
+	double absolutePhi = getAbsolutePhi();
+	return getAbsoluteV()*(-sin(absolutePhi)*sin(absoluteMomentumTheta)*cos(absoluteMomentumPhi)+cos(absolutePhi)*sin(absoluteMomentumTheta)*sin(absoluteMomentumPhi));
+}
+
+double Particle::getAbsoluteVTheta(){
+	double absolutePhi = getAbsolutePhi();
+	double absoluteTheta = getAbsoluteTheta();
+	return getAbsoluteV()*(-sin(absoluteTheta)*cos(absoluteMomentumPhi)+cos(absoluteTheta)*cos(absolutePhi)*sin(absoluteMomentumTheta)*cos(absoluteMomentumPhi)+cos(absoluteTheta)*sin(absolutePhi)*sin(absoluteMomentumTheta)*sin(absoluteMomentumPhi));
+}
+
+double Particle::getInitialEnergy(){
+	return sqrt(mass*mass*c2*c2 + initialMomentum*initialMomentum*c2) - mass*c2;
 }

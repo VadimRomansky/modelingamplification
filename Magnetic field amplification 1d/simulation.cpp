@@ -217,7 +217,7 @@ void Simulation::simulate(){
 		updateEnergy();
 		fprintf(outIteration,"%d %lf %lf %lf %lf %lf %lf %lf %lf %d %lf\n",itNumber, energy, theorEnergy, momentumZ, theorMomentumZ, momentumX, theorMomentumX, momentumY, theorMomentumY, introducedParticles.size(), particlesWeight);
 		fclose(outIteration);
-		outputRadialProfile(bins,0,0,radialFile,averageVelocity);
+		outputRadialProfile(bins,0,0,radialFile);
 		//outputShockWave(shockWavePoints, shockWaveVelocity);
 		fclose(radialFile);
 	}

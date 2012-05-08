@@ -35,6 +35,7 @@ public:
 	double B0;
 	double W;
 
+
 	double initialMomentum;
 
 	Matrix3d* matrix;
