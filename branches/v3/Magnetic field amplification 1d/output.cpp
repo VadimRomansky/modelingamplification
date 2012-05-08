@@ -243,7 +243,7 @@ void outputEnergyPDF(std::vector< Particle*>& list,const char* fileName){
 			}
 		}
 		for(int i = 0; i < pgridNumber; ++i){
-			fprintf(outPDF,"%lf %lf %lf\n", (log(mine) + i*deltae), (distribution[i])/exp(log(mine) + i*deltae), (startDistribution[i])/exp(log(mine) + i*deltae));
+			fprintf(outPDF,"%lf %lf %lf\n", (log(mine) + i*deltae)/log(10.0), (distribution[i])/exp(log(mine) + i*deltae), (startDistribution[i])/exp(log(mine) + i*deltae));
 		}
 		delete[] distribution;
 		delete[] startDistribution;
@@ -316,7 +316,7 @@ void outputEnergyPDF(std::list< Particle*>& list,const char* fileName){
 			}
 		}
 		for(int i = 0; i < pgridNumber; ++i){
-			fprintf(outPDF,"%lf %lf %lf\n", (log(mine) + i*deltae), (distribution[i])/exp(log(mine) + i*deltae), (startDistribution[i])/exp(log(mine) + i*deltae));
+			fprintf(outPDF,"%lf %lf %lf\n", (log(mine) + i*deltae)/log(10.0), (distribution[i])/exp(log(mine) + i*deltae), (startDistribution[i])/exp(log(mine) + i*deltae));
 		}
 		delete[] distribution;
 		delete[] startDistribution;
@@ -487,14 +487,14 @@ void outputParticlePath(std::list<Particle*>& list,const char* cosmicRayFileName
 	fclose(file2);*/
 }
 
-void outputRadialProfile(SpaceBin**** bins, int thetaNumber, int phiNumber, FILE* outProfile, double* averageVelocity){
+void outputRadialProfile(SpaceBin**** bins, int thetaNumber, int phiNumber, FILE* outProfile){
 	//FILE* outPDF = fopen("tamc_pdf.dat","w");
 	//double massFlux0 = simulation.xbins[0]->massFlux;
 	//double momentaFlux0 = simulation.xbins[0]->momentaFlux;
 	//double energyFlux0 = simulation.xbins[0]->energyFlux;
 	for(int i = 0; i < rgridNumber; ++i){
 		SpaceBin* bin = bins[i][thetaNumber][phiNumber];
-		fprintf(outProfile, "%lf %lf %lf %lf %lf %lf",bin->r, bin->U, bin->averageVelocity, bin->massVelocity, 100000*bin->density, bin->temperature);
+		fprintf(outProfile, "%lf %lf %lf %lf %lf %lf",bin->r, bin->U, bin->averageVelocity, 100000*bin->density, bin->temperature);
 		fprintf(outProfile,"%s","\n");
 	}
 	//fclose(outProfile);

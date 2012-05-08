@@ -69,7 +69,7 @@ void Simulation::initializeProfile(){
 					//density = density0*sqr((upstreamR + deltaR/2)/R)/Rtot;
 				}
 				//u = U0;
-				bins[i][j][k] = new SpaceBin(R,Theta,Phi,deltaR,deltaTheta,deltaPhi,u,density,Theta,Phi,temperature,B0,i,j,k);
+				bins[i][j][k] = new SpaceBin(R,Theta,Phi,deltaR,deltaTheta,deltaPhi,u,density,Theta,Phi,temperature,B0,i,j,k,smallAngleScattering);
 				Phi = Phi + deltaPhi;
 			}
 			Theta = Theta + deltaTheta;
@@ -107,7 +107,7 @@ void Simulation::simulate(){
 			printf("%s","First iteration\n");
 		} else {
 			printf("%s", "Particle propagation\n");
-			std::list<Particle*>::iterator it = introducedParticles.begin();
+			std::vector<Particle*>::iterator it = introducedParticles.begin();
 			while( it != introducedParticles.end()){
 				Particle* particle = *it;
 				++it;
@@ -155,31 +155,27 @@ void Simulation::simulate(){
 				}
 			}*/
 			printf("%s", "Reseting profile\n");
-			resetProfile();
+			//resetProfile();
 			collectAverageVelocity();
+			removeEscapedParticles();
+			sortParticlesIntoBins();
 			printf("%s", "magnetic Field updating\n");
 			//updateMagneticField();
-			output(*this);
+			//output(*this);
 			resetDetectors();
 			printf("%s","iteration ¹ ");
 			printf("%d\n",itNumber);
 		}
+		outputParticles(introducedParticles,"./output/particles.dat");
+		outputPDF(introducedParticles,"./output/tamc_pdf.dat");
+		outputEnergyPDF(introducedParticles,"./output/tamc_energy_pdf.dat");
 		outIteration = fopen("./output/tamc_iteration.dat","a");
 		radialFile = fopen("./output/tamc_radial_profile.dat","a");
-		fprintf(outIteration,"%s %d \n","iteration number ",itNumber);
+		updateEnergy();
+		fprintf(outIteration,"%d %lf %lf %lf %lf %lf %lf %lf %lf %d %lf\n",itNumber, energy, theorEnergy, momentumZ, theorMomentumZ, momentumX, theorMomentumX, momentumY, theorMomentumY, introducedParticles.size(), particlesWeight);
 		fclose(outIteration);
-		double maxp;
-		double minp;
-		//updateMaxMinP(minp, maxp);
-		std::list<Particle*> list = std::list<Particle*>();
-		for(int j = 0; j < thetagridNumber; ++j){
-			for(int k = 0; k < phigridNumber; ++k){
-				list.insert(list.end(),bins[rgridNumber - 1][j][k]->detectedParticlesR2.begin(),bins[rgridNumber - 1][j][k]->detectedParticlesR2.end());
-			}
-		}
-		//outputPDF(list,"./output/tamc_pdf_down.dat",*this,minp,maxp);
-		//outputStartPDF(list,"./output/tamc_pdf_start.dat",*this,minp,maxp);
 		outputRadialProfile(bins,0,0,radialFile);
+		//outputShockWave(shockWavePoints, shockWaveVelocity);
 		fclose(radialFile);
 	}
 }
@@ -598,8 +594,8 @@ void Simulation::updatePressureSpectralDensity(){
 	}*/
 }
 
-std::list <Particle*> Simulation::getParticles(){
-	std::list<Particle*> list = std::list<Particle*>();
+std::vector <Particle*> Simulation::getParticles(){
+	std::vector<Particle*> list = std::vector<Particle*>();
 	int cosmicRayNumber = 0;
 	int particleBinNumber = 0;
 	allParticlesNumber = 0;
@@ -618,7 +614,7 @@ std::list <Particle*> Simulation::getParticles(){
 						Particle* particle = new Particle( A, Z,bin, true);
 						particle->weight /= particlesNumber;
 						startPDF.push_front(particle);
-						list.push_front(particle);
+						list.push_back(particle);
 						double v = particle->getAbsoluteV();
 						double vr = particle->getRadialSpeed(); 
 						bin->initialMomentum += vr*particle->mass*particle->weight/sqrt(1 - (v*v)/c2);
@@ -699,7 +695,7 @@ void Simulation::collectAverageVelocity(){
 		averageVelocity[i] = 0;
 	}
 
-	std::list<Particle*>::iterator it = introducedParticles.begin();
+	std::vector<Particle*>::iterator it = introducedParticles.begin();
 	while(it != introducedParticles.end()){
 		Particle* particle = *it;
 		++it;
@@ -725,6 +721,7 @@ void Simulation::collectAverageVelocity(){
 			averageVelocity[i] /= count[i];
 			//bins[i][0][0]->averageVelocity = averageVelocity[i];
 			bins[i][0][0]->U = averageVelocity[i];
+			bins[i][0][0]->averageVelocity = averageVelocity[i];
 		} else {
 			printf("0 particles in bin\n");
 		}
@@ -734,7 +731,7 @@ void Simulation::collectAverageVelocity(){
 }
 
 void Simulation::sortParticlesIntoBins(){
-	std::list<Particle*>::iterator it = introducedParticles.begin();
+	std::vector<Particle*>::iterator it = introducedParticles.begin();
 	while( it != introducedParticles.end()){
 		Particle* particle = *it;
 		double r = particle->getAbsoluteR();
@@ -761,6 +758,60 @@ void Simulation::sortParticlesIntoBins(){
 		for(int i = 0; i < rgridNumber; ++i){
 			bins[i][0][0]->density /= bins[i][0][0]->volume;
 		}
+		++it;
+	}
+}
+
+void Simulation::removeEscapedParticles(){
+	std::vector<Particle*> list = std::vector<Particle*>();
+	std::vector<Particle*>::iterator it = introducedParticles.begin();
+	while(it != introducedParticles.end()){
+		Particle* particle = *it;
+		++it;
+		if(particle->getAbsoluteR() > downstreamR){
+			theorEnergy -= particle->getEnergy()*particle->weight;
+			theorMomentumZ -= particle->absoluteMomentum*cos(particle->absoluteMomentumTheta)*particle->weight;
+			theorMomentumY -= particle->absoluteMomentum*sin(particle->absoluteMomentumTheta)*cos(particle->absoluteMomentumPhi)*particle->weight;
+			theorMomentumX -= particle->absoluteMomentum*sin(particle->absoluteMomentumTheta)*sin(particle->absoluteMomentumPhi)*particle->weight;
+			delete particle;
+		} else {
+			if(particle->absoluteMomentum > momentumParameter*particle->previousAbsoluteMomentum){
+				for(int i = 0; i < generationSize; ++i){
+					Particle* particle1 = new Particle(*particle);
+					particle1->weight /= generationSize;
+					particle1->previousAbsoluteMomentum = particle1->absoluteMomentum;
+					list.push_back(particle1);
+				}
+				delete particle;
+			} else {
+				if(momentumParameter*particle->absoluteMomentum < particle->previousAbsoluteMomentum){
+					particle->previousAbsoluteMomentum = particle->absoluteMomentum;
+				}
+				list.push_back(particle);
+			}
+		}
+	}
+	introducedParticles.clear();
+	introducedParticles = list;
+}
+
+void Simulation::updateEnergy(){
+	std::vector<Particle*>::iterator it = introducedParticles.begin();
+	energy = 0;
+	momentumZ = 0;
+	momentumX = 0;
+	momentumY = 0;
+	particlesWeight = 0;
+	while(it != introducedParticles.end()){
+		Particle* particle = *it;
+		energy += particle->getEnergy()*particle->weight;
+		if(particle->absoluteMomentum < 0){
+			printf("particle->absoluteMomentum < 0\n");
+		}
+		momentumZ += particle->absoluteMomentum*cos(particle->absoluteMomentumTheta)*particle->weight;
+		momentumY += particle->absoluteMomentum*sin(particle->absoluteMomentumTheta)*cos(particle->absoluteMomentumPhi)*particle->weight;
+		momentumX += particle->absoluteMomentum*sin(particle->absoluteMomentumTheta)*sin(particle->absoluteMomentumPhi)*particle->weight;
+		particlesWeight += particle->weight;
 		++it;
 	}
 }

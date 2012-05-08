@@ -5,6 +5,7 @@
 #include "simulation.h"
 #include "util.h"
 #include "BinFlux.h"
+#include "matrix3d.h"
 
 
 SpaceBin::SpaceBin(){
@@ -14,7 +15,7 @@ SpaceBin::SpaceBin(){
 	}
 	sortedParticles = new std::list<Particle*>[kgridNumber];
 }
-SpaceBin::SpaceBin(double R, double Theta, double Phi, double deltar, double deltatheta, double deltaphi, double u, double rho, double utheta,double uphi, double t, double b, int i, int j, int k){
+SpaceBin::SpaceBin(double R, double Theta, double Phi, double deltar, double deltatheta, double deltaphi, double u, double rho, double utheta,double uphi, double t, double b, int i, int j, int k, bool scattering){
 	r = R;
 	theta = Theta;
 	phi = Phi;
@@ -30,6 +31,7 @@ SpaceBin::SpaceBin(double R, double Theta, double Phi, double deltar, double del
 	U = u;
 	UTheta = utheta;
 	UPhi = uphi;
+	averageVelocity = U;
 
 	density = rho;
 	temperature = t;
@@ -39,6 +41,38 @@ SpaceBin::SpaceBin(double R, double Theta, double Phi, double deltar, double del
 	numberR = i;
 	numberTheta = j;
 	numberPhi = k;
+
+	smallAngleScattering = scattering;
+
+	double ux;
+	double uy;
+	double uz;
+	if((thetagridNumber == 1)&&(phigridNumber == 1)){
+		ux = 0;
+		uy = 0;
+		uz = U;		
+	} else {
+		//double c2 = speed_of_light*speed_of_light;
+
+		ux = U*sin(UTheta)*cos(UPhi);
+		uy = U*sin(UTheta)*sin(UPhi);
+		uz = U*cos(UTheta);
+	}	
+	
+	//u - скорость плазмы в абсолютной —ќ. Ћокальна€ ось z направлена по скорости плазмы
+	matrix = Matrix3d::createBasisByOneVector(vector3d(ux,uy,uz));
+	if((0*matrix->matrix[0][0] != 0*matrix->matrix[0][0])
+		||(0*matrix->matrix[0][1] != 0*matrix->matrix[0][1])
+		||(0*matrix->matrix[0][2] != 0*matrix->matrix[0][2])
+		||(0*matrix->matrix[1][0] != 0*matrix->matrix[1][0])
+		||(0*matrix->matrix[1][1] != 0*matrix->matrix[1][1])
+		||(0*matrix->matrix[1][2] != 0*matrix->matrix[1][2])
+		||(0*matrix->matrix[2][0] != 0*matrix->matrix[2][0])
+		||(0*matrix->matrix[2][1] != 0*matrix->matrix[2][1])
+		||(0*matrix->matrix[2][2] != 0*matrix->matrix[2][2])){
+		printf("NaN matrix\n");
+	}
+	invertMatrix = matrix->Inverse();
 
 	//TODO!!!!!!!!!!!!!!!!
 	/*magneticField = new double[kgridNumber];
@@ -74,53 +108,134 @@ int* SpaceBin::propagateParticle(Particle* particle ,double& time, double timeSt
 	double gammaFactor = 1/sqrt(1 - U*U/c2);
 	double colisionTime = lambda/particle->getLocalV();
 	int l = 0;
-	while(isInBin(particle) && (time < timeStep)){
-		//падает где-то здесь
-		l++;
-		if(l > 1000){
-			//printf("%d \n",l);
+	if(smallAngleScattering){
+		while(isInBin(particle) && (time < timeStep)){
+			//падает где-то здесь
+			l++;
+			if(l > 1000){
+				//printf("%d \n",l);
+			}
+		//while(((particle.absoluteR > r1)&&(particle.absoluteR < r2))&&((particle.absoluteTheta > theta1)&&(particle.absoluteTheta < theta2))&&((particle.absolutePhi > phi1)&&(particle.absolutePhi < phi2))){
+			if(colisionTime > defaultTimeRelation*gammaFactor*(timeStep - time)){
+				colisionTime = defaultTimeRelation*gammaFactor*(timeStep - time);
+			}
+			//time += colisionTime/(defaultTimeRelation*gammaFactor);
+			if(time != time){
+				printf("aaa\n");
+			}
+			if(colisionTime != colisionTime){
+				printf("aaa\n");
+			}
+			makeOneStep(particle, colisionTime, time);
 		}
-	//while(((particle.absoluteR > r1)&&(particle.absoluteR < r2))&&((particle.absoluteTheta > theta1)&&(particle.absoluteTheta < theta2))&&((particle.absolutePhi > phi1)&&(particle.absolutePhi < phi2))){
-		if(colisionTime > defaultTimeRelation*gammaFactor*(timeStep - time)){
-			colisionTime = defaultTimeRelation*gammaFactor*(timeStep - time);
+		/*if(particle.absoluteTheta < 0){
+			particle.absoluteTheta = -particle.absoluteTheta;
+			particle.absolutePhi += pi;
+		} 
+		if(particle.absoluteTheta > pi){
+			particle.absoluteTheta = 2*pi - particle.absoluteTheta;
+			particle.absolutePhi += pi;
 		}
-		//time += colisionTime/(defaultTimeRelation*gammaFactor);
-		if(time != time){
-			printf("aaa\n");
+		while(particle.absolutePhi < 0){
+			particle.absolutePhi += 2*pi;
 		}
-		if(colisionTime != colisionTime){
-			printf("aaa\n");
-		}
-		makeOneStep(particle, colisionTime, time);
-	}
-	/*if(particle.absoluteTheta < 0){
-		particle.absoluteTheta = -particle.absoluteTheta;
-		particle.absolutePhi += pi;
-	} 
-	if(particle.absoluteTheta > pi){
-		particle.absoluteTheta = 2*pi - particle.absoluteTheta;
-		particle.absolutePhi += pi;
-	}
-	while(particle.absolutePhi < 0){
-		particle.absolutePhi += 2*pi;
-	}
-	while(particle.absolutePhi > 2*pi){
-		particle.absolutePhi -= 2*pi;
-	}*/
+		while(particle.absolutePhi > 2*pi){
+			particle.absolutePhi -= 2*pi;
+		}*/
 
-	double r = sqrt(particle->absoluteX*particle->absoluteX + particle->absoluteY*particle->absoluteY + particle->absoluteZ*particle->absoluteZ);
-	double theta = acos(particle->absoluteZ/r);
-	if( abs(r) < DBL_EPSILON){
-		theta = pi/2;
-	}
-	double phi = atan2(particle->absoluteY, particle->absoluteX);
-	if(phi < 0) {
-		phi = phi + 2*pi;
-	}
+		double r = sqrt(particle->absoluteX*particle->absoluteX + particle->absoluteY*particle->absoluteY + particle->absoluteZ*particle->absoluteZ);
+		double theta = acos(particle->absoluteZ/r);
+		if( abs(r) < DBL_EPSILON){
+			theta = pi/2;
+		}
+		double phi = atan2(particle->absoluteY, particle->absoluteX);
+		if(phi < 0) {
+			phi = phi + 2*pi;
+		}
 
 
-	return binByCoordinates(r, theta, phi,r1 - numberR*(r2 - r1), r2 - r1, theta2 - theta1, phi2 - phi1);
+		return binByCoordinates(r, theta, phi,r1 - numberR*(r2 - r1), r2 - r1, theta2 - theta1, phi2 - phi1);
+	} else {
+		largeAngleScattering(particle, time, timeStep);
+		double particleR = sqrt(particle->absoluteX*particle->absoluteX + particle->absoluteY*particle->absoluteY + particle->absoluteZ*particle->absoluteZ);
+		double theta = acos(particle->absoluteZ/particleR);
+		if( abs(r) < DBL_EPSILON){
+			theta = pi/2;
+		}
+		double phi = atan2(particle->absoluteY, particle->absoluteX);
+		if(phi < 0) {
+			phi = phi + 2*pi;
+		}
+		return binByCoordinates(particleR, theta, phi,0, r2 - r1, theta2 - theta1, phi2 - phi1);
+	}
 }
+
+void SpaceBin::largeAngleScattering(Particle* particle, double& time, double timeStep){
+	double gammaFactor = 1/sqrt(1 - U*U/c2);
+	double lambda = getFreePath(particle);
+	double colisionTime = lambda/particle->getLocalV();
+	double r0;
+	double sign;
+	double absoluteV = particle->getAbsoluteV();
+
+	double b = particle->absoluteX*absoluteV*sin(particle->absoluteMomentumTheta)*cos(particle->absoluteMomentumPhi)+ particle->absoluteY*absoluteV*sin(particle->absoluteMomentumTheta)*sin(particle->absoluteMomentumPhi)  + particle->absoluteZ*absoluteV*cos(particle->absoluteMomentumTheta);
+	if(b > 0){
+		r0 = r2;
+		sign = 1;
+	} else {
+		r0 = r1;
+		if(numberR == 0){
+			r0 = r2;
+		}
+		sign = -1;
+	}
+
+	double discr = sqr(b) - sqr(absoluteV)*(sqr(particle->getAbsoluteR()) - r0*r0);
+
+	double deltat1 = (-b - sqrt(discr))/(absoluteV*absoluteV);
+	double deltat2 = (-b + sqrt(discr))/(absoluteV*absoluteV);
+
+	double deltat;
+	if(deltat1 < 0){
+		deltat = deltat2;
+	} else {
+		deltat = deltat1;
+	}
+
+	if(deltat > gammaFactor*(timeStep - time)){
+		deltat = gammaFactor*(timeStep - time);
+	}
+	time += deltat/gammaFactor;
+
+	if(deltat < 0){
+		printf("dt < 0\n");
+	}
+
+	if(numberR == 0){
+		sign = 1;
+	}
+
+	particle->absoluteX += (absoluteV*sin(particle->absoluteMomentumTheta)*cos(particle->absoluteMomentumPhi)*deltat)*(1+sign*epsilon);
+	particle->absoluteY += absoluteV*sin(particle->absoluteMomentumTheta)*sin(particle->absoluteMomentumPhi)*deltat*(1+sign*epsilon);
+	particle->absoluteZ += absoluteV*cos(particle->absoluteMomentumTheta)*deltat*(1+sign*epsilon);
+
+	double probability;
+	if(deltat > colisionTime){
+		probability = 1;
+	} else {
+		probability = deltat/colisionTime;
+	}
+	if(uniRandom() <= probability){
+		double cosLocalTheta = 2*(uniRandom() - 0.5);
+		double phi = 2*pi*uniRandom();
+		double theta = acos(cosLocalTheta);
+		particle->localMomentumZ = particle->localMomentum*cos(theta);
+		particle->localMomentumX = particle->localMomentum*sin(theta)*cos(phi);
+		particle->localMomentumY = particle->localMomentum*sin(theta)*sin(phi);
+		particle->setAbsoluteMomentum(this);
+	}
+}
+
 
 int* SpaceBin::binByCoordinates(double r, double theta, double phi, double r0, double deltar, double deltatheta, double deltaphi){
 	int i = lowerInt((r - r0)/deltar);
@@ -452,6 +567,37 @@ void SpaceBin::resetDetectors(){
 	crMassFlux.fluxTheta2 = 0;
 	crMassFlux.fluxPhi1 = 0;
 	crMassFlux.fluxPhi2 = 0;
+
+	double ux;
+	double uy;
+	double uz;
+	if((thetagridNumber == 1)&&(phigridNumber == 1)){
+		ux = 0;
+		uy = 0;
+		uz = U;		
+	} else {
+		//double c2 = speed_of_light*speed_of_light;
+
+		ux = U*sin(UTheta)*cos(UPhi);
+		uy = U*sin(UTheta)*sin(UPhi);
+		uz = U*cos(UTheta);
+	}	
+
+	delete matrix;
+	delete invertMatrix;
+	matrix = Matrix3d::createBasisByOneVector(vector3d(ux,uy,uz));
+	if((0*matrix->matrix[0][0] != 0*matrix->matrix[0][0])
+		||(0*matrix->matrix[0][1] != 0*matrix->matrix[0][1])
+		||(0*matrix->matrix[0][2] != 0*matrix->matrix[0][2])
+		||(0*matrix->matrix[1][0] != 0*matrix->matrix[1][0])
+		||(0*matrix->matrix[1][1] != 0*matrix->matrix[1][1])
+		||(0*matrix->matrix[1][2] != 0*matrix->matrix[1][2])
+		||(0*matrix->matrix[2][0] != 0*matrix->matrix[2][0])
+		||(0*matrix->matrix[2][1] != 0*matrix->matrix[2][1])
+		||(0*matrix->matrix[2][2] != 0*matrix->matrix[2][2])){
+		printf("NaN matrix\n");
+	}
+	invertMatrix = matrix->Inverse();
 	//momentaFlux.reset();
 	//energyFlux.reset();
 }
@@ -893,7 +1039,7 @@ bool SpaceBin::isInThisOrNear(double r, double theta, double phi){
 }
 
 void SpaceBin::detectParticleR1(Particle* particle){
-	detectedParticlesR1.push_back(new Particle(*particle));
+	//detectedParticlesR1.push_back(new Particle(*particle));
 	//double c2 = speed_of_light*speed_of_light;
 	if(particle->isCosmicRay){
 		crMassFlux.fluxR1 += particle->mass*particle->weight;
@@ -906,7 +1052,7 @@ void SpaceBin::detectParticleR1(Particle* particle){
 }
 
 void SpaceBin::detectParticleR2(Particle* particle){
-	detectedParticlesR2.push_back(new Particle(*particle));
+	//detectedParticlesR2.push_back(new Particle(*particle));
 	//double c2 = speed_of_light*speed_of_light;
 	if(particle->isCosmicRay){
 		crMassFlux.fluxR2 += particle->mass*particle->weight;

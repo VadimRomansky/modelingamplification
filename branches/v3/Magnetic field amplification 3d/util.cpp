@@ -83,3 +83,7 @@ double min4(double a, double b,double c, double d){
 		}
 	}
 }
+
+double maxwell(double momentum, double mass, double temperature){
+	return exp(-momentum*momentum/(2*mass*kBoltzman*temperature))/sqrt(2*pi*mass*kBoltzman*temperature);
+}
