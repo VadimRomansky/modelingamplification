@@ -174,29 +174,39 @@ void SpaceBin::largeAngleScattering(Particle* particle, double& time, double tim
 	double gammaFactor = 1/sqrt(1 - U*U/c2);
 	double lambda = getFreePath(particle);
 	double colisionTime = lambda/particle->getLocalV();
+	double localV = particle->getLocalV();
+	if(localV < epsilon){
+		colisionTime = timeStep*2;
+	}
 	double r0;
 	double sign;
 	double absoluteV = particle->getAbsoluteV();
 
 	double b = particle->absoluteX*absoluteV*sin(particle->absoluteMomentumTheta)*cos(particle->absoluteMomentumPhi)+ particle->absoluteY*absoluteV*sin(particle->absoluteMomentumTheta)*sin(particle->absoluteMomentumPhi)  + particle->absoluteZ*absoluteV*cos(particle->absoluteMomentumTheta);
-	if(b > 0){
-		r0 = r2;
-		sign = 1;
-	} else {
-		r0 = r1;
-		if(numberR == 0){
-			r0 = r2;
-		}
+
+	double discr1 = sqr(b) - sqr(absoluteV)*(sqr(particle->getAbsoluteR()) - r1*r1);
+	double discr2 = sqr(b) - sqr(absoluteV)*(sqr(particle->getAbsoluteR()) - r2*r2);
+	double discr;
+	if((b < 0) && (discr1 > 0) && (numberR > 0)){
+		discr = discr1;
 		sign = -1;
+	} else {
+		discr = discr2;
+		sign = 1;
+	}
+	if(discr < 0){
+		printf("discr < 0\n");
 	}
 
-	double discr = sqr(b) - sqr(absoluteV)*(sqr(particle->getAbsoluteR()) - r0*r0);
+	if(absoluteV < epsilon){
+		printf("absoluteV = 0 in largeAngleScattering\n");
+	}
 
 	double deltat1 = (-b - sqrt(discr))/(absoluteV*absoluteV);
 	double deltat2 = (-b + sqrt(discr))/(absoluteV*absoluteV);
 
 	double deltat;
-	if(deltat1 < 0){
+	if(deltat1 <= 0){
 		deltat = deltat2;
 	} else {
 		deltat = deltat1;
@@ -204,6 +214,12 @@ void SpaceBin::largeAngleScattering(Particle* particle, double& time, double tim
 
 	if(deltat > gammaFactor*(timeStep - time)){
 		deltat = gammaFactor*(timeStep - time);
+	}
+	if(deltat != deltat){
+		printf("deltat != deltat in largeAngleScattering\n");
+	}
+	if(0*deltat != 0*deltat){
+		printf("deltat = infinity in largeAngleScattering\n");
 	}
 	time += deltat/gammaFactor;
 

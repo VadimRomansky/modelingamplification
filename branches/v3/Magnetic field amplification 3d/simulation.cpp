@@ -107,9 +107,13 @@ void Simulation::simulate(){
 			printf("%s","First iteration\n");
 		} else {
 			printf("%s", "Particle propagation\n");
-			std::vector<Particle*>::iterator it = introducedParticles.begin();
-			while( it != introducedParticles.end()){
-				Particle* particle = *it;
+			int it;
+			if(introducedParticles.size() == 0){
+				break;
+			}
+			#pragma omp parallel for private(it) shared(l)
+			for(it = 0; it < introducedParticles.size(); ++it){
+				Particle* particle = introducedParticles[it];
 				++it;
 				//printf("%d %s",l,"\n");
 				++l;
@@ -156,8 +160,8 @@ void Simulation::simulate(){
 			}*/
 			printf("%s", "Reseting profile\n");
 			//resetProfile();
-			collectAverageVelocity();
 			removeEscapedParticles();
+			collectAverageVelocity();
 			sortParticlesIntoBins();
 			printf("%s", "magnetic Field updating\n");
 			//updateMagneticField();
@@ -166,17 +170,19 @@ void Simulation::simulate(){
 			printf("%s","iteration ¹ ");
 			printf("%d\n",itNumber);
 		}
-		outputParticles(introducedParticles,"./output/particles.dat");
-		outputPDF(introducedParticles,"./output/tamc_pdf.dat");
-		outputEnergyPDF(introducedParticles,"./output/tamc_energy_pdf.dat");
-		outIteration = fopen("./output/tamc_iteration.dat","a");
-		radialFile = fopen("./output/tamc_radial_profile.dat","a");
-		updateEnergy();
-		fprintf(outIteration,"%d %lf %lf %lf %lf %lf %lf %lf %lf %d %lf\n",itNumber, energy, theorEnergy, momentumZ, theorMomentumZ, momentumX, theorMomentumX, momentumY, theorMomentumY, introducedParticles.size(), particlesWeight);
-		fclose(outIteration);
-		outputRadialProfile(bins,0,0,radialFile);
-		//outputShockWave(shockWavePoints, shockWaveVelocity);
-		fclose(radialFile);
+		if(introducedParticles.size() > 0){
+			outputParticles(introducedParticles,"./output/particles.dat");
+			outputPDF(introducedParticles,"./output/tamc_pdf.dat");
+			outputEnergyPDF(introducedParticles,"./output/tamc_energy_pdf.dat");
+			outIteration = fopen("./output/tamc_iteration.dat","a");
+			radialFile = fopen("./output/tamc_radial_profile.dat","a");
+			updateEnergy();
+			fprintf(outIteration,"%d %lf %lf %lf %lf %lf %lf %lf %lf %d %lf\n",itNumber, energy, theorEnergy, momentumZ, theorMomentumZ, momentumX, theorMomentumX, momentumY, theorMomentumY, introducedParticles.size(), particlesWeight);
+			fclose(outIteration);
+			outputRadialProfile(bins,0,0,radialFile);
+			//outputShockWave(shockWavePoints, shockWaveVelocity);
+			fclose(radialFile);
+		}
 	}
 }
 
@@ -755,10 +761,10 @@ void Simulation::sortParticlesIntoBins(){
 			bins[index[0]][index[1]][index[2]]->particles.push_back(new Particle(*particle));
 			bins[index[0]][index[1]][index[2]]->density += particle->mass*particle->weight;
 		}
-		for(int i = 0; i < rgridNumber; ++i){
-			bins[i][0][0]->density /= bins[i][0][0]->volume;
-		}
 		++it;
+	}
+	for(int i = 0; i < rgridNumber; ++i){
+		bins[i][0][0]->density /= bins[i][0][0]->volume;
 	}
 }
 
