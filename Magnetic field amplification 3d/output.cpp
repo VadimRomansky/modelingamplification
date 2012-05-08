@@ -557,7 +557,7 @@ void outputParticles(std::vector<Particle*>& particles, const char* fileName){
 	FILE* outParticles = fopen(fileName, "w");
 	std::vector<Particle*>::iterator it = particles.begin();
 	while(it != particles.end()){
-		fprintf(outParticles ,"%lf %lf \n",(*it)->absoluteZ, (*it)->absoluteMomentum*1000000000000000000000000.0);
+		fprintf(outParticles ,"%lf %lf \n",(*it)->getAbsoluteR(), (*it)->absoluteMomentum*1000000000000000000000000.0);
 		++it;
 	}
 	fclose(outParticles );
