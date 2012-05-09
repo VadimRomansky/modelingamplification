@@ -145,7 +145,7 @@ int* SpaceBin::propagateParticle(Particle* particle ,double& time, double timeSt
 
 		double r = sqrt(particle->absoluteX*particle->absoluteX + particle->absoluteY*particle->absoluteY + particle->absoluteZ*particle->absoluteZ);
 		double theta = acos(particle->absoluteZ/r);
-		if( abs(r) < DBL_EPSILON){
+		if( abs(r) < epsilon){
 			theta = pi/2;
 		}
 		double phi = atan2(particle->absoluteY, particle->absoluteX);
@@ -159,7 +159,7 @@ int* SpaceBin::propagateParticle(Particle* particle ,double& time, double timeSt
 		largeAngleScattering(particle, time, timeStep);
 		double particleR = sqrt(particle->absoluteX*particle->absoluteX + particle->absoluteY*particle->absoluteY + particle->absoluteZ*particle->absoluteZ);
 		double theta = acos(particle->absoluteZ/particleR);
-		if( abs(r) < DBL_EPSILON){
+		if( abs(r) < epsilon){
 			theta = pi/2;
 		}
 		double phi = atan2(particle->absoluteY, particle->absoluteX);
@@ -280,8 +280,11 @@ int* SpaceBin::binByCoordinates(double r, double theta, double phi, double r0, d
 	}
 	int* result = new int[3];
 	result[0] = i;
-	result[1] = j;
-	result[2] = k;
+	//result[1] = j;
+	//result[2] = k;
+	//TODO !!!!!!!!!
+	result[i]=0;
+	result[j]=0;
 	return result;
 }
 
@@ -322,7 +325,7 @@ void SpaceBin::makeOneStep(Particle* particle, double colisionTime, double& time
 
 	double tempr = sqrt(tempx*tempx + tempy*tempy +tempz*tempz);
 	double temptheta = acos(tempz/tempr);
-	if(abs(tempr) < DBL_EPSILON){
+	if(abs(tempr) < epsilon){
 		temptheta = theta;
 	}
 	double tempphi = atan2(tempy, tempx);
@@ -362,7 +365,7 @@ void SpaceBin::makeOneStep(Particle* particle, double colisionTime, double& time
 
 		tempr = sqrt(tempx*tempx + tempy*tempy +tempz*tempz);
 		temptheta = acos(tempz/tempr);
-		if(abs(tempr) < DBL_EPSILON){
+		if(abs(tempr) < epsilon){
 			temptheta = theta;
 		}
 		tempphi = atan2(tempy, tempx);
@@ -391,7 +394,7 @@ void SpaceBin::makeOneStep(Particle* particle, double colisionTime, double& time
 
 void SpaceBin::scattering(Particle* particle, double maxTheta){
 	double localTheta = acos(particle->localMomentumZ/particle->localMomentum);
-	if(abs(particle->localMomentum) < DBL_EPSILON){
+	if(abs(particle->localMomentum) < epsilon){
 		localTheta = pi/2;
 	}
 	double localPhi = atan2(particle->localMomentumY, particle->localMomentumX);
@@ -418,7 +421,7 @@ void SpaceBin::scattering(Particle* particle, double maxTheta){
 		printf("%s %lf\n","sinDeltaPhi > 1",sinDeltaPhi);
 		localPhi = 0;
 	}
-	if(abs(sinLocalTheta) < DBL_EPSILON){
+	if(abs(sinLocalTheta) < epsilon){
 		localPhi = 0;
 	}
 	particle->localMomentumZ = particle->localMomentum*cos(localTheta);
