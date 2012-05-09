@@ -41,7 +41,7 @@ Particle::Particle(double r, double temperature, int a, int znumber){
 	double z = uniRandom() - 0.5;
 	
 	double theta = acos(z/sqrt(x*x + y*y + z*z));
-	if(abs(x*x + y*y + z*z) < DBL_EPSILON){
+	if(abs(x*x + y*y + z*z) < epsilon){
 		theta = pi/2;
 	}
 	double phi = atan2(y,x);
@@ -193,7 +193,7 @@ Particle::Particle(int a, int znumber, SpaceBin* bin, bool wpath){
 	double y = bin->r2*2*(uniRandom() - 0.5);
 	double z = bin->r2*2*(uniRandom() - 0.5);
 	double theta = acos(z/sqrt(x*x + y*y +z*z));
-	if(abs(x*x + y*y + z*z) < DBL_EPSILON){
+	if(abs(x*x + y*y + z*z) < epsilon){
 		theta = pi/2;
 	}
 	double phi = atan2(y,x);
@@ -206,7 +206,7 @@ Particle::Particle(int a, int znumber, SpaceBin* bin, bool wpath){
 		y = bin->r2*2*(uniRandom() - 0.5);
 		z = bin->r2*2*(uniRandom() - 0.5);
 		theta = acos(z/sqrt(x*x + y*y +z*z));
-		if(abs(x*x + y*y + z*z) < DBL_EPSILON){
+		if(abs(x*x + y*y + z*z) < epsilon){
 			theta = pi/2;
 		}
 		phi = atan2(y,x);
@@ -309,7 +309,7 @@ void Particle::setAbsoluteMomentum(double U, double Utheta, double Uphi){
 	double V = sqrt(sqrp/(sqrm+sqrp/sqrc));
 	//double c2 = speed_of_light*speed_of_light;
 	double theta = acos(localMomentumZ/localMomentum);
-	if(abs(localMomentum) < DBL_EPSILON){
+	if(abs(localMomentum) < epsilon){
 		theta = pi/2;
 	}
 	double phi = atan2(localMomentumY,localMomentumX);
@@ -360,7 +360,7 @@ void Particle::setAbsoluteMomentum(double U, double Utheta, double Uphi){
 	}
 
 	absoluteMomentumTheta = acos(particleAbsoluteV.z/absoluteV);
-	if(abs(absoluteV) < DBL_EPSILON){
+	if(abs(absoluteV) < epsilon){
 		absoluteMomentumTheta = pi/2;
 	}
 	absoluteMomentumPhi = atan2(particleAbsoluteV.y, particleAbsoluteV.x);
@@ -445,7 +445,7 @@ void Particle::setAbsoluteMomentum(SpaceBin* bin){
 	double V = sqrt(sqrp/(sqrm+sqrp/sqrc));
 	//double c2 = speed_of_light*speed_of_light;
 	double theta = acos(localMomentumZ/localMomentum);
-	if(abs(localMomentum) < DBL_EPSILON){
+	if(abs(localMomentum) < epsilon){
 		theta = pi/2;
 	}
 	double phi = atan2(localMomentumY,localMomentumX);
@@ -490,7 +490,7 @@ void Particle::setAbsoluteMomentum(SpaceBin* bin){
 		}
 	}
 
-	if(abs(1 - absoluteV*absoluteV/c2) < DBL_EPSILON){
+	if(abs(1 - absoluteV*absoluteV/c2) < epsilon){
 		printf("absoluteV = c in setAbsoluteMomentum\n");
 	}
 	absoluteMomentum = mass*absoluteV/sqrt(1 - absoluteV*absoluteV/c2);
@@ -499,7 +499,7 @@ void Particle::setAbsoluteMomentum(SpaceBin* bin){
 	}
 
 	absoluteMomentumTheta = acos(particleAbsoluteV.z/absoluteV);
-	if(abs(absoluteV) < DBL_EPSILON){
+	if(abs(absoluteV) < epsilon){
 		absoluteMomentumTheta = pi/2;
 	}
 	absoluteMomentumPhi = atan2(particleAbsoluteV.y, particleAbsoluteV.x);
@@ -561,7 +561,7 @@ void Particle::setLocalMomentum(SpaceBin* bin){
 	}
 
 
-	if(abs(1 - localV*localV/c2) < DBL_EPSILON){
+	if(abs(1 - localV*localV/c2) < epsilon){
 		printf("localV = c in setLocalMomentum\n");
 	}
 	localMomentum = mass*localV/sqrt(1 - localV*localV/c2);
@@ -609,7 +609,7 @@ double Particle::getAbsoluteR(){
 
 double Particle::getAbsoluteTheta(){
 	double r = getAbsoluteR();
-	if(abs(r) < DBL_EPSILON){
+	if(abs(r) < epsilon){
 		return pi/2;
 	}
 	return acos(absoluteZ/r);

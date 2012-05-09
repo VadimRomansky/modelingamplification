@@ -22,7 +22,6 @@ Simulation* readInput(){
 		fscanf(infile,"%d", &a);
 		simulation->smallAngleScattering = (a == 1);
 		fclose(infile);
-		fclose(infile);
 		return simulation;
 	} else {
 		return NULL;

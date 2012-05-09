@@ -114,13 +114,12 @@ void Simulation::simulate(){
 			#pragma omp parallel for private(it) shared(l)
 			for(it = 0; it < introducedParticles.size(); ++it){
 				Particle* particle = introducedParticles[it];
-				++it;
 				//printf("%d %s",l,"\n");
 				++l;
 				bool side = false;
 				double r = sqrt(particle->absoluteX*particle->absoluteX + particle->absoluteY*particle->absoluteY + particle->absoluteZ*particle->absoluteZ);
 				double theta = acos(particle->absoluteZ/r);
-				if(abs(r) < DBL_EPSILON){
+				if(abs(r) < epsilon){
 					theta = pi/2;
 				}
 				double phi =atan2(particle->absoluteY, particle->absoluteX);
@@ -284,7 +283,7 @@ std::list <Particle> Simulation::getParticleGaussDistribution(int number){
 		double y = uniRandom() - 0.5;
 		double z = uniRandom() - 0.5;
 		double theta = acos(z/sqrt(x*x + y*y +z*z));
-		if( abs(x*x + y*y +z*z) < DBL_EPSILON){
+		if( abs(x*x + y*y +z*z) < epsilon){
 			theta = pi/2;
 		}
 		double phi = atan2(y,x);
@@ -707,7 +706,7 @@ void Simulation::collectAverageVelocity(){
 		++it;
 		double r = particle->getAbsoluteR();
 		double theta = acos(particle->absoluteZ/r);
-		if( abs(r) < DBL_EPSILON){
+		if( abs(r) < epsilon){
 			theta = pi/2;
 		}
 		double phi =atan2(particle->absoluteY, particle->absoluteX);
@@ -742,7 +741,7 @@ void Simulation::sortParticlesIntoBins(){
 		Particle* particle = *it;
 		double r = particle->getAbsoluteR();
 		double theta = acos(particle->absoluteZ/r);
-		if( abs(r) < DBL_EPSILON){
+		if( abs(r) < epsilon){
 			printf("r < epsilon");
 			theta = pi/2;
 		}
