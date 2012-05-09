@@ -251,7 +251,7 @@ Particle::Particle(int a, int znumber, SpaceBin* bin, bool wpath){
 	localMomentumZ = localMomentum*localMomentumCosTheta;
 
 	isCosmicRay = false;
-	setAbsoluteMomentum(bin->U,bin->UTheta,bin->UPhi);
+	setAbsoluteMomentum(bin);
 	initialMomentum = absoluteMomentum;
 	previousAbsoluteMomentum = initialMomentum;
 	//path = std::list<double>();

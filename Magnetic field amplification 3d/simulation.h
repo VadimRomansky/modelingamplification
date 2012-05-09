@@ -53,6 +53,8 @@ public:
 	double theorMomentumY;
 	double particlesWeight;
 
+	int shockWavePoint;
+
 	Particle* Particles;
 	SpaceBin**** bins;
 	double** pressureSpectralDensity;
