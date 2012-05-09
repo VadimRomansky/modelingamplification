@@ -98,7 +98,7 @@ int* SpaceBin::propagateParticle(Particle* particle ,double& time, double timeSt
 	if(time != time){
 		printf("aaa\n");
 	}
-	particle->setLocalMomentum(this);
+	particle->setLocalMomentum(U,particle->getAbsoluteTheta(),particle->getAbsolutePhi());
 	double lambda = getFreePath(particle);
 	if(lambda != lambda){
 		printf("aaa\n");
@@ -258,7 +258,7 @@ void SpaceBin::largeAngleScattering(Particle* particle, double& time, double tim
 		particle->localMomentumZ = particle->localMomentum*cos(theta);
 		particle->localMomentumX = particle->localMomentum*sin(theta)*cos(phi);
 		particle->localMomentumY = particle->localMomentum*sin(theta)*sin(phi);
-		particle->setAbsoluteMomentum(this);
+		particle->setAbsoluteMomentum(U,particle->getAbsoluteTheta(),particle->getAbsolutePhi());
 	}
 }
 
