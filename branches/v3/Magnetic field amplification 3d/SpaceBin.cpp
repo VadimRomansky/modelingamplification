@@ -264,6 +264,12 @@ int* SpaceBin::binByCoordinates(double r, double theta, double phi, double r0, d
 		theta = thetagridNumber - 1;
 	}
 	int k = lowerInt(phi/deltaphi);
+	if(k >= phigridNumber){
+		k = 0;
+	}
+	if(k < 0){
+		k = phigridNumber - 1;
+	}
 	if (phi == 2*pi){
 		k = 0;
 	}
@@ -273,11 +279,11 @@ int* SpaceBin::binByCoordinates(double r, double theta, double phi, double r0, d
 	if( i < 0){
 		//printf("aaa");
 	}
-	if(j > thetagridNumber - 1){
-		j = lowerInt((theta - epsilon)/deltatheta);
-		if(j > thetagridNumber - 1){
-			printf("aaa");
-		}
+	if(j >= thetagridNumber){
+		j = 0;
+	}
+	if(j < 0){
+		j = thetagridNumber - 1;
 	}
 	if(k > phigridNumber - 1){
 		printf("aaa");
@@ -287,8 +293,8 @@ int* SpaceBin::binByCoordinates(double r, double theta, double phi, double r0, d
 	//result[1] = j;
 	//result[2] = k;
 	//TODO !!!!!!!!!
-	result[1]=0;
-	result[2]=0;
+	result[1]=j;
+	result[2]=k;
 	return result;
 }
 
