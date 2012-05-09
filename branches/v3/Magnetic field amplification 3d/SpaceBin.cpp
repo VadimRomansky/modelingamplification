@@ -225,6 +225,10 @@ void SpaceBin::largeAngleScattering(Particle* particle, double& time, double tim
 
 	if(deltat < 0){
 		printf("dt < 0\n");
+		FILE* errFile = fopen("./output/errFile.dat","a");
+		fprintf(errFile,"dt < 0\n");
+		fprintf(errFile,"x= %lf, y= %lf, z= %lf, vx= %lf, vy= %lf, vz= %lf, r1= %lf, r2=%lf\n",particle->absoluteX,particle->absoluteY,particle->absoluteZ,absoluteV*sin(particle->absoluteMomentumTheta)*cos(particle->absoluteMomentumPhi),absoluteV*sin(particle->absoluteMomentumTheta)*sin(particle->absoluteMomentumPhi),absoluteV*cos(particle->absoluteMomentumTheta),r1,r2);
+		fclose(errFile);
 	}
 
 	if(numberR == 0){
@@ -283,8 +287,8 @@ int* SpaceBin::binByCoordinates(double r, double theta, double phi, double r0, d
 	//result[1] = j;
 	//result[2] = k;
 	//TODO !!!!!!!!!
-	result[i]=0;
-	result[j]=0;
+	result[1]=0;
+	result[2]=0;
 	return result;
 }
 
