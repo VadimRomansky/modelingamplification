@@ -13,7 +13,7 @@ SpaceBin::SpaceBin(){
 	for (int i = 0; i < kgridNumber;++i){
 		magneticField[i] = 0;
 	}
-	sortedParticles = new std::list<Particle*>[kgridNumber];
+	//sortedParticles = new std::list<Particle*>[kgridNumber];
 	averageVelocity = 0;
 	cosmicRayBoundMomentum = 0;
 }
@@ -58,7 +58,7 @@ SpaceBin::SpaceBin(double R, double Theta, double Phi, double deltar, double del
 	detectedParticlesTheta2 = std::list<Particle*>();
 	detectedParticlesPhi1 = std::list<Particle*>();
 	detectedParticlesPhi2 = std::list<Particle*>();
-	sortedParticles = new std::list<Particle*>[kgridNumber];
+	//sortedParticles = new std::list<Particle*>[kgridNumber];
 
 	particleMassFlux.reset();
 	particleMomentaFlux.reset();
@@ -87,7 +87,7 @@ SpaceBin::SpaceBin(double R, double Theta, double Phi, double deltar, double del
 
 SpaceBin::~SpaceBin(){
 	resetDetectors();
-	delete sortedParticles;
+	//delete sortedParticles;
 	delete[] magneticField;
 }
 
@@ -512,7 +512,7 @@ void SpaceBin::resetDetectors(){
 	detectedParticlesTheta2.clear();
 	detectedParticlesPhi1.clear();
 	detectedParticlesPhi2.clear();
-	for(int j = 0; j < kgridNumber; ++j){
+	/*for(int j = 0; j < kgridNumber; ++j){
 		it = sortedParticles[j].begin();
 		while(it != sortedParticles[j].end()){
 			Particle* particle = *it;
@@ -520,7 +520,7 @@ void SpaceBin::resetDetectors(){
 			++it;
 		}
 		sortedParticles[j].clear();
-	}
+	}*/
 	massFlux.fluxR1 = 0;
 	massFlux.fluxR2 = 0;
 	momentaFlux.fluxR1 = 0;
@@ -851,7 +851,7 @@ void SpaceBin::sortParticles(double minK, double maxK){
 	std::list<Particle*>::iterator it = detectedParticlesR2.begin();
 	while (it != detectedParticlesR2.end()){
 		int i = (int) ( (**it).localMomentum - minK)/kstep;
-		sortedParticles[i].push_back(*it);
+		//sortedParticles[i].push_back(*it);
 		++it;
 	}
 }
@@ -994,7 +994,7 @@ double SpaceBin::evaluateMomentumFlux(std::list<Particle*>& particles, double u)
 	std::list<Particle*>::iterator it = particles.begin();
 	while(it != particles.end()){
 		Particle* particle = *it;
-		particle->setLocalMomentum(u,0,0);
+		particle->setLocalMomentum(this);
 		result += particle->localMomentumZ*particle->weight/getFreeTime(particle);
 		++it;
 	}

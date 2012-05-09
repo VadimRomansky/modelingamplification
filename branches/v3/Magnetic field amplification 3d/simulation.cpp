@@ -22,6 +22,7 @@ Simulation::Simulation(){
 	startPDF = std::list <Particle*>();
 	timeStep = defaultTimeStep;
 	averageVelocity = new double[rgridNumber];
+	shockWavePoint = 0;
 }
 
 Simulation::~Simulation(){
@@ -148,6 +149,7 @@ void Simulation::simulate(){
 						break;
 					}
 				}
+				delete[] index;
 			}
 			/*printf("%s", "Fluxes updating\n");
 			for (int i = 0; i < rgridNumber; ++i){
@@ -780,7 +782,7 @@ void Simulation::removeEscapedParticles(){
 			theorMomentumX -= particle->absoluteMomentum*sin(particle->absoluteMomentumTheta)*sin(particle->absoluteMomentumPhi)*particle->weight;
 			delete particle;
 		} else {
-			if(particle->absoluteMomentum > momentumParameter*particle->previousAbsoluteMomentum){
+			/*if(particle->absoluteMomentum > momentumParameter*particle->previousAbsoluteMomentum){
 				for(int i = 0; i < generationSize; ++i){
 					Particle* particle1 = new Particle(*particle);
 					particle1->weight /= generationSize;
@@ -788,12 +790,12 @@ void Simulation::removeEscapedParticles(){
 					list.push_back(particle1);
 				}
 				delete particle;
-			} else {
-				if(momentumParameter*particle->absoluteMomentum < particle->previousAbsoluteMomentum){
-					particle->previousAbsoluteMomentum = particle->absoluteMomentum;
-				}
+			} else {*/
+				//if(momentumParameter*particle->absoluteMomentum < particle->previousAbsoluteMomentum){
+					//particle->previousAbsoluteMomentum = particle->absoluteMomentum;
+				//}
 				list.push_back(particle);
-			}
+			//}
 		}
 	}
 	introducedParticles.clear();
