@@ -736,6 +736,9 @@ void Simulation::collectAverageVelocity(){
 }
 
 void Simulation::sortParticlesIntoBins(){
+	for(int i = 0; i < rgridNumber; ++i){
+		bins[i][0][0]->density = 0.0;
+	}
 	std::vector<Particle*>::iterator it = introducedParticles.begin();
 	while( it != introducedParticles.end()){
 		Particle* particle = *it;
@@ -751,9 +754,6 @@ void Simulation::sortParticlesIntoBins(){
 		double phi =atan2(particle->absoluteY, particle->absoluteX);
 		if(phi < 0){
 			phi = phi + 2*pi;
-		}
-		for(int i = 0; i < rgridNumber; ++i){
-			bins[i][0][0]->density = 0.0;
 		}
 		int* index = SpaceBin::binByCoordinates(r, theta, phi,upstreamR,deltaR,deltaTheta,deltaPhi);
 		if((index[0] >= 0) && (index[0] < rgridNumber) && (index[1] >= 0) && (index[1] < thetagridNumber) && (index[2] >= 0) && (index[2] < phigridNumber)){
