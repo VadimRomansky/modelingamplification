@@ -2,7 +2,7 @@
 //
 
 #include "stdafx.h"
-#include <crtdbg.h>
+//#include <crtdbg.h>
 #include "input.h"
 #include "simulation.h"
 #include <omp.h>
