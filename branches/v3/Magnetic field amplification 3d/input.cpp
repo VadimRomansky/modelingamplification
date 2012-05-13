@@ -21,6 +21,7 @@ Simulation* readInput(){
 		int a;
 		fscanf(infile,"%d", &a);
 		simulation->smallAngleScattering = (a == 1);
+		fscanf(infile,"%d",&simulation->rgridNumber);
 		fscanf(infile,"%d",&simulation->shockWavePoint);
 		fclose(infile);
 		return simulation;

@@ -269,7 +269,7 @@ void Particle::setAbsoluteMomentum(double U, double Utheta, double Uphi){
 	double sqrp = localMomentum*localMomentum;
 	double V = sqrt(sqrp/(sqrm+sqrp/sqrc));
 	double theta = acos(localMomentumZ/localMomentum);
-	if(abs(localMomentum) < DBL_EPSILON){
+	if(abs(localMomentum) < epsilon*sqrt((kBoltzman)*1000*massProton)){
 		theta = pi/2;
 	}
 	double phi = atan2(localMomentumY,localMomentumX);
@@ -414,7 +414,7 @@ void Particle::setAbsoluteMomentum(SpaceBin* bin){
 	double V = sqrt(sqrp/(sqrm+sqrp/sqrc));
 	//double c2 = speed_of_light*speed_of_light;
 	double theta = acos(localMomentumZ/localMomentum);
-	if(abs(localMomentum) < DBL_EPSILON){
+	if(abs(localMomentum) < epsilon*sqrt((kBoltzman)*1000*massProton)){
 		theta = pi/2;
 	}
 	double phi = atan2(localMomentumY,localMomentumX);

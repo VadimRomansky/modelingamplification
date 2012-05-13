@@ -248,7 +248,7 @@ Particle::Particle(int a, int znumber, SpaceBin* bin, bool wpath){
 	localMomentumZ = localMomentum*localMomentumCosTheta;
 
 	isCosmicRay = false;
-	setAbsoluteMomentum(bin);
+	setAbsoluteMomentum(bin->U,bin->UTheta,bin->UPhi);
 	initialMomentum = absoluteMomentum;
 	previousAbsoluteMomentum = initialMomentum;
 	path = std::list<double>();
@@ -309,7 +309,7 @@ void Particle::setAbsoluteMomentum(double U, double Utheta, double Uphi){
 	double V = sqrt(sqrp/(sqrm+sqrp/sqrc));
 	//double c2 = speed_of_light*speed_of_light;
 	double theta = acos(localMomentumZ/localMomentum);
-	if(abs(localMomentum) < epsilon){
+	if(abs(localMomentum) < epsilon*sqrt((kBoltzman)*1000*massProton)){
 		theta = pi/2;
 	}
 	double phi = atan2(localMomentumY,localMomentumX);
@@ -445,7 +445,7 @@ void Particle::setAbsoluteMomentum(SpaceBin* bin){
 	double V = sqrt(sqrp/(sqrm+sqrp/sqrc));
 	//double c2 = speed_of_light*speed_of_light;
 	double theta = acos(localMomentumZ/localMomentum);
-	if(abs(localMomentum) < epsilon){
+	if(abs(localMomentum) < epsilon*sqrt((kBoltzman)*1000*massProton)){
 		theta = pi/2;
 	}
 	double phi = atan2(localMomentumY,localMomentumX);

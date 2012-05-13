@@ -53,6 +53,7 @@ public:
 	double theorMomentumY;
 	double particlesWeight;
 
+	int rgridNumber;
 	int shockWavePoint;
 
 	Particle* Particles;
