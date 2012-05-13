@@ -21,7 +21,6 @@ Simulation::Simulation(){
 	Z = 1;
 	startPDF = std::list <Particle*>();
 	timeStep = defaultTimeStep;
-	averageVelocity = new double[rgridNumber];
 	shockWavePoint = 0;
 }
 
@@ -42,6 +41,7 @@ Simulation::~Simulation(){
 }
 
 void Simulation::initializeProfile(){
+	averageVelocity = new double[rgridNumber];
  	minK = defaultMinK;
 	maxK = defaultMaxK;
 	deltaR = (downstreamR - upstreamR)/(rgridNumber );
@@ -127,7 +127,7 @@ void Simulation::simulate(){
 				if(phi < 0){
 					phi = phi + 2*pi;
 				}
-				int* index = SpaceBin::binByCoordinates(r, theta, phi,upstreamR,deltaR,deltaTheta,deltaPhi);
+				int* index = SpaceBin::binByCoordinates(r, theta, phi,upstreamR,deltaR,deltaTheta,deltaPhi, rgridNumber);
 				double time = 0;
 				while((index[0] >= 0)&&(index[0] < rgridNumber)){
 					j++;
@@ -142,7 +142,7 @@ void Simulation::simulate(){
 					if(time != time){
 						printf("time != time\n");
 					}
-					int* tempIndex = bin->propagateParticle(particle,time, timeStep);
+					int* tempIndex = bin->propagateParticle(particle,time, timeStep, rgridNumber);
 					delete[] index;
 					index = tempIndex;
 					if (time >= timeStep){
@@ -180,7 +180,7 @@ void Simulation::simulate(){
 			updateEnergy();
 			fprintf(outIteration,"%d %lf %lf %lf %lf %lf %lf %lf %lf %d %lf\n",itNumber, energy, theorEnergy, momentumZ, theorMomentumZ, momentumX, theorMomentumX, momentumY, theorMomentumY, introducedParticles.size(), particlesWeight);
 			fclose(outIteration);
-			outputRadialProfile(bins,0,0,radialFile);
+			outputRadialProfile(bins,0,0,radialFile, rgridNumber);
 			//outputShockWave(shockWavePoints, shockWaveVelocity);
 			fclose(radialFile);
 		}
@@ -715,7 +715,7 @@ void Simulation::collectAverageVelocity(){
 		if(phi < 0){
 			phi = phi + 2*pi;
 		}
-		int* index = SpaceBin::binByCoordinates(r, theta, phi,upstreamR,deltaR,deltaTheta,deltaPhi);
+		int* index = SpaceBin::binByCoordinates(r, theta, phi,upstreamR,deltaR,deltaTheta,deltaPhi, rgridNumber);
 		if(index[0] >= 0){
 			weights[index[0]] += particle->weight;
 			averageVelocity[index[0]] += particle->getRadialSpeed()*particle->weight;
@@ -730,6 +730,8 @@ void Simulation::collectAverageVelocity(){
 			bins[i][0][0]->U = averageVelocity[i];
 			bins[i][0][0]->averageVelocity = averageVelocity[i];
 		} else {
+			bins[i][0][0]->U = 0;
+			bins[i][0][0]->averageVelocity = 0;
 			printf("0 particles in bin\n");
 		}
 	}
@@ -757,7 +759,7 @@ void Simulation::sortParticlesIntoBins(){
 		if(phi < 0){
 			phi = phi + 2*pi;
 		}
-		int* index = SpaceBin::binByCoordinates(r, theta, phi,upstreamR,deltaR,deltaTheta,deltaPhi);
+		int* index = SpaceBin::binByCoordinates(r, theta, phi,upstreamR,deltaR,deltaTheta,deltaPhi, rgridNumber);
 		if((index[0] >= 0) && (index[0] < rgridNumber) && (index[1] >= 0) && (index[1] < thetagridNumber) && (index[2] >= 0) && (index[2] < phigridNumber)){
 			bins[index[0]][index[1]][index[2]]->particles.push_back(new Particle(*particle));
 			bins[index[0]][index[1]][index[2]]->density += particle->mass*particle->weight;

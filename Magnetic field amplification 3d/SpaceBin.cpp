@@ -94,7 +94,7 @@ SpaceBin::~SpaceBin(){
 	delete[] magneticField;
 }
 
-int* SpaceBin::propagateParticle(Particle* particle ,double& time, double timeStep){
+int* SpaceBin::propagateParticle(Particle* particle ,double& time, double timeStep, const int rgridNumber){
 	if(time != time){
 		printf("aaa\n");
 	}
@@ -156,7 +156,7 @@ int* SpaceBin::propagateParticle(Particle* particle ,double& time, double timeSt
 		}
 
 
-		return binByCoordinates(r, theta, phi,r1 - numberR*(r2 - r1), r2 - r1, theta2 - theta1, phi2 - phi1);
+		return binByCoordinates(r, theta, phi,r1 - numberR*(r2 - r1), r2 - r1, theta2 - theta1, phi2 - phi1, rgridNumber);
 	} else {
 		largeAngleScattering(particle, time, timeStep);
 		double particleR = sqrt(particle->absoluteX*particle->absoluteX + particle->absoluteY*particle->absoluteY + particle->absoluteZ*particle->absoluteZ);
@@ -168,7 +168,7 @@ int* SpaceBin::propagateParticle(Particle* particle ,double& time, double timeSt
 		if(phi < 0) {
 			phi = phi + 2*pi;
 		}
-		return binByCoordinates(particleR, theta, phi,0, r2 - r1, theta2 - theta1, phi2 - phi1);
+		return binByCoordinates(particleR, theta, phi,0, r2 - r1, theta2 - theta1, phi2 - phi1, rgridNumber);
 	}
 }
 
@@ -263,7 +263,7 @@ void SpaceBin::largeAngleScattering(Particle* particle, double& time, double tim
 }
 
 
-int* SpaceBin::binByCoordinates(double r, double theta, double phi, double r0, double deltar, double deltatheta, double deltaphi){
+int* SpaceBin::binByCoordinates(double r, double theta, double phi, double r0, double deltar, double deltatheta, double deltaphi, int rgridNumber){
 	int i = lowerInt((r - r0)/deltar);
 	int j = lowerInt(theta/deltatheta);
 	if( theta == pi ){
