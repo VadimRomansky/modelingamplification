@@ -42,6 +42,7 @@ Simulation::~Simulation(){
 
 void Simulation::initializeProfile(){
 	averageVelocity = new double[rgridNumber];
+	currentShockWavePoint = shockWavePoint;
  	minK = defaultMinK;
 	maxK = defaultMaxK;
 	deltaR = (downstreamR - upstreamR)/(rgridNumber );
@@ -178,7 +179,8 @@ void Simulation::simulate(){
 			outIteration = fopen("./output/tamc_iteration.dat","a");
 			radialFile = fopen("./output/tamc_radial_profile.dat","a");
 			updateEnergy();
-			fprintf(outIteration,"%d %lf %lf %lf %lf %lf %lf %lf %lf %d %lf\n",itNumber, energy, theorEnergy, momentumZ, theorMomentumZ, momentumX, theorMomentumX, momentumY, theorMomentumY, introducedParticles.size(), particlesWeight);
+			updateShockWavePoint();
+			fprintf(outIteration,"%d %lf %lf %lf %lf %lf %lf %lf %lf %d %lf %lf\n",itNumber, energy, theorEnergy, momentumZ, theorMomentumZ, momentumX, theorMomentumX, momentumY, theorMomentumY, introducedParticles.size(), particlesWeight, bins[currentShockWavePoint][0][0]->r);
 			fclose(outIteration);
 			outputRadialProfile(bins,0,0,radialFile, rgridNumber);
 			//outputShockWave(shockWavePoints, shockWaveVelocity);
@@ -220,33 +222,8 @@ void Simulation::resetProfile(){
 			}
 			double m = bins[i][0][0]->density*bins[i][0][0]->volume;*/
 			bins[i][0][0]->density += deltaM/(bins[i][0][0]->volume);
-			/*if(bins[i][0][0]->density < 0){
-				if(abs(bins[i][0][0]->density) < epsilon){
-					bins[i][0][0]->density = 0;
-				} else {
-					printf("aaa");
-				}
-			}*/
-			/*bins[i][0][0]->U = p/sqrt(sqr(m) + sqr(p/speed_of_light));
-			if(abs(bins[i][0][0]->U) > speed_of_light){
-				if(abs(bins[i][0][0]->U) < (1 + epsilon)*speed_of_light){
-					bins[i][0][0]->U = (1 - epsilon)*speed_of_light;
-				}
-				printf("aaa");
-			}*/
 		}
 	}
-
-	/*std::list<Particle*>::iterator it = introducedParticles.begin();
-	while(it != introducedParticles.end()){
-		Particle* particle = *it;
-		int* index = SpaceBin::binByCoordinates(particle->absoluteZ, particle->getAbsoluteTheta(), particle->getAbsolutePhi(), upstreamR, deltaR, deltaTheta, deltaPhi);
-		if((index[0] > 0)&&(index[0] < rgridNumber)&&(index[1] > 0)&&(index[1] < thetagridNumber)&&(index[2] > 0)&&(index[2] < phigridNumber)){
-			SpaceBin* bin = bins[index[0]][index[1]][index[2]];
-			particle->setLocalMomentum(bin->U, bin->UTheta, bin->UPhi);
-		}
-		++it;
-	}*/
 }
 
 ////обнуляет счётчики зарегистрированных частиц
@@ -264,19 +241,6 @@ void Simulation::resetDetectors(){
 	}
 }
 
-/*std::list <Particle> Simulation::getParticleUniformDistribution(double  pmax,int  pnumber, int thetanumber){
-	double pstep = pmax/pnumber;
-	double thetastep = pi/(thetanumber);
-	std::list <Particle> l = std::list <Particle>();
-	for(int i=0; i<pnumber; ++i){
-		for(int j=0; j<thetanumber; ++j){
-			Particle particle = Particle(downstreamR, temperature,A,Z,U0,i*pstep+pstep/2,j*thetastep+thetastep/2);
-			particle.weight = maxwell(i*pstep+pstep/2, temperature, A*massProton)*thetastep*pstep*sin(j*thetastep+thetastep/2)/(4*pi);
-			l.push_front(particle);
-		}
-	}
-	return l;
-}*/
 ////возвращает список частиц, размером number. Частицы распределены по максвеллу
 std::list <Particle> Simulation::getParticleGaussDistribution(int number){
 	std::list <Particle> l = std::list <Particle>();
@@ -625,6 +589,10 @@ std::vector <Particle*> Simulation::getParticles(){
 						double v = particle->getAbsoluteV();
 						double vr = particle->getRadialSpeed(); 
 						bin->initialMomentum += vr*particle->mass*particle->weight/sqrt(1 - (v*v)/c2);
+						theorEnergy += particle->getEnergy()*particle->weight;
+						theorMomentumZ += particle->absoluteMomentum*cos(particle->absoluteMomentumTheta)*particle->weight;
+						theorMomentumY += particle->absoluteMomentum*sin(particle->absoluteMomentumTheta)*cos(particle->absoluteMomentumPhi)*particle->weight;
+						theorMomentumX += particle->absoluteMomentum*sin(particle->absoluteMomentumTheta)*sin(particle->absoluteMomentumPhi)*particle->weight;
 					//}
 				}
 			}
@@ -784,7 +752,7 @@ void Simulation::removeEscapedParticles(){
 			theorMomentumX -= particle->absoluteMomentum*sin(particle->absoluteMomentumTheta)*sin(particle->absoluteMomentumPhi)*particle->weight;
 			delete particle;
 		} else {
-			/*if(particle->absoluteMomentum > momentumParameter*particle->previousAbsoluteMomentum){
+			if(particle->absoluteMomentum > momentumParameter*particle->previousAbsoluteMomentum){
 				for(int i = 0; i < generationSize; ++i){
 					Particle* particle1 = new Particle(*particle);
 					particle1->weight /= generationSize;
@@ -792,12 +760,12 @@ void Simulation::removeEscapedParticles(){
 					list.push_back(particle1);
 				}
 				delete particle;
-			} else {*/
-				//if(momentumParameter*particle->absoluteMomentum < particle->previousAbsoluteMomentum){
-					//particle->previousAbsoluteMomentum = particle->absoluteMomentum;
-				//}
+			} else {
+				if(momentumParameter*particle->absoluteMomentum < particle->previousAbsoluteMomentum){
+					particle->previousAbsoluteMomentum = particle->absoluteMomentum;
+				}
 				list.push_back(particle);
-			//}
+			}
 		}
 	}
 	introducedParticles.clear();
@@ -822,5 +790,15 @@ void Simulation::updateEnergy(){
 		momentumX += particle->absoluteMomentum*sin(particle->absoluteMomentumTheta)*sin(particle->absoluteMomentumPhi)*particle->weight;
 		particlesWeight += particle->weight;
 		++it;
+	}
+}
+
+void Simulation::updateShockWavePoint(){
+	double maxDensity = bins[rgridNumber - 1][0][0]->density;
+	for(int i = rgridNumber-1;i >=0; --i){
+		if(bins[i][0][0]->density > maxDensity){
+			maxDensity = bins[i][0][0]->density;
+			currentShockWavePoint = i;
+		}
 	}
 }

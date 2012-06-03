@@ -21,7 +21,7 @@ const int kgridNumber = 100;
 const double defaultMaxK = 2E-8;
 const double defaultMinK = 0.1E-8;
 const double turbulenceSeed = 0.000000000001;
-const int generationSize = 25;
-const double momentumParameter = 2;
+const int generationSize = 2;
+const double momentumParameter = 5;
 
 #endif
