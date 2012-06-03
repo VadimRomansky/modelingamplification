@@ -55,6 +55,7 @@ public:
 
 	int rgridNumber;
 	int shockWavePoint;
+	int currentShockWavePoint;
 
 	Particle* Particles;
 	SpaceBin**** bins;
@@ -94,6 +95,7 @@ public:
 	void sortParticlesIntoBins();
 	void removeEscapedParticles();
 	void updateEnergy();
+	void updateShockWavePoint();
 private:
 	static const int particleMultiply = 20;
 };

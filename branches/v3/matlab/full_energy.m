@@ -43,3 +43,10 @@ title ('particles weight');
 xlabel ('iteration');
 ylabel ('weight');
 grid ;
+
+figure(7);
+plot (tamc_iteration(1:N,1),tamc_iteration(1:N,12),'blue');
+title ('shock wave point');
+xlabel ('iteration');
+ylabel ('r');
+grid ;
