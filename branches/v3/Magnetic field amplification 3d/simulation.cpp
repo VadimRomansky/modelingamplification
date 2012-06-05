@@ -5,6 +5,7 @@
 #include "output.h"
 #include "util.h"
 #include <omp.h>
+#include <Windows.h>
 
 Simulation::Simulation(){
 	partOfCosmicRay = 0;
@@ -160,19 +161,28 @@ void Simulation::simulate(){
 					}
 				}
 			}*/
-			printf("%s", "Reseting profile\n");
+			//printf("%s", "Reseting profile\n");
 			//resetProfile();
+			printf("%s", "Removing escaped particles\n");
 			removeEscapedParticles();
+			//Sleep(5000);
+			printf("%s", "collect average velocity\n");
 			collectAverageVelocity();
-			sortParticlesIntoBins();
-			printf("%s", "magnetic Field updating\n");
+			//Sleep(5000);
+			//printf("%s", "sorting particles into bins\n");
+			//sortParticlesIntoBins();
+			//Sleep(5000);
+			//printf("%s", "magnetic Field updating\n");
 			//updateMagneticField();
 			//output(*this);
+			printf("%s", "reseting detectors\n");
 			resetDetectors();
+			//Sleep(5000);
 			printf("%s","iteration ¹ ");
 			printf("%d\n",itNumber);
 		}
 		if(introducedParticles.size() > 0){
+			printf("%s", "outputing\n");
 			outputParticles(introducedParticles,"./output/particles.dat");
 			outputPDF(introducedParticles,"./output/tamc_pdf.dat");
 			outputEnergyPDF(introducedParticles,"./output/tamc_energy_pdf.dat");
@@ -185,6 +195,7 @@ void Simulation::simulate(){
 			outputRadialProfile(bins,0,0,radialFile, rgridNumber);
 			//outputShockWave(shockWavePoints, shockWaveVelocity);
 			fclose(radialFile);
+			//Sleep(5000);
 		}
 	}
 }
@@ -668,6 +679,7 @@ void Simulation::collectAverageVelocity(){
 	for(int i = 0; i < rgridNumber; ++i){
 		weights[i] = 0;
 		averageVelocity[i] = 0;
+		bins[i][0][0]->density = 0;
 	}
 
 	std::vector<Particle*>::iterator it = introducedParticles.begin();
@@ -687,11 +699,13 @@ void Simulation::collectAverageVelocity(){
 		if(index[0] >= 0){
 			weights[index[0]] += particle->weight;
 			averageVelocity[index[0]] += particle->getRadialSpeed()*particle->weight;
+			bins[index[0]][index[1]][index[2]]->density += particle->mass*particle->weight;
 		}
 		delete[] index;
 	}
 
 	for(int i = 0; i < rgridNumber; ++i){
+		bins[i][0][0]->density /= bins[i][0][0]->volume;
 		if(weights[i] > epsilon){
 			averageVelocity[i] /= weights[i];
 			//bins[i][0][0]->averageVelocity = averageVelocity[i];
