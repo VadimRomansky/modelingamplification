@@ -50,3 +50,10 @@ title ('shock wave point');
 xlabel ('iteration');
 ylabel ('r');
 grid ;
+
+figure(8);
+plot (tamc_iteration(1:N,1),tamc_iteration(1:N,12),'blue', tamc_iteration(1:N,1),tamc_iteration(N,12)*exp((2/5)*log(tamc_iteration(1:N,1)/tamc_iteration(N,1))),'red');
+title ('shock wave point');
+xlabel ('iteration');
+ylabel ('r');
+grid ;
