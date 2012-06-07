@@ -59,6 +59,8 @@ public:
 	int shockWavePoint;
 	int currentShockWavePoint;
 
+	double zeroBinScale;
+
 	Particle* Particles;
 	SpaceBin**** bins;
 	SpaceBin* zeroBin;

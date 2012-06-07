@@ -5,6 +5,7 @@
 #include "output.h"
 #include "util.h"
 #include <omp.h>
+//#include <Windows.h>
 
 Simulation::Simulation(){
 	partOfCosmicRay = 0;
@@ -55,6 +56,7 @@ void Simulation::initializeProfile(){
 	double Theta = deltaTheta/2;
 	double Phi = deltaPhi/2;
 	bins = new SpaceBin***[rgridNumber];
+	zeroBinScale = 2*U0*defaultTimeStep/deltaR;
 	zeroBin = new SpaceBin(-zeroBinScale*deltaR/2,Theta,Phi,zeroBinScale*deltaR,deltaTheta,deltaPhi,U0,density0,Theta,Phi,temperature,B0,-1,0,0, smallAngleScattering);
     for(int i = 0; i < rgridNumber; ++i){
 		bins[i] = new SpaceBin**[thetagridNumber];
@@ -159,19 +161,22 @@ void Simulation::simulate(){
 
 			printf("%s", "Introducing new particles from left boundary\n");
 			introduceNewParticles();
-
-			printf("%s", "Reseting profile\n");
+			//Sleep(5000);
+			printf("%s", "collecting velocity, density and crflux\n");
 			//resetProfile();
 			collectAverageVelocity();
+			//Sleep(5000);
 			//resetVelocity();
 			//findShockWavePoint();
-			printf("%s", "magnetic Field updating\n");
+			printf("%s", "removing escaped particles\n");
 			//updateMagneticField();
 			//output(*this);
 			removeEscapedParticles();
+			//Sleep(5000);
 			//sortParticlesIntoBins();
 			//outputZPDF(bins[rgridNumber/2][0][0]->particles,"./output/zpdf.dat");
-			smoothProfile();
+			//smoothProfile();
+			printf("%s","updating energy\n");
 			updateCosmicRayBoundMomentum();
 			FILE* cosmicRayMomentum = fopen("./output/tamc_cosmic_ray_momentum.dat","w");
 			for(int i = 0; i < rgridNumber; ++i){
@@ -652,6 +657,8 @@ void Simulation::collectAverageVelocity(){
 			count[index[0]] += particle->weight;
 			averageVelocity[index[0]] += particle->getAbsoluteV()*cos(particle->absoluteMomentumTheta)*particle->weight;
 			bins[index[0]][index[1]][index[2]]->density += particle->mass*particle->weight;
+			bins[index[0]][index[1]][index[2]]->particleMomentaZ.push_back(particle->absoluteMomentum*cos(particle->absoluteMomentumTheta));
+			bins[index[0]][index[1]][index[2]]->particleWeights.push_back(particle->weight);
 		}
 		delete[] index;
 	}

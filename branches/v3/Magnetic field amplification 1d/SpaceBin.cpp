@@ -560,6 +560,8 @@ void SpaceBin::resetDetectors(){
 	crMassFlux.fluxR1 = 0;
 	crMassFlux.fluxR2 = 0;
 
+	particleMomentaZ.clear();
+
 	double ux;
 	double uy;
 	double uz;
@@ -1146,20 +1148,15 @@ void SpaceBin::updateCosmicRayBoundMomentum(){
 	}
 	delete[] averageVz;
 	delete[] count;*/
-	if( particles.size() > 0){
-		std::list<Particle*>::iterator it = particles.begin();
+	if( particleMomentaZ.size() > 0){
 		double maxp;
-		maxp = (*it)->localMomentumZ;
-		++it;
+		maxp = particleMomentaZ[0];
 		double weight = 0;
-		weight += (*it)->weight;
-		while(it != particles.end()){
-			Particle* particle = *it;
-			weight += particle->weight;
-			if(maxp < abs(particle->localMomentumZ)){
-				maxp = abs(particle->localMomentumZ);
+		weight += particleWeights[0];
+		for(int i = 1; i < particleMomentaZ.size(); ++i){
+			if(maxp < abs(particleMomentaZ[i])){
+				maxp = abs(particleMomentaZ[i]);
 			}
-			++it;
 		}
 		double* distribution = new double[pgridNumber];
 		for (int i = 0; i < pgridNumber; ++i){
@@ -1168,19 +1165,16 @@ void SpaceBin::updateCosmicRayBoundMomentum(){
 		int particleNumber = 0;
 		double mass;
 		double deltap = (2*maxp)/(pgridNumber);
-		it = particles.begin();
-		while(it != particles.end()){
-			particleNumber++;
-			Particle* particle = *it;
-			mass = particle->mass;
-			++it;
-			double p = particle->localMomentumZ;
+
+		for(int i = 0; i < particleMomentaZ.size(); ++i){
+			double p = particleMomentaZ[i];
+			double particleWeight = particleWeights[i];
 			if (abs(p) >= maxp){
 				continue;
 			}
-			for(int i =0; i< pgridNumber; ++i){
-				if (p <-maxp + deltap*(i + 1)){
-					distribution[i] += particle->weight/(weight*deltap);
+			for(int j =0; j< pgridNumber; ++j){
+				if (p <-maxp + deltap*(j + 1)){
+					distribution[j] += particleWeight/(weight*deltap);
 					break;
 				}
 			}
