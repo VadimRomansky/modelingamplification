@@ -55,6 +55,10 @@ public:
 
 	bool smallAngleScattering;
 
+	int rgridNumber;
+	int shockWavePoint;
+	int currentShockWavePoint;
+
 	Particle* Particles;
 	SpaceBin**** bins;
 	SpaceBin* zeroBin;

@@ -30,7 +30,6 @@ Simulation::Simulation(){
 	startPDF = std::list <Particle*>();
 	timeStep = defaultTimeStep;
 	zeroBin = NULL;
-	averageVelocity = new double[rgridNumber];
 }
 
 Simulation::~Simulation(){
@@ -46,6 +45,7 @@ Simulation::~Simulation(){
 }
 
 void Simulation::initializeProfile(){
+	averageVelocity = new double[rgridNumber];
  	minK = defaultMinK;
 	maxK = defaultMaxK;
 	deltaR = (downstreamR - upstreamR)/(rgridNumber );
@@ -121,7 +121,7 @@ void Simulation::simulate(){
 				if(phi < 0){
 					phi = phi + 2*pi;
 				}
-				int* index = SpaceBin::binByCoordinates(particle->absoluteZ, theta, phi,upstreamR,deltaR,deltaTheta,deltaPhi);
+				int* index = SpaceBin::binByCoordinates(particle->absoluteZ, theta, phi,upstreamR,deltaR,deltaTheta,deltaPhi, rgridNumber);
 				if((index[1] >= thetagridNumber) || (index[1] < 0) || (index[2] >= phigridNumber) || (index[2] < 0)){
 					printf("out of bound in simulate()\n");
 				}
@@ -132,7 +132,7 @@ void Simulation::simulate(){
 					if(time != time){
 						printf("time != time\n");
 					}
-					int* tempIndex = bin->propagateParticle(particle,time, timeStep);
+					int* tempIndex = bin->propagateParticle(particle,time, timeStep, rgridNumber);
 					delete[] index;
 					index = tempIndex;
 					if(index[0] > rgridNumber){
@@ -169,7 +169,7 @@ void Simulation::simulate(){
 			//updateMagneticField();
 			//output(*this);
 			removeEscapedParticles();
-			sortParticlesIntoBins();
+			//sortParticlesIntoBins();
 			//outputZPDF(bins[rgridNumber/2][0][0]->particles,"./output/zpdf.dat");
 			smoothProfile();
 			updateCosmicRayBoundMomentum();
@@ -215,9 +215,9 @@ void Simulation::simulate(){
 		outIteration = fopen("./output/tamc_iteration.dat","a");
 		radialFile = fopen("./output/tamc_radial_profile.dat","a");
 		updateEnergy();
-		fprintf(outIteration,"%d %lf %lf %lf %lf %lf %lf %lf %lf %d %lf %lf\n",itNumber, energy, theorEnergy, momentumZ, theorMomentumZ, momentumX, theorMomentumX, momentumY, theorMomentumY, introducedParticles.size(), particlesWeight, 0.0);
+		fprintf(outIteration,"%d %lf %lf %lf %lf %lf %lf %lf %lf %d %lf %lf\n",itNumber, energy, theorEnergy, momentumZ, theorMomentumZ, momentumX, theorMomentumX, momentumY, theorMomentumY, introducedParticles.size(), particlesWeight, 1.0);
 		fclose(outIteration);
-		outputRadialProfile(bins,0,0,radialFile);
+		outputRadialProfile(bins,0,0,radialFile, rgridNumber);
 		//outputShockWave(shockWavePoints, shockWaveVelocity);
 		fclose(radialFile);
 	}
@@ -528,7 +528,7 @@ void Simulation::introduceNewParticles(){
 			phi = phi + 2*pi;
 		}
 		double time = 0;
-		int* index = zeroBin->propagateParticle(particle, time, timeStep);
+		int* index = zeroBin->propagateParticle(particle, time, timeStep, rgridNumber);
 		if((index[1] >= thetagridNumber) || (index[1] < 0) || (index[2] >= phigridNumber) || (index[2] < 0)){
 			printf("out of bound in introduceNewParticles()\n");
 		}
@@ -543,7 +543,7 @@ void Simulation::introduceNewParticles(){
 				if(time != time){
 					printf("time != time\n");
 				}
-				int* tempIndex = bin->propagateParticle(particle,time, timeStep);
+				int* tempIndex = bin->propagateParticle(particle,time, timeStep, rgridNumber);
 				delete[] index;
 				index = tempIndex;
 				if(index[0] > rgridNumber){
@@ -627,10 +627,11 @@ void Simulation::removeEscapedParticles(){
 }
 
 void Simulation::collectAverageVelocity(){
-	int* count = new int[rgridNumber];
+	double* count = new double[rgridNumber];
 	for(int i = 0; i < rgridNumber; ++i){
 		count[i] = 0;
 		averageVelocity[i] = 0;
+		bins[i][0][0]->density = 0;
 	}
 
 	std::vector<Particle*>::iterator it = introducedParticles.begin();
@@ -646,21 +647,25 @@ void Simulation::collectAverageVelocity(){
 		if(phi < 0){
 			phi = phi + 2*pi;
 		}
-		int* index = SpaceBin::binByCoordinates(particle->absoluteZ, theta, phi,upstreamR,deltaR,deltaTheta,deltaPhi);
+		int* index = SpaceBin::binByCoordinates(particle->absoluteZ, theta, phi,upstreamR,deltaR,deltaTheta,deltaPhi, rgridNumber);
 		if(index[0] >= 0){
-			count[index[0]] += 1;
-			averageVelocity[index[0]] += particle->getAbsoluteV()*cos(particle->absoluteMomentumTheta);
+			count[index[0]] += particle->weight;
+			averageVelocity[index[0]] += particle->getAbsoluteV()*cos(particle->absoluteMomentumTheta)*particle->weight;
+			bins[index[0]][index[1]][index[2]]->density += particle->mass*particle->weight;
 		}
 		delete[] index;
 	}
 
 	for(int i = 0; i < rgridNumber; ++i){
-		if(count[i] != 0){
+		bins[i][0][0]->density /= bins[i][0][0]->volume;
+		if(count[i] > epsilon){
 			averageVelocity[i] /= count[i];
 			bins[i][0][0]->averageVelocity = averageVelocity[i];
 			bins[i][0][0]->U = averageVelocity[i];
 		} else {
 			printf("0 particles in bin\n");
+			bins[i][0][0]->averageVelocity = 0;
+			bins[i][0][0]->U = 0;
 		}
 	}
 
@@ -688,7 +693,7 @@ void Simulation::resetVelocity(){
 		if(phi < 0){
 			phi = phi + 2*pi;
 		}
-		int* index = SpaceBin::binByCoordinates(particle->absoluteZ, theta, phi,upstreamR,deltaR,deltaTheta,deltaPhi);
+		int* index = SpaceBin::binByCoordinates(particle->absoluteZ, theta, phi,upstreamR,deltaR,deltaTheta,deltaPhi, rgridNumber);
 		if(index[0] >= 0){
 			particles[index[0]].push_back(new Particle(*particle));
 		}
@@ -764,7 +769,7 @@ void Simulation::sortParticlesIntoBins(){
 		if(phi < 0){
 			phi = phi + 2*pi;
 		}
-		int* index = SpaceBin::binByCoordinates(particle->absoluteZ, theta, phi,upstreamR,deltaR,deltaTheta,deltaPhi);
+		int* index = SpaceBin::binByCoordinates(particle->absoluteZ, theta, phi,upstreamR,deltaR,deltaTheta,deltaPhi, rgridNumber);
 		if((index[0] >= 0) && (index[0] < rgridNumber) && (index[1] >= 0) && (index[1] < thetagridNumber) && (index[2] >= 0) && (index[2] < phigridNumber)){
 			//bins[index[0]][index[1]][index[2]]->particles.push_back(new Particle(*particle));
 			bins[index[0]][index[1]][index[2]]->particles.push_back(particle);

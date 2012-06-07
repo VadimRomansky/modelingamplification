@@ -91,7 +91,7 @@ SpaceBin::~SpaceBin(){
 	delete[] magneticField;
 }
 
-int* SpaceBin::propagateParticle(Particle* particle ,double& time, double timeStep){
+int* SpaceBin::propagateParticle(Particle* particle ,double& time, double timeStep, const int rgridNumber){
 	if(time != time){
 		printf("time != time");
 	}
@@ -157,7 +157,7 @@ int* SpaceBin::propagateParticle(Particle* particle ,double& time, double timeSt
 
 		//particle->setAbsoluteMomentum(U,UTheta,UPhi);
 		particle->setAbsoluteMomentum(this);
-		return binByCoordinates(particle->absoluteZ, theta, phi,0, r2 - r1, theta2 - theta1, phi2 - phi1);
+		return binByCoordinates(particle->absoluteZ, theta, phi,0, r2 - r1, theta2 - theta1, phi2 - phi1, rgridNumber);
 	} else {
 		//double v = particle->getLocalV()*particle->localMomentumZ/particle->localMomentum;
 		//if(particle->localMomentum < epsilon*sqrt(particle->mass*temperature*kBoltzman)){
@@ -166,7 +166,7 @@ int* SpaceBin::propagateParticle(Particle* particle ,double& time, double timeSt
 			if(absoluteV > 0){
 				deltat = (r2 - particle->absoluteZ)/absoluteV; 
 				if(deltat < gammaFactor*(timeStep - time)){
-					particle->absoluteZ = r2*(1 + epsilon);
+					particle->absoluteZ = r2*(1 + epsilon)+epsilon;
 					time += deltat/gammaFactor;
 				} else {
 					particle->absoluteZ += absoluteV*(timeStep - time)*gammaFactor;
@@ -176,7 +176,7 @@ int* SpaceBin::propagateParticle(Particle* particle ,double& time, double timeSt
 			} else {
 				deltat = (r1 - particle->absoluteZ)/absoluteV;
 				if(deltat < gammaFactor*(timeStep - time)){
-					particle->absoluteZ = r1*(1 - epsilon);
+					particle->absoluteZ = r1*(1 - epsilon)-epsilon;
 					if(r1 < epsilon){
 						particle->absoluteZ = -epsilon;
 					}
@@ -187,14 +187,15 @@ int* SpaceBin::propagateParticle(Particle* particle ,double& time, double timeSt
 					time = timeStep;
 				}
 			}
-			particle->absoluteX += particle->getAbsoluteV()*sin(particle->absoluteMomentumTheta)*cos(particle->absoluteMomentumPhi);
-			particle->absoluteY += particle->getAbsoluteV()*sin(particle->absoluteMomentumTheta)*sin(particle->absoluteMomentumPhi);
+			particle->absoluteX += particle->getAbsoluteV()*sin(particle->absoluteMomentumTheta)*cos(particle->absoluteMomentumPhi)*deltat/gammaFactor;
+			particle->absoluteY += particle->getAbsoluteV()*sin(particle->absoluteMomentumTheta)*sin(particle->absoluteMomentumPhi)*deltat/gammaFactor;
 			double probability;
-			if(deltat > colisionTime){
+			probability = 1 - exp(-deltat/colisionTime);
+			/*if(deltat > colisionTime){
 				probability = 1;
 			} else {
 				probability = deltat/colisionTime;
-			}
+			}*/
 			if(uniRandom() <= probability){
 				double cosLocalTheta = 2*(uniRandom() - 0.5);
 				double phi = 2*pi*uniRandom();
@@ -213,12 +214,12 @@ int* SpaceBin::propagateParticle(Particle* particle ,double& time, double timeSt
 			if(phi < 0) {
 				phi = phi + 2*pi;
 			}
-			return binByCoordinates(particle->absoluteZ, theta, phi,0, r2 - r1, theta2 - theta1, phi2 - phi1);
+			return binByCoordinates(particle->absoluteZ, theta, phi,0, r2 - r1, theta2 - theta1, phi2 - phi1, rgridNumber);
 		//}
 	}
 }
 
-int* SpaceBin::binByCoordinates(double r, double theta, double phi, double r0, double deltar, double deltatheta, double deltaphi){
+int* SpaceBin::binByCoordinates(double r, double theta, double phi, double r0, double deltar, double deltatheta, double deltaphi, int rgridNumber){
 	int i = lowerInt((r - r0)/deltar);
 	int j = lowerInt(theta/deltatheta);
 	if( theta == pi ){
@@ -272,6 +273,29 @@ double SpaceBin::getFreeTime(Particle* particle){
 		return speed_of_light*particle->mass/(particle->Z*electron_charge*B0);
 	}
 }
+
+/*double SpaceBin::getFreePath(Particle* particle){
+	//return speed_of_light*particle.localMomentum/(particle.Z*electron_charge*B);
+	double lambda = particle->getLocalV()*particle->localMomentum/(particle->Z*electron_charge*B0);
+
+	if( lambda != lambda){
+		printf("lambda != lambda");
+	}
+	if( 0*lambda != 0*lambda){
+		printf("0*lambda != 0*lambda");
+	}
+	return lambda;
+}
+
+double SpaceBin::getFreeTime(Particle* particle){
+	double lambda = getFreePath(particle);
+	if(abs(particle->getLocalV()) > DBL_EPSILON){
+		return lambda/particle->getLocalV();
+	} else {
+		printf("particle localv = 0 in getFreeTime\n");
+		return speed_of_light*particle->mass/(particle->Z*electron_charge*B0);
+	}
+}*/
 
 void SpaceBin::makeOneStep(Particle* particle, double colisionTime, double& time){
 	double deltat = colisionTime/defaultTimeRelation;
