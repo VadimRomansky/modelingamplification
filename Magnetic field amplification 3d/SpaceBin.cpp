@@ -246,11 +246,7 @@ void SpaceBin::largeAngleScattering(Particle* particle, double& time, double tim
 	particle->absoluteZ += absoluteV*cos(particle->absoluteMomentumTheta)*deltat*(1+sign*epsilon);
 
 	double probability;
-	if(deltat > colisionTime){
-		probability = 1;
-	} else {
-		probability = deltat/colisionTime;
-	}
+	probability = 1 - exp(-deltat/colisionTime);
 	if(uniRandom() <= probability){
 		double cosLocalTheta = 2*(uniRandom() - 0.5);
 		double phi = 2*pi*uniRandom();

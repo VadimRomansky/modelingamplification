@@ -14,7 +14,7 @@ double sqr(double v){
 int lowerInt(double v){
 	int i = (int) v;
 
-	if(1.0*i > v){
+	if(1.0*i >= v){
 		i = i - 1;
 	}
 	return i;
@@ -48,6 +48,38 @@ double angleDelta(double phi1, double phi2){
 			return delta2;
 		} else {
 			return delta3;
+		}
+	}
+}
+
+double min4(double a, double b,double c, double d){
+	if( a <  b ){
+		if( c < d){
+			if( a < c){
+				return a;
+			} else {
+				return c;
+			}
+		} else {
+			if( a < d){
+				return a;
+			} else {
+				return d;
+			}
+		}
+	} else {
+		if( c < d){
+			if( b < c){
+				return b;
+			} else {
+				return c;
+			}
+		} else {
+			if( b < d){
+				return b;
+			} else {
+				return d;
+			}
 		}
 	}
 }

@@ -24,10 +24,10 @@ void output(Simulation& simulation){
 	outputPDF(simulation.startPDF,"./output/tamc_pdf_start.dat");
 	outputPDF(bin->detectedParticlesR2,"./output/tamc_pdf_FEB.dat");
 	//outputTurbulenceSpectrum(bin->magneticField,"./output/tamc_turb_FEB.dat",simulation.minK,simulation.maxK);
-	bin = simulation.bins[shockWavePoint][0][0];
+	bin = simulation.bins[simulation.shockWavePoint][0][0];
 	outputPDF(bin->detectedParticlesR2,"./output/tamc_pdf_zero.dat");
 	//outputTurbulenceSpectrum(bin->magneticField,"./output/tamc_turb_zero.dat",simulation.minK,simulation.maxK);
-	bin = simulation.bins[rgridNumber-1][0][0];
+	bin = simulation.bins[simulation.rgridNumber-1][0][0];
 	outputPDF(bin->detectedParticlesR2,"./output/tamc_pdf_down.dat");
 	//outputTurbulenceSpectrum(bin->magneticField,"./output/tamc_turb_down.dat",simulation.minK,simulation.maxK);
 	//outputMagneticField(simulation.xbins,"./output/tamc_field.dat");
@@ -434,13 +434,13 @@ void outputTurbulenceSpectrum(double* w, const char* fileName, double minK, doub
 	fclose(outTurb);
 }
 
-void outputMagneticField(SpaceBin**** bins, const char* fileName){
+/*void outputMagneticField(SpaceBin**** bins, const char* fileName){
 	FILE* outField = fopen(fileName,"w");
 	for(int i = 0; i < rgridNumber; ++i){
 		fprintf(outField,"%lf %lf\n", (bins[i][0][0]->r2+bins[i][0][0]->r1)/2,bins[i][0][0]->B);
 	}
 	fclose(outField);
-}
+}*/
 
 void outputParticlePath(std::list<Particle*>& list,const char* cosmicRayFileName,const char* notCosmicRayFileName){
 	/*FILE* file1 = fopen(cosmicRayFileName,"w");
@@ -487,7 +487,7 @@ void outputParticlePath(std::list<Particle*>& list,const char* cosmicRayFileName
 	fclose(file2);*/
 }
 
-void outputRadialProfile(SpaceBin**** bins, int thetaNumber, int phiNumber, FILE* outProfile){
+void outputRadialProfile(SpaceBin**** bins, int thetaNumber, int phiNumber, FILE* outProfile, const int rgridNumber){
 	//FILE* outPDF = fopen("tamc_pdf.dat","w");
 	//double massFlux0 = simulation.xbins[0]->massFlux;
 	//double momentaFlux0 = simulation.xbins[0]->momentaFlux;
