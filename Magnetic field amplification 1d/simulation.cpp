@@ -442,8 +442,8 @@ std::vector <Particle*> Simulation::getParticles(){
 					bin->initialMomentum += vr*particle->mass*particle->weight/sqrt(1 - (v*v)/c2);
 					energy += particle->getEnergy()*particle->weight;
 					momentumZ += particle->absoluteMomentum*cos(particle->absoluteMomentumTheta)*particle->weight;
-					momentumY += particle->absoluteMomentum*sin(particle->absoluteMomentumTheta)*cos(particle->absoluteMomentumPhi)*particle->weight;
-					momentumX += particle->absoluteMomentum*sin(particle->absoluteMomentumTheta)*sin(particle->absoluteMomentumPhi)*particle->weight;
+					momentumX += particle->absoluteMomentum*sin(particle->absoluteMomentumTheta)*cos(particle->absoluteMomentumPhi)*particle->weight;
+					momentumY += particle->absoluteMomentum*sin(particle->absoluteMomentumTheta)*sin(particle->absoluteMomentumPhi)*particle->weight;
 				}
 			}
 		}
@@ -588,8 +588,8 @@ void Simulation::introduceNewParticles(){
 			introducedParticles.push_back(new Particle(*particle));
 			theorEnergy += particle->getEnergy()*particle->weight;
 			theorMomentumZ += particle->absoluteMomentum*cos(particle->absoluteMomentumTheta)*particle->weight;
-			theorMomentumY += particle->absoluteMomentum*sin(particle->absoluteMomentumTheta)*cos(particle->absoluteMomentumPhi)*particle->weight;
-			theorMomentumX += particle->absoluteMomentum*sin(particle->absoluteMomentumTheta)*sin(particle->absoluteMomentumPhi)*particle->weight;
+			theorMomentumX += particle->absoluteMomentum*sin(particle->absoluteMomentumTheta)*cos(particle->absoluteMomentumPhi)*particle->weight;
+			theorMomentumY += particle->absoluteMomentum*sin(particle->absoluteMomentumTheta)*sin(particle->absoluteMomentumPhi)*particle->weight;
 		}
 		delete particle;
 		++it;
@@ -607,8 +607,8 @@ void Simulation::removeEscapedParticles(){
 		if(particle->absoluteZ < 0){
 			theorEnergy -= particle->getEnergy()*particle->weight;
 			theorMomentumZ -= particle->absoluteMomentum*cos(particle->absoluteMomentumTheta)*particle->weight;
-			theorMomentumY -= particle->absoluteMomentum*sin(particle->absoluteMomentumTheta)*cos(particle->absoluteMomentumPhi)*particle->weight;
-			theorMomentumX -= particle->absoluteMomentum*sin(particle->absoluteMomentumTheta)*sin(particle->absoluteMomentumPhi)*particle->weight;
+			theorMomentumX -= particle->absoluteMomentum*sin(particle->absoluteMomentumTheta)*cos(particle->absoluteMomentumPhi)*particle->weight;
+			theorMomentumY -= particle->absoluteMomentum*sin(particle->absoluteMomentumTheta)*sin(particle->absoluteMomentumPhi)*particle->weight;
 			delete particle;
 		} else {
 			if(particle->absoluteMomentum > momentumParameter*particle->previousAbsoluteMomentum){
@@ -870,8 +870,8 @@ void Simulation::updateEnergy(){
 			printf("particle->absoluteMomentum < 0\n");
 		}
 		momentumZ += particle->absoluteMomentum*cos(particle->absoluteMomentumTheta)*particle->weight;
-		momentumY += particle->absoluteMomentum*sin(particle->absoluteMomentumTheta)*cos(particle->absoluteMomentumPhi)*particle->weight;
-		momentumX += particle->absoluteMomentum*sin(particle->absoluteMomentumTheta)*sin(particle->absoluteMomentumPhi)*particle->weight;
+		momentumX += particle->absoluteMomentum*sin(particle->absoluteMomentumTheta)*cos(particle->absoluteMomentumPhi)*particle->weight;
+		momentumY += particle->absoluteMomentum*sin(particle->absoluteMomentumTheta)*sin(particle->absoluteMomentumPhi)*particle->weight;
 		particlesWeight += particle->weight;
 		++it;
 	}
