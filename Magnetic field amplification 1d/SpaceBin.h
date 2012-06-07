@@ -70,6 +70,9 @@ public:
 	std::list <Particle*> detectedParticlesPhi2;
 	std::list <Particle*> detectedParticlesPhi1;
 
+	std::vector<double> particleMomentaZ;
+	std::vector<double> particleWeights;
+
 	std::list <Particle*> particles;
 
 	double* magneticField;
