@@ -126,6 +126,7 @@ void Simulation::simulate(){
 				int* index = SpaceBin::binByCoordinates(particle->absoluteZ, theta, phi,upstreamR,deltaR,deltaTheta,deltaPhi, rgridNumber);
 				if((index[1] >= thetagridNumber) || (index[1] < 0) || (index[2] >= phigridNumber) || (index[2] < 0)){
 					printf("out of bound in simulate()\n");
+					printf("theta = %lf phi = %lf\n",particle->getAbsoluteTheta(), particle->getAbsolutePhi());
 				}
 				double time = 0;
 				while((index[0] >= 0)){
@@ -186,45 +187,47 @@ void Simulation::simulate(){
 			if(bins[0][0][0]->particles.size() > 0){
 				outputPDF(bins[0][0][0]->particles,"./output/tamc_pdf0.dat");
 			}
-			for(int i = 0; i < rgridNumber; ++i){
+			/*for(int i = 0; i < rgridNumber; ++i){
 				if(i == 0){
-					outputEnergyPDF(bins[i][0][0]->particles,"./output/tamc_energy_pdf0.dat");
+					outputZPDF(bins[i][0][0]->particles,"./output/zpdf0.dat");
 				}
 				if(i == 10){
-					outputEnergyPDF(bins[i][0][0]->particles,"./output/tamc_energy_pdf1.dat");
+					outputZPDF(bins[i][0][0]->particles,"./output/zpdf1.dat");
 				}
 				if(i == 20){
-					outputEnergyPDF(bins[i][0][0]->particles,"./output/tamc_energy_pdf2.dat");
+					outputZPDF(bins[i][0][0]->particles,"./output/zpdf2.dat");
 				}
 				if(i == 30){
-					outputEnergyPDF(bins[i][0][0]->particles,"./output/tamc_energy_pdf3.dat");
+					outputZPDF(bins[i][0][0]->particles,"./output/zpdf3.dat");
 				}
 				if(i == 45){
-					outputEnergyPDF(bins[i][0][0]->particles,"./output/tamc_energy_pdf4.dat");
+					outputZPDF(bins[i][0][0]->particles,"./output/zpdf4.dat");
 				}
 				if(i == 50){
-					outputEnergyPDF(bins[i][0][0]->particles,"./output/tamc_energy_pdf5.dat");
+					outputZPDF(bins[i][0][0]->particles,"./output/tamc_energy_pdf5.dat");
 				}
 				if(i == febNumber){
 					outputEnergyPDF(bins[febNumber][0][0]->detectedParticlesR1,"./output/feb_energy_pdf.dat");
 				}
-			}
+			}*/
 			outputEnergyPDF(introducedParticles,"./output/tamc_energy_pdf.dat");
 			resetDetectors();
 			printf("%s","iteration ¹ ");
 			printf("%d\n",itNumber);
 		}
-		outputParticles(introducedParticles,"./output/particles.dat");
-		outputPDF(introducedParticles,"./output/tamc_pdf.dat");
-		outputEnergyPDF(introducedParticles,"./output/tamc_energy_pdf.dat");
-		outIteration = fopen("./output/tamc_iteration.dat","a");
-		radialFile = fopen("./output/tamc_radial_profile.dat","a");
 		updateEnergy();
-		fprintf(outIteration,"%d %lf %lf %lf %lf %lf %lf %lf %lf %d %lf %lf\n",itNumber, energy, theorEnergy, momentumZ, theorMomentumZ, momentumX, theorMomentumX, momentumY, theorMomentumY, introducedParticles.size(), particlesWeight, 1.0);
-		fclose(outIteration);
-		outputRadialProfile(bins,0,0,radialFile, rgridNumber);
-		//outputShockWave(shockWavePoints, shockWaveVelocity);
-		fclose(radialFile);
+		if(itNumber % 10 == 0){
+			outputParticles(introducedParticles,"./output/particles.dat");
+			outputPDF(introducedParticles,"./output/tamc_pdf.dat");
+			outputEnergyPDF(introducedParticles,"./output/tamc_energy_pdf.dat");
+			outIteration = fopen("./output/tamc_iteration.dat","a");
+			radialFile = fopen("./output/tamc_radial_profile.dat","a");
+			fprintf(outIteration,"%d %lf %lf %lf %lf %lf %lf %lf %lf %d %lf %lf\n",itNumber, energy, theorEnergy, momentumZ, theorMomentumZ, momentumX, theorMomentumX, momentumY, theorMomentumY, introducedParticles.size(), particlesWeight, 1.0);
+			fclose(outIteration);
+			outputRadialProfile(bins,0,0,radialFile, rgridNumber);
+			//outputShockWave(shockWavePoints, shockWaveVelocity);
+			fclose(radialFile);
+		}
 	}
 }
 
@@ -643,26 +646,29 @@ void Simulation::collectAverageVelocity(){
 	while(it != introducedParticles.end()){
 		Particle* particle = *it;
 		++it;
+		double theta;
 		double r = particle->getAbsoluteR();
-		double theta = acos(particle->absoluteZ/r);
 		if( abs(r) < DBL_EPSILON){
 			theta = pi/2;
+		} else {
+			theta = acos(particle->absoluteZ/r);
 		}
 		double phi =atan2(particle->absoluteY, particle->absoluteX);
+
 		if(phi < 0){
 			phi = phi + 2*pi;
 		}
 		int* index = SpaceBin::binByCoordinates(particle->absoluteZ, theta, phi,upstreamR,deltaR,deltaTheta,deltaPhi, rgridNumber);
-		if(index[0] >= 0){
+		if((index[0] >= 0)&&(index[0] < rgridNumber)&&(index[1] >= 0)&&(index[1] < thetagridNumber)&&(index[2] >= 0)&&(index[2] < phigridNumber)){
 			count[index[0]] += particle->weight;
 			averageVelocity[index[0]] += particle->getAbsoluteV()*cos(particle->absoluteMomentumTheta)*particle->weight;
 			bins[index[0]][index[1]][index[2]]->density += particle->mass*particle->weight;
-			bins[index[0]][index[1]][index[2]]->particleMomentaZ.push_back(particle->absoluteMomentum*cos(particle->absoluteMomentumTheta));
+			bins[index[0]][index[1]][index[2]]->particleMomentaZ.push_back(particle->localMomentumZ);
 			bins[index[0]][index[1]][index[2]]->particleWeights.push_back(particle->weight);
 		}
 		delete[] index;
 	}
-
+	printf("collecting finished\n");
 	for(int i = 0; i < rgridNumber; ++i){
 		bins[i][0][0]->density /= bins[i][0][0]->volume;
 		if(count[i] > epsilon){
