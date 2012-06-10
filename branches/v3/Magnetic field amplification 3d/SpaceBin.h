@@ -77,6 +77,8 @@ public:
 	double maxK;
 	double averageVelocity;
 
+	double centralMomentum;
+
 	SpaceBin();
 	SpaceBin(double r, double theta, double phi, double deltar, double deltatheta, double deltaphi, double u, double rho, double utheta,double uphi, double temperature, double b, int i, int j, int k, bool scattering);
 	~SpaceBin();

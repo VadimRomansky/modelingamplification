@@ -38,6 +38,8 @@ public:
 
 	double initialMomentum;
 
+	double centralMomentum;
+
 	Matrix3d* matrix;
 	Matrix3d* invertMatrix;
 
