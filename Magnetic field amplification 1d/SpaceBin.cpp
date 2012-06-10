@@ -16,6 +16,7 @@ SpaceBin::SpaceBin(){
 	//sortedParticles = new std::list<Particle*>[kgridNumber];
 	averageVelocity = 0;
 	cosmicRayBoundMomentum = 0;
+	centralMomentum = 0;
 }
 SpaceBin::SpaceBin(double R, double Theta, double Phi, double deltar, double deltatheta, double deltaphi, double u, double rho, double utheta,double uphi, double t, double b, int i, int j, int k, bool smallAngle){
 	r = R;
@@ -1080,77 +1081,77 @@ void SpaceBin::updateCosmicRayBoundMomentum(){
 		if(numberR == 10){
 			FILE* outPDF = fopen("./output/zpdf1.dat","w");
 			for(int i = 0; i < pgridNumber; ++i){
-				fprintf(outPDF,"%lf %lf %lf\n", 100000000000000000000.0*(-maxp + i*deltap), distribution[i], maxwell(-maxp + (i + 1/2)*deltap, massProton, temperature));
-			}
+				fprintf(outPDF,"%lf %lf %lf\n", 100000000000000000000.0*(-maxp + i*deltap), distribution[i], maxwell(-maxp + (i + 1/2)*deltap - centralMomentum, massProton, temperature));
+			} 
 			fclose(outPDF);
 		}
 		if(numberR == 20){
 			FILE* outPDF = fopen("./output/zpdf2.dat","w");
 			for(int i = 0; i < pgridNumber; ++i){
-				fprintf(outPDF,"%lf %lf %lf\n", 100000000000000000000.0*(-maxp + i*deltap), distribution[i], maxwell(-maxp + (i + 1/2)*deltap, massProton, temperature));
+				fprintf(outPDF,"%lf %lf %lf\n", 100000000000000000000.0*(-maxp + i*deltap), distribution[i], maxwell(-maxp + (i + 1/2)*deltap - centralMomentum, massProton, temperature));
 			}
 			fclose(outPDF);
 		}
 		if(numberR == 30){
 			FILE* outPDF = fopen("./output/zpdf3.dat","w");
 			for(int i = 0; i < pgridNumber; ++i){
-				fprintf(outPDF,"%lf %lf %lf\n", 100000000000000000000.0*(-maxp + i*deltap), distribution[i], maxwell(-maxp + (i + 1/2)*deltap, massProton, temperature));
+				fprintf(outPDF,"%lf %lf %lf\n", 100000000000000000000.0*(-maxp + i*deltap - centralMomentum), distribution[i], maxwell(-maxp + (i + 1/2)*deltap - centralMomentum, massProton, temperature));
 			}
 			fclose(outPDF);
 		}
 		if(numberR == 40){
 			FILE* outPDF = fopen("./output/zpdf4.dat","w");
 			for(int i = 0; i < pgridNumber; ++i){
-				fprintf(outPDF,"%lf %lf %lf\n", 100000000000000000000.0*(-maxp + i*deltap), distribution[i], maxwell(-maxp + (i + 1/2)*deltap, massProton, temperature));
+				fprintf(outPDF,"%lf %lf %lf\n", 100000000000000000000.0*(-maxp + i*deltap), distribution[i], maxwell(-maxp + (i + 1/2)*deltap - centralMomentum, massProton, temperature));
 			}
 			fclose(outPDF);
 		}
 		if(numberR == 50){
 			FILE* outPDF = fopen("./output/zpdf5.dat","w");
 			for(int i = 0; i < pgridNumber; ++i){
-				fprintf(outPDF,"%lf %lf %lf\n", 100000000000000000000.0*(-maxp + i*deltap), distribution[i], maxwell(-maxp + (i + 1/2)*deltap, massProton, temperature));
+				fprintf(outPDF,"%lf %lf %lf\n", 100000000000000000000.0*(-maxp + i*deltap), distribution[i], maxwell(-maxp + (i + 1/2)*deltap - centralMomentum, massProton, temperature));
 			}
 			fclose(outPDF);
 		}
 		if(numberR == 60){
 			FILE* outPDF = fopen("./output/zpdf6.dat","w");
 			for(int i = 0; i < pgridNumber; ++i){
-				fprintf(outPDF,"%lf %lf %lf\n", 100000000000000000000.0*(-maxp + i*deltap), distribution[i], maxwell(-maxp + (i + 1/2)*deltap, massProton, temperature));
+				fprintf(outPDF,"%lf %lf %lf\n", 100000000000000000000.0*(-maxp + i*deltap), distribution[i], maxwell(-maxp + (i + 1/2)*deltap - centralMomentum, massProton, temperature));
 			}
 			fclose(outPDF);
 		}
 		if(numberR == 70){
 			FILE* outPDF = fopen("./output/zpdf7.dat","w");
 			for(int i = 0; i < pgridNumber; ++i){
-				fprintf(outPDF,"%lf %lf %lf\n", 100000000000000000000.0*(-maxp + i*deltap), distribution[i], maxwell(-maxp + (i + 1/2)*deltap, massProton, temperature));
+				fprintf(outPDF,"%lf %lf %lf\n", 100000000000000000000.0*(-maxp + i*deltap), distribution[i], maxwell(-maxp + (i + 1/2)*deltap - centralMomentum, massProton, temperature));
 			}
 			fclose(outPDF);
 		}
 		if(numberR == 80){
 			FILE* outPDF = fopen("./output/zpdf8.dat","w");
 			for(int i = 0; i < pgridNumber; ++i){
-				fprintf(outPDF,"%lf %lf %lf\n", 100000000000000000000.0*(-maxp + i*deltap), distribution[i], maxwell(-maxp + (i + 1/2)*deltap, massProton, temperature));
+				fprintf(outPDF,"%lf %lf %lf\n", 100000000000000000000.0*(-maxp + i*deltap), distribution[i], maxwell(-maxp + (i + 1/2)*deltap - centralMomentum, massProton, temperature));
 			}
 			fclose(outPDF);
 		}
 		if(numberR == 90){
 			FILE* outPDF = fopen("./output/zpdf9.dat","w");
 			for(int i = 0; i < pgridNumber; ++i){
-				fprintf(outPDF,"%lf %lf %lf\n", 100000000000000000000.0*(-maxp + i*deltap), distribution[i], maxwell(-maxp + (i + 1/2)*deltap, massProton, temperature));
+				fprintf(outPDF,"%lf %lf %lf\n", 100000000000000000000.0*(-maxp + i*deltap), distribution[i], maxwell(-maxp + (i + 1/2)*deltap - centralMomentum, massProton, temperature));
 			}
 			fclose(outPDF);
 		}
-		if(numberR == 0){
+		if(numberR == 249){
 			FILE* outPDF = fopen("./output/zpdf0.dat","w");
 			for(int i = 0; i < pgridNumber; ++i){
-				fprintf(outPDF,"%lf %lf %lf\n", 100000000000000000000.0*(-maxp + i*deltap), distribution[i], maxwell(-maxp + (i + 1/2)*deltap, massProton, temperature));
+				fprintf(outPDF,"%lf %lf %lf\n", 100000000000000000000.0*(-maxp + i*deltap), distribution[i], maxwell(-maxp + (i + 1/2)*deltap - centralMomentum, massProton, temperature));
 			}
 			fclose(outPDF);
 		}
 
 		/*FILE* outPDF = fopen(fileName,"w");
 		for(int i = 0; i < pgridNumber; ++i){
-			fprintf(outPDF,"%lf %lf %lf\n", 100000000000000000000.0*(-maxp + i*deltap), distribution[i], maxwell(-maxp + (i + 1/2)*deltap, massProton, temperature));
+			fprintf(outPDF,"%lf %lf %lf\n", 100000000000000000000.0*(-maxp + i*deltap), distribution[i], maxwell(-maxp + (i + 1/2)*deltap - centralMomentum, massProton, temperature));
 		}
 		fclose(outPDF);*/
 
@@ -1158,7 +1159,7 @@ void SpaceBin::updateCosmicRayBoundMomentum(){
 		double j = 0;
 
 		for(int i = 0; i < pgridNumber; ++i){
-			distribution[i] -= maxwell(-maxp + (i + 1/2)*deltap, massProton, temperature);
+			distribution[i] -= maxwell(-maxp + (i + 1/2)*deltap - centralMomentum, massProton, temperature);
 			j += weight*((-maxp + (i + 1/2)*deltap)/massProton*volume)*electron_charge*distribution[i];
 		}
 
@@ -1172,8 +1173,16 @@ void SpaceBin::updateTemperature(double* distribution, double deltap){
 	double sigma;
 	int zeroP = pgridNumber/2;
 	int sigmaIndex = zeroP;
-	double maxDistribution = (distribution[zeroP] + distribution[zeroP + 1])/2;
-	for(int i = zeroP;i < pgridNumber-2; ++i){
+	double maxDistribution = 0;
+	int maxDistributionIndex = 1;
+	for(int i = zeroP; i < pgridNumber-2; ++i){
+		if(maxDistribution < (distribution[i])){
+			maxDistribution = distribution[i];
+			maxDistributionIndex = i;
+		}
+	}
+
+	for(int i = maxDistributionIndex + 1;i < pgridNumber-2; ++i){
 		if((distribution[i - 1] + distribution[i] + distribution[i + 1])/3< maxDistribution/exp(1.0)){
 			sigmaIndex = i - 1;
 			break;
@@ -1184,9 +1193,10 @@ void SpaceBin::updateTemperature(double* distribution, double deltap){
 
 
 	//sigma =  (maxDistribution/exp(0.5) - d1)*deltap/(d2 - d1) + (sigmaIndex + 0.5 - zeroP)*deltap;
-	sigma = (sigmaIndex + 0.5 - zeroP)*deltap;
+	sigma = (sigmaIndex + 0.5 - maxDistributionIndex)*deltap;
 	temperature = sigma*sigma/(2*massProton*kBoltzman);
 	temperature = temperature;
+	centralMomentum = (maxDistributionIndex - zeroP)*deltap;
 
 	double minT = 0;
 	double maxT = (deltap*pgridNumber)*(deltap*pgridNumber)/(8*kBoltzman*massProton);
