@@ -171,7 +171,7 @@ void outputPDF(std::vector< Particle*>& list,const char* fileName){
 		}
 	}
 	for(int i = 0; i < pgridNumber; ++i){
-		fprintf(outPDF,"%lf %lf %lf\n", 10000000000000000000.0*(minp + i*deltap), (distribution[i]), (startDistribution[i]));
+		fprintf(outPDF,"%lf %lf %lf\n", 100000000000000000000.0*(minp + i*deltap), (distribution[i]), (startDistribution[i]));
 	}
 	delete[] distribution;
 	delete[] startDistribution;
@@ -366,6 +366,9 @@ void outputZPDF(std::list< Particle*>& list,const char* fileName){
 			}
 		}
 	}
+	for(int i = 1; i < pgridNumber - 1; ++i){
+		distribution[i] = (distribution[i-1] + distribution[i] + distribution[i+1])/3;
+	}
 	double temperature;
 	double sigma;
 	int zeroP = pgridNumber/2;
@@ -494,7 +497,7 @@ void outputRadialProfile(SpaceBin**** bins, int thetaNumber, int phiNumber, FILE
 	//double energyFlux0 = simulation.xbins[0]->energyFlux;
 	for(int i = 0; i < rgridNumber; ++i){
 		SpaceBin* bin = bins[i][thetaNumber][phiNumber];
-		fprintf(outProfile, "%lf %lf %lf %lf %lf %lf",bin->r, bin->U, bin->averageVelocity, 100000*bin->density, bin->temperature);
+		fprintf(outProfile, "%lf %lf %lf %lf %lf %lf",bin->r, bin->U, bin->averageVelocity, 100000*bin->density, bin->temperature, bin->crFlux);
 		fprintf(outProfile,"%s","\n");
 	}
 	//fclose(outProfile);
