@@ -29,7 +29,7 @@ public:
 	double beta;
 	double gamma;
 	double delta;
-	double epsilon;
+	double epsilonR;
 	bool kolmogorovCascading;
 	bool resonantInstability;
 	bool bellInstability;

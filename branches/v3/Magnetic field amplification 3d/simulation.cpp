@@ -17,7 +17,7 @@ Simulation::Simulation(){
 	beta = 1;
 	gamma = 1;
 	delta = 1;
-	epsilon = 0.1;
+	epsilonR = 0.1;
 	A = 1;
 	Z = 1;
 	startPDF = std::list <Particle*>();
@@ -33,7 +33,7 @@ Simulation::~Simulation(){
 	beta = 1;
 	gamma = 1;
 	delta = 1;
-	epsilon = 0.1;
+	epsilonR = 0.1;
 	delete[] averageVelocity;
 	/*for(int i = 0; i < xgridNumber; ++i){
 		delete[] pressureSpectralDensity[i];
@@ -184,7 +184,7 @@ void Simulation::simulate(){
 		if(introducedParticles.size() > 0){
 			updateEnergy();
 			updateShockWavePoint();
-			if(itNumber % 5 == 0){
+			//if(itNumber % 5 == 0){
 				printf("%s", "outputing\n");
 				outputParticles(introducedParticles,"./output/particles.dat");
 				outputPDF(introducedParticles,"./output/tamc_pdf.dat");
@@ -196,7 +196,7 @@ void Simulation::simulate(){
 				outputRadialProfile(bins,0,0,radialFile, rgridNumber);
 				//outputShockWave(shockWavePoints, shockWaveVelocity);
 				fclose(radialFile);
-			}
+			//}
 			//Sleep(5000);
 		}
 	}
@@ -825,25 +825,27 @@ void Simulation::updateShockWavePoint(){
 		averageDensity +=bins[i][0][0]->density*bins[i][0][0]->volume;
 	}
 	averageDensity /= fullVolume;
-	int secondShockWavePoint = currentShockWavePoint;
-	int tempShockWavePoint = currentShockWavePoint;
+	if(maxDensity > 2*averageDensity){
+		int secondShockWavePoint = currentShockWavePoint;
+		int tempShockWavePoint = currentShockWavePoint;
 
-	for(int i = currentShockWavePoint + 1; i < rgridNumber; ++i){
-		if((bins[i][0][0]->density - averageDensity) < (maxDensity-averageDensity)/2){
-			tempShockWavePoint = i;
-			maxDensity = bins[i][0][0]->density;
-			break;
+		for(int i = currentShockWavePoint + 1; i < rgridNumber; ++i){
+			if((bins[i][0][0]->density - averageDensity) < (maxDensity-averageDensity)/2){
+				tempShockWavePoint = i;
+				maxDensity = bins[i][0][0]->density;
+				break;
+			}
 		}
-	}
 
-	for(int i = tempShockWavePoint; i < rgridNumber; ++i){
-		if(bins[i][0][0]->density > maxDensity){
-			maxDensity = bins[i][0][0]->density;
-			secondShockWavePoint = i;
+		for(int i = tempShockWavePoint; i < rgridNumber; ++i){
+			if(bins[i][0][0]->density > maxDensity){
+				maxDensity = bins[i][0][0]->density;
+				secondShockWavePoint = i;
+			}
 		}
-	}
 
-	if(tempShockWavePoint != secondShockWavePoint){
-		currentShockWavePoint = secondShockWavePoint;
+		if(tempShockWavePoint != secondShockWavePoint){
+			currentShockWavePoint = secondShockWavePoint;
+		}
 	}
 }
