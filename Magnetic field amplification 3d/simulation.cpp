@@ -182,19 +182,21 @@ void Simulation::simulate(){
 			printf("%d\n",itNumber);
 		}
 		if(introducedParticles.size() > 0){
-			printf("%s", "outputing\n");
-			outputParticles(introducedParticles,"./output/particles.dat");
-			outputPDF(introducedParticles,"./output/tamc_pdf.dat");
-			outputEnergyPDF(introducedParticles,"./output/tamc_energy_pdf.dat");
-			outIteration = fopen("./output/tamc_iteration.dat","a");
-			radialFile = fopen("./output/tamc_radial_profile.dat","a");
 			updateEnergy();
 			updateShockWavePoint();
-			fprintf(outIteration,"%d %lf %lf %lf %lf %lf %lf %lf %lf %d %lf %lf\n",itNumber, energy, theorEnergy, momentumZ, theorMomentumZ, momentumX, theorMomentumX, momentumY, theorMomentumY, introducedParticles.size(), particlesWeight, bins[currentShockWavePoint][0][0]->r);
-			fclose(outIteration);
-			outputRadialProfile(bins,0,0,radialFile, rgridNumber);
-			//outputShockWave(shockWavePoints, shockWaveVelocity);
-			fclose(radialFile);
+			if(itNumber % 5 == 0){
+				printf("%s", "outputing\n");
+				outputParticles(introducedParticles,"./output/particles.dat");
+				outputPDF(introducedParticles,"./output/tamc_pdf.dat");
+				outputEnergyPDF(introducedParticles,"./output/tamc_energy_pdf.dat");
+				outIteration = fopen("./output/tamc_iteration.dat","a");
+				radialFile = fopen("./output/tamc_radial_profile.dat","a");
+				fprintf(outIteration,"%d %lf %lf %lf %lf %lf %lf %lf %lf %d %lf %lf\n",itNumber, energy, theorEnergy, momentumZ, theorMomentumZ, momentumX, theorMomentumX, momentumY, theorMomentumY, introducedParticles.size(), particlesWeight, bins[currentShockWavePoint][0][0]->r);
+				fclose(outIteration);
+				outputRadialProfile(bins,0,0,radialFile, rgridNumber);
+				//outputShockWave(shockWavePoints, shockWaveVelocity);
+				fclose(radialFile);
+			}
 			//Sleep(5000);
 		}
 	}
@@ -814,5 +816,34 @@ void Simulation::updateShockWavePoint(){
 			maxDensity = bins[i][0][0]->density;
 			currentShockWavePoint = i;
 		}
+	}
+	//нахождение второй ударной волны
+	double averageDensity = 0;
+	double fullVolume = 0;
+	for(int i = 0; i < rgridNumber; ++i){
+		fullVolume += bins[i][0][0]->volume;
+		averageDensity +=bins[i][0][0]->density*bins[i][0][0]->volume;
+	}
+	averageDensity /= fullVolume;
+	int secondShockWavePoint = currentShockWavePoint;
+	int tempShockWavePoint = currentShockWavePoint;
+
+	for(int i = currentShockWavePoint + 1; i < rgridNumber; ++i){
+		if((bins[i][0][0]->density - averageDensity) < (maxDensity-averageDensity)/2){
+			tempShockWavePoint = i;
+			maxDensity = bins[i][0][0]->density;
+			break;
+		}
+	}
+
+	for(int i = tempShockWavePoint; i < rgridNumber; ++i){
+		if(bins[i][0][0]->density > maxDensity){
+			maxDensity = bins[i][0][0]->density;
+			secondShockWavePoint = i;
+		}
+	}
+
+	if(tempShockWavePoint != secondShockWavePoint){
+		currentShockWavePoint = secondShockWavePoint;
 	}
 }
