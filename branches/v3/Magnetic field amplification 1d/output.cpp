@@ -423,7 +423,7 @@ void outputStartPDF(std::list< Particle*>& l,const char* fileName, Simulation& s
 		}
 	}
 	for(int i = 0; i < pgridNumber; ++i){
-		fprintf(outPDF,"%lf %lf\n", 100000000000*(minp + i*deltap), (distribution[i]));
+		fprintf(outPDF,"%lf %lf\n", 100000000000.0*(minp + i*deltap), (distribution[i]));
 	}
 	delete[] distribution;
 	fclose(outPDF); 
@@ -432,7 +432,7 @@ void outputStartPDF(std::list< Particle*>& l,const char* fileName, Simulation& s
 void outputTurbulenceSpectrum(double* w, const char* fileName, double minK, double maxK){
 	FILE* outTurb = fopen(fileName,"w");
 	for(int i = 0; i < kgridNumber; ++i){
-		fprintf(outTurb,"%lf %lf\n", 100000000000000*(minK + i*(maxK - minK)/(kgridNumber-1)),100000000000000*w[i]);
+		fprintf(outTurb,"%lf %lf\n", 100000000000000.0*(minK + i*(maxK - minK)/(kgridNumber-1)),100000000000000.0*w[i]);
 	}
 	fclose(outTurb);
 }

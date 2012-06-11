@@ -81,7 +81,7 @@ void Simulation::initializeProfile(){
 		R = R + deltaR;
 	}
 }
-///// главная функция программы.
+/////   .
 void Simulation::simulate(){
 	FILE* outIteration;
 	srand ( time(NULL) );
@@ -181,7 +181,7 @@ void Simulation::simulate(){
 			updateCosmicRayBoundMomentum();
 			FILE* cosmicRayMomentum = fopen("./output/tamc_cosmic_ray_momentum.dat","w");
 			for(int i = 0; i < rgridNumber; ++i){
-				fprintf(cosmicRayMomentum, "%lf %lf %lf\n", bins[i][0][0]->r, 10000000000000000*bins[i][0][0]->cosmicRayBoundMomentum, bins[i][0][0]->crFlux);
+				fprintf(cosmicRayMomentum, "%lf %lf %lf\n", bins[i][0][0]->r, 10000000000000000.0*bins[i][0][0]->cosmicRayBoundMomentum, bins[i][0][0]->crFlux);
 			}
 			fclose(cosmicRayMomentum);
 			if(bins[0][0][0]->particles.size() > 0){
@@ -212,7 +212,7 @@ void Simulation::simulate(){
 			}*/
 			outputEnergyPDF(introducedParticles,"./output/tamc_energy_pdf.dat");
 			resetDetectors();
-			printf("%s","iteration № ");
+			printf("%s","iteration  ");
 			printf("%d\n",itNumber);
 		}
 		updateEnergy();
@@ -256,7 +256,7 @@ void Simulation::resetProfile(){
 			}
 			double deltaM = massFlux2 + massFlux1 - bins[i][0][0]->particleMassFlux.fluxR1 - bins[i][0][0]->particleMassFlux.fluxR2;
 			double deltaP = momentaFlux2 + momentaFlux1 - bins[i][0][0]->particleMomentaFlux.fluxR1 - bins[i][0][0]->particleMomentaFlux.fluxR2;
-			//TODO знак U!
+			//TODO  U!
 			double p = bins[i][0][0]->density*bins[i][0][0]->volume*bins[i][0][0]->U/(sqrt(1 - sqr(bins[i][0][0]->U/speed_of_light)));
 			//if(abs(deltaP) > abs(p)){
 				//printf("aaaaaaaaa");
@@ -293,7 +293,7 @@ void Simulation::resetProfile(){
 	}*/
 }
 
-////обнуляет счётчики зарегистрированных частиц
+////   
 void Simulation::resetDetectors(){
 	zeroBin->resetDetectors();
 	for(int i = 0; i < rgridNumber; ++i){
@@ -309,7 +309,7 @@ void Simulation::resetDetectors(){
 	}
 }
 
-////возвращает список частиц, размером number. Частицы распределены по максвеллу
+////  ,  number.    
 std::list <Particle> Simulation::getParticleGaussDistribution(int number){
 	std::list <Particle> l = std::list <Particle>();
 	for (int i = 0; i < number; ++i){
@@ -327,19 +327,19 @@ std::list <Particle> Simulation::getParticleGaussDistribution(int number){
 	}
 	return l;
 }
-////возвращает функцию распределения максвелла от импульса, температуры и массы.
+////     ,   .
 double Simulation::maxwell(double p, double temperature, double mass){
 	return p*p*exp(-p*p/(2*mass*kBoltzman*temperature))*1/(sqrt(2*pi*mass*kBoltzman*temperature)*sqrt(2*pi*mass*kBoltzman*temperature)*sqrt(2*pi*mass*kBoltzman*temperature));
 }
-////пересчитывает спектральную плотность магнитного поля в соответствии с уравнением 3.86 у Владимирова
+////         3.86  
 void Simulation::updateMagneticField(){
 }
 
-////градиент скорости
+//// 
 vector3d Simulation::gradientSpeed(int i, int j, int k){
 	return vector3d(0,0,0);
 }
-////производная члена уравнения 3.86, отвечающего за каскад по плотности энергии
+////   3.86,      
 double Simulation::cascadingDerivativeW(double w,double k,double rho){
 	if (kolmogorovCascading){
 		return (3.0/2.0)*power(w,1.0/2.0)*power(k,5.0/3.0)*power(rho,-1.0/2.0);
@@ -348,7 +348,7 @@ double Simulation::cascadingDerivativeW(double w,double k,double rho){
 	}
 }
 
-////производная плотности энергии по волновому числу. i - номер ячейки по x, j - по k
+////     . i -    x, j -  k
 double Simulation::derivativeFieldK(double* field,int j){
 	double kstep = (maxK-minK)/(kgridNumber-1);
 	if(j == 0){
@@ -358,12 +358,12 @@ double Simulation::derivativeFieldK(double* field,int j){
 	}
 }
 
-////Член уравнения 3.86, отвечающий за нестабильность (резонансная или белловская)
+////  3.86,    (  )
 double Simulation::instability(double w,int i,int j){
 	return 0;
 }
 
-////Производная члена уравнения 3.86, отвечающая за каскад по волновому числу
+////   3.86,      
 double Simulation::cascadingDerivativeK(double w,double k,double rho){
 	if(kolmogorovCascading){
 		double result =  (5.0/3.0)*power(w,3.0/2.0)*power(k,2.0/3.0)*power(rho,-1.0/2.0);
@@ -377,7 +377,7 @@ double Simulation::cascadingDerivativeK(double w,double k,double rho){
 	}
 }
 
-////Член уравнения 3.86, отвечающий за диссипацию, определяемый по формуле 3.76
+////  3.86,   ,    3.76
 double Simulation::dissipation(double w, int i, double k){
 	return 0;
 }
@@ -643,6 +643,7 @@ void Simulation::collectAverageVelocity(){
 	}
 
 	std::vector<Particle*>::iterator it = introducedParticles.begin();
+
 	while(it != introducedParticles.end()){
 		Particle* particle = *it;
 		++it;
@@ -668,7 +669,7 @@ void Simulation::collectAverageVelocity(){
 		}
 		delete[] index;
 	}
-	printf("collecting finished\n");
+
 	for(int i = 0; i < rgridNumber; ++i){
 		bins[i][0][0]->density /= bins[i][0][0]->volume;
 		if(count[i] > epsilon){
@@ -800,6 +801,23 @@ void Simulation::updateCosmicRayBoundMomentum(){
 	for(int i = 0; i < rgridNumber; ++i){
 		bins[i][0][0]->updateCosmicRayBoundMomentum();
 	}
+	double averageFlux = 0;
+	for(int i = 0; i < rgridNumber; ++i){
+		averageFlux += bins[i][0][0]->crFlux;
+	}
+	averageFlux /= rgridNumber;
+	double tempFlux = bins[0][0][0]->crFlux;
+	for(int i = 1; i < rgridNumber; ++i){
+		double t = bins[i][0][0]->crFlux;
+		bins[i][0][0]->crFlux = (bins[i][0][0]->crFlux + tempFlux - 2*averageFlux)/2;
+		tempFlux = t;
+	}
+	for(int i  = 1; i < rgridNumber - 1; ++i){
+		if(abs(bins[i][0][0]->crFlux) < abs(averageFlux)){
+			bins[i][0][0]->crFlux = (bins[i-1][0][0]->crFlux + bins[i][0][0]->crFlux + bins[i+1][0][0]->crFlux)/3;
+		}
+	}
+	bins[0][0][0]->crFlux = bins[1][0][0]->crFlux;
 }
 
 void Simulation::smoothProfile(){
