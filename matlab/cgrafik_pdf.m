@@ -10,6 +10,6 @@ end;
 figure(1);
 plot (pdf(1:N,1),pdf(1:N,2),'blue',pdf(1:N,1),pdf(1:N,3),'red');
 title ('pdf');
-xlabel ('p  10^-20');
+xlabel ('p  10^-20 g*cm/s');
 ylabel ('dN/N');
 grid ;
