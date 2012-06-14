@@ -5,7 +5,7 @@
 #include "output.h"
 #include "util.h"
 #include <omp.h>
-#include <Windows.h>
+//#include <Windows.h>
 
 Simulation::Simulation(){
 	partOfCosmicRay = 0;
@@ -23,6 +23,14 @@ Simulation::Simulation(){
 	startPDF = std::list <Particle*>();
 	timeStep = defaultTimeStep;
 	shockWavePoint = 0;
+	theorEnergy = 0;
+	theorMomentumZ = 0;
+	theorMomentumY = 0;
+	theorMomentumX = 0;
+	energy = 0;
+	momentumZ = 0;
+	momentumY = 0;
+	momentumX = 0;
 }
 
 Simulation::~Simulation(){
@@ -184,7 +192,7 @@ void Simulation::simulate(){
 		if(introducedParticles.size() > 0){
 			updateEnergy();
 			updateShockWavePoint();
-			//if(itNumber % 5 == 0){
+			if(itNumber % 10 == 0){
 				printf("%s", "outputing\n");
 				outputParticles(introducedParticles,"./output/particles.dat");
 				outputPDF(introducedParticles,"./output/tamc_pdf.dat");
@@ -196,7 +204,7 @@ void Simulation::simulate(){
 				outputRadialProfile(bins,0,0,radialFile, rgridNumber);
 				//outputShockWave(shockWavePoints, shockWaveVelocity);
 				fclose(radialFile);
-			//}
+			}
 			//Sleep(5000);
 		}
 	}
@@ -604,8 +612,8 @@ std::vector <Particle*> Simulation::getParticles(){
 						bin->initialMomentum += vr*particle->mass*particle->weight/sqrt(1 - (v*v)/c2);
 						theorEnergy += particle->getEnergy()*particle->weight;
 						theorMomentumZ += particle->absoluteMomentum*cos(particle->absoluteMomentumTheta)*particle->weight;
-						theorMomentumY += particle->absoluteMomentum*sin(particle->absoluteMomentumTheta)*cos(particle->absoluteMomentumPhi)*particle->weight;
-						theorMomentumX += particle->absoluteMomentum*sin(particle->absoluteMomentumTheta)*sin(particle->absoluteMomentumPhi)*particle->weight;
+						theorMomentumX += particle->absoluteMomentum*sin(particle->absoluteMomentumTheta)*cos(particle->absoluteMomentumPhi)*particle->weight;
+						theorMomentumY += particle->absoluteMomentum*sin(particle->absoluteMomentumTheta)*sin(particle->absoluteMomentumPhi)*particle->weight;
 					//}
 				}
 			}
@@ -764,8 +772,8 @@ void Simulation::removeEscapedParticles(){
 		if(particle->getAbsoluteR() > downstreamR){
 			theorEnergy -= particle->getEnergy()*particle->weight;
 			theorMomentumZ -= particle->absoluteMomentum*cos(particle->absoluteMomentumTheta)*particle->weight;
-			theorMomentumY -= particle->absoluteMomentum*sin(particle->absoluteMomentumTheta)*cos(particle->absoluteMomentumPhi)*particle->weight;
-			theorMomentumX -= particle->absoluteMomentum*sin(particle->absoluteMomentumTheta)*sin(particle->absoluteMomentumPhi)*particle->weight;
+			theorMomentumX -= particle->absoluteMomentum*sin(particle->absoluteMomentumTheta)*cos(particle->absoluteMomentumPhi)*particle->weight;
+			theorMomentumY -= particle->absoluteMomentum*sin(particle->absoluteMomentumTheta)*sin(particle->absoluteMomentumPhi)*particle->weight;
 			delete particle;
 		} else {
 			if(particle->absoluteMomentum > momentumParameter*particle->previousAbsoluteMomentum){
@@ -802,8 +810,8 @@ void Simulation::updateEnergy(){
 			printf("particle->absoluteMomentum < 0\n");
 		}
 		momentumZ += particle->absoluteMomentum*cos(particle->absoluteMomentumTheta)*particle->weight;
-		momentumY += particle->absoluteMomentum*sin(particle->absoluteMomentumTheta)*cos(particle->absoluteMomentumPhi)*particle->weight;
-		momentumX += particle->absoluteMomentum*sin(particle->absoluteMomentumTheta)*sin(particle->absoluteMomentumPhi)*particle->weight;
+		momentumX += particle->absoluteMomentum*sin(particle->absoluteMomentumTheta)*cos(particle->absoluteMomentumPhi)*particle->weight;
+		momentumY += particle->absoluteMomentum*sin(particle->absoluteMomentumTheta)*sin(particle->absoluteMomentumPhi)*particle->weight;
 		particlesWeight += particle->weight;
 		++it;
 	}

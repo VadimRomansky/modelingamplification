@@ -1173,7 +1173,7 @@ void SpaceBin::updateCosmicRayBoundMomentum(){
 			j += weight*((-maxp + (i + 1/2)*deltap)/massProton*volume)*electron_charge*distribution[i];
 		}
 
-		crFlux = j;
+		crFlux = j/volume;
 
 		delete[] distribution;
 	}
