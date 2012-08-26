@@ -801,7 +801,7 @@ void Simulation::updateCosmicRayBoundMomentum(){
 	for(int i = 0; i < rgridNumber; ++i){
 		bins[i][0][0]->updateCosmicRayBoundMomentum();
 	}
-	double averageFlux = 0;
+	/*double averageFlux = 0;
 	for(int i = 0; i < rgridNumber; ++i){
 		averageFlux += bins[i][0][0]->crFlux;
 	}
@@ -817,7 +817,7 @@ void Simulation::updateCosmicRayBoundMomentum(){
 			bins[i][0][0]->crFlux = (bins[i-1][0][0]->crFlux + bins[i][0][0]->crFlux + bins[i+1][0][0]->crFlux)/3;
 		}
 	}
-	bins[0][0][0]->crFlux = bins[1][0][0]->crFlux;
+	bins[0][0][0]->crFlux = bins[1][0][0]->crFlux;*/
 }
 
 void Simulation::smoothProfile(){
