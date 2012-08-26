@@ -183,6 +183,7 @@ void Simulation::simulate(){
 			//printf("%s", "magnetic Field updating\n");
 			//updateMagneticField();
 			//output(*this);
+			updateCosmicRayBoundMomentum();
 			printf("%s", "reseting detectors\n");
 			resetDetectors();
 			//Sleep(5000);
@@ -285,45 +286,9 @@ double Simulation::maxwell(double p, double temperature, double mass){
 	return p*p*exp(-p*p/(2*mass*kBoltzman*temperature))*1/(sqrt(2*pi*mass*kBoltzman*temperature)*sqrt(2*pi*mass*kBoltzman*temperature)*sqrt(2*pi*mass*kBoltzman*temperature));
 }
 ////пересчитывает спектральную плотность магнитного поля в соответствии с уравнением 3.86 у Владимирова
-void Simulation::updateMagneticField(){
-	/*updateMaxMinK();
-	updatePressureSpectralDensity();
-	for(int i =0; i < kgridNumber; ++i){
-		double k = minK + (maxK-minK)*i/(kgridNumber-1);
-		for(int j = 0; j < xgridNumber; ++j){
-			xbins[j]->magneticField[i] = turbulenceSeed*turbulenceSeed/(4*pi*maxK*k*log(maxK/minK));
-		}
-	}
-	Xbin* bin1 = NULL;
-	Xbin* bin2 = xbins[0];
-	bin2->updateMagneticField();
-	for(int i = 1; i <xgridNumber; ++i){
-		bin1 = bin2;
-		bin2 = xbins[i];
-	    double dx = (bin2->right - bin1->left)/2;
-		double gradU = gradientSpeed(i);
-		//printf("%s %d","bin number",i);
-		//printf("\n");
-		evaluateMagneticField(bin1->magneticField,bin2->magneticField,dx,1000,gradU,bin1->density,bin1->U,i);
-		bin2->updateMagneticField();
-	}*/
-}
 
 ////градиент скорости
-vector3d Simulation::gradientSpeed(int i, int j, int k){
-	/*Xbin* bin1;
-	Xbin* bin2;
-	if(i == 0){
-		bin1 = xbins[1];
-		bin2 = xbins[0];
-	} else {
-		bin1 = xbins[i];
-		bin2 = xbins[i-1];
-	}
-	///// расстояние между центрами ящиков
-	return (bin1->U-bin2->U)*2/(bin1->right-bin2->left);*/
-	return vector3d(0,0,0);
-}
+
 ////производная члена уравнения 3.86, отвечающего за каскад по плотности энергии
 double Simulation::cascadingDerivativeW(double w,double k,double rho){
 	if (kolmogorovCascading){
@@ -344,102 +309,12 @@ double Simulation::derivativeFieldK(double* field,int j){
 }
 
 ////Член уравнения 3.86, отвечающий за нестабильность (резонансная или белловская)
-double Simulation::instability(double w,int i,int j){
-	/*Xbin* bin;
-	double instability = 0;
-	bin = xbins[i];
-	double k = minK + j*(maxK - minK)/(kgridNumber-1);
-	double va = B0/sqrt(4*pi*bin->density);
-	if (resonantInstability){
-		/////TODO Z?		
-		double dx = (xbins[i]->right - xbins[i-1]->left)/2;
-		double gradp = 0;
-		//double p1 = xbins[i]->pressureSpectralDensity(k, B0, density0, U0, Z, A);
-		//double p2 = xbins[i-1]->pressureSpectralDensity(k, B0, density0, U0, Z, A);
-		double p1 = pressureSpectralDensity[i][j];
-		double p2 = pressureSpectralDensity[i-1][j];
-		gradp = (p1 -p2)/dx;
-		/////TODO B0?
-		double pres = Z*electron_charge*B0/(speed_of_light*k);
-		/////TODO как считать давление космических лучей?
-		instability += va*gradp*pres/(k);
-		if(instability != instability){
-			printf("NaN instability");
-		}
-	}
-	if (bellInstability){
-		/////TODO как обработать нижнюю границу по k?
-		double j = bin->crMassFlux*electron_charge*Z/(A*massProton);
-		double kc = B0*j/(speed_of_light*bin->density*va*va);
-		if(k < kc){
-			instability += 2*va*k*sqrt(kc/k - 1.0)*w;
-			if(instability != instability){
-				printf("NaN instability");
-			}
-		}
-	}
-	double x = instability*0;
-	if((instability != instability)||(x != x)){
-		printf("NaN instability");
-	}
-	return instability;*/
-	return 0;
-}
 
 ////Производная члена уравнения 3.86, отвечающая за каскад по волновому числу
-double Simulation::cascadingDerivativeK(double w,double k,double rho){
-	if(kolmogorovCascading){
-		double result =  (5.0/3.0)*power(w,3.0/2.0)*power(k,2.0/3.0)*power(rho,-1.0/2.0);
-		double x = result*0;
-		if((x != x)||(result != result)){
-			printf("%s","NaN cDK");
-		}
-		return result;
-	} else {
-		return 0;
-	}
-}
 
 ////Член уравнения 3.86, отвечающий за диссипацию, определяемый по формуле 3.76
-double Simulation::dissipation(double w, int i, double k){
-	/*double va;
-	double kd;
-	Xbin* bin = xbins[i];
-	//////TODO Z и A?
-	kd = Z*electron_charge*B0/(speed_of_light*sqrt(massProton*A*kBoltzman*bin->temperature));
-	//////TODO B0 ?
-	va = B0/sqrt(4*pi*bin->density);
-	return va*k*k*w/kd;*/
-	return 0;
-}
 
 
-void Simulation::updateMaxMinK(){
-	/*double pmin;
-	double pmax;
-	double p1;
-	double p2;
-	pmax = xbins[0]->getMaxLocalP();
-	pmin = xbins[0]->getMinLocalP();
-	for(int i = 1; i < xgridNumber; ++i){
-		p1 = xbins[i]->getMaxLocalP();
-		p2 = xbins[i]->getMinLocalP();
-		if(p1 > pmax){
-			pmax = p1;
-		}
-		if(p2 < pmin){
-			pmin = p2;
-		}
-	}
-	minK = Z*electron_charge*B0/(speed_of_light*pmax);
-	maxK = Z*electron_charge*B0/(speed_of_light*pmin);
-	minK = minK/1.1;
-	maxK = maxK*1.1;
-	for(int i = 0; i < xgridNumber; ++i){
-		xbins[i]->minK = minK;
-		xbins[i]->maxK = maxK;
-	}*/
-}
 
 void Simulation::updateMaxMinP(double& minP, double& maxP){
 	maxP =bins[0][0][0]->getMaxP();
@@ -485,104 +360,6 @@ void Simulation::updateMaxMinP(double& minP, double& maxP){
 			minP = p2;
 		}
 
-	}*/
-}
-
-void Simulation::evaluateMagneticField(double* startField,double* endField,double deltax,int gridNumber,double gradU, double density,double U,int binNumber){
-	/*double* currentField= new double[kgridNumber];
-	double* newField= new double[kgridNumber];
-	for(int i = 0; i<kgridNumber; ++i){
-		currentField[i] = startField[i];
-	}
-	double dx = deltax/gridNumber;
-	for(int i = 0; i<gridNumber; ++i){
-		if (i%100 ==0){
-			//printf("%d %s",i,"\n");
-		}
-		for(int j = 0; j < kgridNumber; ++j){
-			double w = currentField[j];
-			double k = minK + j*(maxK-minK)/(kgridNumber-1);
-			double rho = density;
-			////TODO i-1?
-			double x = w*0;
-			if ((w != w)||(x != x)){
-				printf("%s","NaN w");
-			}
-			double cDW = cascadingDerivativeW(w,k,rho);
-			x = cDW*0;
-			if ((cDW != cDW)||(x != x)){
-				printf("%s", "NaN cDW\n");
-			}
-			double dFK = derivativeFieldK(currentField,j);
-			x = dFK*0;
-			if ((dFK != dFK)||(x != x)){
-				printf("%s", "NaN dFK\n");
-			}
-			double inst = instability(w,binNumber,j);
-			x = inst*0;
-			if ((inst != inst)||(x != x)){
-				printf("%s", "NaN inst\n");
-			}
-			double cDK =  cascadingDerivativeK(w,k,rho);
-			x = cDK*0;
-			if ((cDK != cDK)||(x != x)){
-				printf("%s", "NaN cDK\n");
-			}
-			double diss = dissipation(w,binNumber,k);
-			x = diss*0;
-			if ((diss != diss)||(x != x)){
-				printf("%s", "NaN diss\n");
-			}
-			if( w != w){
-				printf("%s", "NaN w\n");
-			}
-			if( gradU != gradU){
-				printf("%s","NaN gradU\n");
-			}
-			//double dw = (dx/bin1->U)*((delta*cascadingDerivativeW(w,k,rho)-beta*k*gradU)*derivativeFieldK(i-1,j)-(alpha-beta)*w*gradU + gamma*instability(w,i,j) -delta*cascadingDerivativeK(w,k,rho) - epsilon*dissipation(w,i,k));
-			double dw = (dx/U)*((-delta*cDW+beta*k*gradU)*dFK-(alpha-beta)*w*gradU + gamma*inst -delta*cDK - epsilon*diss);
-			x = w*0;
-			if(( w != w)||(x != x)){
-				printf("%s", "NaN w\n");
-			}
-			x = dw*0;
-			if(( dw != dw)||(x != x)){
-				printf("%s", "NaN w\n");
-			}
-			if((w < 1E100)&&(dw < 1E100)){
-				newField[j] = w + dw;
-			} else {
-				newField[j] = w;
-				//printf("%s","w goes to infinity");
-			}
-			x = newField[j]*0;
-			if((newField[j] != newField[j])||(x != x)){
-				printf("%s","NaN newField");
-			}
-			if(newField[j] < 0){
-				newField[j] = 0;
-				//printf("%s","field < 0");
-			}
-	
-		}
-
-		for(int j = 0; j<kgridNumber; ++j){
-			currentField[j] = newField[j];
-		}
-	}
-	for(int i = 0; i<kgridNumber; ++i){
-		endField[i] = currentField[i];
-	}*/
-}
-
-void Simulation::updatePressureSpectralDensity(){
-	/*for(int i = 0; i < xgridNumber; ++i){
-		xbins[i]->sortParticles(minK,maxK);
-		//printf("%d %s",i,"\n");
-		for(int j = 0; j < kgridNumber; ++j){
-			double k = minK + j*(maxK - minK)/(kgridNumber-1);
-			pressureSpectralDensity[i][j] = xbins[i]->pressureSpectralDensity(j, density0, U0, Z, A); 
-		}
 	}*/
 }
 
@@ -636,31 +413,6 @@ SpaceBin* Simulation::getStartBin(double theta, double phi){
 	return bins[0][j][k];
 }
 
-void Simulation::detectFromTo(int fromIndexR, int fromIndexTheta, int fromIndexPhi, int toIndexR, int toIndexTheta, int toIndexPhi, const Particle& particle){
-	/*if(fromIndexR > toIndexR){
-		if (fromIndexR < rgridNumber) bins[fromIndexR][fromIndexTheta][fromIndexPhi]->detectedParticlesR1.push_back(Particle(particle));
-		if (toIndexR >=0) bins[toIndexR][toIndexTheta][toIndexPhi]->detectedParticlesR2.push_back(Particle(particle));
-		return;
-	}
-	if(fromIndexR < toIndexR){
-		if (fromIndexR >= 0) bins[fromIndexR][fromIndexTheta][fromIndexPhi]->detectedParticlesR2.push_back(Particle(particle));
-		if (toIndexR < rgridNumber) bins[toIndexR][toIndexTheta][toIndexPhi]->detectedParticlesR1.push_back(Particle(particle));
-		return;
-	}
-	if(fromIndexTheta != toIndexTheta){
-		if(fromIndexTheta == 0){
-			if(toIndexTheta == thetagridNumber - 1){
-			} else {
-				bins[fromIndexR][fromIndexTheta][fromIndexPhi]->detectedParticlesTheta2.push_back(Particle(particle));	
-			}
-		}
-	}
-	if(fromIndexPhi != toIndexPhi){
-	}
-	if(fromIndexTheta 
-	if*/
-}
-
 void Simulation::multiplyParticleWeights(double v){
 	for(int i = 0; i < rgridNumber; ++i){
 		for(int j = 0; j < thetagridNumber; ++j){
@@ -686,8 +438,10 @@ Particle* Simulation::getAnyParticle(){
 
 void Simulation::collectAverageVelocity(){
 	double* weights = new double[rgridNumber];
+	int* count = new int[rgridNumber];
 	for(int i = 0; i < rgridNumber; ++i){
 		weights[i] = 0;
+		count[i] = 0;
 		averageVelocity[i] = 0;
 		bins[i][0][0]->density = 0;
 	}
@@ -708,8 +462,11 @@ void Simulation::collectAverageVelocity(){
 		int* index = SpaceBin::binByCoordinates(r, theta, phi,upstreamR,deltaR,deltaTheta,deltaPhi, rgridNumber);
 		if(index[0] >= 0){
 			weights[index[0]] += particle->weight;
+			count[index[0]] += 1;
 			averageVelocity[index[0]] += particle->getRadialSpeed()*particle->weight;
 			bins[index[0]][index[1]][index[2]]->density += particle->mass*particle->weight;
+			bins[index[0]][index[1]][index[2]]->particleMomentaZ.push_back(particle->localMomentumZ);
+			bins[index[0]][index[1]][index[2]]->particleWeights.push_back(particle->weight);
 		}
 		delete[] index;
 	}
@@ -718,6 +475,9 @@ void Simulation::collectAverageVelocity(){
 		bins[i][0][0]->density /= bins[i][0][0]->volume;
 		if(weights[i] > epsilon){
 			averageVelocity[i] /= weights[i];
+			if(count[i] < 10){
+				averageVelocity[i] = 0;
+			}
 			//bins[i][0][0]->averageVelocity = averageVelocity[i];
 			bins[i][0][0]->U = averageVelocity[i];
 			bins[i][0][0]->averageVelocity = averageVelocity[i];
@@ -729,6 +489,7 @@ void Simulation::collectAverageVelocity(){
 	}
 
 	delete[] weights;
+	delete[] count;
 }
 
 void Simulation::sortParticlesIntoBins(){
@@ -814,6 +575,12 @@ void Simulation::updateEnergy(){
 		momentumY += particle->absoluteMomentum*sin(particle->absoluteMomentumTheta)*sin(particle->absoluteMomentumPhi)*particle->weight;
 		particlesWeight += particle->weight;
 		++it;
+	}
+}
+
+void Simulation::updateCosmicRayBoundMomentum(){
+	for(int i = 0; i < rgridNumber; ++i){
+		bins[i][0][0]->updateCosmicRayBoundMomentum();
 	}
 }
 

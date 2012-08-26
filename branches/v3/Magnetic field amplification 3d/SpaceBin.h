@@ -73,9 +73,14 @@ public:
 	double* magneticField;
 	std::list <Particle*>* sortedParticles;
 
+	std::vector<double> particleMomentaZ;
+	std::vector<double> particleWeights;
+
 	double minK;
 	double maxK;
 	double averageVelocity;
+
+	double crFlux;
 
 	double centralMomentum;
 
@@ -112,6 +117,9 @@ public:
 	void detectParticleTheta2(Particle* particle);
 	void detectParticlePhi1(Particle* particle);
 	void detectParticlePhi2(Particle* particle);
+
+	void updateCosmicRayBoundMomentum();
+	void updateTemperature(double* distribution, double deltap);
 
 	void largeAngleScattering(Particle* particle, double& time, double timeStep);
 

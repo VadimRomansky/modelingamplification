@@ -96,6 +96,7 @@ public:
 	void removeEscapedParticles();
 	void updateEnergy();
 	void updateShockWavePoint();
+	void updateCosmicRayBoundMomentum();
 private:
 	static const int particleMultiply = 20;
 };

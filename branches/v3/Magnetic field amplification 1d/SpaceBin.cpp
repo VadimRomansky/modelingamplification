@@ -1170,7 +1170,7 @@ void SpaceBin::updateCosmicRayBoundMomentum(){
 
 		for(int i = 0; i < pgridNumber; ++i){
 			distribution[i] -= scale*maxwell(-maxp + (i + 1/2)*deltap - centralMomentum, massProton, temperature);
-			j += weight*((-maxp + (i + 1/2)*deltap)/massProton*volume)*electron_charge*distribution[i];
+			j += weight*((-maxp + (i + 1/2)*deltap)/massProton)*electron_charge*distribution[i]*deltap;
 		}
 
 		crFlux = j/volume;
