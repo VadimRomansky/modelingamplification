@@ -25,6 +25,8 @@ public:
 	double localMomentumY;
 	double localMomentumZ;
 
+	int number;
+
 
 	bool  isCosmicRay;
 	double initialMomentum;
@@ -41,7 +43,7 @@ public:
 	Particle(double x, double y, double z, double temperature, int a, int znumber, double Ur, double Utheta, double Uphi, bool wPath);
 	Particle(double x, double y, double z, double temperature, int a, int znumber, double Ur, double Utheta, double Uphi, double px, double py, double pz, bool wPath);
 	Particle(double x, double y, double z, double temperature, int a, int znumber, double Ur, double Utheta, double Uphi, double px,double py, double pz, double ptheta, double pphi);
-	Particle(int a, int znumber, SpaceBin* bin, bool wpath); 
+	Particle(int a, int znumber, SpaceBin* bin, bool wpath, int n); 
 	void LorentzTransition(double v1, double v2);
 	double getAbsoluteV();
 	double getAbsoluteVR();
