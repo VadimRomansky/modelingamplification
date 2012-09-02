@@ -380,7 +380,7 @@ std::vector <Particle*> Simulation::getParticles(){
 						++allParticlesNumber;
 						printf("%d",allParticlesNumber);
 						printf("%s","\n");
-						Particle* particle = new Particle( A, Z,bin, true);
+						Particle* particle = new Particle( A, Z,bin, true, allParticlesNumber);
 						particle->weight /= particlesNumber;
 						startPDF.push_front(particle);
 						list.push_back(particle);
@@ -475,12 +475,13 @@ void Simulation::collectAverageVelocity(){
 		bins[i][0][0]->density /= bins[i][0][0]->volume;
 		if(weights[i] > epsilon){
 			averageVelocity[i] /= weights[i];
-			if(count[i] < 10){
+			if(count[i] < sqrt(1.0*particlesNumber)){
 				averageVelocity[i] = 0;
 			}
 			//bins[i][0][0]->averageVelocity = averageVelocity[i];
 			bins[i][0][0]->U = averageVelocity[i];
 			bins[i][0][0]->averageVelocity = averageVelocity[i];
+
 		} else {
 			bins[i][0][0]->U = 0;
 			bins[i][0][0]->averageVelocity = 0;
@@ -542,6 +543,8 @@ void Simulation::removeEscapedParticles(){
 					Particle* particle1 = new Particle(*particle);
 					particle1->weight /= generationSize;
 					particle1->previousAbsoluteMomentum = particle1->absoluteMomentum;
+					allParticlesNumber++;
+					particle1->number = allParticlesNumber;
 					list.push_back(particle1);
 				}
 				delete particle;

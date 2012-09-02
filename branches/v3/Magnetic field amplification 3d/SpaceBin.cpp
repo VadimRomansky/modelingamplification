@@ -219,6 +219,7 @@ void SpaceBin::largeAngleScattering(Particle* particle, double& time, double tim
 		//deltat = epsilon;
 		deltat = 1000*epsilon;
 		printf("deltat = 0 in largeAngleScattering\n");
+		printf("particle number %d particle r% lf r1 %lf r2 %lf\n", particle->number, particle->getAbsoluteR(), r1, r2);
 	}
 
 	if(deltat > gammaFactor*(timeStep - time)){

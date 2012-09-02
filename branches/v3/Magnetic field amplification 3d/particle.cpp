@@ -188,7 +188,8 @@ Particle::Particle(double x, double y, double z, double temperature, int a, int 
 	writePath = wPath;
 }
 
-Particle::Particle(int a, int znumber, SpaceBin* bin, bool wpath){
+Particle::Particle(int a, int znumber, SpaceBin* bin, bool wpath, int n){
+	number = n;
 	double x = bin->r2*2*(uniRandom() - 0.5);
 	double y = bin->r2*2*(uniRandom() - 0.5);
 	double z = bin->r2*2*(uniRandom() - 0.5);
