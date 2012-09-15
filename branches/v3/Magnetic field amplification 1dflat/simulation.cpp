@@ -78,14 +78,14 @@ void Simulation::simulate(){
 	fclose(outIteration);
 	fclose(radialFile);
 	for (int itNumber  = 0; itNumber < iterationNumber; ++itNumber){ 
-		printf("%s", "\n");
+		//printf("%s", "\n");
 		int j = 0;
 		int l = 0;
-		printf("%s", "Iteration started\n");
+		//printf("%s", "Iteration started\n");
 		if(itNumber == 0){
 			printf("%s","First iteration\n");
 		} else {
-			printf("%s", "Particle propagation\n");
+			//printf("%s", "Particle propagation\n");
 			int it;
 			#pragma omp parallel for private(it) shared(l)
 			for(it = 0; it < introducedParticles.size(); ++it){
@@ -132,15 +132,15 @@ void Simulation::simulate(){
 				}
 			}
 
-			printf("%s", "Introducing new particles from left boundary\n");
+			//printf("%s", "Introducing new particles from left boundary\n");
 			if((simulationType == 1) || (simulationType == 2)){
 				introduceNewParticles();
 			}
-			printf("%s", "collecting velocity, density and crflux\n");
+			//printf("%s", "collecting velocity, density and crflux\n");
 			collectAverageVelocity();
-			printf("%s", "removing escaped particles\n");
+			//printf("%s", "removing escaped particles\n");
 			removeEscapedParticles();
-			printf("%s","updating energy\n");
+			//printf("%s","updating energy\n");
 			updateCosmicRayBoundMomentum();
 			FILE* cosmicRayMomentum = fopen("./output/tamc_cosmic_ray_momentum.dat","w");
 			for(int i = 0; i < rgridNumber; ++i){
@@ -153,11 +153,13 @@ void Simulation::simulate(){
 
 			outputEnergyPDF(introducedParticles,"./output/tamc_energy_pdf.dat");
 			resetDetectors();
-			printf("%s","iteration  ");
-			printf("%d\n",itNumber);
+			//printf("%s","iteration  ");
+			//printf("%d\n",itNumber);
 		}
 		updateEnergy();
-		if(itNumber % 10 == 0){
+		if(itNumber % 20 == 0){
+			printf("%s","iteration  ");
+			printf("%d\n",itNumber);
 			printf("outputing\n");
 			outputParticles(introducedParticles,"./output/particles.dat");
 			outputPDF(introducedParticles,"./output/tamc_pdf.dat");
