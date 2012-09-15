@@ -78,7 +78,7 @@ public:
 	void detectParticleR1(Particle* particle);
 	void detectParticleR2(Particle* particle);
 
-	void updateCosmicRayBoundMomentum();
+	void updateCosmicRayBoundMomentum(bool write);
 	void updateTemperature(double* distribution, double deltap);
 
 	void largeAngleScattering(Particle* particle, double& time, double timeStep);
