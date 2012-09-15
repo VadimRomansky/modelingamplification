@@ -57,16 +57,16 @@ int SpaceBin::propagateParticle(Particle* particle ,double& time, double timeSte
 		printf("aaa\n");
 	}
 	particle->setLocalMomentum(U);
-	double lambda = getFreePath(particle);
+	/*double lambda = getFreePath(particle);
 	if(lambda != lambda){
 		printf("aaa\n");
 	}
 	if(lambda == 0){
 		printf("lambda == 0\n");
-	}
+	}*/
 	//double c2 = speed_of_light*speed_of_light;
 	double gammaFactor = 1/sqrt(1 - U*U/c2);
-	double colisionTime = lambda/particle->getLocalV();
+	double colisionTime = getFreeTime(particle);
 	int l = 0;
 	if(smallAngleScattering){
 		while(isInBin(particle) && (time < timeStep)){
@@ -102,8 +102,8 @@ int SpaceBin::propagateParticle(Particle* particle ,double& time, double timeSte
 
 void SpaceBin::largeAngleScattering(Particle* particle, double& time, double timeStep){
 	double gammaFactor = 1/sqrt(1 - U*U/c2);
-	double lambda = getFreePath(particle);
-	double colisionTime = lambda/particle->getLocalV();
+	//double lambda = getFreePath(particle);
+	double colisionTime = getFreeTime(particle);
 	double localV = particle->getLocalV();
 	if(localV < epsilon){
 		colisionTime = timeStep*2;
@@ -167,7 +167,7 @@ int SpaceBin::binByCoordinates(double r, double r0, double deltar,const int rgri
 	return result;
 }
 
-double SpaceBin::getFreePath(Particle* particle){
+/*double SpaceBin::getFreePath(Particle* particle){
 	//return speed_of_light*particle.localMomentum/(particle.Z*electron_charge*B);
 	double lambda = speed_of_light*particle->localMomentum/(particle->Z*electron_charge*B0);
 	if( lambda != lambda){
@@ -177,6 +177,28 @@ double SpaceBin::getFreePath(Particle* particle){
 		printf("aaa");
 	}
 	return lambda;
+}*/
+
+double SpaceBin::getFreeTime(Particle* particle){
+	//return speed_of_light*particle.localMomentum/(particle.Z*electron_charge*B);
+	double lambda = speed_of_light*particle->localMomentum/(particle->Z*electron_charge*B0);
+	if( lambda != lambda){
+		printf("aaa");
+	}
+	if( 0*lambda != 0*lambda){
+		printf("aaa");
+	}
+	double time;
+	//if(particle->localMomentum > particleLocalMomentum){
+		//time = lambda*particle->mass/particleLocalMomentum;
+	//} else {
+	if(particle->getLocalV() < epsilon){
+		time = defaultTimeStep*1000;
+	} else {
+		time = lambda*particle->mass/particle->getLocalV();
+	}
+	//}
+	return time;
 }
 
 void SpaceBin::makeOneStep(Particle* particle, double colisionTime, double& time){

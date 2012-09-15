@@ -94,6 +94,9 @@ public:
 	void updateCosmicRayBoundMomentum();
 	void smoothProfile();
 	void smoothProfile(std::list<SpaceBin*> bins);
+
+	void findShockWavePoint();
+
 private:
 	static const int particleMultiply = 20;
 };

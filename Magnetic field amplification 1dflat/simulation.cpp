@@ -158,6 +158,7 @@ void Simulation::simulate(){
 		}
 		updateEnergy();
 		if(itNumber % 20 == 0){
+			findShockWavePoint();
 			printf("%s","iteration  ");
 			printf("%d\n",itNumber);
 			printf("outputing\n");
@@ -166,7 +167,7 @@ void Simulation::simulate(){
 			outputEnergyPDF(introducedParticles,"./output/tamc_energy_pdf.dat");
 			outIteration = fopen("./output/tamc_iteration.dat","a");
 			radialFile = fopen("./output/tamc_radial_profile.dat","a");
-			fprintf(outIteration,"%d %lf %lf %lf %lf %d %lf %lf\n",itNumber, energy, theorEnergy, momentumX, theorMomentumX, introducedParticles.size(), particlesWeight, 1.0);
+			fprintf(outIteration,"%d %lf %lf %lf %lf %d %lf %lf\n",itNumber, energy, theorEnergy, momentumX, theorMomentumX, introducedParticles.size(), particlesWeight, shockWavePoint);
 			fclose(outIteration);
 			outputRadialProfile(bins,radialFile, rgridNumber);
 			fclose(radialFile);
@@ -399,7 +400,7 @@ void Simulation::removeEscapedParticles(){
 			theorMomentumX -= particle->absoluteMomentumX*particle->weight;
 			delete particle;
 		} else {
-			/*if(particle->absoluteMomentum > momentumParameter*particle->previousAbsoluteMomentum){
+			if(particle->absoluteMomentum > momentumParameter*particle->previousAbsoluteMomentum){
 				for(int i = 0; i < generationSize; ++i){
 					Particle* particle1 = new Particle(*particle);
 					particle1->weight /= generationSize;
@@ -407,12 +408,12 @@ void Simulation::removeEscapedParticles(){
 					list.push_back(particle1);
 				}
 				delete particle;
-			} else {*/
+			} else {
 				if(momentumParameter*particle->absoluteMomentum < particle->previousAbsoluteMomentum){
 					particle->previousAbsoluteMomentum = particle->absoluteMomentum;
 				}
 				list.push_back(particle);
-			//}
+			}
 		}
 	}
 	introducedParticles.clear();
@@ -564,4 +565,16 @@ void Simulation::updateEnergy(){
 		particlesWeight += particle->weight;
 		++it;
 	}
+}
+
+void Simulation::findShockWavePoint(){
+	double deltaV = 0;
+	int shockWaveIndex = 0;
+	for(int i = 1; i < rgridNumber - 1; ++i){
+		double dV = bins[i - 1]->U - bins[i]->U;
+		if( dV > deltaV){
+			shockWaveIndex = i;
+		}
+	}
+	shockWavePoint = bins[shockWaveIndex]->r;
 }
