@@ -56,7 +56,8 @@ public:
 	SpaceBin(double r, double deltar, double u, double rho, double temperature, double b, int i, bool scattering);
 	~SpaceBin();
 	int propagateParticle(Particle* particle ,double& time, double timeStep, const int rgridNumber);
-	double getFreePath(Particle* particle);
+	//double getFreePath(Particle* particle);
+	double getFreeTime(Particle* particle);
 	void makeOneStep(Particle* particle, double deltat, double& time);
 	bool isInBin(Particle* particle);
 	bool isInThisOrNear(double r);
