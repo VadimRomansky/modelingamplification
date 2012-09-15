@@ -50,7 +50,7 @@ public:
 	double particlesWeight;
 
 	int rgridNumber;
-	int shockWavePoint;
+	double shockWavePoint;
 	int currentShockWavePoint;
 
 	int simulationType;
@@ -91,7 +91,7 @@ public:
 	void removeEscapedParticles();
 	void updateEnergy();
 	void updateShockWavePoint();
-	void updateCosmicRayBoundMomentum();
+	void updateCosmicRayBoundMomentum(bool write);
 	void smoothProfile();
 	void smoothProfile(std::list<SpaceBin*> bins);
 

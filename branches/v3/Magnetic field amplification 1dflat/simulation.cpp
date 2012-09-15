@@ -141,15 +141,7 @@ void Simulation::simulate(){
 			//printf("%s", "removing escaped particles\n");
 			removeEscapedParticles();
 			//printf("%s","updating energy\n");
-			updateCosmicRayBoundMomentum();
-			FILE* cosmicRayMomentum = fopen("./output/tamc_cosmic_ray_momentum.dat","w");
-			for(int i = 0; i < rgridNumber; ++i){
-				fprintf(cosmicRayMomentum, "%lf %lf\n", bins[i]->r, bins[i]->crFlux);
-			}
-			fclose(cosmicRayMomentum);
-			if(bins[0]->particles.size() > 0){
-				outputPDF(bins[0]->particles,"./output/tamc_pdf0.dat");
-			}
+			updateCosmicRayBoundMomentum(itNumber % 20 == 0);
 
 			outputEnergyPDF(introducedParticles,"./output/tamc_energy_pdf.dat");
 			resetDetectors();
@@ -158,6 +150,12 @@ void Simulation::simulate(){
 		}
 		updateEnergy();
 		if(itNumber % 20 == 0){
+
+			if(bins[0]->particles.size() > 0){
+				outputPDF(bins[0]->particles,"./output/tamc_pdf0.dat");
+			}
+
+			outputEnergyPDF(introducedParticles,"./output/tamc_energy_pdf.dat");
 			findShockWavePoint();
 			printf("%s","iteration  ");
 			printf("%d\n",itNumber);
@@ -484,9 +482,9 @@ void Simulation::sortParticlesIntoBins(){
 	}
 }
 
-void Simulation::updateCosmicRayBoundMomentum(){
+void Simulation::updateCosmicRayBoundMomentum(bool write){
 	for(int i = 0; i < rgridNumber; ++i){
-		bins[i]->updateCosmicRayBoundMomentum();
+		bins[i]->updateCosmicRayBoundMomentum(write);
 	}
 }
 
@@ -574,6 +572,7 @@ void Simulation::findShockWavePoint(){
 		double dV = bins[i - 1]->U - bins[i]->U;
 		if( dV > deltaV){
 			shockWaveIndex = i;
+			deltaV = dV;
 		}
 	}
 	shockWavePoint = bins[shockWaveIndex]->r;
