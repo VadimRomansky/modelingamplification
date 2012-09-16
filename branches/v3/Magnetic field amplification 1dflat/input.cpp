@@ -22,11 +22,12 @@ Simulation* readInput(){
 		fscanf(infile,"%d", &a);
 		simulation->smallAngleScattering = (a == 1);
 		fscanf(infile,"%d",&simulation->rgridNumber);
-		fscanf(infile,"%d",&simulation->shockWavePoint);
+		fscanf(infile,"%d",&simulation->shockWaveIndex);
 		fscanf(infile,"%d",&simulation->simulationType);
 		if((simulation->simulationType != 1) && (simulation->simulationType != 2) && (simulation->simulationType != 3)){
 			throw std::exception("simulationType mshould be 1,2 or 3");
 		}
+		//fscanf(infile,"%d",&simulation->freeTimeEvaluatorType);
 		fclose(infile);
 		return simulation;
 	} else {

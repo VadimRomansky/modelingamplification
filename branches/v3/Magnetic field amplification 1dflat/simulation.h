@@ -2,7 +2,7 @@
 #define SIMULATION_H
 
 #include "stdafx.h"
-//#include "particle.h"
+#include "particle.h"
 #include "SpaceBin.h"
 #include "constants.h"
 #include "vector3d.h"
@@ -50,6 +50,7 @@ public:
 	double particlesWeight;
 
 	int rgridNumber;
+	int shockWaveIndex;
 	double shockWavePoint;
 	int currentShockWavePoint;
 

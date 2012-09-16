@@ -51,6 +51,7 @@ public:
 	double crFlux;
 
 	double centralMomentum;
+	double momentumDifference;
 
 	SpaceBin();
 	SpaceBin(double r, double deltar, double u, double rho, double temperature, double b, int i, bool scattering);
