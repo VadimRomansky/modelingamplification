@@ -50,13 +50,20 @@ void Simulation::initializeProfile(){
 	double R = upstreamR + deltaR/2;
 	double Theta = deltaTheta/2;
 	double Phi = deltaPhi/2;
+	/*if(freeTimeEvaluatorType == 1){
+		freeTimeEvaluator = new ConstantFreeTimeEvaluator(B0);
+	} else if(freeTimeEvaluatorType == 2) {
+		freeTimeEvaluator = new LinearFreeTimeEvaluator(B0,particleLocalMomentum);
+	} else {
+		freeTimeEvaluator = NULL;
+	}*/
 	bins = new SpaceBin*[rgridNumber];
 	zeroBinScale = 2*U0*defaultTimeStep/deltaR;
 	zeroBin = new SpaceBin(-zeroBinScale*deltaR/2,zeroBinScale*deltaR,U0,density0,temperature,B0,-1, smallAngleScattering);
     for(int i = 0; i < rgridNumber; ++i){
 		double density = density0;
 		double u;
-		if(i < shockWavePoint){
+		if(i < shockWaveIndex){
 			u = U0;
 		} else {
 			u = U0;
@@ -143,7 +150,7 @@ void Simulation::simulate(){
 			//printf("%s","updating energy\n");
 			updateCosmicRayBoundMomentum(itNumber % 20 == 0);
 
-			outputEnergyPDF(introducedParticles,"./output/tamc_energy_pdf.dat");
+			//outputEnergyPDF(introducedParticles,"./output/tamc_energy_pdf.dat");
 			resetDetectors();
 			//printf("%s","iteration  ");
 			//printf("%d\n",itNumber);
@@ -450,6 +457,7 @@ void Simulation::collectAverageVelocity(){
 			averageVelocity[i] /= count[i];
 			bins[i]->averageVelocity = averageVelocity[i];
 			bins[i]->U = averageVelocity[i];
+			//bins[i]->U = averageVelocity[i] - bins[i]->momentumDifference/count[i];
 		} else {
 			printf("0 particles in bin\n");
 			bins[i]->averageVelocity = 0;

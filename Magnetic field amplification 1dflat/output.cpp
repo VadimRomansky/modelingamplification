@@ -24,7 +24,7 @@ void output(Simulation& simulation){
 	outputPDF(simulation.startPDF,"./output/tamc_pdf_start.dat");
 	outputPDF(bin->detectedParticlesR2,"./output/tamc_pdf_FEB.dat");
 	//outputTurbulenceSpectrum(bin->magneticField,"./output/tamc_turb_FEB.dat",simulation.minK,simulation.maxK);
-	bin = simulation.bins[simulation.shockWavePoint];
+	bin = simulation.bins[simulation.shockWaveIndex];
 	outputPDF(bin->detectedParticlesR2,"./output/tamc_pdf_zero.dat");
 	//outputTurbulenceSpectrum(bin->magneticField,"./output/tamc_turb_zero.dat",simulation.minK,simulation.maxK);
 	bin = simulation.bins[simulation.rgridNumber-1];

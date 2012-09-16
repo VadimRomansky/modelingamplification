@@ -45,7 +45,7 @@ SpaceBin::SpaceBin(double R, double deltar, double u, double rho, double t, doub
 	}*/
 	detectedParticlesR1 = std::list<Particle*>();
 	detectedParticlesR2 = std::list<Particle*>();
-
+	momentumDifference = 0;
 }
 
 SpaceBin::~SpaceBin(){
@@ -148,7 +148,9 @@ void SpaceBin::largeAngleScattering(Particle* particle, double& time, double tim
 		double cosLocalTheta = 2*(uniRandom() - 0.5);
 		particle->localMomentumX = particle->localMomentum*cosLocalTheta;
 
+		double absoluteMomentum = particle->absoluteMomentumX*particle->weight;
 		particle->setAbsoluteMomentum(U);
+		momentumDifference += particle->absoluteMomentumX - absoluteMomentum*particle->weight;
 	}
 }
 
@@ -189,15 +191,15 @@ double SpaceBin::getFreeTime(Particle* particle){
 		printf("aaa");
 	}
 	double time;
-	//if(particle->localMomentum > particleLocalMomentum){
-		//time = lambda*particle->mass/particleLocalMomentum;
-	//} else {
+	if(particle->localMomentum > particleLocalMomentum){
+		time = lambda*particle->mass/particleLocalMomentum;
+	} else {
 	if(particle->getLocalV() < epsilon){
 		time = defaultTimeStep*1000;
 	} else {
 		time = lambda/particle->getLocalV();
 	}
-	//}
+	}
 	return time;
 }
 
@@ -296,6 +298,8 @@ void SpaceBin::resetDetectors(){
 	for(int j = 0; j < kgridNumber; ++j){
 		//sortedParticles[j].clear();
 	}
+
+	momentumDifference = 0;
 
 }
 
