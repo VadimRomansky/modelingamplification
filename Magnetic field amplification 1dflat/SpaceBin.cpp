@@ -15,7 +15,7 @@ SpaceBin::SpaceBin(){
 	}
 	//sortedParticles = new std::list<Particle*>[kgridNumber];
 }
-SpaceBin::SpaceBin(double R, double deltar, double u, double rho, double t, double b, int i, bool scattering){
+SpaceBin::SpaceBin(double R, double deltar, double u, double rho, double t, double b, int i, bool scattering, int freeTimeEvaluation){
 	r = R;
 	r1 = r - deltar/2;
 	r2 = r + deltar/2;
@@ -47,6 +47,7 @@ SpaceBin::SpaceBin(double R, double deltar, double u, double rho, double t, doub
 	detectedParticlesR2 = std::list<Particle*>();
 	momentumDifference = 0;
 	energyDifference = 0;
+	freeTimeEvaluationType = freeTimeEvaluation;
 }
 
 SpaceBin::~SpaceBin(){
@@ -195,14 +196,23 @@ double SpaceBin::getFreeTime(Particle* particle){
 		printf("aaa");
 	}
 	double time;
-	if(particle->localMomentum > particleLocalMomentum){
-		time = lambda*particle->mass/particleLocalMomentum;
-	} else {
-	if(particle->getLocalV() < epsilon){
-		time = defaultTimeStep*1000;
-	} else {
-		time = lambda/particle->getLocalV();
-	}
+
+	if(freeTimeEvaluationType == 1){
+		if(particle->getLocalV() < epsilon){
+			time = defaultTimeStep*1000;
+		} else {
+			time = lambda/particle->getLocalV();
+		}
+	} else if(freeTimeEvaluationType == 2){
+		if(particle->localMomentum > particleLocalMomentum){
+			time = lambda*particle->mass/particleLocalMomentum;
+		} else {
+			if(particle->getLocalV() < epsilon){
+				time = defaultTimeStep*1000;
+			} else {
+				time = lambda/particle->getLocalV();
+			}
+		}
 	}
 	return time;
 }
