@@ -148,7 +148,7 @@ void Simulation::simulate(){
 			//printf("%s", "removing escaped particles\n");
 			removeEscapedParticles();
 			//printf("%s","updating energy\n");
-			updateCosmicRayBoundMomentum(itNumber % 20 == 0);
+			updateCosmicRayBoundMomentum(itNumber % writeParameter == 0);
 
 			//outputEnergyPDF(introducedParticles,"./output/tamc_energy_pdf.dat");
 			resetDetectors();
@@ -156,7 +156,7 @@ void Simulation::simulate(){
 			//printf("%d\n",itNumber);
 		}
 		updateEnergy();
-		if(itNumber % 20 == 0){
+		if(itNumber % writeParameter == 0){
 
 			if(bins[0]->particles.size() > 0){
 				outputPDF(bins[0]->particles,"./output/tamc_pdf0.dat");
@@ -427,9 +427,14 @@ void Simulation::removeEscapedParticles(){
 
 void Simulation::collectAverageVelocity(){
 	double* count = new double[rgridNumber];
+	double* absoluteEnergy = new double[rgridNumber];
+	double* absoluteTheorEnergy = new double[rgridNumber];
+
 	for(int i = 0; i < rgridNumber; ++i){
 		count[i] = 0;
 		averageVelocity[i] = 0;
+		absoluteEnergy[i] = 0;
+		absoluteTheorEnergy[i] = 0;
 		bins[i]->density = 0;
 	}
 
@@ -444,10 +449,52 @@ void Simulation::collectAverageVelocity(){
 		int index = SpaceBin::binByCoordinates(particle->absoluteX,upstreamR,deltaR, rgridNumber);
 		if((index >= 0)&&(index < rgridNumber)){
 			count[index] += particle->weight;
-			averageVelocity[index] += particle->getAbsoluteVX()*particle->weight;
 			bins[index]->density += particle->mass*particle->weight;
 			bins[index]->particleMomentaZ.push_back(particle->localMomentumX);
 			bins[index]->particleWeights.push_back(particle->weight);
+		}
+	}
+
+	it = introducedParticles.begin();
+
+	while(it != introducedParticles.end()){
+		Particle* particle = *it;
+		++it;
+		int index = SpaceBin::binByCoordinates(particle->absoluteX,upstreamR,deltaR, rgridNumber);
+		if((index >= 0)&&(index < rgridNumber)){
+			double energy = particle->getEnergy();
+			double deltaP = bins[index]->momentumDifference/count[index];
+			if(particle->absoluteMomentum*particle->absoluteMomentum <= particle->absoluteMomentumX*particle->absoluteMomentumX){
+				particle->absoluteMomentumX -= deltaP;
+				particle->absoluteMomentum = particle->absoluteMomentumX;
+			} else {
+				double particleMomentumY = sqrt(particle->absoluteMomentum*particle->absoluteMomentum - particle->absoluteMomentumX*particle->absoluteMomentumX);
+				particle->absoluteMomentumX -= deltaP;
+				particle->absoluteMomentum = sqrt(particle->absoluteMomentumX*particle->absoluteMomentumX + particleMomentumY*particleMomentumY);
+			}
+			bins[index]->energyDifference += (particle->getEnergy() - energy)*particle->weight;
+			absoluteEnergy[index] +=particle->getEnergy()*particle->weight;
+		}
+	}
+
+	it = introducedParticles.begin();
+
+	while(it != introducedParticles.end()){
+		Particle* particle = *it;
+		++it;
+		double theta;
+		double r = particle->absoluteX;
+
+		int index = SpaceBin::binByCoordinates(particle->absoluteX,upstreamR,deltaR, rgridNumber);
+		if((index >= 0)&&(index < rgridNumber)){
+			averageVelocity[index] += particle->getAbsoluteVX()*particle->weight;
+		}
+	}
+
+	for(int i = 0; i < rgridNumber; ++i){
+		absoluteTheorEnergy[i] = absoluteEnergy[i] - bins[i]->energyDifference;
+		if(absoluteTheorEnergy[i] <= 0){
+			absoluteTheorEnergy[i] = absoluteEnergy[i];
 		}
 	}
 
@@ -457,7 +504,7 @@ void Simulation::collectAverageVelocity(){
 			averageVelocity[i] /= count[i];
 			bins[i]->averageVelocity = averageVelocity[i];
 			bins[i]->U = averageVelocity[i];
-			//bins[i]->U = averageVelocity[i] - bins[i]->momentumDifference/count[i];
+			//bins[i]->U = averageVelocity[i] - bins[i]->momentumDifference/(massProton*count[i]);
 		} else {
 			printf("0 particles in bin\n");
 			bins[i]->averageVelocity = 0;
@@ -465,7 +512,31 @@ void Simulation::collectAverageVelocity(){
 		}
 	}
 
+	/*it = introducedParticles.begin();
+
+	while(it != introducedParticles.end()){
+		Particle* particle = *it;
+		++it;
+		int index = SpaceBin::binByCoordinates(particle->absoluteX,upstreamR,deltaR, rgridNumber);
+		if((index >= 0)&&(index < rgridNumber)){
+			double localEnergy = absoluteEnergy[index] - bins[index]->density*bins[index]->volume*(bins[index]->U*bins[index]->U)/2;
+			double localTheorEnergy = absoluteTheorEnergy[index] - bins[index]->density*bins[index]->volume*(bins[index]->U*bins[index]->U)/2;
+			if(localEnergy < 0){
+				printf("localEnergy < 0\n");
+			}
+			if(localTheorEnergy < 0){
+				printf("localTheorEnergy < 0\n");
+			}
+			double momentumRelation = sqrt(localTheorEnergy/localEnergy);
+			particle->localMomentum *= momentumRelation;
+			particle->localMomentumX *= momentumRelation;
+			particle->setAbsoluteMomentum(bins[index]->U);
+		}
+	}*/
+
 	delete[] count;
+	delete[] absoluteEnergy;
+	delete[] absoluteTheorEnergy;
 }
 
 void Simulation::sortParticlesIntoBins(){
@@ -584,4 +655,58 @@ void Simulation::findShockWavePoint(){
 		}
 	}
 	shockWavePoint = bins[shockWaveIndex]->r;
+}
+
+void Simulation::saveEnergyAndMomentum(){
+	double* count = new double[rgridNumber];
+	for(int i = 0; i < rgridNumber; ++i){
+		count[i] = 0;
+		averageVelocity[i] = 0;
+		bins[i]->density = 0;
+	}
+
+	std::vector<Particle*>::iterator it = introducedParticles.begin();
+
+	while(it != introducedParticles.end()){
+		Particle* particle = *it;
+		++it;
+		double theta;
+		double r = particle->absoluteX;
+
+		int index = SpaceBin::binByCoordinates(particle->absoluteX,upstreamR,deltaR, rgridNumber);
+		if((index >= 0)&&(index < rgridNumber)){
+			count[index] += particle->weight;
+			averageVelocity[index] += particle->getAbsoluteVX()*particle->weight;
+			bins[index]->density += particle->mass*particle->weight;
+			bins[index]->particleMomentaZ.push_back(particle->localMomentumX);
+			bins[index]->particleWeights.push_back(particle->weight);
+		}
+	}
+
+	for(int i = 0; i < rgridNumber; ++i){
+		bins[i]->density /= bins[i]->volume;
+		if(count[i] > epsilon){
+			averageVelocity[i] /= count[i];
+			bins[i]->averageVelocity = averageVelocity[i];
+			//bins[i]->U = averageVelocity[i];
+			bins[i]->U = averageVelocity[i] - bins[i]->momentumDifference/count[i];
+		} else {
+			printf("0 particles in bin\n");
+			bins[i]->averageVelocity = 0;
+			bins[i]->U = 0;
+		}
+	}
+
+	it = introducedParticles.begin();
+
+	while(it != introducedParticles.end()){
+		Particle* particle = *it;
+		++it;
+		int index = SpaceBin::binByCoordinates(particle->absoluteX,upstreamR,deltaR, rgridNumber);
+		if((index >= 0)&&(index < rgridNumber)){
+			particle->setAbsoluteMomentum(bins[index]->U);
+		}
+	}
+
+	delete[] count;
 }

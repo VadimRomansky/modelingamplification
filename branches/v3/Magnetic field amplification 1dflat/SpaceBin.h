@@ -52,6 +52,7 @@ public:
 
 	double centralMomentum;
 	double momentumDifference;
+	double energyDifference;
 
 	SpaceBin();
 	SpaceBin(double r, double deltar, double u, double rho, double temperature, double b, int i, bool scattering);
