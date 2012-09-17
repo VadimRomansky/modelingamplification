@@ -46,6 +46,7 @@ SpaceBin::SpaceBin(double R, double deltar, double u, double rho, double t, doub
 	detectedParticlesR1 = std::list<Particle*>();
 	detectedParticlesR2 = std::list<Particle*>();
 	momentumDifference = 0;
+	energyDifference = 0;
 }
 
 SpaceBin::~SpaceBin(){
@@ -145,12 +146,15 @@ void SpaceBin::largeAngleScattering(Particle* particle, double& time, double tim
 	double probability;
 	probability = 1 - exp(-deltat/colisionTime);
 	if(uniRandom() <= probability){
+		double absoluteMomentum = particle->absoluteMomentumX;
+		double energy = particle->getEnergy();
+
 		double cosLocalTheta = 2*(uniRandom() - 0.5);
 		particle->localMomentumX = particle->localMomentum*cosLocalTheta;
 
-		double absoluteMomentum = particle->absoluteMomentumX*particle->weight;
 		particle->setAbsoluteMomentum(U);
-		momentumDifference += particle->absoluteMomentumX - absoluteMomentum*particle->weight;
+		momentumDifference += (particle->absoluteMomentumX - absoluteMomentum)*particle->weight;
+		energyDifference += (particle->getEnergy() - energy)*particle->weight;
 	}
 }
 
@@ -300,6 +304,7 @@ void SpaceBin::resetDetectors(){
 	}
 
 	momentumDifference = 0;
+	energyDifference = 0;
 
 }
 

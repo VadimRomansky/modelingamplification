@@ -97,6 +97,7 @@ public:
 	void smoothProfile(std::list<SpaceBin*> bins);
 
 	void findShockWavePoint();
+	void saveEnergyAndMomentum();
 
 private:
 	static const int particleMultiply = 20;

@@ -11,7 +11,6 @@ const double pi = 3.1415926535897932384626433832795028841971693993751;
 const double epsilon = 1.0E-7; 
 const double relativistic_gamma = 1.3333333333;
 const double maxMomentum = 5.0E-19;
-const double weight = 5;
 const int pgridNumber = 100;
 const double defaultTimeStep = 0.003;
 //const int rgridNumber = 100;
@@ -23,6 +22,7 @@ const double defaultMinK = 0.1E-8;
 const double turbulenceSeed = 0.000000000001;
 const int generationSize = 2;
 const double momentumParameter = 5;
+const int writeParameter = 20;
 
 const double particleLocalMomentum = 1.0E-16;
 
