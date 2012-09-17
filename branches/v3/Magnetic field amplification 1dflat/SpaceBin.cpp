@@ -4,7 +4,6 @@
 #include "constants.h"
 #include "simulation.h"
 #include "util.h"
-#include "BinFlux.h"
 #include "matrix3d.h"
 
 
