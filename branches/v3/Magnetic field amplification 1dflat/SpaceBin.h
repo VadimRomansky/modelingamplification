@@ -54,8 +54,10 @@ public:
 	double momentumDifference;
 	double energyDifference;
 
+	int freeTimeEvaluationType;
+
 	SpaceBin();
-	SpaceBin(double r, double deltar, double u, double rho, double temperature, double b, int i, bool scattering);
+	SpaceBin(double r, double deltar, double u, double rho, double temperature, double b, int i, bool scattering, int freeTimeEvaluation);
 	~SpaceBin();
 	int propagateParticle(Particle* particle ,double& time, double timeStep, const int rgridNumber);
 	//double getFreePath(Particle* particle);

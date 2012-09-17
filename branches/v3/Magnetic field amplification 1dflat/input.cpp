@@ -27,7 +27,7 @@ Simulation* readInput(){
 		if((simulation->simulationType != 1) && (simulation->simulationType != 2) && (simulation->simulationType != 3)){
 			//throw std::exception("simulationType mshould be 1,2 or 3");
 		}
-		//fscanf(infile,"%d",&simulation->freeTimeEvaluatorType);
+		fscanf(infile,"%d",&simulation->freeTimeEvaluationType);
 		fclose(infile);
 		return simulation;
 	} else {

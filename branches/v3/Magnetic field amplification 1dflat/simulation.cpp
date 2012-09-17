@@ -59,7 +59,7 @@ void Simulation::initializeProfile(){
 	}*/
 	bins = new SpaceBin*[rgridNumber];
 	zeroBinScale = 2*U0*defaultTimeStep/deltaR;
-	zeroBin = new SpaceBin(-zeroBinScale*deltaR/2,zeroBinScale*deltaR,U0,density0,temperature,B0,-1, smallAngleScattering);
+	zeroBin = new SpaceBin(-zeroBinScale*deltaR/2,zeroBinScale*deltaR,U0,density0,temperature,B0,-1, smallAngleScattering, freeTimeEvaluationType);
     for(int i = 0; i < rgridNumber; ++i){
 		double density = density0;
 		double u;
@@ -68,7 +68,7 @@ void Simulation::initializeProfile(){
 		} else {
 			u = U0;
 		}
-		bins[i] = new SpaceBin(R,deltaR,u,density,temperature,B0,i, smallAngleScattering);
+		bins[i] = new SpaceBin(R,deltaR,u,density,temperature,B0,i, smallAngleScattering, freeTimeEvaluationType);
 		averageVelocity[i] = U0;
 		R = R + deltaR;
 	}
