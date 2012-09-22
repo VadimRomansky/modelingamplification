@@ -7,6 +7,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Magnetic field amplificatio
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Magnetic field amplification 1dflat", "Magnetic field amplification 1dflat\Magnetic field amplification 1dflat.vcxproj", "{37DBE559-18DF-4283-9FA3-D802156698C5}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Magnetic field amplification 2dflat", "Magnetic field amplification 2dflat\Magnetic field amplification 2dflat.vcxproj", "{A5649277-EDA0-4D10-B43B-B67A1D428607}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -25,6 +27,10 @@ Global
 		{37DBE559-18DF-4283-9FA3-D802156698C5}.Debug|Win32.Build.0 = Debug|Win32
 		{37DBE559-18DF-4283-9FA3-D802156698C5}.Release|Win32.ActiveCfg = Release|Win32
 		{37DBE559-18DF-4283-9FA3-D802156698C5}.Release|Win32.Build.0 = Release|Win32
+		{A5649277-EDA0-4D10-B43B-B67A1D428607}.Debug|Win32.ActiveCfg = Debug|Win32
+		{A5649277-EDA0-4D10-B43B-B67A1D428607}.Debug|Win32.Build.0 = Debug|Win32
+		{A5649277-EDA0-4D10-B43B-B67A1D428607}.Release|Win32.ActiveCfg = Release|Win32
+		{A5649277-EDA0-4D10-B43B-B67A1D428607}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

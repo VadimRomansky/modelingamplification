@@ -169,6 +169,9 @@ void Simulation::simulate(){
 			printf("outputing\n");
 			outputParticles(introducedParticles,"./output/particles.dat");
 			outputPDF(introducedParticles,"./output/tamc_pdf.dat");
+			if(escapedParticles.size() > 10){
+				outputPDF(escapedParticles,"./output/escaped_pdf.dat");
+			}
 			outputEnergyPDF(introducedParticles,"./output/tamc_energy_pdf.dat");
 			outIteration = fopen("./output/tamc_iteration.dat","a");
 			radialFile = fopen("./output/tamc_radial_profile.dat","a");
@@ -403,7 +406,7 @@ void Simulation::removeEscapedParticles(){
 		if((particle->absoluteX < 0) || (particle->absoluteX > downstreamR)){
 			theorEnergy -= particle->getEnergy()*particle->weight;
 			theorMomentumX -= particle->absoluteMomentumX*particle->weight;
-			delete particle;
+			escapedParticles.push_back(particle);
 		} else {
 			if(particle->absoluteMomentum > momentumParameter*particle->previousAbsoluteMomentum){
 				for(int i = 0; i < generationSize; ++i){

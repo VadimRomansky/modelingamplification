@@ -65,6 +65,7 @@ public:
 	double** pressureSpectralDensity;
 	std::list <Particle*> startPDF;
 	std::vector<Particle*> introducedParticles;
+	std::vector<Particle*> escapedParticles;
 
 	double* averageVelocity;
 
