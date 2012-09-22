@@ -20,7 +20,7 @@ void output(Simulation& simulation){
 	}
 	fclose(outProfile);*/
     SpaceBin* bin = simulation.bins[0][0][0];
-	simulation.updateMaxMinP(maxp,minp);
+	//simulation.updateMaxMinP(maxp,minp);
 	outputPDF(simulation.startPDF,"./output/tamc_pdf_start.dat");
 	outputPDF(bin->detectedParticlesR2,"./output/tamc_pdf_FEB.dat");
 	//outputTurbulenceSpectrum(bin->magneticField,"./output/tamc_turb_FEB.dat",simulation.minK,simulation.maxK);

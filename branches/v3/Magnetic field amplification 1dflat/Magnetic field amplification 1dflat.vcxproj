@@ -75,7 +75,6 @@
     <None Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="BinFlux.h" />
     <ClInclude Include="constants.h" />
     <ClInclude Include="input.h" />
     <ClInclude Include="matrix3d.h" />
@@ -91,7 +90,6 @@
     <ClInclude Include="vector3d.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="BinFlux.cpp" />
     <ClCompile Include="input.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="matrix3d.cpp" />
