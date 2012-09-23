@@ -134,11 +134,11 @@ void SpaceBin::largeAngleScattering(Particle* particle, double& time, double tim
 		if(absoluteVY >= 0){
 			deltat2 = (y2 - particle->absoluteY)/absoluteVY;
 		} else {
-			deltat2 = (y2 - particle->absoluteY)/absoluteVY;
+			deltat2 = (y1 - particle->absoluteY)/absoluteVY;
 		}
 		deltat = min(deltat1, deltat2);
 	}
-	deltat = deltat*(1+epsilon);
+	deltat = deltat*(1+100*epsilon);
 	if(deltat < epsilon){
 		deltat = epsilon;
 	}
@@ -185,20 +185,20 @@ int* SpaceBin::binByCoordinates(double x, double y, double x0, double deltax, co
 	if(i > xgridNumber - 1){
 		//printf("aaa");
 	}
-	if( i < 0){
-		//printf("aaa");
+	if( i < -1){
+		printf("j < -1");
 	}
 
 	if(j > ygridNumber - 1){
 		//printf("aaa");
 	}
-	if( j < 0){
-		//printf("aaa");
+	if( j < -1){
+		printf("j < -1");
 	}
 
 	int* result = new int[2];
 	result[0] = i;
-	result[2] = j;
+	result[1] = j;
 	return result;
 }
 

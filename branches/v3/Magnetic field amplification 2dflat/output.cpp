@@ -473,10 +473,26 @@ void outputParticlePath(std::list<Particle*>& list,const char* cosmicRayFileName
 void outputRadialProfile(SpaceBin** bins, FILE* outProfile, const int rgridNumber){
 	for(int i = 0; i < rgridNumber; ++i){
 		SpaceBin* bin = bins[i];
-		fprintf(outProfile, "%lf %lf %lf %lf %lf %lf",bin->x, bin->Ux, bin->averageVelocityX, 100000*bin->density, bin->temperature, bin->crFlux);
+		fprintf(outProfile, "%lf %lf %lf %lf %lf %lf",bin->y, bin->Uy, bin->averageVelocityX, 100000*bin->density, bin->temperature, bin->crFlux);
 		fprintf(outProfile,"%s","\n");
 	}
 	//fclose(outProfile);
+}
+
+void outputProfile(SpaceBin*** bins, const int xgridNumber, const int ygridNumber){
+	FILE* outProfileDensity = fopen("./output/density2d.dat","w");
+	FILE* outProfileV = fopen("./output/velocity2d.dat","w");
+	for(int i = 0; i < xgridNumber; ++i){
+		for(int j = 0; j < ygridNumber; ++j){
+		  SpaceBin* bin = bins[i][j];
+		  fprintf(outProfileDensity, "%lf ",100000*bin->density);
+		  fprintf(outProfileV, "%lf ", bin->getU());
+		}
+		fprintf(outProfileDensity,"%s","\n");
+		fprintf(outProfileV,"%s", "\n");
+	}
+	fclose(outProfileDensity);
+	fclose(outProfileV);
 }
 
 void outputShockWave(std::list<double> points, std::list<double> velocity){

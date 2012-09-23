@@ -14,7 +14,7 @@ double sqr(double v){
 int lowerInt(double v){
 	int i = (int) v;
 
-	if(1.0*i >= v){
+	if(1.0*i > v){
 		i = i - 1;
 	}
 	return i;

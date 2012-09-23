@@ -42,13 +42,13 @@ void Simulation::initializeProfile(){
 		for(int j = 0; j < ygridNumber; ++j){
 			double density = density0;
 			double u;
-			if((i+1/2)*(i+1/2) + (j+1/2)*(j+1/2) < (shockWaveIndex+1/2)*(shockWaveIndex+1/2)){
+			if((i+0.5)*(i+0.5) + (j+0.5)*(j+0.5) < (shockWaveIndex+0.5)*(shockWaveIndex+0.5)){
 				u = U0;
 			} else {
 				u = 0;
 			}
-			double ux = U0*(i + 0.5)/(sqrt(1.0*((i+0.5)*(i+0.5) + (j+0.5)*(j+0.5))));
-			double uy = U0*(j + 0.5)/(sqrt(1.0*((i+0.5)*(i+0.5) + (j+0.5)*(j+0.5))));
+			double ux = u*(i + 0.5)/(sqrt(1.0*((i+0.5)*(i+0.5) + (j+0.5)*(j+0.5))));
+			double uy = u*(j + 0.5)/(sqrt(1.0*((i+0.5)*(i+0.5) + (j+0.5)*(j+0.5))));
 			bins[i][j] = new SpaceBin(X, deltaX, Y, deltaY, ux, uy, density, temperature, B0, i, j, smallAngleScattering, freeTimeEvaluationType);
 			Y = Y + deltaY;
 		}
@@ -86,16 +86,21 @@ void Simulation::simulate(){
 				int* index = SpaceBin::binByCoordinates(particle->absoluteX, particle->absoluteY, X1, deltaX, xgridNumber, Y1, deltaY, ygridNumber);
 
 				double time = 0;
-				while((index[0] < xgridNumber)&&(index[1] < ygridNumber)){
+				if((index[0] == -1) || (index[1] == -1)){
+					printf("(index[0] == -1) || (index[1] == -1)\n");
+					printf("10000000*x = %lf 100000000*y = %lf\n", 100000000*particle->absoluteX, 10000000*particle->absoluteY);
+				}
+				while((index[0] < xgridNumber) && (index[1] < ygridNumber) && (index[0] >= 0) && (index[1] >= 0)){
 					j++;
 					SpaceBin* bin = bins[index[0]][index[1]];
 					if(time != time){
 						printf("time != time\n");
 					}
 					int* tempIndex = bin->propagateParticle(particle,time, timeStep, xgridNumber, ygridNumber);
+					delete[] index;
 					index = tempIndex;
-					if((index[0] < 0) &&(index[1] < 0)){
-						printf("(index[0] < 0) &&(index[1] < 0)\n");
+					if((index[0] < -1) || (index[1] < -1)){
+						printf("(index[0] < -1) || (index[1] < -1)\n");
 					}
 					if((index[0] < 0) || (index[1] < 0)){
 						if(index[0] == -1){
@@ -115,6 +120,7 @@ void Simulation::simulate(){
 						break;
 					}
 				}
+				delete[] index;
 			}
 
 			//printf("%s", "collecting velocity, density and crflux\n");
@@ -122,7 +128,7 @@ void Simulation::simulate(){
 			//printf("%s", "removing escaped particles\n");
 			removeEscapedParticles();
 			//printf("%s","updating energy\n");
-			updateCosmicRayBoundMomentum(itNumber % writeParameter == 0);
+			//updateCosmicRayBoundMomentum(itNumber % writeParameter == 0);
 
 			//outputEnergyPDF(introducedParticles,"./output/tamc_energy_pdf.dat");
 			resetDetectors();
@@ -131,7 +137,7 @@ void Simulation::simulate(){
 		}
 		updateEnergy();
 		if(itNumber % writeParameter == 0){
-
+			outputProfile(bins, xgridNumber, ygridNumber);
 			outputEnergyPDF(introducedParticles,"./output/tamc_energy_pdf.dat");
 			//findShockWavePoint();
 			printf("%s","iteration  ");
@@ -147,8 +153,7 @@ void Simulation::simulate(){
 			radialFile = fopen("./output/tamc_radial_profile.dat","a");
 			fprintf(outIteration,"%d %lf %lf %lf %lf %d %lf %lf\n",itNumber, energy, theorEnergy, momentumX, theorMomentumX, introducedParticles.size(), particlesWeight, shockWavePoint);
 			fclose(outIteration);
-			outputRadialProfile(bins[0],radialFile, xgridNumber);
-			//outputProfile(bins);
+			outputRadialProfile(bins[0],radialFile, ygridNumber);
 			fclose(radialFile);
 		}
 	}
@@ -382,7 +387,7 @@ void Simulation::collectAverageVelocity(){
 
 void Simulation::updateCosmicRayBoundMomentum(bool write){
 	for(int i = 0; i < xgridNumber; ++i){
-		for(int j = 0; j , ygridNumber; ++j){
+		for(int j = 0; j < ygridNumber; ++j){
 			bins[i][j]->updateCosmicRayBoundMomentum(write);
 		}
 	}
@@ -400,6 +405,7 @@ void Simulation::updateEnergy(){
 			printf("particle->absoluteMomentum < 0\n");
 		}
 		momentumX += particle->absoluteMomentumX*particle->weight;
+		momentumY += particle->absoluteMomentumY*particle->weight;
 		particlesWeight += particle->weight;
 		++it;
 	}
