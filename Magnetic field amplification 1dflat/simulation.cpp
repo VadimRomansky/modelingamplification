@@ -458,7 +458,7 @@ void Simulation::collectAverageVelocity(){
 		}
 	}
 
-	it = introducedParticles.begin();
+	/*it = introducedParticles.begin();
 
 	while(it != introducedParticles.end()){
 		Particle* particle = *it;
@@ -478,7 +478,7 @@ void Simulation::collectAverageVelocity(){
 			bins[index]->energyDifference += (particle->getEnergy() - energy)*particle->weight;
 			absoluteEnergy[index] +=particle->getEnergy()*particle->weight;
 		}
-	}
+	}*/
 
 	it = introducedParticles.begin();
 
@@ -540,6 +540,29 @@ void Simulation::collectAverageVelocity(){
 	delete[] count;
 	delete[] absoluteEnergy;
 	delete[] absoluteTheorEnergy;
+	if(averageVelocityEvaluationType == 2){
+		it = introducedParticles.begin();
+
+		while(it != introducedParticles.end()){
+			Particle* particle = *it;
+			++it;
+			double theta;
+			double r = particle->absoluteX;
+
+			int index = SpaceBin::binByCoordinates(particle->absoluteX,upstreamR,deltaR, rgridNumber);
+			if((index >= 0)&&(index < rgridNumber)){
+				bins[index]->particles.push_back(new Particle(*particle));
+			}
+		}
+
+		for(int i = 0; i < rgridNumber; ++i){
+			if(bins[i]->U > 0){
+				bins[i]->evaluateU(0,2*bins[i]->U);
+			} else {
+				bins[i]->evaluateU(2*bins[i]->U,0);
+			}
+		}
+	}
 }
 
 void Simulation::sortParticlesIntoBins(){

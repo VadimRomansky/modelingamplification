@@ -22,7 +22,7 @@ const double defaultMinK = 0.1E-8;
 const double turbulenceSeed = 0.000000000001;
 const int generationSize = 2;
 const double momentumParameter = 5;
-const int writeParameter = 5;
+const int writeParameter = 20;
 
 const double particleLocalMomentum = 1.0E-16;
 

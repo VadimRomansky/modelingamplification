@@ -124,8 +124,10 @@ void Simulation::simulate(){
 			}
 
 			//printf("%s", "collecting velocity, density and crflux\n");
+			//Sleep(5000);
 			collectAverageVelocity();
 			//printf("%s", "removing escaped particles\n");
+			//Sleep(5000);
 			removeEscapedParticles();
 			//printf("%s","updating energy\n");
 			//updateCosmicRayBoundMomentum(itNumber % writeParameter == 0);
@@ -143,6 +145,7 @@ void Simulation::simulate(){
 			printf("%s","iteration  ");
 			printf("%d\n",itNumber);
 			printf("outputing\n");
+			//Sleep(5000);
 			outputParticles(introducedParticles,"./output/particles.dat");
 			outputPDF(introducedParticles,"./output/tamc_pdf.dat");
 			if(escapedParticles.size() > 10){
@@ -212,7 +215,7 @@ void Simulation::removeEscapedParticles(){
 	while(it != introducedParticles.end()){
 		Particle* particle = *it;
 		++it;
-		if((particle->absoluteX < X1) || (particle->absoluteX > X2) || (particle->absoluteY < Y1) || (particle->absoluteY > Y2)){
+		if((particle->absoluteX <= X1) || (particle->absoluteX >= X2) || (particle->absoluteY <= Y1) || (particle->absoluteY >= Y2)){
 			theorEnergy -= particle->getEnergy()*particle->weight;
 			theorMomentumX -= particle->absoluteMomentumX*particle->weight;
 			theorMomentumY -= particle->absoluteMomentumY*particle->weight;
@@ -276,6 +279,7 @@ void Simulation::collectAverageVelocity(){
 			bins[index[0]][index[1]]->particleMomentaZ.push_back(particle->localMomentumX);
 			bins[index[0]][index[1]]->particleWeights.push_back(particle->weight);
 		}
+		delete[] index;
 	}
 
 	/*it = introducedParticles.begin();
@@ -318,6 +322,7 @@ void Simulation::collectAverageVelocity(){
 			averageVelocityX[index[0]][index[1]] += particle->getAbsoluteVX()*particle->weight;
 			averageVelocityY[index[0]][index[1]] += particle->getAbsoluteVY()*particle->weight;
 		}
+		delete[] index;
 	}
 
 	/*for(int i = 0; i < xgridNumber; ++i){

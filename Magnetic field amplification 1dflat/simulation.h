@@ -56,6 +56,7 @@ public:
 
 	int simulationType;
 	int freeTimeEvaluationType;
+	int averageVelocityEvaluationType;
 
 	Particle* Particles;
 	SpaceBin** bins;

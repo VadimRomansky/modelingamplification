@@ -28,6 +28,7 @@ Simulation* readInput(){
 			//throw std::exception("simulationType mshould be 1,2 or 3");
 		}
 		fscanf(infile,"%d",&simulation->freeTimeEvaluationType);
+		fscanf(infile,"%d",&simulation->averageVelocityEvaluationType);
 		fclose(infile);
 		return simulation;
 	} else {

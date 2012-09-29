@@ -482,17 +482,25 @@ void outputRadialProfile(SpaceBin** bins, FILE* outProfile, const int rgridNumbe
 void outputProfile(SpaceBin*** bins, const int xgridNumber, const int ygridNumber){
 	FILE* outProfileDensity = fopen("./output/density2d.dat","w");
 	FILE* outProfileV = fopen("./output/velocity2d.dat","w");
+	FILE* outProfileVX = fopen("./output/velocity2dx.dat","w");
+	FILE* outProfileVY = fopen("./output/velocity2dy.dat","w");
 	for(int i = 0; i < xgridNumber; ++i){
 		for(int j = 0; j < ygridNumber; ++j){
 		  SpaceBin* bin = bins[i][j];
 		  fprintf(outProfileDensity, "%lf ",100000*bin->density);
 		  fprintf(outProfileV, "%lf ", bin->getU());
+		  fprintf(outProfileVX, "%lf ", bin->Ux);
+		  fprintf(outProfileVY, "%lf ", bin->Uy);
 		}
 		fprintf(outProfileDensity,"%s","\n");
 		fprintf(outProfileV,"%s", "\n");
+		fprintf(outProfileVX,"%s", "\n");
+		fprintf(outProfileVY,"%s", "\n");
 	}
 	fclose(outProfileDensity);
 	fclose(outProfileV);
+	fclose(outProfileVX);
+	fclose(outProfileVY);
 }
 
 void outputShockWave(std::list<double> points, std::list<double> velocity){
