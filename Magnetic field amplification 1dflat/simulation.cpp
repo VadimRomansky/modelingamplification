@@ -549,19 +549,23 @@ void Simulation::collectAverageVelocity(){
 			double theta;
 			double r = particle->absoluteX;
 
-			int index = SpaceBin::binByCoordinates(particle->absoluteX,upstreamR,deltaR, rgridNumber);
+			int index = SpaceBin::binByCoordinates(particle->absoluteX, upstreamR, deltaR, rgridNumber);
 			if((index >= 0)&&(index < rgridNumber)){
 				bins[index]->particles.push_back(new Particle(*particle));
 			}
 		}
 
+		//printf("crymsky\n");
+		#pragma omp parallel for private(i)
 		for(int i = 0; i < rgridNumber; ++i){
+			//printf("%d\n", i);
 			if(bins[i]->U > 0){
 				bins[i]->evaluateU(0,2*bins[i]->U);
 			} else {
 				bins[i]->evaluateU(2*bins[i]->U,0);
 			}
 		}
+		//printf("end crymsky\n");
 	}
 }
 

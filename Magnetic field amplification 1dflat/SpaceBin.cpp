@@ -635,7 +635,7 @@ void SpaceBin::evaluateU(double u1, double u2){
 	if(u1 > u2){
 		printf("u1 > u2\n");
 	}
-	if(abs(u2 - u1) < epsilon*100){
+	if(abs(u2 - u1) < 100){
 		return;
 	}
 	U = (u1 + u2)/2;
@@ -656,13 +656,9 @@ double SpaceBin::evaluateCrymskyIntegral(){
 		Particle* particle = *it;
 		++it;
 		particle->setLocalMomentum(U);
-		integral += power(particle->getLocalV(),3)*(particle->localMomentumX/particle->localMomentum)*particle->weight/getFreeTime(particle);
+		integral += power(particle->getLocalV(),2)*(particle->localMomentumX/particle->localMomentum)*particle->weight/getFreeTime(particle);
 	}
 
 	return integral;
 }
-
-
-	
-
 
