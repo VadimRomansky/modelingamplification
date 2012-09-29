@@ -631,6 +631,37 @@ void SpaceBin::updateTemperature(double* distribution, double deltap){
 	//temperature = T;
 }
 
+void SpaceBin::evaluateU(double u1, double u2){
+	if(u1 > u2){
+		printf("u1 > u2\n");
+	}
+	if(abs(u2 - u1) < epsilon*100){
+		return;
+	}
+	U = (u1 + u2)/2;
+
+	double integral = evaluateCrymskyIntegral();
+	if(integral > 0){
+		evaluateU(U, u2);
+	} else {
+		evaluateU(u1, U);
+	}
+}
+
+double SpaceBin::evaluateCrymskyIntegral(){
+	std::list<Particle*>::iterator it = particles.begin();
+	double integral = 0;
+
+	while(it != particles.end()){
+		Particle* particle = *it;
+		++it;
+		particle->setLocalMomentum(U);
+		integral += power(particle->getLocalV(),3)*(particle->localMomentumX/particle->localMomentum)*particle->weight/getFreeTime(particle);
+	}
+
+	return integral;
+}
+
 
 	
 

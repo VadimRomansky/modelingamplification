@@ -15,6 +15,7 @@ Particle::Particle(const Particle& p){
 	Z = p.Z;
 	mass = p.mass;
 	absoluteX = p.absoluteX;
+	absoluteY = p.absoluteY;
 
 	absoluteMomentum = p.absoluteMomentum;
 	absoluteMomentumX = p.absoluteMomentumX;
@@ -55,6 +56,9 @@ Particle::Particle(int a, int znumber, SpaceBin* bin, bool wpath, int n){
 	localMomentumX = localMomentum*cosLocalTheta;
 	double cosLocalPhi = 2*(uniRandom() - 0.5);
 	localMomentumY = localMomentum*sqrt(1- cosLocalTheta*cosLocalTheta)*cosLocalPhi;
+	if(localMomentumY != localMomentumY){
+		printf("aaa");
+	}
 
 
 	isCosmicRay = false;
@@ -96,7 +100,7 @@ void Particle::setAbsoluteMomentum(double Ux, double Uy){
 
 		double VabsoluteX = VabsoluteRotateX*cosPhi - VabsoluteRotateY*sinPhi;
 		double VabsoluteY = VabsoluteRotateY*cosPhi + VabsoluteRotateX*sinPhi;
-		double VabsoluteZ = VlocalZ*gamma/denominator;
+		double VabsoluteZ = VlocalZ/(gamma*denominator);
 
 		double absoluteV = sqrt(VabsoluteX*VabsoluteX + VabsoluteY*VabsoluteY + VabsoluteZ*VabsoluteZ);
 
@@ -112,6 +116,10 @@ void Particle::setAbsoluteMomentum(double Ux, double Uy){
 		absoluteMomentum = mass*absoluteV/sqrt(1 - absoluteV*absoluteV/c2);
 		if(absoluteMomentum != absoluteMomentum){
 			printf("absoluteMomentum != absoluteMomentum\n");
+		}
+
+		if(absoluteV < epsilon){
+			printf("aaa");
 		}
 
 		absoluteMomentumX = absoluteMomentum*VabsoluteX/absoluteV;
@@ -152,9 +160,9 @@ void Particle::setLocalMomentum(double Ux, double Uy){
 		double denominator = 1 - VabsoluteRotateX*U/sqrc;
 
 		double VlocalX = (VabsoluteRotateX - U)/denominator;
-		double VlocalY = VabsoluteY/(gamma*denominator);
+		double VlocalY = VabsoluteRotateY/(gamma*denominator);
 
-		double VlocalZ = VabsoluteZ*gamma/denominator;
+		double VlocalZ = VabsoluteZ/(gamma*denominator);
 
 		double localV = sqrt(VlocalX*VlocalX + VlocalY*VlocalY + VlocalZ*VlocalZ);
 
@@ -171,7 +179,9 @@ void Particle::setLocalMomentum(double Ux, double Uy){
 		if(localMomentum != localMomentum){
 			printf("localMomentum != localMomentum\n");
 		}
-
+		if(localV < epsilon){
+			printf("aaa");
+		}
 		localMomentumX = localMomentum*VlocalX/localV;
 		localMomentumY = localMomentum*VlocalY/localV;
 	} else {

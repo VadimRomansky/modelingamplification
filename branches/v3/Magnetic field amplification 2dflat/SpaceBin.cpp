@@ -126,15 +126,23 @@ void SpaceBin::largeAngleScattering(Particle* particle, double& time, double tim
 	} else {
 		double deltat1;
 		double deltat2;
-		if(absoluteVX >= 0){
-			deltat1 = (x2 - particle->absoluteX)/absoluteVX;
+		if(abs(absoluteVX) < epsilon){
+			deltat1 = gammaFactor*(timeStep - time);
 		} else {
-			deltat1 = (x1 - particle->absoluteX)/absoluteVX;
+			if(absoluteVX >= 0){
+				deltat1 = (x2 - particle->absoluteX)/absoluteVX;
+			} else {
+				deltat1 = (x1 - particle->absoluteX)/absoluteVX;
+			}
 		}
-		if(absoluteVY >= 0){
-			deltat2 = (y2 - particle->absoluteY)/absoluteVY;
+		if(abs(absoluteVY) < epsilon){
+			deltat2 = gammaFactor*(timeStep - time);
 		} else {
-			deltat2 = (y1 - particle->absoluteY)/absoluteVY;
+			if(absoluteVY >= 0){
+				deltat2 = (y2 - particle->absoluteY)/absoluteVY;
+			} else {
+				deltat2 = (y1 - particle->absoluteY)/absoluteVY;
+			}
 		}
 		deltat = min(deltat1, deltat2);
 	}
