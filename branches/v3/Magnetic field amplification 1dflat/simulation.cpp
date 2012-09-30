@@ -556,8 +556,9 @@ void Simulation::collectAverageVelocity(){
 		}
 
 		//printf("crymsky\n");
+		int i;
 		#pragma omp parallel for private(i)
-		for(int i = 0; i < rgridNumber; ++i){
+		for(i = 0; i < rgridNumber; ++i){
 			//printf("%d\n", i);
 			if(bins[i]->U > 0){
 				bins[i]->evaluateU(0,2*bins[i]->U);

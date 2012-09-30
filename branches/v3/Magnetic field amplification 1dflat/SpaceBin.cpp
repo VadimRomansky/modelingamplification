@@ -656,7 +656,7 @@ double SpaceBin::evaluateCrymskyIntegral(){
 		Particle* particle = *it;
 		++it;
 		particle->setLocalMomentum(U);
-		integral += power(particle->getLocalV(),2)*(particle->localMomentumX/particle->localMomentum)*particle->weight/getFreeTime(particle);
+		integral += particle->getLocalV()*(particle->localMomentumX/particle->localMomentum)*particle->weight/getFreeTime(particle);
 	}
 
 	return integral;
