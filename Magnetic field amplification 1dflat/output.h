@@ -17,6 +17,7 @@ void outputRadialProfile(SpaceBin** bins, FILE* outProfile, const int rgridNumbe
 void outputShockWave(std::list<double> points, std::list<double> velocity);
 void outputAverageVz(double minp, double maxp, double* averageVz, const char* fileName);
 void outputParticles(std::vector<Particle*>& particles, const char* fileName);
+void outputDistribution(std::vector<Particle*>& partcles, FILE* file, double maxP);
 //void outputParticlesCount(Xbin** bins, const char* fileName);
 
 #endif

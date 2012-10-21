@@ -496,6 +496,39 @@ void outputRadialProfile(SpaceBin** bins, FILE* outProfile, const int rgridNumbe
 	//fclose(outProfile);
 }
 
+void outputDistribution(std::vector<Particle*>& particles, FILE* file, double maxP){
+	double maxp = maxP;
+	double minp = 0;
+	double* distribution = new double[pgridNumber];
+	for (int i = 0; i < pgridNumber; ++i){
+		distribution[i] = 0;
+	}
+	int particleNumber = 0;
+	double mass;
+	double deltap = (maxp - minp)/(pgridNumber - 1);
+	std::vector<Particle*>::iterator it = particles.begin();
+	while(it != particles.end()){
+		particleNumber++;
+		Particle* particle = *it;
+		mass = particle->mass;
+		++it;
+		double p = particle->absoluteMomentum;
+		if (p >= maxp){
+			distribution[pgridNumber-1]+=particle->weight;
+		}
+		for(int i =0; i< pgridNumber-1; ++i){
+			if (p <minp + deltap*(i + 1)){
+				distribution[i] += particle->weight;
+				break;
+			}
+		}
+	}
+	for(int i = 0; i < pgridNumber; ++i){
+		fprintf(file,"%lf %lf\n", 10000000000000000000.0*(minp + i*deltap), (distribution[i]));
+	}
+	delete[] distribution;
+}
+
 void outputShockWave(std::list<double> points, std::list<double> velocity){
 	FILE* outWave = fopen("./output/tamc_shock_wave.dat", "w");
 	std::list<double>::iterator it1 = points.begin();
