@@ -80,10 +80,13 @@ void Simulation::simulate(){
 	initializeProfile();
 	introducedParticles = getParticles();
 	FILE* radialFile;
+	FILE* pdfFile;
 	outIteration = fopen("./output/tamc_iteration.dat","w");
 	radialFile = fopen("./output/tamc_radial_profile.dat","w");
+	pdfFile = fopen("./output/tamc_distribution.dat","w");
 	fclose(outIteration);
 	fclose(radialFile);
+	fclose(pdfFile);
 	for (int itNumber  = 0; itNumber < iterationNumber; ++itNumber){ 
 		//printf("%s", "\n");
 		int j = 0;
@@ -175,10 +178,13 @@ void Simulation::simulate(){
 			outputEnergyPDF(introducedParticles,"./output/tamc_energy_pdf.dat");
 			outIteration = fopen("./output/tamc_iteration.dat","a");
 			radialFile = fopen("./output/tamc_radial_profile.dat","a");
+			pdfFile = fopen("./output/tamc_distribution.dat","a");
 			fprintf(outIteration,"%d %lf %lf %lf %lf %d %lf %lf\n",itNumber, energy, theorEnergy, momentumX, theorMomentumX, introducedParticles.size(), particlesWeight, shockWavePoint);
 			fclose(outIteration);
 			outputRadialProfile(bins,radialFile, rgridNumber);
+			outputDistribution(introducedParticles, pdfFile, massProton*U0*100);
 			fclose(radialFile);
+			fclose(pdfFile);
 		}
 	}
 }
