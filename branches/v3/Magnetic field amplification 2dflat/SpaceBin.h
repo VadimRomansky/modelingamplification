@@ -94,6 +94,10 @@ public:
 
 	void largeAngleScattering(Particle* particle, double& time, double timeStep);
 
+	void evaluateU(double ux1, double ux2, double uy1, double uy2);
+	double evaluateCrymskyIntegralX();
+	double evaluateCrymskyIntegralY();
+
 	//void operator=(Xbin bin);
 
 };

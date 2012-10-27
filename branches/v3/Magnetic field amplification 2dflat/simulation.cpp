@@ -388,6 +388,46 @@ void Simulation::collectAverageVelocity(){
 	delete[] averageVelocityY;
 	delete[] absoluteEnergy;
 	delete[] absoluteTheorEnergy;
+
+	if(averageVelocityEvaluationType == 2){
+		it = introducedParticles.begin();
+
+		while(it != introducedParticles.end()){
+			Particle* particle = *it;
+			++it;
+			double theta;
+			double r = particle->absoluteX;
+
+			int* index = SpaceBin::binByCoordinates(particle->absoluteX, particle->absoluteY, 0, deltaX, xgridNumber, 0, deltaY, ygridNumber);
+			if((index[0] >= 0)&&(index[0] < xgridNumber) && (index[1] >= 0) && (index[1] < ygridNumber)){
+				bins[index[0]][index[1]]->particles.push_back(new Particle(*particle));
+			}
+			delete[] index;
+		}
+
+		//printf("crymsky\n");
+		int i;
+		#pragma omp parallel for private(i)
+		for(i = 0; i < xgridNumber; ++i){
+			for(int j = 0; j < ygridNumber; ++j){
+				//printf("%d\n", i);
+				if(bins[i][j]->Ux > 0){
+					if(bins[i][j]->Uy > 0){
+						bins[i][j]->evaluateU(0, 2*bins[i][j]->Ux, 0, 2*bins[i][j]->Uy);
+					} else {
+						bins[i][j]->evaluateU(0, 2*bins[i][j]->Ux, 2*bins[i][j]->Uy, 0);
+					}
+				} else {
+					if(bins[i][j]->Uy > 0){
+						bins[i][j]->evaluateU(2*bins[i][j]->Ux, 0, 0, 2*bins[i][j]->Uy);
+					} else {
+						bins[i][j]->evaluateU(2*bins[i][j]->Ux, 0, 2*bins[i][j]->Uy, 0);
+					}
+				}
+			}
+		}
+		//printf("end crymsky\n");
+	}
 }
 
 void Simulation::updateCosmicRayBoundMomentum(bool write){

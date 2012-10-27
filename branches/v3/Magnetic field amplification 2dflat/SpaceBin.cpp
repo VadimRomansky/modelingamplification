@@ -679,6 +679,64 @@ double SpaceBin::getU(){
 	return sqrt(Ux*Ux + Uy*Uy);
 }
 
+void SpaceBin::evaluateU(double ux1, double ux2, double uy1, double uy2){
+	if(ux1 > ux2){
+		printf("ux1 > ux2\n");
+	}
+	if(uy1 > uy2){
+		printf("uy1 > uy2\n");
+	}
+	if((abs(ux2 - ux1) < 100) && (abs(uy2 - uy1))){
+		return;
+	}
+	Ux = (ux1 + ux2)/2;
+	Uy = (uy1 + uy2)/2;
+
+	double integralX = evaluateCrymskyIntegralX();
+	double integralY = evaluateCrymskyIntegralY();
+	if(integralX > 0){
+		if(integralY > 0){
+			evaluateU(Ux, ux2, Uy, uy2);
+		} else {
+			evaluateU(Ux, ux2, uy1, Uy);
+		}
+	} else {
+		if(integralY > 0){
+			evaluateU(ux1, Ux, Uy, uy2);
+		} else {
+			evaluateU(ux1, Ux, uy1, Uy);
+		}
+	}
+}
+
+double SpaceBin::evaluateCrymskyIntegralX(){
+	std::list<Particle*>::iterator it = particles.begin();
+	double integral = 0;
+
+	while(it != particles.end()){
+		Particle* particle = *it;
+		++it;
+		particle->setLocalMomentum(Ux, Uy);
+		integral += particle->getLocalVX()*particle->weight/getFreeTime(particle);
+	}
+
+	return integral;
+}
+
+double SpaceBin::evaluateCrymskyIntegralY(){
+	std::list<Particle*>::iterator it = particles.begin();
+	double integral = 0;
+
+	while(it != particles.end()){
+		Particle* particle = *it;
+		++it;
+		particle->setLocalMomentum(Ux, Uy);
+		integral += particle->getLocalVY()*particle->weight/getFreeTime(particle);
+	}
+
+	return integral;
+}
+
 
 	
 
