@@ -50,6 +50,7 @@ public:
 	int currentShockWavePoint;
 
 	int freeTimeEvaluationType;
+	int averageVelocityEvaluationType;
 
 	Particle* Particles;
 	SpaceBin*** bins;

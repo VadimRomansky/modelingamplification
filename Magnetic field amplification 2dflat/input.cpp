@@ -26,6 +26,7 @@ Simulation* readInput(){
 		fscanf(infile,"%d",&simulation->ygridNumber);
 		fscanf(infile,"%d",&simulation->shockWaveIndex);
 		fscanf(infile,"%d",&simulation->freeTimeEvaluationType);
+		fscanf(infile,"%d",&simulation->averageVelocityEvaluationType);
 		fclose(infile);
 		return simulation;
 	} else {
