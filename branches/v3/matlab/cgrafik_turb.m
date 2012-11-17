@@ -1,0 +1,11 @@
+clear;
+load tamc_turb_FEB.dat;
+load tamc_turb_zero.dat;
+load tamc_turb_down.dat;
+N=20;
+figure(1);
+plot (tamc_turb_FEB(1:N,1),tamc_turb_FEB(1:N,2),'blue',tamc_turb_zero(1:N,1),tamc_turb_zero(1:N,2),'red',tamc_turb_down(1:N,1),tamc_turb_down(1:N,2),'green');
+title ('spectral density');
+xlabel ('k');
+ylabel ('W(k)');
+grid ;
