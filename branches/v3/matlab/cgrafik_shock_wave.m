@@ -1,7 +1,7 @@
 clear;
 load tamc_shock_wave.dat;
 N1=1;
-N2=50;
+N2=200;
 figure(1);
 plot (tamc_shock_wave(1:N2,1),tamc_shock_wave(1:N2,2),'blue');
 title ('shock wawe r');

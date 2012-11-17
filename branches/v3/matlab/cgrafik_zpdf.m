@@ -9,7 +9,7 @@ load zpdf7.dat;
 load zpdf8.dat;
 load zpdf9.dat;
 load zpdf0.dat;
-N=size(zpdf1,1);
+N=size(zpdf0,1);
 
 figure(1);
 plot (zpdf0(1:N,1),zpdf0(1:N,2),'blue',zpdf0(1:N,1),zpdf0(1:N,3),'red');
