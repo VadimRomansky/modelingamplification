@@ -437,7 +437,7 @@ Particle* Simulation::getAnyParticle(){
 }
 
 void Simulation::collectAverageVelocity(){
-	double* weights = new double[rgridNumber];
+	/*double* weights = new double[rgridNumber];
 	int* count = new int[rgridNumber];
 	for(int i = 0; i < rgridNumber; ++i){
 		weights[i] = 0;
@@ -490,7 +490,33 @@ void Simulation::collectAverageVelocity(){
 	}
 
 	delete[] weights;
-	delete[] count;
+	delete[] count;*/
+
+	double* newDensity = new double[rgridNumber];
+	double* newVelocity = new double[rgridNumber];
+	double* newPressure = new double[rgridNumber];
+
+	newDensity[0] = bins[0][0][0]->density + defaultTimeStep*(-(bins[1][0][0]->r*bins[1][0][0]->U*bins[1][0][0]->density - bins[0][0][0]->r*bins[0][0][0]->U*bins[0][0][0]->density)/(bins[0][0][0]->r*bins[0][0][0]->r*deltaR));
+	newVelocity[0] = bins[0][0][0]->U + defaultTimeStep*(-bins[0][0][0]->U*((bins[1][0][0]->U - bins[0][0][0]->U)/deltaR) - (1/bins[0][0][0]->density)*((bins[1][0][0]->pressure - bins[0][0][0]->pressure)/deltaR));
+	newPressure[0] = bins[0][0][0]->pressure + defaultTimeStep*(-bins[0][0][0]->U*((bins[1][0][0]->pressure - bins[0][0][0]->pressure)/deltaR) - (gamma*bins[0][0][0]->pressure/(bins[0][0][0]->r*bins[0][0][0]->r))*((bins[1][0][0]->r*bins[1][0][0]->r*bins[1][0][0]->U - bins[0][0][0]->r*bins[0][0][0]->r*bins[0][0][0]->U)/deltaR));
+	for(int i = 1; i < rgridNumber - 1; ++i){
+		newDensity[i] = bins[i][0][0]->density + defaultTimeStep*(-(bins[i+1][0][0]->r*bins[i+1][0][0]->U*bins[i+1][0][0]->density - bins[i][0][0]->r*bins[i][0][0]->U*bins[i][0][0]->density)/(bins[i][0][0]->r*bins[i][0][0]->r*deltaR));
+		newVelocity[i] = bins[i][0][0]->U + defaultTimeStep*(-bins[i][0][0]->U*((bins[i+1][0][0]->U - bins[i][0][0]->U)/deltaR) - (1/bins[i][0][0]->density)*((bins[i+1][0][0]->pressure - bins[i][0][0]->pressure)/deltaR));
+		newPressure[i] = bins[i][0][0]->pressure + defaultTimeStep*(-bins[i][0][0]->U*((bins[i+1][0][0]->pressure - bins[i][0][0]->pressure)/deltaR) - (gamma*bins[i][0][0]->pressure/(bins[i][0][0]->r*bins[i][0][0]->r))*((bins[i+1][0][0]->r*bins[i+1][0][0]->r*bins[i+1][0][0]->U - bins[i][0][0]->r*bins[i][0][0]->r*bins[i][0][0]->U)/deltaR));
+	}
+	newDensity[rgridNumber] = bins[rgridNumber][0][0]->density + defaultTimeStep*(-(bins[rgridNumber][0][0]->r*bins[rgridNumber][0][0]->U*bins[rgridNumber][0][0]->density - bins[rgridNumber-1][0][0]->r*bins[rgridNumber-1][0][0]->U*bins[rgridNumber-1][0][0]->density)/(bins[rgridNumber][0][0]->r*bins[rgridNumber][0][0]->r*deltaR));
+	newVelocity[rgridNumber] = bins[rgridNumber][0][0]->U + defaultTimeStep*(-bins[rgridNumber][0][0]->U*((bins[rgridNumber][0][0]->U - bins[rgridNumber-1][0][0]->U)/deltaR) - (1/bins[rgridNumber][0][0]->density)*((bins[rgridNumber][0][0]->pressure - bins[rgridNumber-1][0][0]->pressure)/deltaR));
+	newPressure[rgridNumber] = bins[rgridNumber][0][0]->pressure + defaultTimeStep*(-bins[rgridNumber][0][0]->U*((bins[rgridNumber][0][0]->pressure - bins[rgridNumber-1][0][0]->pressure)/deltaR) - (gamma*bins[rgridNumber][0][0]->pressure/(bins[rgridNumber][0][0]->r*bins[rgridNumber][0][0]->r))*((bins[rgridNumber][0][0]->r*bins[rgridNumber][0][0]->r*bins[rgridNumber][0][0]->U - bins[rgridNumber-1][0][0]->r*bins[rgridNumber-1][0][0]->r*bins[rgridNumber-1][0][0]->U)/deltaR));
+
+	for(int i = 0; i < rgridNumber; ++i){
+		bins[i][0][0]->density = newDensity[i];
+		bins[i][0][0]->U = newVelocity[i];
+		bins[i][0][0]->pressure = newPressure[i];
+	}
+
+	delete[] newDensity;
+	delete[] newVelocity;
+	delete[] newPressure;
 }
 
 void Simulation::sortParticlesIntoBins(){

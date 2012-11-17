@@ -1,7 +1,7 @@
 clear;
 load tamc_radial_profile.dat;
 N1=1;
-N2=250;
+N2=1000;
 N3=6;
 e = size(tamc_radial_profile,1)/N2 - 1;
 d = fix(3*e/4);
@@ -81,4 +81,10 @@ plot (crflux(1:N2,1),crflux(1:N2,2),'cyan',crflux(1:N2,1),crflux(1:N2,3),'green'
 title ('cosmic ray flux');
 xlabel ('r cm');
 ylabel ('j A/cm^2');
+grid ;
+figure(6);
+plot (vel(1:N2,1),vel(1:N2,2) - avervel(1:N2,2),'cyan',vel(1:N2,1),vel(1:N2,3) - avervel(1:N2,3),'green',vel(1:N2,1),vel(1:N2,4) - avervel(1:N2,4),'blue',vel(1:N2,1),vel(1:N2,5) - avervel(1:N2,5),'black',vel(1:N2,1),vel(1:N2,6) - avervel(1:N2,6),'yellow',vel(1:N2,1),vel(1:N2,7) - avervel(1:N2,7),'red');
+title ('delta u(x)');
+xlabel ('r cm');
+ylabel ('U cm/s');
 grid ;

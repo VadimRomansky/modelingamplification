@@ -717,7 +717,7 @@ double SpaceBin::evaluateCrymskyIntegralX(){
 		Particle* particle = *it;
 		++it;
 		particle->setLocalMomentum(Ux, Uy);
-		integral += particle->getLocalVX()*particle->weight/getFreeTime(particle);
+		integral += particle->localMomentumX*particle->weight/getFreeTime(particle);
 	}
 
 	return integral;
@@ -731,7 +731,7 @@ double SpaceBin::evaluateCrymskyIntegralY(){
 		Particle* particle = *it;
 		++it;
 		particle->setLocalMomentum(Ux, Uy);
-		integral += particle->getLocalVY()*particle->weight/getFreeTime(particle);
+		integral += particle->localMomentumY*particle->weight/getFreeTime(particle);
 	}
 
 	return integral;

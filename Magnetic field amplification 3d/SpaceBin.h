@@ -31,6 +31,7 @@ public:
 	double density;
 	double volume;
 	double temperature;
+	double pressure;
 	double B;
 	double B0;
 	double W;

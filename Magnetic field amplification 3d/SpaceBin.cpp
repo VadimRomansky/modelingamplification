@@ -36,6 +36,8 @@ SpaceBin::SpaceBin(double R, double Theta, double Phi, double deltar, double del
 	density = rho;
 	temperature = t;
 
+	pressure = density*kBoltzman*temperature/(massProton);
+
 	B0 = b;
 
 	numberR = i;
