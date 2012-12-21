@@ -97,6 +97,7 @@ public:
 	void updateEnergy();
 	void updateShockWavePoint();
 	void updateCosmicRayBoundMomentum();
+	void evaluateHydrodynamic(double* newDensity, double* newVelocity, double* newPressure);
 private:
 	static const int particleMultiply = 20;
 };

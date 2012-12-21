@@ -13,10 +13,6 @@ Simulation::Simulation(){
 	kolmogorovCascading = true;
 	resonantInstability = true;
 	bellInstability = true;
-	alpha = 1;
-	beta = 1;
-	gamma = 1;
-	delta = 1;
 	epsilonR = 0.1;
 	A = 1;
 	Z = 1;
@@ -437,7 +433,7 @@ Particle* Simulation::getAnyParticle(){
 }
 
 void Simulation::collectAverageVelocity(){
-	double* weights = new double[rgridNumber];
+	/*double* weights = new double[rgridNumber];
 	int* count = new int[rgridNumber];
 	for(int i = 0; i < rgridNumber; ++i){
 		weights[i] = 0;
@@ -490,7 +486,27 @@ void Simulation::collectAverageVelocity(){
 	}
 
 	delete[] weights;
-	delete[] count;
+	delete[] count;*/
+	double* newVelocity = new double[rgridNumber];
+	double* newDensity = new double[rgridNumber];
+	double* newPressure = new double[rgridNumber];
+
+	evaluateHydrodynamic(newDensity, newVelocity, newPressure);
+
+	for(int i = 0; i < rgridNumber; ++i){
+		bins[i][0][0]->U = newVelocity[i];
+		if(newDensity[i] < 0){
+			bins[i][0][0] = 0;
+			printf("density < 0\n");
+		} else {
+			bins[i][0][0]->density = newDensity[i];
+		}
+		bins[i][0][0]->pressure = newPressure[i];
+	}
+
+	delete[] newVelocity;
+	delete[] newDensity;
+	delete[] newPressure;
 }
 
 void Simulation::sortParticlesIntoBins(){
@@ -626,4 +642,20 @@ void Simulation::updateShockWavePoint(){
 			currentShockWavePoint = secondShockWavePoint;
 		}
 	}
+}
+
+void Simulation::evaluateHydrodynamic(double* newDensity, double* newVelocity, double* newPressure){
+	newDensity[0] = bins[0][0][0]->density - defaultTimeStep*((bins[1][0][0]->r*bins[1][0][0]->r*bins[1][0][0]->U*bins[1][0][0]->density - bins[0][0][0]->r*bins[0][0][0]->r*bins[0][0][0]->U*bins[0][0][0]->density)/(bins[0][0][0]->r*bins[0][0][0]->r*deltaR));
+	newVelocity[0] = bins[0][0][0]->U - defaultTimeStep*(bins[0][0][0]->U*(bins[1][0][0]->U - bins[1][0][0]->U)/(deltaR) + (bins[1][0][0]->pressure - bins[0][0][0]->pressure)/(deltaR*bins[0][0][0]->density));
+	newPressure[0] = bins[0][0][0]->pressure - defaultTimeStep*(bins[0][0][0]->U*(bins[1][0][0]->pressure-bins[0][0][0]->pressure)/(deltaR) + gamma*bins[0][0][0]->pressure*(bins[1][0][0]->r*bins[1][0][0]->r*bins[1][0][0]->U-bins[0][0][0]->r*bins[0][0][0]->r*bins[0][0][0]->U)/(bins[0][0][0]->r*bins[0][0][0]->r*deltaR));
+
+	for(int i = 1; i < rgridNumber - 1; ++i){
+		newDensity[i] = bins[i][0][0]->density - defaultTimeStep*((bins[i+1][0][0]->r*bins[i+1][0][0]->r*bins[i+1][0][0]->U*bins[i+1][0][0]->density - bins[i-1][0][0]->r*bins[i-1][0][0]->r*bins[i-1][0][0]->U*bins[i-1][0][0]->density)/(2*bins[i][0][0]->r*bins[i][0][0]->r*deltaR));
+		newVelocity[i] = bins[i][0][0]->U - defaultTimeStep*(bins[i][0][0]->U*(bins[i+1][0][0]->U - bins[i-1][0][0]->U)/(2*deltaR) + (bins[i+1][0][0]->pressure - bins[i-1][0][0]->pressure)/(2*deltaR*bins[i][0][0]->density));
+		newPressure[i] = bins[i][0][0]->pressure - defaultTimeStep*(bins[i][0][0]->U*(bins[i+1][0][0]->pressure-bins[i-1][0][0]->pressure)/(2*deltaR) + gamma*bins[i][0][0]->pressure*(bins[i+1][0][0]->r*bins[i+1][0][0]->r*bins[i+1][0][0]->U-bins[i-1][0][0]->r*bins[i-1][0][0]->r*bins[i-1][0][0]->U)/(2*bins[i][0][0]->r*bins[i][0][0]->r*deltaR));
+	}
+
+	newDensity[rgridNumber-1] = bins[rgridNumber-1][0][0]->density - defaultTimeStep*((bins[rgridNumber-1][0][0]->r*bins[rgridNumber-1][0][0]->r*bins[rgridNumber-1][0][0]->U*bins[rgridNumber-1][0][0]->density - bins[rgridNumber-2][0][0]->r*bins[rgridNumber-2][0][0]->r*bins[rgridNumber-2][0][0]->U*bins[rgridNumber-2][0][0]->density)/(bins[rgridNumber-1][0][0]->r*bins[rgridNumber-1][0][0]->r*deltaR));
+	newVelocity[rgridNumber-1] = bins[rgridNumber-1][0][0]->U - defaultTimeStep*(bins[rgridNumber-1][0][0]->U*(bins[rgridNumber-1][0][0]->U - bins[rgridNumber-2][0][0]->U)/(deltaR) + (bins[rgridNumber-1][0][0]->pressure - bins[rgridNumber-2][0][0]->pressure)/(deltaR*bins[rgridNumber-1][0][0]->density));
+	newPressure[rgridNumber-1] = bins[rgridNumber-1][0][0]->pressure - defaultTimeStep*(bins[rgridNumber-1][0][0]->U*(bins[rgridNumber-1][0][0]->pressure-bins[rgridNumber-2][0][0]->pressure)/(deltaR) + gamma*bins[rgridNumber-1][0][0]->pressure*(bins[rgridNumber-1][0][0]->r*bins[rgridNumber-1][0][0]->r*bins[rgridNumber-1][0][0]->U-bins[rgridNumber-2][0][0]->r*bins[rgridNumber-2][0][0]->r*bins[rgridNumber-2][0][0]->U)/(bins[rgridNumber-1][0][0]->r*bins[rgridNumber-1][0][0]->r*deltaR));
 }
