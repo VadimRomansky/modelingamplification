@@ -4,6 +4,7 @@
 #include "particle.h"
 #include "output.h"
 #include "util.h"
+#include "constants.h"
 #include <omp.h>
 //#include <Windows.h>
 
@@ -13,10 +14,6 @@ Simulation::Simulation(){
 	kolmogorovCascading = true;
 	resonantInstability = true;
 	bellInstability = true;
-	alpha = 1;
-	beta = 1;
-	gamma = 1;
-	delta = 1;
 	epsilonR = 0.1;
 	A = 1;
 	Z = 1;

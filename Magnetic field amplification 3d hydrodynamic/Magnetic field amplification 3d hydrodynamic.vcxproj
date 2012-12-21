@@ -11,7 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{44A03627-10EB-44DF-9318-24A73EE82C2E}</ProjectGuid>
+    <ProjectGuid>{E9F20A95-4996-4802-B34C-4C86A403FE5B}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>Magneticfieldamplification3d</RootNamespace>
   </PropertyGroup>
