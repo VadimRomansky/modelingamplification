@@ -11,6 +11,7 @@ const double pi = 3.1415926535897932384626433832795028841971693993751;
 const double epsilon = 1.0E-7; 
 const double gamma = 1.66666666;
 const double relativistic_gamma = 1.3333333333;
+const double delta = 0.1;
 const double maxMomentum = 5.0E-19;
 const double weight = 5;
 const int pgridNumber = 100;

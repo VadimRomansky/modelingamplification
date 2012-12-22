@@ -19,15 +19,15 @@ void output(Simulation& simulation){
 		fprintf(outProfile,"%s","\n");
 	}
 	fclose(outProfile);*/
-    SpaceBin* bin = simulation.bins[0][0][0];
+    SpaceBin* bin = simulation.bins[0];
 	simulation.updateMaxMinP(maxp,minp);
 	outputPDF(simulation.startPDF,"./output/tamc_pdf_start.dat");
 	outputPDF(bin->detectedParticlesR2,"./output/tamc_pdf_FEB.dat");
 	//outputTurbulenceSpectrum(bin->magneticField,"./output/tamc_turb_FEB.dat",simulation.minK,simulation.maxK);
-	bin = simulation.bins[simulation.shockWavePoint][0][0];
+	bin = simulation.bins[simulation.shockWavePoint];
 	outputPDF(bin->detectedParticlesR2,"./output/tamc_pdf_zero.dat");
 	//outputTurbulenceSpectrum(bin->magneticField,"./output/tamc_turb_zero.dat",simulation.minK,simulation.maxK);
-	bin = simulation.bins[simulation.rgridNumber-1][0][0];
+	bin = simulation.bins[simulation.rgridNumber-1];
 	outputPDF(bin->detectedParticlesR2,"./output/tamc_pdf_down.dat");
 	//outputTurbulenceSpectrum(bin->magneticField,"./output/tamc_turb_down.dat",simulation.minK,simulation.maxK);
 	//outputMagneticField(simulation.xbins,"./output/tamc_field.dat");
@@ -434,10 +434,10 @@ void outputTurbulenceSpectrum(double* w, const char* fileName, double minK, doub
 	fclose(outTurb);
 }
 
-void outputMagneticField(SpaceBin**** bins, const char* fileName, int rgridNumber){
+void outputMagneticField(SpaceBin** bins, const char* fileName, int rgridNumber){
 	FILE* outField = fopen(fileName,"w");
 	for(int i = 0; i < rgridNumber; ++i){
-		fprintf(outField,"%lf %lf\n", (bins[i][0][0]->r2+bins[i][0][0]->r1)/2,bins[i][0][0]->B);
+		fprintf(outField,"%lf %lf\n", (bins[i]->r2+bins[i]->r1)/2,bins[i]->B);
 	}
 	fclose(outField);
 }
@@ -487,45 +487,17 @@ void outputParticlePath(std::list<Particle*>& list,const char* cosmicRayFileName
 	fclose(file2);*/
 }
 
-void outputRadialProfile(SpaceBin**** bins, int thetaNumber, int phiNumber, FILE* outProfile, const int rgridNumber){
+void outputRadialProfile(SpaceBin** bins, int thetaNumber, int phiNumber, FILE* outProfile, const int rgridNumber){
 	//FILE* outPDF = fopen("tamc_pdf.dat","w");
 	//double massFlux0 = simulation.xbins[0]->massFlux;
 	//double momentaFlux0 = simulation.xbins[0]->momentaFlux;
 	//double energyFlux0 = simulation.xbins[0]->energyFlux;
 	for(int i = 0; i < rgridNumber; ++i){
-		SpaceBin* bin = bins[i][thetaNumber][phiNumber];
+		SpaceBin* bin = bins[i];
 		fprintf(outProfile, "%lf %lf %lf %lf %lf %lf",bin->r, bin->U, bin->averageVelocity, 100000*bin->density, bin->temperature, bin->crFlux);
 		fprintf(outProfile,"%s","\n");
 	}
 	//fclose(outProfile);
-}
-
-void outputThetaProfile(SpaceBin**** bins, int rNumber, int phiNumber){
-	FILE* outProfile = fopen("./output/tamc_grid_theta.dat","w");
-	//FILE* outPDF = fopen("tamc_pdf.dat","w");
-	//double massFlux0 = simulation.xbins[0]->massFlux;
-	//double momentaFlux0 = simulation.xbins[0]->momentaFlux;
-	//double energyFlux0 = simulation.xbins[0]->energyFlux;
-	for(int i = 0; i < thetagridNumber; ++i){
-		SpaceBin* bin = bins[rNumber][i][phiNumber];
-		fprintf(outProfile, "%lf %lf %lf %lf",bin->theta, bin->U, bin->density, bin->temperature);
-		fprintf(outProfile,"%s","\n");
-	}
-	fclose(outProfile);
-}
-
-void outputPhiProfile(SpaceBin**** bins, int rNumber, int thetaNumber){
-	FILE* outProfile = fopen("./output/tamc_grid_phi.dat","w");
-	//FILE* outPDF = fopen("tamc_pdf.dat","w");
-	//double massFlux0 = simulation.xbins[0]->massFlux;
-	//double momentaFlux0 = simulation.xbins[0]->momentaFlux;
-	//double energyFlux0 = simulation.xbins[0]->energyFlux;
-	for(int i = 0; i < phigridNumber; ++i){
-		SpaceBin* bin = bins[rNumber][thetaNumber][i];
-		fprintf(outProfile, "%lf %lf %lf %lf",bin->phi, bin->U, bin->density, bin->temperature);
-		fprintf(outProfile,"%s","\n");
-	}
-	fclose(outProfile);
 }
 
 void outputShockWave(std::list<double> points, std::list<double> velocity){
