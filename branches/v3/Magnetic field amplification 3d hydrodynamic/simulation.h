@@ -58,7 +58,7 @@ public:
 	int currentShockWavePoint;
 
 	Particle* Particles;
-	SpaceBin**** bins;
+	SpaceBin** bins;
 	double** pressureSpectralDensity;
 	std::list <Particle*> startPDF;
 	std::vector<Particle*> introducedParticles;
@@ -98,6 +98,7 @@ public:
 	void updateShockWavePoint();
 	void updateCosmicRayBoundMomentum();
 	void evaluateHydrodynamic(double* newDensity, double* newVelocity, double* newPressure);
+	double getQ(int i);
 private:
 	static const int particleMultiply = 20;
 };

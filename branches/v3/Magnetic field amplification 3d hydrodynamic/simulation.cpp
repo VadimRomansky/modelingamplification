@@ -56,14 +56,14 @@ void Simulation::initializeProfile(){
 	double R = upstreamR + deltaR/2;
 	double Theta = deltaTheta/2;
 	double Phi = deltaPhi/2;
-	bins = new SpaceBin***[rgridNumber];
+	bins = new SpaceBin*[rgridNumber];
     for(int i = 0; i < rgridNumber; ++i){
-		bins[i] = new SpaceBin**[thetagridNumber];
+		//bins[i] = new SpaceBin**[thetagridNumber];
 		Theta = deltaTheta/2;
-		for(int j = 0; j < thetagridNumber; ++j){
-			bins[i][j] = new SpaceBin*[phigridNumber];
+		//for(int j = 0; j < thetagridNumber; ++j){
+			//bins[i][j] = new SpaceBin*[phigridNumber];
 			Phi = deltaPhi/2;
-			for(int k = 0; k < phigridNumber; ++k){
+			//for(int k = 0; k < phigridNumber; ++k){
 				double density = density0;
 				double u;
 				if(i < shockWavePoint){
@@ -76,11 +76,11 @@ void Simulation::initializeProfile(){
 					//density = density0*sqr((upstreamR + deltaR/2)/R)/Rtot;
 				}
 				//u = U0;
-				bins[i][j][k] = new SpaceBin(R,Theta,Phi,deltaR,deltaTheta,deltaPhi,u,density,Theta,Phi,temperature,B0,i,j,k,smallAngleScattering);
-				Phi = Phi + deltaPhi;
-			}
-			Theta = Theta + deltaTheta;
-		}
+				bins[i] = new SpaceBin(R,Theta,Phi,deltaR,deltaTheta,deltaPhi,u,density,Theta,Phi,temperature,B0,i,0,0,smallAngleScattering);
+				//Phi = Phi + deltaPhi;
+			//}
+			//Theta = Theta + deltaTheta;
+		//}
 		R = R + deltaR;
 	}
 	/*for(int j = 0; j < xgridNumber; ++j){
@@ -120,7 +120,7 @@ void Simulation::simulate(){
 			}
 			#pragma omp parallel for private(it) shared(l)
 			for(it = 0; it < introducedParticles.size(); ++it){
-				Particle* particle = introducedParticles[it];
+				/*Particle* particle = introducedParticles[it];
 				//printf("%d %s",l,"\n");
 				++l;
 				bool side = false;
@@ -155,7 +155,7 @@ void Simulation::simulate(){
 						break;
 					}
 				}
-				delete[] index;
+				delete[] index;*/
 			}
 			/*printf("%s", "Fluxes updating\n");
 			for (int i = 0; i < rgridNumber; ++i){
@@ -196,7 +196,7 @@ void Simulation::simulate(){
 				outputEnergyPDF(introducedParticles,"./output/tamc_energy_pdf.dat");
 				outIteration = fopen("./output/tamc_iteration.dat","a");
 				radialFile = fopen("./output/tamc_radial_profile.dat","a");
-				fprintf(outIteration,"%d %lf %lf %lf %lf %lf %lf %lf %lf %d %lf %lf\n",itNumber, energy, theorEnergy, momentumZ, theorMomentumZ, momentumX, theorMomentumX, momentumY, theorMomentumY, introducedParticles.size(), particlesWeight, bins[currentShockWavePoint][0][0]->r);
+				fprintf(outIteration,"%d %lf %lf %lf %lf %lf %lf %lf %lf %d %lf %lf\n",itNumber, energy, theorEnergy, momentumZ, theorMomentumZ, momentumX, theorMomentumX, momentumY, theorMomentumY, introducedParticles.size(), particlesWeight, bins[currentShockWavePoint]->r);
 				fclose(outIteration);
 				outputRadialProfile(bins,0,0,radialFile, rgridNumber);
 				//outputShockWave(shockWavePoints, shockWaveVelocity);
@@ -221,17 +221,17 @@ void Simulation::resetProfile(){
 			double massFlux1 = 0;
 			double momentaFlux1 = 0;
 			if(i > 0){
-				massFlux1 = bins[i - 1][0][0]->particleMassFlux.fluxR2;
-				momentaFlux1 = bins[i - 1][0][0]->particleMomentaFlux.fluxR2;
+				massFlux1 = bins[i - 1]->particleMassFlux.fluxR2;
+				momentaFlux1 = bins[i - 1]->particleMomentaFlux.fluxR2;
 			}
 			double massFlux2 = 0;
 			double momentaFlux2 = 0;
 			if ( i < rgridNumber - 1){
-				massFlux2 = bins[i + 1][0][0]->particleMassFlux.fluxR1;
-				momentaFlux2 = bins[i + 1][0][0]->particleMomentaFlux.fluxR1;
+				massFlux2 = bins[i + 1]->particleMassFlux.fluxR1;
+				momentaFlux2 = bins[i + 1]->particleMomentaFlux.fluxR1;
 			}
-			double deltaM = massFlux2 + massFlux1 - bins[i][0][0]->particleMassFlux.fluxR1 - bins[i][0][0]->particleMassFlux.fluxR2;
-			double deltaP = momentaFlux2 + momentaFlux1 - bins[i][0][0]->particleMomentaFlux.fluxR1 - bins[i][0][0]->particleMomentaFlux.fluxR2;
+			double deltaM = massFlux2 + massFlux1 - bins[i]->particleMassFlux.fluxR1 - bins[i]->particleMassFlux.fluxR2;
+			double deltaP = momentaFlux2 + momentaFlux1 - bins[i]->particleMomentaFlux.fluxR1 - bins[i]->particleMomentaFlux.fluxR2;
 			//TODO знак U!
 			/*double p = bins[i][0][0]->density*bins[i][0][0]->volume*bins[i][0][0]->U/(sqrt(1 - sqr(bins[i][0][0]->U/speed_of_light)));
 			p = p + deltaP;
@@ -239,7 +239,7 @@ void Simulation::resetProfile(){
 				printf("deltaP > p\n");
 			}
 			double m = bins[i][0][0]->density*bins[i][0][0]->volume;*/
-			bins[i][0][0]->density += deltaM/(bins[i][0][0]->volume);
+			bins[i]->density += deltaM/(bins[i]->volume);
 		}
 	}
 }
@@ -247,15 +247,11 @@ void Simulation::resetProfile(){
 ////обнуляет счётчики зарегистрированных частиц
 void Simulation::resetDetectors(){
 	for(int i = 0; i < rgridNumber; ++i){
-		for(int j = 0; j < thetagridNumber; ++j){
-			for(int k = 0; k < phigridNumber; ++k){
-				SpaceBin* bin = bins[i][j][k];
+				SpaceBin* bin = bins[i];
 				bin->resetDetectors();			
 		/*if(i >= zeroPoint){
 			bin->density = density0*Rtot;
 		}*/
-			}
-		}	
 	}
 }
 
@@ -313,7 +309,7 @@ double Simulation::derivativeFieldK(double* field,int j){
 
 
 void Simulation::updateMaxMinP(double& minP, double& maxP){
-	maxP =bins[0][0][0]->getMaxP();
+	maxP =bins[0]->getMaxP();
 	Particle* particle = getAnyParticle();
 	if(particle == NULL){
 		minP = 1;
@@ -321,19 +317,15 @@ void Simulation::updateMaxMinP(double& minP, double& maxP){
 		minP = particle->absoluteMomentum;
 	}
 	for(int i = 0; i < rgridNumber; ++i){
-		for(int j = 0; j < thetagridNumber; ++j){
-			for(int k = 0; k < phigridNumber; ++k){
-				if(maxP < bins[i][j][k]->getMaxP()){
-					maxP = bins[i][j][k]->getMaxP();
+				if(maxP < bins[i]->getMaxP()){
+					maxP = bins[i]->getMaxP();
 					if(minP == 0){
 						minP = maxP;
 					}
 				}
-				if(minP > bins[i][j][k]->getMinP()){
-					minP = bins[i][j][k]->getMinP();
+				if(minP > bins[i]->getMinP()){
+					minP = bins[i]->getMinP();
 				}
-			}
-		}
 	}
 	/*std::list <Particle> ::iterator it = xbins[0]->detectedParticlesRight.begin();
 	while(it != xbins[0]->detectedParticlesRight.end()){
@@ -365,10 +357,8 @@ std::vector <Particle*> Simulation::getParticles(){
 	int particleBinNumber = 0;
 	allParticlesNumber = 0;
 	for(int i = 0; i < rgridNumber; ++i){
-		for(int j = 0; j < thetagridNumber; ++j){
-			for(int k = 0; k < phigridNumber; ++k){
 				particleBinNumber = 0;
-				SpaceBin* bin = bins[i][j][k];
+				SpaceBin* bin = bins[i];
 				bin->initialMomentum = 0;
 				//double c2 = speed_of_light*speed_of_light;
 				for( int l = 0; l < particlesNumber; ++l){
@@ -389,8 +379,6 @@ std::vector <Particle*> Simulation::getParticles(){
 						theorMomentumY += particle->absoluteMomentum*sin(particle->absoluteMomentumTheta)*sin(particle->absoluteMomentumPhi)*particle->weight;
 					//}
 				}
-			}
-		}
 	}
 	return list;
 }
@@ -406,27 +394,19 @@ SpaceBin* Simulation::getStartBin(double theta, double phi){
 	if (phi == 2*pi){
 		k = 0;
 	}
-	return bins[0][j][k];
+	return bins[0];
 }
 
 void Simulation::multiplyParticleWeights(double v){
 	for(int i = 0; i < rgridNumber; ++i){
-		for(int j = 0; j < thetagridNumber; ++j){
-			for(int k = 0; k < phigridNumber; ++k){
-				bins[i][j][k]->multiplyParticleWeights(v);
-			}
-		}
+				bins[i]->multiplyParticleWeights(v);
 	}
 }
 
 Particle* Simulation::getAnyParticle(){
-	for(int j = 0; j < thetagridNumber; ++j){
-		for(int k = 0; k < phigridNumber; ++k){
-			if(bins[0][j][k]->detectedParticlesR2.size() > 0){
-				Particle* particle = *bins[0][j][k]->detectedParticlesR2.begin();
+	if(bins[0]->detectedParticlesR2.size() > 0){
+				Particle* particle = *bins[0]->detectedParticlesR2.begin();
 				return particle;
-			}
-		}
 	}
 	return NULL;
 
@@ -494,14 +474,14 @@ void Simulation::collectAverageVelocity(){
 	evaluateHydrodynamic(newDensity, newVelocity, newPressure);
 
 	for(int i = 0; i < rgridNumber; ++i){
-		bins[i][0][0]->U = newVelocity[i];
+		bins[i]->U = newVelocity[i];
 		if(newDensity[i] < 0){
-			bins[i][0][0] = 0;
+			bins[i]->density = epsilon;
 			printf("density < 0\n");
 		} else {
-			bins[i][0][0]->density = newDensity[i];
+			bins[i]->density = newDensity[i];
 		}
-		bins[i][0][0]->pressure = newPressure[i];
+		bins[i]->pressure = newPressure[i];
 	}
 
 	delete[] newVelocity;
@@ -511,7 +491,7 @@ void Simulation::collectAverageVelocity(){
 
 void Simulation::sortParticlesIntoBins(){
 	for(int i = 0; i < rgridNumber; ++i){
-		bins[i][0][0]->density = 0.0;
+		bins[i]->density = 0.0;
 	}
 	std::vector<Particle*>::iterator it = introducedParticles.begin();
 	while( it != introducedParticles.end()){
@@ -529,16 +509,16 @@ void Simulation::sortParticlesIntoBins(){
 		if(phi < 0){
 			phi = phi + 2*pi;
 		}
-		int* index = SpaceBin::binByCoordinates(r, theta, phi,upstreamR,deltaR,deltaTheta,deltaPhi, rgridNumber);
-		if((index[0] >= 0) && (index[0] < rgridNumber) && (index[1] >= 0) && (index[1] < thetagridNumber) && (index[2] >= 0) && (index[2] < phigridNumber)){
-			bins[index[0]][index[1]][index[2]]->particles.push_back(new Particle(*particle));
-			bins[index[0]][index[1]][index[2]]->density += particle->mass*particle->weight;
+		int index = SpaceBin::binByCoordinates(r, theta, phi,upstreamR,deltaR,deltaTheta,deltaPhi, rgridNumber);
+		if((index >= 0) && (index < rgridNumber)){
+			bins[index]->particles.push_back(new Particle(*particle));
+			//bins[index]->density += particle->mass*particle->weight;
 		}
 		++it;
 	}
-	for(int i = 0; i < rgridNumber; ++i){
-		bins[i][0][0]->density /= bins[i][0][0]->volume;
-	}
+	/*for(int i = 0; i < rgridNumber; ++i){
+		bins[i]->density /= bins[i]->volume;
+	}*/
 }
 
 void Simulation::removeEscapedParticles(){
@@ -599,15 +579,15 @@ void Simulation::updateEnergy(){
 
 void Simulation::updateCosmicRayBoundMomentum(){
 	for(int i = 0; i < rgridNumber; ++i){
-		bins[i][0][0]->updateCosmicRayBoundMomentum();
+		bins[i]->updateCosmicRayBoundMomentum();
 	}
 }
 
 void Simulation::updateShockWavePoint(){
-	double maxDensity = bins[rgridNumber - 1][0][0]->density;
+	double maxDensity = bins[rgridNumber - 1]->density;
 	for(int i = rgridNumber-1;i >=0; --i){
-		if(bins[i][0][0]->density > maxDensity){
-			maxDensity = bins[i][0][0]->density;
+		if(bins[i]->density > maxDensity){
+			maxDensity = bins[i]->density;
 			currentShockWavePoint = i;
 		}
 	}
@@ -615,8 +595,8 @@ void Simulation::updateShockWavePoint(){
 	double averageDensity = 0;
 	double fullVolume = 0;
 	for(int i = 0; i < rgridNumber; ++i){
-		fullVolume += bins[i][0][0]->volume;
-		averageDensity +=bins[i][0][0]->density*bins[i][0][0]->volume;
+		fullVolume += bins[i]->volume;
+		averageDensity +=bins[i]->density*bins[i]->volume;
 	}
 	averageDensity /= fullVolume;
 	if(maxDensity > 2*averageDensity){
@@ -624,16 +604,16 @@ void Simulation::updateShockWavePoint(){
 		int tempShockWavePoint = currentShockWavePoint;
 
 		for(int i = currentShockWavePoint + 1; i < rgridNumber; ++i){
-			if((bins[i][0][0]->density - averageDensity) < (maxDensity-averageDensity)/2){
+			if((bins[i]->density - averageDensity) < (maxDensity-averageDensity)/2){
 				tempShockWavePoint = i;
-				maxDensity = bins[i][0][0]->density;
+				maxDensity = bins[i]->density;
 				break;
 			}
 		}
 
 		for(int i = tempShockWavePoint; i < rgridNumber; ++i){
-			if(bins[i][0][0]->density > maxDensity){
-				maxDensity = bins[i][0][0]->density;
+			if(bins[i]->density > maxDensity){
+				maxDensity = bins[i]->density;
 				secondShockWavePoint = i;
 			}
 		}
@@ -645,17 +625,52 @@ void Simulation::updateShockWavePoint(){
 }
 
 void Simulation::evaluateHydrodynamic(double* newDensity, double* newVelocity, double* newPressure){
-	newDensity[0] = bins[0][0][0]->density - defaultTimeStep*((bins[1][0][0]->r*bins[1][0][0]->r*bins[1][0][0]->U*bins[1][0][0]->density - bins[0][0][0]->r*bins[0][0][0]->r*bins[0][0][0]->U*bins[0][0][0]->density)/(bins[0][0][0]->r*bins[0][0][0]->r*deltaR));
-	newVelocity[0] = bins[0][0][0]->U - defaultTimeStep*(bins[0][0][0]->U*(bins[1][0][0]->U - bins[1][0][0]->U)/(deltaR) + (bins[1][0][0]->pressure - bins[0][0][0]->pressure)/(deltaR*bins[0][0][0]->density));
-	newPressure[0] = bins[0][0][0]->pressure - defaultTimeStep*(bins[0][0][0]->U*(bins[1][0][0]->pressure-bins[0][0][0]->pressure)/(deltaR) + gamma*bins[0][0][0]->pressure*(bins[1][0][0]->r*bins[1][0][0]->r*bins[1][0][0]->U-bins[0][0][0]->r*bins[0][0][0]->r*bins[0][0][0]->U)/(bins[0][0][0]->r*bins[0][0][0]->r*deltaR));
+	double* tempVelocity = new double[rgridNumber];
+	double* tempDensity = new double[rgridNumber];
+	double* tempPressure = new double[rgridNumber];
+
+	newDensity[0] = bins[0]->density - defaultTimeStep*((bins[1]->r*bins[1]->r*bins[1]->U*bins[1]->density - bins[0]->r*bins[0]->r*bins[0]->U*bins[0]->density)/(bins[0]->r*bins[0]->r*deltaR));
+	newVelocity[0] = bins[0]->U - defaultTimeStep*(bins[0]->U*(bins[1]->U - bins[1]->U)/(deltaR) + (bins[1]->pressure - bins[0]->pressure)/(deltaR*bins[0]->density));
+	newPressure[0] = bins[0]->pressure - defaultTimeStep*(bins[0]->U*(bins[1]->pressure-bins[0]->pressure)/(deltaR) + gamma*bins[0]->pressure*(bins[1]->r*bins[1]->r*bins[1]->U-bins[0]->r*bins[0]->r*bins[0]->U)/(bins[0]->r*bins[0]->r*deltaR));
 
 	for(int i = 1; i < rgridNumber - 1; ++i){
-		newDensity[i] = bins[i][0][0]->density - defaultTimeStep*((bins[i+1][0][0]->r*bins[i+1][0][0]->r*bins[i+1][0][0]->U*bins[i+1][0][0]->density - bins[i-1][0][0]->r*bins[i-1][0][0]->r*bins[i-1][0][0]->U*bins[i-1][0][0]->density)/(2*bins[i][0][0]->r*bins[i][0][0]->r*deltaR));
-		newVelocity[i] = bins[i][0][0]->U - defaultTimeStep*(bins[i][0][0]->U*(bins[i+1][0][0]->U - bins[i-1][0][0]->U)/(2*deltaR) + (bins[i+1][0][0]->pressure - bins[i-1][0][0]->pressure)/(2*deltaR*bins[i][0][0]->density));
-		newPressure[i] = bins[i][0][0]->pressure - defaultTimeStep*(bins[i][0][0]->U*(bins[i+1][0][0]->pressure-bins[i-1][0][0]->pressure)/(2*deltaR) + gamma*bins[i][0][0]->pressure*(bins[i+1][0][0]->r*bins[i+1][0][0]->r*bins[i+1][0][0]->U-bins[i-1][0][0]->r*bins[i-1][0][0]->r*bins[i-1][0][0]->U)/(2*bins[i][0][0]->r*bins[i][0][0]->r*deltaR));
+		newDensity[i] = bins[i]->density - defaultTimeStep*((bins[i]->r*bins[i]->r*bins[i]->U*bins[i]->density - bins[i-1]->r*bins[i-1]->r*bins[i-1]->U*bins[i-1]->density)/(bins[i]->r*bins[i]->r*deltaR));
+		newVelocity[i] = bins[i]->U - defaultTimeStep*((bins[i]->U + bins[i-1]->U)*(bins[i]->U - bins[i-1]->U)/(2*deltaR) + (bins[i]->pressure - bins[i-1]->pressure)/(bins[i]->density*deltaR));
+		newPressure[i] = bins[i]->pressure - defaultTimeStep*(bins[i]->U*(bins[i]->pressure - bins[i-1]->pressure)/deltaR + gamma*bins[i]->pressure*(bins[i]->r*bins[i]->r*bins[i]->U - bins[i-1]->r*bins[i-1]->r*bins[i-1]->U)/(bins[i]->r*bins[i]->r*deltaR));
+		/*newDensity[i] = bins[i][0][0]->density - defaultTimeStep*(bins[i+1][0][0]->r*bins[i+1][0][0]->r*bins[i+1][0][0]->U*bins[i+1][0][0]->density - bins[i-1][0][0]->r*bins[i-1][0][0]->r*bins[i-1][0][0]->U*bins[i-1][0][0]->density - getQ(i)*(bins[i+1][0][0]->r*bins[i+1][0][0]->r*bins[i+1][0][0]->density-bins[i][0][0]->r*bins[i][0][0]->r*bins[i][0][0]->density) + getQ(i-1)*(bins[i][0][0]->r*bins[i][0][0]->r*bins[i][0][0]->density - bins[i-1][0][0]->r*bins[i-1][0][0]->r*bins[i-1][0][0]->density))/(bins[i][0][0]->r*bins[i][0][0]->r*deltaR);
+		newVelocity[i] = bins[i][0][0]->U - defaultTimeStep*(bins[i][0][0]->U*(bins[i+1][0][0]->U - bins[i-1][0][0]->U)/(deltaR) + (bins[i+1][0][0]->pressure - bins[i-1][0][0]->pressure - getQ(i)*(bins[i+1][0][0]->U*bins[i+1][0][0]->density - bins[i][0][0]->U*bins[i][0][0]->density) + getQ(i-1)*(bins[i][0][0]->U*bins[i][0][0]->density - bins[i-1][0][0]->U*bins[i-1][0][0]->density))/(bins[i][0][0]->density*deltaR));
+		newPressure[i] = bins[i][0][0]->pressure - defaultTimeStep*((bins[i+1][0][0]->pressure - bins[i-1][0][0]->pressure)/deltaR + gamma*bins[i][0][0]->pressure*(bins[i+1][0][0]->r*bins[i+1][0][0]->r*bins[i+1][0][0]->U - bins[i-1][0][0]->r*bins[i-1][0][0]->r*bins[i-1][0][0]->U - getQ(i)*(bins[i+1][0][0]->r*bins[i+1][0][0]->r - bins[i][0][0]->r*bins[i][0][0]->r) + getQ(i-1)*(bins[i][0][0]->r*bins[i][0][0]->r - bins[i-1][0][0]->r*bins[i-1][0][0]->r))/(bins[i][0][0]->r*bins[i][0][0]->r*deltaR));*/
 	}
 
-	newDensity[rgridNumber-1] = bins[rgridNumber-1][0][0]->density - defaultTimeStep*((bins[rgridNumber-1][0][0]->r*bins[rgridNumber-1][0][0]->r*bins[rgridNumber-1][0][0]->U*bins[rgridNumber-1][0][0]->density - bins[rgridNumber-2][0][0]->r*bins[rgridNumber-2][0][0]->r*bins[rgridNumber-2][0][0]->U*bins[rgridNumber-2][0][0]->density)/(bins[rgridNumber-1][0][0]->r*bins[rgridNumber-1][0][0]->r*deltaR));
-	newVelocity[rgridNumber-1] = bins[rgridNumber-1][0][0]->U - defaultTimeStep*(bins[rgridNumber-1][0][0]->U*(bins[rgridNumber-1][0][0]->U - bins[rgridNumber-2][0][0]->U)/(deltaR) + (bins[rgridNumber-1][0][0]->pressure - bins[rgridNumber-2][0][0]->pressure)/(deltaR*bins[rgridNumber-1][0][0]->density));
-	newPressure[rgridNumber-1] = bins[rgridNumber-1][0][0]->pressure - defaultTimeStep*(bins[rgridNumber-1][0][0]->U*(bins[rgridNumber-1][0][0]->pressure-bins[rgridNumber-2][0][0]->pressure)/(deltaR) + gamma*bins[rgridNumber-1][0][0]->pressure*(bins[rgridNumber-1][0][0]->r*bins[rgridNumber-1][0][0]->r*bins[rgridNumber-1][0][0]->U-bins[rgridNumber-2][0][0]->r*bins[rgridNumber-2][0][0]->r*bins[rgridNumber-2][0][0]->U)/(bins[rgridNumber-1][0][0]->r*bins[rgridNumber-1][0][0]->r*deltaR));
+	newDensity[rgridNumber-1] = bins[rgridNumber-1]->density - 0.5*defaultTimeStep*((bins[rgridNumber-1]->r*bins[rgridNumber-1]->r*bins[rgridNumber-1]->U*bins[rgridNumber-1]->density - bins[rgridNumber-2]->r*bins[rgridNumber-2]->r*bins[rgridNumber-2]->U*bins[rgridNumber-2]->density)/(bins[rgridNumber-1]->r*bins[rgridNumber-1]->r*deltaR));
+	newVelocity[rgridNumber-1] = bins[rgridNumber-1]->U - 0.5*defaultTimeStep*(bins[rgridNumber-1]->U*(bins[rgridNumber-1]->U - bins[rgridNumber-2]->U)/(deltaR) + (bins[rgridNumber-1]->pressure - bins[rgridNumber-2]->pressure)/(deltaR*bins[rgridNumber-1]->density));
+	newPressure[rgridNumber-1] = bins[rgridNumber-1]->pressure - 0.5*defaultTimeStep*(bins[rgridNumber-1]->U*(bins[rgridNumber-1]->pressure-bins[rgridNumber-2]->pressure)/(deltaR) + gamma*bins[rgridNumber-1]->pressure*(bins[rgridNumber-1]->r*bins[rgridNumber-1]->r*bins[rgridNumber-1]->U-bins[rgridNumber-2]->r*bins[rgridNumber-2]->r*bins[rgridNumber-2]->U)/(bins[rgridNumber-1]->r*bins[rgridNumber-1]->r*deltaR));
+
+	/*newDensity[0] = bins[0][0][0]->density - defaultTimeStep*((bins[1][0][0]->r*bins[1][0][0]->r*tempVelocity[1]*tempDensity[1] - bins[0][0][0]->r*bins[0][0][0]->r*tempVelocity[0]*tempDensity[0])/(bins[0][0][0]->r*bins[0][0][0]->r*deltaR));
+	newVelocity[0] = bins[0][0][0]->U - defaultTimeStep*(tempVelocity[0]*(tempVelocity[1] - tempVelocity[0])/(deltaR) + (tempPressure[1] - tempPressure[0])/(deltaR*tempDensity[0]));
+	newPressure[0] = bins[0][0][0]->pressure - defaultTimeStep*(tempVelocity[0]*(tempPressure[1] - tempPressure[0])/(deltaR) + gamma*tempPressure[0]*(bins[1][0][0]->r*bins[1][0][0]->r*tempVelocity[1] - bins[0][0][0]->r*bins[0][0][0]->r*tempVelocity[0])/(bins[0][0][0]->r*bins[0][0][0]->r*deltaR));
+
+	for(int i = 1; i < rgridNumber - 1; ++i){
+		newDensity[i] = bins[i][0][0]->density - defaultTimeStep*((bins[i+1][0][0]->r*bins[i+1][0][0]->r*tempVelocity[i+1]*tempDensity[i+1] - bins[i-1][0][0]->r*bins[i-1][0][0]->r*tempVelocity[i-1]*tempDensity[i-1])/(2*bins[i][0][0]->r*bins[i][0][0]->r*deltaR));
+		newVelocity[i] = bins[i][0][0]->U - defaultTimeStep*(tempVelocity[i]*(tempVelocity[i+1] - tempVelocity[i-1])/(2*deltaR) + (tempPressure[i+1] - tempPressure[i-1])/(2*deltaR*tempDensity[i]));
+		newPressure[i] = bins[i][0][0]->pressure - defaultTimeStep*(tempVelocity[i]*(tempPressure[i+1] - tempPressure[i-1])/(2*deltaR) + gamma*tempPressure[i]*(bins[i+1][0][0]->r*bins[i+1][0][0]->r*tempVelocity[i+1] - bins[i-1][0][0]->r*bins[i-1][0][0]->r*tempVelocity[i-1])/(2*bins[i][0][0]->r*bins[i][0][0]->r*deltaR));
+	}
+
+	newDensity[rgridNumber-1] = bins[rgridNumber-1][0][0]->density - defaultTimeStep*((bins[rgridNumber-1][0][0]->r*bins[rgridNumber-1][0][0]->r*tempVelocity[rgridNumber-1]*tempDensity[rgridNumber-1] - bins[rgridNumber-2][0][0]->r*bins[rgridNumber-2][0][0]->r*tempVelocity[rgridNumber-2]*tempDensity[rgridNumber-2])/(bins[rgridNumber-1][0][0]->r*bins[rgridNumber-1][0][0]->r*deltaR));
+	newVelocity[rgridNumber-1] = bins[rgridNumber-1][0][0]->U - defaultTimeStep*(tempVelocity[rgridNumber-1]*(tempVelocity[rgridNumber-1] - tempVelocity[rgridNumber-2])/(deltaR) + (tempPressure[rgridNumber-1] - tempPressure[rgridNumber-2])/(deltaR*tempDensity[rgridNumber-1]));
+	newPressure[rgridNumber-1] = bins[rgridNumber-1][0][0]->pressure - defaultTimeStep*(tempVelocity[rgridNumber-1]*(tempPressure[rgridNumber-1] - tempPressure[rgridNumber-2])/(deltaR) + gamma*tempPressure[rgridNumber-1]*(bins[rgridNumber-1][0][0]->r*bins[rgridNumber-1][0][0]->r*tempVelocity[rgridNumber-1] - bins[rgridNumber-2][0][0]->r*bins[rgridNumber-2][0][0]->r*tempVelocity[rgridNumber-2])/(bins[rgridNumber-1][0][0]->r*bins[rgridNumber-1][0][0]->r*deltaR));*/
+
+	delete[] tempVelocity;
+	delete[] tempDensity;
+	delete[] tempPressure;
+}
+
+double Simulation::getQ(int i){
+	return 0;
+	double b = 0.5*(bins[i+1]->U + bins[i]->U);
+	if(abs(b) < delta){
+		return (b*b/delta + delta)*1/2;
+	} else {
+		return abs(b);
+	}
 }

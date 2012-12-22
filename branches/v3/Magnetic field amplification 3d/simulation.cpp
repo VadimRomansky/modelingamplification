@@ -34,10 +34,6 @@ Simulation::~Simulation(){
 	kolmogorovCascading = true;
 	resonantInstability = true;
 	bellInstability = true;
-	alpha = 1;
-	beta = 1;
-	gamma = 1;
-	delta = 1;
 	epsilonR = 0.1;
 	delete[] averageVelocity;
 	/*for(int i = 0; i < xgridNumber; ++i){

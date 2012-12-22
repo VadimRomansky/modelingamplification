@@ -96,7 +96,7 @@ SpaceBin::~SpaceBin(){
 	delete[] magneticField;
 }
 
-int* SpaceBin::propagateParticle(Particle* particle ,double& time, double timeStep, const int rgridNumber){
+int SpaceBin::propagateParticle(Particle* particle ,double& time, double timeStep, const int rgridNumber){
 	if(time != time){
 		printf("aaa\n");
 	}
@@ -269,7 +269,7 @@ void SpaceBin::largeAngleScattering(Particle* particle, double& time, double tim
 }
 
 
-int* SpaceBin::binByCoordinates(double r, double theta, double phi, double r0, double deltar, double deltatheta, double deltaphi, int rgridNumber){
+int SpaceBin::binByCoordinates(double r, double theta, double phi, double r0, double deltar, double deltatheta, double deltaphi, int rgridNumber){
 	int i = lowerInt((r - r0)/deltar);
 	int j = lowerInt(theta/deltatheta);
 	if( theta == pi ){
@@ -300,14 +300,7 @@ int* SpaceBin::binByCoordinates(double r, double theta, double phi, double r0, d
 	if(k > phigridNumber - 1){
 		printf("aaa");
 	}
-	int* result = new int[3];
-	result[0] = i;
-	//result[1] = j;
-	//result[2] = k;
-	//TODO !!!!!!!!!
-	result[1]=j;
-	result[2]=k;
-	return result;
+	return i;
 }
 
 double SpaceBin::getFreePath(Particle* particle){
