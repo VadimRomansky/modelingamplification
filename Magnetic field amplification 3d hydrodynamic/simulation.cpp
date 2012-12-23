@@ -33,10 +33,6 @@ Simulation::~Simulation(){
 	kolmogorovCascading = true;
 	resonantInstability = true;
 	bellInstability = true;
-	alpha = 1;
-	beta = 1;
-	gamma = 1;
-	delta = 1;
 	epsilonR = 0.1;
 	delete[] averageVelocity;
 	/*for(int i = 0; i < xgridNumber; ++i){
@@ -196,7 +192,7 @@ void Simulation::simulate(){
 				outputEnergyPDF(introducedParticles,"./output/tamc_energy_pdf.dat");
 				outIteration = fopen("./output/tamc_iteration.dat","a");
 				radialFile = fopen("./output/tamc_radial_profile.dat","a");
-				fprintf(outIteration,"%d %lf %lf %lf %lf %lf %lf %lf %lf %d %lf %lf\n",itNumber, energy, theorEnergy, momentumZ, theorMomentumZ, momentumX, theorMomentumX, momentumY, theorMomentumY, introducedParticles.size(), particlesWeight, bins[currentShockWavePoint]->r);
+				fprintf(outIteration,"%d %lf %lf %lf %lf %d %lf %lf\n",itNumber, energy, theorEnergy, momentumZ, theorMomentumZ, introducedParticles.size(), particlesWeight, bins[currentShockWavePoint]->r);
 				fclose(outIteration);
 				outputRadialProfile(bins,0,0,radialFile, rgridNumber);
 				//outputShockWave(shockWavePoints, shockWaveVelocity);
@@ -481,7 +477,12 @@ void Simulation::collectAverageVelocity(){
 		} else {
 			bins[i]->density = newDensity[i];
 		}
-		bins[i]->pressure = newPressure[i];
+		if(newPressure[i] < 0){
+			bins[i]->pressure= 0;
+			printf("pressure < 0\n");
+		} else {
+			bins[i]->pressure = newPressure[i];
+		}
 	}
 
 	delete[] newVelocity;
@@ -592,7 +593,7 @@ void Simulation::updateShockWavePoint(){
 		}
 	}
 	//нахождение второй ударной волны
-	double averageDensity = 0;
+	/*double averageDensity = 0;
 	double fullVolume = 0;
 	for(int i = 0; i < rgridNumber; ++i){
 		fullVolume += bins[i]->volume;
@@ -621,13 +622,13 @@ void Simulation::updateShockWavePoint(){
 		if(tempShockWavePoint != secondShockWavePoint){
 			currentShockWavePoint = secondShockWavePoint;
 		}
-	}
+	}*/
 }
 
 void Simulation::evaluateHydrodynamic(double* newDensity, double* newVelocity, double* newPressure){
-	double* tempVelocity = new double[rgridNumber];
+	/*double* tempVelocity = new double[rgridNumber];
 	double* tempDensity = new double[rgridNumber];
-	double* tempPressure = new double[rgridNumber];
+	double* tempPressure = new double[rgridNumber];*/
 
 	newDensity[0] = bins[0]->density - defaultTimeStep*((bins[1]->r*bins[1]->r*bins[1]->U*bins[1]->density - bins[0]->r*bins[0]->r*bins[0]->U*bins[0]->density)/(bins[0]->r*bins[0]->r*deltaR));
 	newVelocity[0] = bins[0]->U - defaultTimeStep*(bins[0]->U*(bins[1]->U - bins[1]->U)/(deltaR) + (bins[1]->pressure - bins[0]->pressure)/(deltaR*bins[0]->density));
@@ -635,8 +636,8 @@ void Simulation::evaluateHydrodynamic(double* newDensity, double* newVelocity, d
 
 	for(int i = 1; i < rgridNumber - 1; ++i){
 		newDensity[i] = bins[i]->density - defaultTimeStep*((bins[i]->r*bins[i]->r*bins[i]->U*bins[i]->density - bins[i-1]->r*bins[i-1]->r*bins[i-1]->U*bins[i-1]->density)/(bins[i]->r*bins[i]->r*deltaR));
-		newVelocity[i] = bins[i]->U - defaultTimeStep*((bins[i]->U + bins[i-1]->U)*(bins[i]->U - bins[i-1]->U)/(2*deltaR) + (bins[i]->pressure - bins[i-1]->pressure)/(bins[i]->density*deltaR));
-		newPressure[i] = bins[i]->pressure - defaultTimeStep*(bins[i]->U*(bins[i]->pressure - bins[i-1]->pressure)/deltaR + gamma*bins[i]->pressure*(bins[i]->r*bins[i]->r*bins[i]->U - bins[i-1]->r*bins[i-1]->r*bins[i-1]->U)/(bins[i]->r*bins[i]->r*deltaR));
+		newVelocity[i] = bins[i]->U - defaultTimeStep*((bins[i]->U + bins[i-1]->U)*(bins[i]->U - bins[i-1]->U)/(2*deltaR) + (bins[i+1]->pressure - bins[i-1]->pressure)/((bins[i]->density + max(bins[i]->density, newDensity[i]))*deltaR));
+		newPressure[i] = bins[i]->pressure - defaultTimeStep*((bins[i]->U + bins[i-1]->U)*(bins[i]->pressure - bins[i-1]->pressure)/(2*deltaR) + gamma*bins[i]->pressure*(bins[i]->r2*bins[i]->r2*(2*bins[i]->U) - bins[i]->r1*bins[i]->r1*(bins[i]->U + bins[i-1]->U))/(2*bins[i]->r*bins[i]->r*deltaR));
 		/*newDensity[i] = bins[i][0][0]->density - defaultTimeStep*(bins[i+1][0][0]->r*bins[i+1][0][0]->r*bins[i+1][0][0]->U*bins[i+1][0][0]->density - bins[i-1][0][0]->r*bins[i-1][0][0]->r*bins[i-1][0][0]->U*bins[i-1][0][0]->density - getQ(i)*(bins[i+1][0][0]->r*bins[i+1][0][0]->r*bins[i+1][0][0]->density-bins[i][0][0]->r*bins[i][0][0]->r*bins[i][0][0]->density) + getQ(i-1)*(bins[i][0][0]->r*bins[i][0][0]->r*bins[i][0][0]->density - bins[i-1][0][0]->r*bins[i-1][0][0]->r*bins[i-1][0][0]->density))/(bins[i][0][0]->r*bins[i][0][0]->r*deltaR);
 		newVelocity[i] = bins[i][0][0]->U - defaultTimeStep*(bins[i][0][0]->U*(bins[i+1][0][0]->U - bins[i-1][0][0]->U)/(deltaR) + (bins[i+1][0][0]->pressure - bins[i-1][0][0]->pressure - getQ(i)*(bins[i+1][0][0]->U*bins[i+1][0][0]->density - bins[i][0][0]->U*bins[i][0][0]->density) + getQ(i-1)*(bins[i][0][0]->U*bins[i][0][0]->density - bins[i-1][0][0]->U*bins[i-1][0][0]->density))/(bins[i][0][0]->density*deltaR));
 		newPressure[i] = bins[i][0][0]->pressure - defaultTimeStep*((bins[i+1][0][0]->pressure - bins[i-1][0][0]->pressure)/deltaR + gamma*bins[i][0][0]->pressure*(bins[i+1][0][0]->r*bins[i+1][0][0]->r*bins[i+1][0][0]->U - bins[i-1][0][0]->r*bins[i-1][0][0]->r*bins[i-1][0][0]->U - getQ(i)*(bins[i+1][0][0]->r*bins[i+1][0][0]->r - bins[i][0][0]->r*bins[i][0][0]->r) + getQ(i-1)*(bins[i][0][0]->r*bins[i][0][0]->r - bins[i-1][0][0]->r*bins[i-1][0][0]->r))/(bins[i][0][0]->r*bins[i][0][0]->r*deltaR));*/
@@ -660,9 +661,9 @@ void Simulation::evaluateHydrodynamic(double* newDensity, double* newVelocity, d
 	newVelocity[rgridNumber-1] = bins[rgridNumber-1][0][0]->U - defaultTimeStep*(tempVelocity[rgridNumber-1]*(tempVelocity[rgridNumber-1] - tempVelocity[rgridNumber-2])/(deltaR) + (tempPressure[rgridNumber-1] - tempPressure[rgridNumber-2])/(deltaR*tempDensity[rgridNumber-1]));
 	newPressure[rgridNumber-1] = bins[rgridNumber-1][0][0]->pressure - defaultTimeStep*(tempVelocity[rgridNumber-1]*(tempPressure[rgridNumber-1] - tempPressure[rgridNumber-2])/(deltaR) + gamma*tempPressure[rgridNumber-1]*(bins[rgridNumber-1][0][0]->r*bins[rgridNumber-1][0][0]->r*tempVelocity[rgridNumber-1] - bins[rgridNumber-2][0][0]->r*bins[rgridNumber-2][0][0]->r*tempVelocity[rgridNumber-2])/(bins[rgridNumber-1][0][0]->r*bins[rgridNumber-1][0][0]->r*deltaR));*/
 
-	delete[] tempVelocity;
+	/*delete[] tempVelocity;
 	delete[] tempDensity;
-	delete[] tempPressure;
+	delete[] tempPressure;*/
 }
 
 double Simulation::getQ(int i){

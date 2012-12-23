@@ -590,6 +590,8 @@ void SpaceBin::resetDetectors(){
 		printf("NaN matrix\n");
 	}
 	invertMatrix = matrix->Inverse();
+
+	temperature = massProton*pressure/(density*kBoltzman);
 	//momentaFlux.reset();
 	//energyFlux.reset();
 }

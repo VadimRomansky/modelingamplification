@@ -52,6 +52,14 @@ double angleDelta(double phi1, double phi2){
 	}
 }
 
+double max(double a, double b){
+	if(a >= b){
+		return a;
+	} else {
+		return b;
+	}
+}
+
 double min4(double a, double b,double c, double d){
 	if( a <  b ){
 		if( c < d){

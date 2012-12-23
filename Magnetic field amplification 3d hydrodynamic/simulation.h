@@ -25,10 +25,6 @@ public:
 	double deltaPhi;
 	double temperature;
 	double gridParameter;
-	double alpha;
-	double beta;
-	double gamma;
-	double delta;
 	double epsilonR;
 	bool kolmogorovCascading;
 	bool resonantInstability;
