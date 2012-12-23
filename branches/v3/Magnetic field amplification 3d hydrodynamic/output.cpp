@@ -494,7 +494,7 @@ void outputRadialProfile(SpaceBin** bins, int thetaNumber, int phiNumber, FILE* 
 	//double energyFlux0 = simulation.xbins[0]->energyFlux;
 	for(int i = 0; i < rgridNumber; ++i){
 		SpaceBin* bin = bins[i];
-		fprintf(outProfile, "%lf %lf %lf %lf %lf %lf",bin->r, bin->U, bin->averageVelocity, 100000*bin->density, bin->temperature, bin->crFlux);
+		fprintf(outProfile, "%lf %lf %lf %lf %lf %lf %lf",bin->r, bin->U, bin->averageVelocity, 100000*bin->density, bin->temperature, bin->crFlux, bin->pressure);
 		fprintf(outProfile,"%s","\n");
 	}
 	//fclose(outProfile);
