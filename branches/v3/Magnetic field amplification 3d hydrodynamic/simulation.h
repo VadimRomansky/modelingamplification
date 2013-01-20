@@ -95,6 +95,11 @@ public:
 	void updateCosmicRayBoundMomentum();
 	void evaluateHydrodynamic(double* newDensity, double* newVelocity, double* newPressure);
 	double getQ(int i);
+
+	double densityFluxRight(int i);
+	double velocityFluxRight(int i);
+	double pressureFluxRight(int i);
+	double volumeFluxRight(int i);
 private:
 	static const int particleMultiply = 20;
 };

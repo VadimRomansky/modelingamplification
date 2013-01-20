@@ -5,7 +5,7 @@
 #include "output.h"
 #include "util.h"
 #include <omp.h>
-//#include <Windows.h>
+#include <Windows.h>
 
 Simulation::Simulation(){
 	partOfCosmicRay = 0;
@@ -470,17 +470,29 @@ void Simulation::collectAverageVelocity(){
 	evaluateHydrodynamic(newDensity, newVelocity, newPressure);
 
 	for(int i = 0; i < rgridNumber; ++i){
+		if((newVelocity[i] != newVelocity[i]) || (0*newVelocity[i] != 0*newVelocity[i])){
+			printf("NaN velocity\n");
+			Sleep(500);
+		}
 		bins[i]->U = newVelocity[i];
 		if(newDensity[i] < 0){
 			bins[i]->density = epsilon;
 			printf("density < 0\n");
 		} else {
+			if((newDensity[i] != newDensity[i]) || (0*newDensity[i] != 0*newDensity[i])){
+				printf("NaN density\n");
+				Sleep(1000);
+			}
 			bins[i]->density = newDensity[i];
 		}
 		if(newPressure[i] < 0){
 			bins[i]->pressure= 0;
 			printf("pressure < 0\n");
 		} else {
+			if((newPressure[i] != newPressure[i]) || (0*newPressure[i] != 0*newPressure[i])){
+				printf("NaN pressure\n");
+				Sleep(500);
+			}
 			bins[i]->pressure = newPressure[i];
 		}
 	}
@@ -631,13 +643,36 @@ void Simulation::evaluateHydrodynamic(double* newDensity, double* newVelocity, d
 	double* tempPressure = new double[rgridNumber];*/
 
 	newDensity[0] = bins[0]->density - defaultTimeStep*((bins[1]->r*bins[1]->r*bins[1]->U*bins[1]->density - bins[0]->r*bins[0]->r*bins[0]->U*bins[0]->density)/(bins[0]->r*bins[0]->r*deltaR));
-	newVelocity[0] = bins[0]->U - defaultTimeStep*(bins[0]->U*(bins[1]->U - bins[1]->U)/(deltaR) + (bins[1]->pressure - bins[0]->pressure)/(deltaR*bins[0]->density));
+	if(newDensity[0] > epsilon*density0){
+	    newVelocity[0] = bins[0]->U - defaultTimeStep*(bins[0]->U*(bins[1]->U - bins[1]->U)/(deltaR) + 2*(bins[1]->pressure - bins[0]->pressure)/((bins[0]->density + max(bins[0]->density, newDensity[0]))*deltaR));
+	} else {
+		newVelocity[0] = 0;
+	}
 	newPressure[0] = bins[0]->pressure - defaultTimeStep*(bins[0]->U*(bins[1]->pressure-bins[0]->pressure)/(deltaR) + gamma*bins[0]->pressure*(bins[1]->r*bins[1]->r*bins[1]->U-bins[0]->r*bins[0]->r*bins[0]->U)/(bins[0]->r*bins[0]->r*deltaR));
 
 	for(int i = 1; i < rgridNumber - 1; ++i){
-		newDensity[i] = bins[i]->density - defaultTimeStep*((bins[i]->r*bins[i]->r*bins[i]->U*bins[i]->density - bins[i-1]->r*bins[i-1]->r*bins[i-1]->U*bins[i-1]->density)/(bins[i]->r*bins[i]->r*deltaR));
-		newVelocity[i] = bins[i]->U - defaultTimeStep*((bins[i]->U + bins[i-1]->U)*(bins[i]->U - bins[i-1]->U)/(2*deltaR) + (bins[i+1]->pressure - bins[i-1]->pressure)/((bins[i]->density + max(bins[i]->density, newDensity[i]))*deltaR));
-		newPressure[i] = bins[i]->pressure - defaultTimeStep*((bins[i]->U + bins[i-1]->U)*(bins[i]->pressure - bins[i-1]->pressure)/(2*deltaR) + gamma*bins[i]->pressure*(bins[i]->r2*bins[i]->r2*(2*bins[i]->U) - bins[i]->r1*bins[i]->r1*(bins[i]->U + bins[i-1]->U))/(2*bins[i]->r*bins[i]->r*deltaR));
+		newDensity[i] = bins[i]->density - defaultTimeStep*(densityFluxRight(i) - densityFluxRight(i-1))/(bins[i]->r*bins[i]->r*deltaR);
+		if((newDensity[i] != newDensity[i]) || (0*newDensity[i] != 0*newDensity[i])){
+			printf("NaN density\n");
+			Sleep(1000);
+		}
+		if(newDensity[i] > epsilon*density0){
+		    newVelocity[i] = bins[i]->U - defaultTimeStep*((velocityFluxRight(i) - velocityFluxRight(i-1))/deltaR + 2*(bins[i+1]->pressure - bins[i-1]->pressure)/((bins[i]->density + max(bins[i]->density, newDensity[i]))*deltaR));
+		} else {
+			newVelocity[i] = 0;
+		}
+
+		if((newVelocity[i] != newVelocity[i]) || (0*newVelocity[i] != 0*newVelocity[i])){
+			printf("NaN velocity\n");
+			Sleep(500);
+		}
+
+		newPressure[i] = bins[i]->pressure - defaultTimeStep*((pressureFluxRight(i) - pressureFluxRight(i-1))/deltaR + gamma*bins[i]->pressure*(volumeFluxRight(i) - volumeFluxRight(i-1))/(bins[i]->r*bins[i]->r*deltaR));
+
+		if((newPressure[i] != newPressure[i]) || (0*newPressure[i] != 0*newPressure[i])){
+			printf("NaN pressure\n");
+			Sleep(500);
+		}
 		/*newDensity[i] = bins[i][0][0]->density - defaultTimeStep*(bins[i+1][0][0]->r*bins[i+1][0][0]->r*bins[i+1][0][0]->U*bins[i+1][0][0]->density - bins[i-1][0][0]->r*bins[i-1][0][0]->r*bins[i-1][0][0]->U*bins[i-1][0][0]->density - getQ(i)*(bins[i+1][0][0]->r*bins[i+1][0][0]->r*bins[i+1][0][0]->density-bins[i][0][0]->r*bins[i][0][0]->r*bins[i][0][0]->density) + getQ(i-1)*(bins[i][0][0]->r*bins[i][0][0]->r*bins[i][0][0]->density - bins[i-1][0][0]->r*bins[i-1][0][0]->r*bins[i-1][0][0]->density))/(bins[i][0][0]->r*bins[i][0][0]->r*deltaR);
 		newVelocity[i] = bins[i][0][0]->U - defaultTimeStep*(bins[i][0][0]->U*(bins[i+1][0][0]->U - bins[i-1][0][0]->U)/(deltaR) + (bins[i+1][0][0]->pressure - bins[i-1][0][0]->pressure - getQ(i)*(bins[i+1][0][0]->U*bins[i+1][0][0]->density - bins[i][0][0]->U*bins[i][0][0]->density) + getQ(i-1)*(bins[i][0][0]->U*bins[i][0][0]->density - bins[i-1][0][0]->U*bins[i-1][0][0]->density))/(bins[i][0][0]->density*deltaR));
 		newPressure[i] = bins[i][0][0]->pressure - defaultTimeStep*((bins[i+1][0][0]->pressure - bins[i-1][0][0]->pressure)/deltaR + gamma*bins[i][0][0]->pressure*(bins[i+1][0][0]->r*bins[i+1][0][0]->r*bins[i+1][0][0]->U - bins[i-1][0][0]->r*bins[i-1][0][0]->r*bins[i-1][0][0]->U - getQ(i)*(bins[i+1][0][0]->r*bins[i+1][0][0]->r - bins[i][0][0]->r*bins[i][0][0]->r) + getQ(i-1)*(bins[i][0][0]->r*bins[i][0][0]->r - bins[i-1][0][0]->r*bins[i-1][0][0]->r))/(bins[i][0][0]->r*bins[i][0][0]->r*deltaR));*/
@@ -673,5 +708,65 @@ double Simulation::getQ(int i){
 		return (b*b/delta + delta)*1/2;
 	} else {
 		return abs(b);
+	}
+}
+
+double Simulation::densityFluxRight(int i){
+	double v1 = bins[i]->U;
+	double v2 = bins[i+1]->U;
+
+	if(v1*v2 >= 0){
+		if(v1 > 0){
+			return bins[i]->r2*bins[i]->r2*bins[i]->U*bins[i]->density;
+		} else {
+			return bins[i+1]->r1*bins[i+1]->r1*bins[i+1]->U*bins[i+1]->density;
+		}
+	} else {
+		return (bins[i]->r2*bins[i]->r2*bins[i]->U*bins[i]->density + bins[i+1]->r1*bins[i+1]->r1*bins[i+1]->U*bins[i+1]->density)/2;
+	}
+}
+
+double Simulation::velocityFluxRight(int i){
+	double v1 = bins[i]->U;
+	double v2 = bins[i+1]->U;
+
+	if(v1*v2 >= 0){
+		if(v1 > 0){
+			return bins[i]->U*bins[i]->U;
+		} else {
+			return bins[i+1]->U*bins[i+1]->U;
+		}
+	} else {
+		return (bins[i]->U*bins[i]->U + bins[i+1]->U*bins[i+1]->U)/2;
+	}
+}
+
+double Simulation::pressureFluxRight(int i){
+	double v1 = bins[i]->U;
+	double v2 = bins[i+1]->U;
+
+	if(v1*v2 >= 0){
+		if(v1 > 0){
+			return bins[i]->U*bins[i]->pressure;
+		} else {
+			return bins[i+1]->U*bins[i+1]->pressure;
+		}
+	} else {
+		return (bins[i]->U*bins[i]->pressure + bins[i+1]->U*bins[i+1]->pressure)/2;
+	}
+}
+
+double Simulation::volumeFluxRight(int i){
+	double v1 = bins[i]->U;
+	double v2 = bins[i+1]->U;
+
+	if(v1*v2 >= 0){
+		if(v1 > 0){
+			return bins[i]->r2*bins[i]->r2*bins[i]->U;
+		} else {
+			return bins[i+1]->r1*bins[i+1]->r1*bins[i+1]->U;
+		}
+	} else {
+		return (bins[i]->r2*bins[i]->r2*bins[i]->U + bins[i+1]->r1*bins[i+1]->r1*bins[i+1]->U)/2;
 	}
 }
