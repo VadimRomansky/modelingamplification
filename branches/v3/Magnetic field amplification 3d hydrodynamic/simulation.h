@@ -97,14 +97,12 @@ public:
 	double getQ(int i);
 
 	double densityFluxRight(int i);
-	double velocityFluxRight(int i);
-	double pressureFluxRight(int i);
-	double volumeFluxRight(int i);
+	double momentumFluxRight(int i);
+	double energyFluxRight(int i);
 
 	double densityFlux(int i);
-	double velocityFlux(int i);
-	double pressureFlux(int i);
-	double volumeFlux(int i);
+	double momentumFlux(int i);
+	double energyFlux(int i);
 
 	double vanleer(double a, double b);
 private:
