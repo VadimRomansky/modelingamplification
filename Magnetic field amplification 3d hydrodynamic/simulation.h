@@ -100,6 +100,13 @@ public:
 	double velocityFluxRight(int i);
 	double pressureFluxRight(int i);
 	double volumeFluxRight(int i);
+
+	double densityFlux(int i);
+	double velocityFlux(int i);
+	double pressureFlux(int i);
+	double volumeFlux(int i);
+
+	double vanleer(double a, double b);
 private:
 	static const int particleMultiply = 20;
 };
