@@ -642,9 +642,9 @@ void Simulation::evaluateHydrodynamic(double* newDensity, double* newVelocity, d
 	double* tempDensity = new double[rgridNumber];
 	double* tempPressure = new double[rgridNumber];*/
 
-	newDensity[0] = bins[0]->density - defaultTimeStep*((bins[1]->r*bins[1]->r*bins[1]->U*bins[1]->density - bins[0]->r*bins[0]->r*bins[0]->U*bins[0]->density)/(bins[0]->r*bins[0]->r*deltaR));
+	newDensity[0] = bins[0]->density - defaultTimeStep*(densityFluxRight(0))/(bins[0]->r*bins[0]->r*deltaR);
 	if(newDensity[0] > epsilon*density0){
-	    newVelocity[0] = bins[0]->U - defaultTimeStep*(bins[0]->U*(bins[1]->U - bins[1]->U)/(deltaR) + 2*(bins[1]->pressure - bins[0]->pressure)/((bins[0]->density + max(bins[0]->density, newDensity[0]))*deltaR));
+	    newVelocity[0] = bins[0]->U - defaultTimeStep*(bins[0]->U*(bins[1]->U - bins[0]->U)/(deltaR) + 2*(bins[1]->pressure - bins[0]->pressure)/((bins[0]->density + max(bins[0]->density, newDensity[0]))*deltaR));
 	} else {
 		newVelocity[0] = 0;
 	}
@@ -712,61 +712,141 @@ double Simulation::getQ(int i){
 }
 
 double Simulation::densityFluxRight(int i){
+	if(i == rgridNumber -1){
+		return densityFlux(i);
+	}
 	double v1 = bins[i]->U;
 	double v2 = bins[i+1]->U;
-
-	if(v1*v2 >= 0){
-		if(v1 > 0){
-			return bins[i]->r2*bins[i]->r2*bins[i]->U*bins[i]->density;
-		} else {
-			return bins[i+1]->r1*bins[i+1]->r1*bins[i+1]->U*bins[i+1]->density;
-		}
+	if(v1*v2 > 0){
+	  double flux;
+	  double deltaFluxLeft;
+	  double deltaFluxRight;
+	  if(v1 > 0){
+		flux = densityFlux(i);
+		deltaFluxLeft = (flux - densityFlux(i - 1))/2;
+		deltaFluxRight = (densityFlux(i + 1) - flux)/2;
+	  } else {
+		flux = densityFlux(i + 1);
+		deltaFluxLeft = (-(flux - densityFlux(i))/2);
+		deltaFluxRight = (-(densityFlux(i + 2) - flux)/2);
+	  }
+	  return flux + vanleer(deltaFluxLeft, deltaFluxRight);
 	} else {
-		return (bins[i]->r2*bins[i]->r2*bins[i]->U*bins[i]->density + bins[i+1]->r1*bins[i+1]->r1*bins[i+1]->U*bins[i+1]->density)/2;
+      return (densityFlux(i) + densityFlux(i+1))/2;
 	}
 }
 
 double Simulation::velocityFluxRight(int i){
+	if(i == rgridNumber - 1){
+		return velocityFlux(i);
+	}
 	double v1 = bins[i]->U;
 	double v2 = bins[i+1]->U;
-
-	if(v1*v2 >= 0){
-		if(v1 > 0){
-			return bins[i]->U*bins[i]->U;
-		} else {
-			return bins[i+1]->U*bins[i+1]->U;
-		}
+	if(v1*v2 > 0){
+	  double flux;
+	  double deltaFluxLeft;
+	  double deltaFluxRight;
+	  if(v1 > 0){
+		flux = velocityFlux(i);
+		deltaFluxLeft = (flux - velocityFlux(i - 1))/2;
+		deltaFluxRight = (velocityFlux(i + 1) - flux)/2;
+	  } else {
+		flux = velocityFlux(i + 1);
+		deltaFluxLeft = (-(flux - velocityFlux(i))/2);
+		deltaFluxRight = (-(velocityFlux(i + 2) - flux)/2);
+	  }
+	  return flux + vanleer(deltaFluxLeft, deltaFluxRight);
 	} else {
-		return (bins[i]->U*bins[i]->U + bins[i+1]->U*bins[i+1]->U)/2;
+      return (velocityFlux(i) + velocityFlux(i+1))/2;
 	}
 }
 
 double Simulation::pressureFluxRight(int i){
+	if( i == rgridNumber - 1){
+		return pressureFlux(i);
+	}
 	double v1 = bins[i]->U;
 	double v2 = bins[i+1]->U;
-
-	if(v1*v2 >= 0){
-		if(v1 > 0){
-			return bins[i]->U*bins[i]->pressure;
-		} else {
-			return bins[i+1]->U*bins[i+1]->pressure;
-		}
+	if(v1*v2 > 0){
+	  double flux;
+	  double deltaFluxLeft;
+	  double deltaFluxRight;
+	  if(v1 > 0){
+		flux = pressureFlux(i);
+		deltaFluxLeft = (flux - pressureFlux(i - 1))/2;
+		deltaFluxRight = (pressureFlux(i + 1) - flux)/2;
+	  } else {
+		flux = pressureFlux(i + 1);
+		deltaFluxLeft = (-(flux - pressureFlux(i))/2);
+		deltaFluxRight = (-(pressureFlux(i + 2) - flux)/2);
+	  }
+	  return flux + vanleer(deltaFluxLeft, deltaFluxRight);
 	} else {
-		return (bins[i]->U*bins[i]->pressure + bins[i+1]->U*bins[i+1]->pressure)/2;
+      return (pressureFlux(i) + pressureFlux(i+1))/2;
 	}
 }
 
 double Simulation::volumeFluxRight(int i){
+	if( i == rgridNumber - 1){
+		return volumeFlux(i);
+	}
 	double v1 = bins[i]->U;
 	double v2 = bins[i+1]->U;
-
-	if(v1*v2 >= 0){
-		if(v1 > 0){
-			return bins[i]->r2*bins[i]->r2*bins[i]->U;
-		} else {
-			return bins[i+1]->r1*bins[i+1]->r1*bins[i+1]->U;
-		}
+	if(v1*v2 > 0){
+	  double flux;
+	  double deltaFluxLeft;
+	  double deltaFluxRight;
+	  if(v1 > 0){
+		flux = volumeFlux(i);
+		deltaFluxLeft = (flux - volumeFlux(i - 1))/2;
+		deltaFluxRight = (volumeFlux(i + 1) - flux)/2;
+	  } else {
+		flux = volumeFlux(i + 1);
+		deltaFluxLeft = (-(flux - volumeFlux(i))/2);
+		deltaFluxRight = (-(volumeFlux(i + 2) - flux)/2);
+	  }
+	  return flux + vanleer(deltaFluxLeft, deltaFluxRight);
 	} else {
-		return (bins[i]->r2*bins[i]->r2*bins[i]->U + bins[i+1]->r1*bins[i+1]->r1*bins[i+1]->U)/2;
+      return (volumeFlux(i) + volumeFlux(i+1))/2;
 	}
 }
+
+double Simulation::densityFlux(int i){
+	if(i == -1){
+		return 0;
+	}
+	return bins[i]->r2*bins[i]->r2*bins[i]->U*bins[i]->density;
+}
+
+double Simulation::velocityFlux(int i){
+	if(i == -1){
+		return 0;
+	}
+	return bins[i]->U*bins[i]->U;
+}
+
+double Simulation::pressureFlux(int i){
+	if(i == -1){
+		return 0;
+	}
+	return bins[i]->U*bins[i]->pressure;
+}
+
+double Simulation::volumeFlux(int i){
+	if( i == -1){
+		return 0;
+	}
+	return bins[i]->r2*bins[i]->r2*bins[i]->U;
+}
+
+double Simulation::vanleer(double a, double b){
+	if(abs(a + b) < epsilon){
+		return 0;
+	} else if( a*b < 0) {
+		return 0;
+	} else {
+		return 2*a*b/(a + b);
+	}
+}
+
+
