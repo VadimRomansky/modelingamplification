@@ -96,15 +96,18 @@ public:
 	void evaluateHydrodynamic(double* newDensity, double* newVelocity, double* newPressure);
 	double getQ(int i);
 
-	double densityFluxRight(int i);
-	double momentumFluxRight(int i);
-	double energyFluxRight(int i);
+	double densityFluxRight(int i, double maxVelocity);
+	double momentumFluxRight(int i, double maxVelocty);
+	double energyFluxRight(int i, double maxVelocity);
 
 	double densityFlux(int i);
 	double momentumFlux(int i);
 	double energyFlux(int i);
 
 	double vanleer(double a, double b);
+	double findMaxVelocity();
+
+	void tvd(double* value, double* flux, double maxVelocity);
 private:
 	static const int particleMultiply = 20;
 };
