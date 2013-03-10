@@ -11,6 +11,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Magnetic field amplificatio
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Magnetic field amplification 3d hydrodynamic", "Magnetic field amplification 3d hydrodynamic\Magnetic field amplification 3d hydrodynamic.vcxproj", "{E9F20A95-4996-4802-B34C-4C86A403FE5B}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Magnetic field amplification 1d hydrodynamic", "Magnetic field amplification 1d hydrodynamic\Magnetic field amplification 1d hydrodynamic.vcxproj", "{EC2CDB74-568B-4732-996F-7337009BE792}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -37,6 +39,10 @@ Global
 		{E9F20A95-4996-4802-B34C-4C86A403FE5B}.Debug|Win32.Build.0 = Debug|Win32
 		{E9F20A95-4996-4802-B34C-4C86A403FE5B}.Release|Win32.ActiveCfg = Release|Win32
 		{E9F20A95-4996-4802-B34C-4C86A403FE5B}.Release|Win32.Build.0 = Release|Win32
+		{EC2CDB74-568B-4732-996F-7337009BE792}.Debug|Win32.ActiveCfg = Debug|Win32
+		{EC2CDB74-568B-4732-996F-7337009BE792}.Debug|Win32.Build.0 = Debug|Win32
+		{EC2CDB74-568B-4732-996F-7337009BE792}.Release|Win32.ActiveCfg = Release|Win32
+		{EC2CDB74-568B-4732-996F-7337009BE792}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
