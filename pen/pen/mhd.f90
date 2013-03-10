@@ -216,7 +216,7 @@ subroutine init(u,b,nx,ny,nz)
   u(2,:,:,:) = 0;
 
   do i = nx/10,nx
-    u(1,i,:,:) = 1;
+    u(2,i,:,:) = 1;
   enddo
 end subroutine init
 
@@ -376,7 +376,7 @@ recursive subroutine mhdflux(v,c,u,b,n)
   v(4,:)=u(4,:)*vx-b(3,:)*b(1,:)
   v(5,:)=(u(5,:)+ps)*vx-b(1,:)*sum(b*u(2:4,:),1)/u(1,:)
   p=ps-sum(b**2,1)/2
-  c=maxval(abs(vx)+sqrt(abs( (sum(b**2,1)+gamma*p)/u(1,:))))
+  c=1.1*maxval(abs(vx)+sqrt(abs( (sum(b**2,1)+gamma*p)/u(1,:))))
   if (c>0) v=v/c
 end subroutine mhdflux
 
