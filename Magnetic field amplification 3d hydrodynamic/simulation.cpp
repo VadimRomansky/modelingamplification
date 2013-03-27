@@ -27,6 +27,8 @@ Simulation::Simulation(){
 	momentumZ = 0;
 	momentumY = 0;
 	momentumX = 0;
+	deltaT = defaultTimeStep;
+	simulationTime = 0;
 }
 
 Simulation::~Simulation(){
@@ -181,6 +183,9 @@ void Simulation::simulate(){
 			//Sleep(5000);
 			printf("%s","iteration ¹ ");
 			printf("%d\n",itNumber);
+			simulationTime = simulationTime + deltaT;
+			printf("%s","time ");
+			printf("%lf\n",simulationTime);
 		}
 		if(introducedParticles.size() > 0){
 			updateEnergy();
@@ -192,7 +197,7 @@ void Simulation::simulate(){
 				outputEnergyPDF(introducedParticles,"./output/tamc_energy_pdf.dat");
 				outIteration = fopen("./output/tamc_iteration.dat","a");
 				radialFile = fopen("./output/tamc_radial_profile.dat","a");
-				fprintf(outIteration,"%d %lf %lf %lf %lf %d %lf %lf\n",itNumber, energy, theorEnergy, momentumZ, theorMomentumZ, introducedParticles.size(), particlesWeight, bins[currentShockWavePoint]->r);
+				fprintf(outIteration,"%d %lf %lf %lf %lf %lf %d %lf %lf\n",itNumber, simulationTime, energy, theorEnergy, momentumZ, theorMomentumZ, introducedParticles.size(), particlesWeight, bins[currentShockWavePoint]->r);
 				fclose(outIteration);
 				outputRadialProfile(bins,0,0,radialFile, rgridNumber);
 				//outputShockWave(shockWavePoints, shockWaveVelocity);
@@ -465,17 +470,17 @@ void Simulation::collectAverageVelocity(){
 	delete[] count;*/
 	double* newMomentum = new double[rgridNumber];
 	double* newDensity = new double[rgridNumber];
-	double* newEnergy = new double[rgridNumber];
+	double* newPressure = new double[rgridNumber];
 
-	evaluateHydrodynamic(newDensity, newMomentum, newEnergy);
+	evaluateHydrodynamic(newDensity, newMomentum, newPressure);
 
 	for(int i = 0; i < rgridNumber; ++i){
-		/*if((newVelocity[i] != newVelocity[i]) || (0*newVelocity[i] != 0*newVelocity[i])){
+		if((newMomentum[i] != newMomentum[i]) || (0*newMomentum[i] != 0*newMomentum[i])){
 			printf("NaN velocity\n");
 			Sleep(500);
 		}
-		bins[i]->U = newVelocity[i];*/
-		bins[i]->U = (newMomentum[i]/newDensity[i]);
+
+		bins[i]->U = (newMomentum[i]/bins[i]->density);
 
 		if(newDensity[i] < 0){
 			bins[i]->density = epsilon;
@@ -485,16 +490,22 @@ void Simulation::collectAverageVelocity(){
 				printf("NaN density\n");
 				Sleep(1000);
 			}
-			bins[i]->density = newDensity[i]/(bins[i]->r*bins[i]->r);
+			bins[i]->density = newDensity[i];
+		}
+
+		//bins[i]->U = newMomentum[i]/bins[i]->density;
+
+		if(bins[i]->density < 100*epsilon*density0){
+			bins[i]->U = 0;
 		}
 
 		//bins[i]->U = newMomentum[i]/bins[i]->density;
 
 
-		bins[i]->pressure = (gamma - 1)*(newEnergy[i]/(bins[i]->r*bins[i]->r)- bins[i]->density*bins[i]->U*bins[i]->U/2);
+		bins[i]->pressure = newPressure[i];
 
 		if(bins[i]->pressure < 0){
-			bins[i]->pressure= 0;
+			bins[i]->pressure = epsilon;
 			printf("pressure < 0\n");
 		} else {
 			if((bins[i]->pressure != bins[i]->pressure) || (0*bins[i]->pressure != 0*bins[i]->pressure)){
@@ -502,11 +513,15 @@ void Simulation::collectAverageVelocity(){
 				Sleep(500);
 			}
 		}
+
+		if(bins[i]->density < 100*epsilon*density0){
+			bins[i]->pressure = epsilon*newPressure[i];
+		}
 	}
 
 	delete[] newMomentum;
 	delete[] newDensity;
-	delete[] newEnergy;
+	delete[] newPressure;
 }
 
 void Simulation::sortParticlesIntoBins(){
@@ -644,47 +659,73 @@ void Simulation::updateShockWavePoint(){
 	}*/
 }
 
-void Simulation::evaluateHydrodynamic(double* newDensity, double* newMomentum, double* newEnergy){
+void Simulation::evaluateHydrodynamic(double* newDensity, double* newMomentum, double* newPressure){
 	/*double* tempVelocity = new double[rgridNumber];
 	double* tempDensity = new double[rgridNumber];
 	double* tempPressure = new double[rgridNumber];*/
-	double c = 0.0005*findMaxVelocity();
+	double c = 0.05*findMaxVelocity();
+	deltaT = 0.005*deltaR/abs(c);
 
 	double* densityFluxes = new double[rgridNumber];
 	double* momentumFluxes = new double[rgridNumber];
-	double* energyFluxes = new double[rgridNumber];
+	double* pressureFluxes = new double[rgridNumber];
+
+	double* momentumPressureFluxes = new double[rgridNumber];
+	double* volumeFluxes = new double[rgridNumber];
 
 	for(int i = 0; i < rgridNumber; ++i){
 		newDensity[i] = bins[i]->density*bins[i]->r*bins[i]->r;
 		newMomentum[i] = bins[i]->density*bins[i]->U*bins[i]->r*bins[i]->r;
-		newEnergy[i] = (bins[i]->density*bins[i]->U*bins[i]->U/2 + bins[i]->pressure/(gamma - 1))*bins[i]->r*bins[i]->r;
+		newPressure[i] = bins[i]->pressure*bins[i]->r*bins[i]->r;
 
 		densityFluxes[i] = densityFlux(i);
 		momentumFluxes[i] = momentumFlux(i);
-		energyFluxes[i] = energyFlux(i);
+		pressureFluxes[i] = pressureFlux(i);
+		momentumPressureFluxes[i] = momentumPressureFlux(i);
+		volumeFluxes[i] = (gamma-1)*volumeFlux(i);
 	}
 
 	tvd(newDensity, densityFluxes, c);
 	tvd(newMomentum, momentumFluxes, c);
-	tvd(newEnergy, energyFluxes, c);
+	tvd(newPressure, pressureFluxes, c);
+
+	for(int i = 0; i < rgridNumber; ++i){
+		newDensity[i] = newDensity[i]/(bins[i]->r*bins[i]->r);
+		newMomentum[i] = newMomentum[i]/(bins[i]->r*bins[i]->r);
+		newPressure[i] = newPressure[i]/(bins[i]->pressure);
+	}
+	tvd(newMomentum, momentumPressureFluxes, c);
+	tvd(newPressure, volumeFluxes, c);
+	for(int i = 0; i < rgridNumber; ++i){
+		newMomentum[i] = newMomentum[i];
+		newPressure[i] = newPressure[i]*bins[i]->pressure/(bins[i]->r*bins[i]->r);
+	}
+
+	delete[] densityFluxes;
+	delete[] momentumFluxes;
+	delete[] pressureFluxes;
+
+	delete[] momentumPressureFluxes;
+	delete[] volumeFluxes;
 
 
-	/*newDensity[0] = bins[0]->density - defaultTimeStep*(densityFluxRight(0, c))/(bins[0]->r*bins[0]->r*deltaR);
+
+	/*newDensity[0] = bins[0]->density - deltaT*(densityFluxRight(0, c))/(bins[0]->r*bins[0]->r*deltaR);
 	if(newDensity[0] > epsilon*density0){
-		newMomentum[0] = bins[0]->density*bins[0]->U - defaultTimeStep*(momentumFluxRight(0, c)/deltaR);
+		newMomentum[0] = bins[0]->density*bins[0]->U - deltaT*(momentumFluxRight(0, c)/deltaR);
 	} else {
 		newMomentum[0] = 0;
 	}
-	newEnergy[0] = (bins[0]->density*bins[0]->U*bins[0]->U/2 + bins[0]->pressure/(gamma - 1)) - defaultTimeStep*(energyFluxRight(0, c))/(bins[0]->r*bins[0]->r*deltaR);
+	newEnergy[0] = (bins[0]->density*bins[0]->U*bins[0]->U/2 + bins[0]->pressure/(gamma - 1)) - deltaT*(energyFluxRight(0, c))/(bins[0]->r*bins[0]->r*deltaR);
 
 	for(int i = 1; i < rgridNumber - 1; ++i){
-		newDensity[i] = bins[i]->density - defaultTimeStep*(densityFluxRight(i, c) - densityFluxRight(i - 1, c))/(bins[i]->r*bins[i]->r*deltaR);
+		newDensity[i] = bins[i]->density - deltaT*(densityFluxRight(i, c) - densityFluxRight(i - 1, c))/(bins[i]->r*bins[i]->r*deltaR);
 		if((newDensity[i] != newDensity[i]) || (0*newDensity[i] != 0*newDensity[i])){
 			printf("NaN density\n");
 			Sleep(1000);
 		}
 	    if(newDensity[i] > epsilon*density0){
-		    newMomentum[i] = bins[i]->density*bins[i]->U - defaultTimeStep*((momentumFluxRight(i, c) - momentumFluxRight(i - 1, c))/deltaR);
+		    newMomentum[i] = bins[i]->density*bins[i]->U - deltaT*((momentumFluxRight(i, c) - momentumFluxRight(i - 1, c))/deltaR);
 	    } else {
 		    newMomentum[i] = 0;
 	    }
@@ -694,148 +735,89 @@ void Simulation::evaluateHydrodynamic(double* newDensity, double* newMomentum, d
 			Sleep(500);
 		}
 
-		newEnergy[i] = (bins[i]->density*bins[i]->U*bins[i]->U/2 + bins[i]->pressure/(gamma - 1)) - defaultTimeStep*(energyFluxRight(i, c) - energyFluxRight(i - 1, c))/(bins[i]->r*bins[i]->r*deltaR);
+		newEnergy[i] = (bins[i]->density*bins[i]->U*bins[i]->U/2 + bins[i]->pressure/(gamma - 1)) - deltaT*(energyFluxRight(i, c) - energyFluxRight(i - 1, c))/(bins[i]->r*bins[i]->r*deltaR);
 
 		if((newEnergy[i] != newEnergy[i]) || (0*newEnergy[i] != 0*newEnergy[i])){
 			printf("NaN pressure\n");
 			Sleep(500);
 		}
-		/*newDensity[i] = bins[i][0][0]->density - defaultTimeStep*(bins[i+1][0][0]->r*bins[i+1][0][0]->r*bins[i+1][0][0]->U*bins[i+1][0][0]->density - bins[i-1][0][0]->r*bins[i-1][0][0]->r*bins[i-1][0][0]->U*bins[i-1][0][0]->density - getQ(i)*(bins[i+1][0][0]->r*bins[i+1][0][0]->r*bins[i+1][0][0]->density-bins[i][0][0]->r*bins[i][0][0]->r*bins[i][0][0]->density) + getQ(i-1)*(bins[i][0][0]->r*bins[i][0][0]->r*bins[i][0][0]->density - bins[i-1][0][0]->r*bins[i-1][0][0]->r*bins[i-1][0][0]->density))/(bins[i][0][0]->r*bins[i][0][0]->r*deltaR);
-		newVelocity[i] = bins[i][0][0]->U - defaultTimeStep*(bins[i][0][0]->U*(bins[i+1][0][0]->U - bins[i-1][0][0]->U)/(deltaR) + (bins[i+1][0][0]->pressure - bins[i-1][0][0]->pressure - getQ(i)*(bins[i+1][0][0]->U*bins[i+1][0][0]->density - bins[i][0][0]->U*bins[i][0][0]->density) + getQ(i-1)*(bins[i][0][0]->U*bins[i][0][0]->density - bins[i-1][0][0]->U*bins[i-1][0][0]->density))/(bins[i][0][0]->density*deltaR));
-		newPressure[i] = bins[i][0][0]->pressure - defaultTimeStep*((bins[i+1][0][0]->pressure - bins[i-1][0][0]->pressure)/deltaR + gamma*bins[i][0][0]->pressure*(bins[i+1][0][0]->r*bins[i+1][0][0]->r*bins[i+1][0][0]->U - bins[i-1][0][0]->r*bins[i-1][0][0]->r*bins[i-1][0][0]->U - getQ(i)*(bins[i+1][0][0]->r*bins[i+1][0][0]->r - bins[i][0][0]->r*bins[i][0][0]->r) + getQ(i-1)*(bins[i][0][0]->r*bins[i][0][0]->r - bins[i-1][0][0]->r*bins[i-1][0][0]->r))/(bins[i][0][0]->r*bins[i][0][0]->r*deltaR));*/
+		/*newDensity[i] = bins[i][0][0]->density - deltaT*(bins[i+1][0][0]->r*bins[i+1][0][0]->r*bins[i+1][0][0]->U*bins[i+1][0][0]->density - bins[i-1][0][0]->r*bins[i-1][0][0]->r*bins[i-1][0][0]->U*bins[i-1][0][0]->density - getQ(i)*(bins[i+1][0][0]->r*bins[i+1][0][0]->r*bins[i+1][0][0]->density-bins[i][0][0]->r*bins[i][0][0]->r*bins[i][0][0]->density) + getQ(i-1)*(bins[i][0][0]->r*bins[i][0][0]->r*bins[i][0][0]->density - bins[i-1][0][0]->r*bins[i-1][0][0]->r*bins[i-1][0][0]->density))/(bins[i][0][0]->r*bins[i][0][0]->r*deltaR);
+		newVelocity[i] = bins[i][0][0]->U - deltaT*(bins[i][0][0]->U*(bins[i+1][0][0]->U - bins[i-1][0][0]->U)/(deltaR) + (bins[i+1][0][0]->pressure - bins[i-1][0][0]->pressure - getQ(i)*(bins[i+1][0][0]->U*bins[i+1][0][0]->density - bins[i][0][0]->U*bins[i][0][0]->density) + getQ(i-1)*(bins[i][0][0]->U*bins[i][0][0]->density - bins[i-1][0][0]->U*bins[i-1][0][0]->density))/(bins[i][0][0]->density*deltaR));
+		newPressure[i] = bins[i][0][0]->pressure - deltaT*((bins[i+1][0][0]->pressure - bins[i-1][0][0]->pressure)/deltaR + gamma*bins[i][0][0]->pressure*(bins[i+1][0][0]->r*bins[i+1][0][0]->r*bins[i+1][0][0]->U - bins[i-1][0][0]->r*bins[i-1][0][0]->r*bins[i-1][0][0]->U - getQ(i)*(bins[i+1][0][0]->r*bins[i+1][0][0]->r - bins[i][0][0]->r*bins[i][0][0]->r) + getQ(i-1)*(bins[i][0][0]->r*bins[i][0][0]->r - bins[i-1][0][0]->r*bins[i-1][0][0]->r))/(bins[i][0][0]->r*bins[i][0][0]->r*deltaR));*/
 	//}
 
-	/*newDensity[rgridNumber - 1] = bins[rgridNumber - 1]->density - defaultTimeStep*(densityFluxRight(rgridNumber - 1, c) - densityFluxRight(rgridNumber - 2, c))/(bins[rgridNumber - 1]->r*bins[rgridNumber - 1]->r*deltaR);
-	newMomentum[rgridNumber - 1] = bins[rgridNumber-1]->density*bins[rgridNumber - 1]->U - defaultTimeStep*((momentumFluxRight(rgridNumber - 1, c) - momentumFluxRight(rgridNumber - 2, c))/deltaR);
-	newEnergy[rgridNumber - 1] = (bins[rgridNumber - 1]->density*bins[rgridNumber - 1]->U*bins[rgridNumber - 1]->U/2 + bins[rgridNumber - 1]->pressure/(gamma - 1)) - defaultTimeStep*(energyFluxRight(rgridNumber - 1, c) - energyFluxRight(rgridNumber - 2, c))/(bins[rgridNumber - 1]->r*bins[rgridNumber - 1]->r*deltaR);*/
+	/*newDensity[rgridNumber - 1] = bins[rgridNumber - 1]->density - deltaT*(densityFluxRight(rgridNumber - 1, c) - densityFluxRight(rgridNumber - 2, c))/(bins[rgridNumber - 1]->r*bins[rgridNumber - 1]->r*deltaR);
+	newMomentum[rgridNumber - 1] = bins[rgridNumber-1]->density*bins[rgridNumber - 1]->U - deltaT*((momentumFluxRight(rgridNumber - 1, c) - momentumFluxRight(rgridNumber - 2, c))/deltaR);
+	newEnergy[rgridNumber - 1] = (bins[rgridNumber - 1]->density*bins[rgridNumber - 1]->U*bins[rgridNumber - 1]->U/2 + bins[rgridNumber - 1]->pressure/(gamma - 1)) - deltaT*(energyFluxRight(rgridNumber - 1, c) - energyFluxRight(rgridNumber - 2, c))/(bins[rgridNumber - 1]->r*bins[rgridNumber - 1]->r*deltaR);*/
 
-	/*newDensity[0] = bins[0][0][0]->density - defaultTimeStep*((bins[1][0][0]->r*bins[1][0][0]->r*tempVelocity[1]*tempDensity[1] - bins[0][0][0]->r*bins[0][0][0]->r*tempVelocity[0]*tempDensity[0])/(bins[0][0][0]->r*bins[0][0][0]->r*deltaR));
-	newVelocity[0] = bins[0][0][0]->U - defaultTimeStep*(tempVelocity[0]*(tempVelocity[1] - tempVelocity[0])/(deltaR) + (tempPressure[1] - tempPressure[0])/(deltaR*tempDensity[0]));
-	newPressure[0] = bins[0][0][0]->pressure - defaultTimeStep*(tempVelocity[0]*(tempPressure[1] - tempPressure[0])/(deltaR) + gamma*tempPressure[0]*(bins[1][0][0]->r*bins[1][0][0]->r*tempVelocity[1] - bins[0][0][0]->r*bins[0][0][0]->r*tempVelocity[0])/(bins[0][0][0]->r*bins[0][0][0]->r*deltaR));
+	/*newDensity[0] = bins[0][0][0]->density - deltaT*((bins[1][0][0]->r*bins[1][0][0]->r*tempVelocity[1]*tempDensity[1] - bins[0][0][0]->r*bins[0][0][0]->r*tempVelocity[0]*tempDensity[0])/(bins[0][0][0]->r*bins[0][0][0]->r*deltaR));
+	newVelocity[0] = bins[0][0][0]->U - deltaT*(tempVelocity[0]*(tempVelocity[1] - tempVelocity[0])/(deltaR) + (tempPressure[1] - tempPressure[0])/(deltaR*tempDensity[0]));
+	newPressure[0] = bins[0][0][0]->pressure - deltaT*(tempVelocity[0]*(tempPressure[1] - tempPressure[0])/(deltaR) + gamma*tempPressure[0]*(bins[1][0][0]->r*bins[1][0][0]->r*tempVelocity[1] - bins[0][0][0]->r*bins[0][0][0]->r*tempVelocity[0])/(bins[0][0][0]->r*bins[0][0][0]->r*deltaR));
 
 	for(int i = 1; i < rgridNumber - 1; ++i){
-		newDensity[i] = bins[i][0][0]->density - defaultTimeStep*((bins[i+1][0][0]->r*bins[i+1][0][0]->r*tempVelocity[i+1]*tempDensity[i+1] - bins[i-1][0][0]->r*bins[i-1][0][0]->r*tempVelocity[i-1]*tempDensity[i-1])/(2*bins[i][0][0]->r*bins[i][0][0]->r*deltaR));
-		newVelocity[i] = bins[i][0][0]->U - defaultTimeStep*(tempVelocity[i]*(tempVelocity[i+1] - tempVelocity[i-1])/(2*deltaR) + (tempPressure[i+1] - tempPressure[i-1])/(2*deltaR*tempDensity[i]));
-		newPressure[i] = bins[i][0][0]->pressure - defaultTimeStep*(tempVelocity[i]*(tempPressure[i+1] - tempPressure[i-1])/(2*deltaR) + gamma*tempPressure[i]*(bins[i+1][0][0]->r*bins[i+1][0][0]->r*tempVelocity[i+1] - bins[i-1][0][0]->r*bins[i-1][0][0]->r*tempVelocity[i-1])/(2*bins[i][0][0]->r*bins[i][0][0]->r*deltaR));
+		newDensity[i] = bins[i][0][0]->density - deltaT*((bins[i+1][0][0]->r*bins[i+1][0][0]->r*tempVelocity[i+1]*tempDensity[i+1] - bins[i-1][0][0]->r*bins[i-1][0][0]->r*tempVelocity[i-1]*tempDensity[i-1])/(2*bins[i][0][0]->r*bins[i][0][0]->r*deltaR));
+		newVelocity[i] = bins[i][0][0]->U - deltaT*(tempVelocity[i]*(tempVelocity[i+1] - tempVelocity[i-1])/(2*deltaR) + (tempPressure[i+1] - tempPressure[i-1])/(2*deltaR*tempDensity[i]));
+		newPressure[i] = bins[i][0][0]->pressure - deltaT*(tempVelocity[i]*(tempPressure[i+1] - tempPressure[i-1])/(2*deltaR) + gamma*tempPressure[i]*(bins[i+1][0][0]->r*bins[i+1][0][0]->r*tempVelocity[i+1] - bins[i-1][0][0]->r*bins[i-1][0][0]->r*tempVelocity[i-1])/(2*bins[i][0][0]->r*bins[i][0][0]->r*deltaR));
 	}
 
-	newDensity[rgridNumber-1] = bins[rgridNumber-1][0][0]->density - defaultTimeStep*((bins[rgridNumber-1][0][0]->r*bins[rgridNumber-1][0][0]->r*tempVelocity[rgridNumber-1]*tempDensity[rgridNumber-1] - bins[rgridNumber-2][0][0]->r*bins[rgridNumber-2][0][0]->r*tempVelocity[rgridNumber-2]*tempDensity[rgridNumber-2])/(bins[rgridNumber-1][0][0]->r*bins[rgridNumber-1][0][0]->r*deltaR));
-	newVelocity[rgridNumber-1] = bins[rgridNumber-1][0][0]->U - defaultTimeStep*(tempVelocity[rgridNumber-1]*(tempVelocity[rgridNumber-1] - tempVelocity[rgridNumber-2])/(deltaR) + (tempPressure[rgridNumber-1] - tempPressure[rgridNumber-2])/(deltaR*tempDensity[rgridNumber-1]));
-	newPressure[rgridNumber-1] = bins[rgridNumber-1][0][0]->pressure - defaultTimeStep*(tempVelocity[rgridNumber-1]*(tempPressure[rgridNumber-1] - tempPressure[rgridNumber-2])/(deltaR) + gamma*tempPressure[rgridNumber-1]*(bins[rgridNumber-1][0][0]->r*bins[rgridNumber-1][0][0]->r*tempVelocity[rgridNumber-1] - bins[rgridNumber-2][0][0]->r*bins[rgridNumber-2][0][0]->r*tempVelocity[rgridNumber-2])/(bins[rgridNumber-1][0][0]->r*bins[rgridNumber-1][0][0]->r*deltaR));*/
+	newDensity[rgridNumber-1] = bins[rgridNumber-1][0][0]->density - deltaT*((bins[rgridNumber-1][0][0]->r*bins[rgridNumber-1][0][0]->r*tempVelocity[rgridNumber-1]*tempDensity[rgridNumber-1] - bins[rgridNumber-2][0][0]->r*bins[rgridNumber-2][0][0]->r*tempVelocity[rgridNumber-2]*tempDensity[rgridNumber-2])/(bins[rgridNumber-1][0][0]->r*bins[rgridNumber-1][0][0]->r*deltaR));
+	newVelocity[rgridNumber-1] = bins[rgridNumber-1][0][0]->U - deltaT*(tempVelocity[rgridNumber-1]*(tempVelocity[rgridNumber-1] - tempVelocity[rgridNumber-2])/(deltaR) + (tempPressure[rgridNumber-1] - tempPressure[rgridNumber-2])/(deltaR*tempDensity[rgridNumber-1]));
+	newPressure[rgridNumber-1] = bins[rgridNumber-1][0][0]->pressure - deltaT*(tempVelocity[rgridNumber-1]*(tempPressure[rgridNumber-1] - tempPressure[rgridNumber-2])/(deltaR) + gamma*tempPressure[rgridNumber-1]*(bins[rgridNumber-1][0][0]->r*bins[rgridNumber-1][0][0]->r*tempVelocity[rgridNumber-1] - bins[rgridNumber-2][0][0]->r*bins[rgridNumber-2][0][0]->r*tempVelocity[rgridNumber-2])/(bins[rgridNumber-1][0][0]->r*bins[rgridNumber-1][0][0]->r*deltaR));*/
 
 	/*delete[] tempVelocity;
 	delete[] tempDensity;
 	delete[] tempPressure;*/
 }
 
-double Simulation::getQ(int i){
-	return 0;
-	double b = 0.5*(bins[i+1]->U + bins[i]->U);
-	if(abs(b) < delta){
-		return (b*b/delta + delta)*1/2;
-	} else {
-		return abs(b);
-	}
-}
-
-double Simulation::densityFluxRight(int i, double maxVelocity){
-	if(i == rgridNumber -1){
-		return densityFlux(i);
-	}
-	double v1 = bins[i]->U;
-	double v2 = bins[i+1]->U;
-
-	double wr = bins[i]->density + densityFlux(i)/maxVelocity;
-	double wl = bins[i]->density - densityFlux(i)/maxVelocity;
-
-	if(v1*v2 > 0){
-	  double flux;
-	  double deltaFluxLeft;
-	  double deltaFluxRight;
-	  if(v1 > 0){
-		flux = densityFlux(i);
-		deltaFluxLeft = (flux - densityFlux(i - 1))/2;
-		deltaFluxRight = (densityFlux(i + 1) - flux)/2;
-	  } else {
-		flux = densityFlux(i + 1);
-		deltaFluxLeft = (-(flux - densityFlux(i))/2);
-		deltaFluxRight = (-(densityFlux(i + 2) - flux)/2);
-	  }
-	  return flux;// + vanleer(deltaFluxLeft, deltaFluxRight);
-	} else {
-      return (densityFlux(i) + densityFlux(i+1))/2;
-	}
-}
-
-double Simulation::momentumFluxRight(int i, double maxVelocity){
-	if(i == rgridNumber - 1){
-		return momentumFlux(i);
-	}
-	double v1 = bins[i]->U;
-	double v2 = bins[i+1]->U;
-	if(v1*v2 > 0){
-	  double flux;
-	  double deltaFluxLeft;
-	  double deltaFluxRight;
-	  if(v1 > 0){
-		flux = momentumFlux(i);
-		deltaFluxLeft = (flux - momentumFlux(i - 1))/2;
-		deltaFluxRight = (momentumFlux(i + 1) - flux)/2;
-	  } else {
-		flux = momentumFlux(i + 1);
-		deltaFluxLeft = (-(flux - momentumFlux(i))/2);
-		deltaFluxRight = (-(momentumFlux(i + 2) - flux)/2);
-	  }
-	  return flux;// + vanleer(deltaFluxLeft, deltaFluxRight);
-	} else {
-      return (momentumFlux(i) + momentumFlux(i+1))/2;
-	}
-}
-
-double Simulation::energyFluxRight(int i, double naxVelocity){
-	if( i == rgridNumber - 1){
-		return energyFlux(i);
-	}
-	double v1 = bins[i]->U;
-	double v2 = bins[i+1]->U;
-	if(v1*v2 > 0){
-	  double flux;
-	  double deltaFluxLeft;
-	  double deltaFluxRight;
-	  if(v1 > 0){
-		flux = energyFlux(i);
-		deltaFluxLeft = (flux - energyFlux(i - 1))/2;
-		deltaFluxRight = (energyFlux(i + 1) - flux)/2;
-	  } else {
-		flux = energyFlux(i + 1);
-		deltaFluxLeft = (-(flux - energyFlux(i))/2);
-		deltaFluxRight = (-(energyFlux(i + 2) - flux)/2);
-	  }
-	  return flux;// + vanleer(deltaFluxLeft, deltaFluxRight);
-	} else {
-      return (energyFlux(i) + energyFlux(i+1))/2;
-	}
-}
-
 double Simulation::densityFlux(int i){
 	if(i == -1){
 		return 0;
 	}
-	return bins[i]->r*bins[i]->r*bins[i]->U*bins[i]->density;
+	double flux = bins[i]->r*bins[i]->r*bins[i]->U*bins[i]->density;
+	if(flux != flux || (0*flux != 0*flux)){
+		printf("NaN densityFlux\n");
+	}
+	return flux;
 }
 
 double Simulation::momentumFlux(int i){
 	if(i == -1){
 		return 0;
 	}
-	return (bins[i]->pressure + bins[i]->density*bins[i]->U*bins[i]->U)*bins[i]->r*bins[i]->r;
+	double flux = bins[i]->density*bins[i]->U*bins[i]->U*bins[i]->r*bins[i]->r;
+	if(flux != flux || (0*flux != 0*flux)){
+		printf("NaN momentumFlux\n");
+	}
+	return flux;
 }
 
-double Simulation::energyFlux(int i){
+double Simulation::pressureFlux(int i){
 	if(i == -1){
 		return 0;
 	}
-	return bins[i]->r*bins[i]->r*bins[i]->U*(bins[i]->density*bins[i]->U*bins[i]->U/2 + gamma*bins[i]->pressure/(gamma - 1));
+	double flux = bins[i]->r*bins[i]->r*bins[i]->U*bins[i]->pressure;
+	if(flux != flux || (0*flux != 0*flux)){
+		printf("NaN energyFlux\n");
+	}
+	return flux;
+}
+
+double Simulation::momentumPressureFlux(int i){
+	if(i == -1){
+		return 0;
+	}
+	if(bins[i]->pressure != bins[i]->pressure || (0*bins[i]->pressure != 0*bins[i]->pressure)){
+		printf("NaN pressureFlux\n");
+	}
+	return bins[i]->pressure;
+}
+
+double Simulation::volumeFlux(int i){
+	double flux = bins[i]->U*bins[i]->r*bins[i]->r;
+	if(flux != flux || (0*flux != 0*flux)){
+		printf("NaN volumeFlux\n");
+	}
+	return flux;
 }
 
 double Simulation::vanleer(double a, double b){
@@ -851,7 +833,7 @@ double Simulation::vanleer(double a, double b){
 double Simulation::findMaxVelocity(){
 	double maxVelocity = 0;
 	for(int i = 0; i < rgridNumber; ++i){
-		if( abs(bins[i]->U) > maxVelocity){
+		if( abs(bins[i]->U) > abs(maxVelocity)){
 			maxVelocity = bins[i]->U;
 		}
 	}
@@ -865,48 +847,103 @@ void Simulation::tvd(double* value, double* valueFlux, double maxVelocity){
 
 	double* tempValue = new double[rgridNumber];
 
-	fr[0] = maxVelocity*value[0] + valueFlux[0];
-	fl[0] = 0;
-	for(int i = 1; i < rgridNumber; ++i){
-		fr[i] = maxVelocity*value[i] + valueFlux[i];
-		fl[i] = maxVelocity*value[i-1] - valueFlux[i-1];
-	}
+	if(maxVelocity > 0){
+	  fr[0] = maxVelocity*value[0] + valueFlux[0];
+	  fl[0] = 0;
+	  for(int i = 1; i < rgridNumber; ++i){
+		  fr[i] = maxVelocity*value[i] + valueFlux[i];
+		  fl[i] = maxVelocity*value[i-1] - valueFlux[i-1];
+	  }
 
-	flux[0] = (fr[0] - fl[0])/2;
-	for(int i = 1; i < rgridNumber - 1; ++i){
-		flux[i] = (fr[i] - fl[i])/2;
-	}
-	flux[rgridNumber - 1] = (fr[rgridNumber - 1] - fl[rgridNumber - 1])/2;
+	  /*flux[0] = (fr[0] - fl[0])/2;
+	  for(int i = 1; i < rgridNumber - 1; ++i){
+		  flux[i] = (fr[i] - fl[i])/2;
+	  }
+	  flux[rgridNumber - 1] = (fr[rgridNumber - 1] - fl[rgridNumber - 1])/2;
 
-	tempValue[0] = value[0] - defaultTimeStep*0.5*(flux[0])/deltaR;
-	for(int i = 1; i < rgridNumber; ++i){
-		tempValue[i] = value[i] - defaultTimeStep*0.5*(flux[i] - flux[i-1])/deltaR;
-	}
+	  tempValue[0] = value[0] - deltaT*0.5*(flux[0])/deltaR;
+	  for(int i = 1; i < rgridNumber; ++i){
+		  tempValue[i] = value[i] - deltaT*0.5*(flux[i] - flux[i-1])/deltaR;
+	  }
 
-	fr[0] = maxVelocity*tempValue[0] + valueFlux[0];
-	fl[0] = 0;
-	for(int i = 1; i < rgridNumber; ++i){
-		fr[i] = maxVelocity*tempValue[i] + valueFlux[i];
-		fl[i] = maxVelocity*tempValue[i-1] - valueFlux[i-1];
-	}
+	  fr[0] = maxVelocity*tempValue[0] + valueFlux[0];
+	  fl[0] = 0;
+	  for(int i = 1; i < rgridNumber; ++i){
+		  fr[i] = maxVelocity*tempValue[i] + valueFlux[i];
+		  fl[i] = maxVelocity*tempValue[i-1] - valueFlux[i-1];
+	  }*/
 
-	flux[0] = (fr[0] - fl[0])/2;
-	for(int i = 1; i < rgridNumber - 1; ++i){
-		double dfrp = (fr[i+1] - fr[i])/2;
-		double dfrm = (fr[i] - fr[i-1])/2;
-		double dfr = vanleer(dfrp, dfrm);
+	  flux[0] = (fr[0] - fl[0])/2;
+	  for(int i = 1; i < rgridNumber - 1; ++i){
+		  double dfrp = (fr[i+1] - fr[i])/2;
+		  double dfrm = (fr[i] - fr[i-1])/2;
+		  double dfr = vanleer(dfrp, dfrm);
 
-		double dflp = (fl[i]-fl[i+1])/2;
-		double dflm = (fl[i-1] - fl[i])/2;
-		double dfl = vanleer(dflp, dflm);
+		  double dflp = (fl[i]-fl[i+1])/2;
+		  double dflm = (fl[i-1] - fl[i])/2;
+		  double dfl = vanleer(dflp, dflm);
 
-		flux[i] = (fr[i] - fl[i] + dfr - dfl)/2;
-	}
-	flux[rgridNumber - 1] = (fr[rgridNumber - 1] - fl[rgridNumber - 1])/2;
+		  flux[i] = (fr[i] - fl[i] + dfr - dfl)/2;
+	  }
+	  flux[rgridNumber - 1] = (fr[rgridNumber - 1] - fl[rgridNumber - 1])/2;
 
-	value[0] = value[0] - defaultTimeStep*(flux[0])/deltaR;
-	for(int i = 1; i < rgridNumber; ++i){
-		value[i] = value[i] - defaultTimeStep*(flux[i] - flux[i-1])/deltaR;
+
+	  value[0] = value[0] - deltaT*(flux[0])/deltaR;
+	  if(value[0] != value[0] || (0*value[0] != 0*value[0])){
+	    printf("NaN value");
+	  }
+	  for(int i = 1; i < rgridNumber; ++i){
+		  value[i] = value[i] - deltaT*(flux[i] - flux[i-1])/deltaR;
+		  if(value[i] != value[i] || (0*value[i] != 0*value[i])){
+			  printf("NaN value");
+		  }
+	  }
+	} else {
+	  for(int i = 0; i < rgridNumber - 1; ++i){
+		  fr[i] = maxVelocity*value[i+1] + valueFlux[i+1];
+		  fl[i] = maxVelocity*value[i] - valueFlux[i];
+	  }
+	  fr[rgridNumber - 1] = maxVelocity*value[rgridNumber - 1] + valueFlux[rgridNumber - 1];
+	  fl[rgridNumber - 1] = maxVelocity*value[rgridNumber - 1] + valueFlux[rgridNumber - 1];
+
+	  /*for(int i = 0; i < rgridNumber - 1; ++i){
+		  flux[i] = (fr[i] - fl[i])/2;
+	  }
+	  flux[rgridNumber - 1] = (fr[rgridNumber - 1] - fl[rgridNumber - 1])/2;
+
+	  tempValue[0] = value[0] - deltaT*0.5*(flux[0])/deltaR;
+	  for(int i = 1; i < rgridNumber; ++i){
+		  tempValue[i] = value[i] - deltaT*0.5*(flux[i] - flux[i-1])/deltaR;
+	  }
+
+	  for(int i = 0; i < rgridNumber-1; ++i){
+		  fr[i] = maxVelocity*tempValue[i+1] + valueFlux[i+1];
+		  fl[i] = maxVelocity*tempValue[i] - valueFlux[i];
+	  }
+	  fr[rgridNumber- 1] = maxVelocity*tempValue[rgridNumber - 1] + valueFlux[rgridNumber - 1];
+	  fl[rgridNumber- 1] = maxVelocity*tempValue[rgridNumber - 1] + valueFlux[rgridNumber - 1];*/
+
+	  flux[0] = (fr[0] - fl[0])/2;
+	  for(int i = 1; i < rgridNumber - 1; ++i){
+	 	  double dfrp = -(fr[i+2] - fr[i+1])/2;
+		  double dfrm = -(fr[i+1] - fr[i])/2;
+		  double dfr = vanleer(dfrp, dfrm);
+
+		  double dflp = (fr[i+2] - fr[i+1])/2;
+		  double dflm = (fr[i+1] - fr[i])/2;
+		  double dfl = vanleer(dflp, dflm);
+
+		  flux[i] = (fr[i] - fl[i] + dfr - dfl)/2;
+	  }
+	  flux[rgridNumber - 1] = (fr[rgridNumber - 1] - fl[rgridNumber - 1])/2;
+
+	  value[0] = value[0] - deltaT*(flux[0])/deltaR;
+	  for(int i = 1; i < rgridNumber; ++i){
+		  value[i] = value[i] - deltaT*(flux[i] - flux[i-1])/deltaR;
+		  if(value[i] != value[i] || (0*value[i] != 0*value[i])){
+			  printf("NaN value");
+		  }
+	  }
 	}
 
 	delete[] fr;

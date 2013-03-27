@@ -110,7 +110,7 @@ contains
              ps=(u(5,i,j,k)-sum(u(2:4,i,j,k)**2,1)/u(1,i,j,k)/2)*(gamma-1)+(2-gamma)*sum(b(:,i,j,k)**2,1)/2
              p=ps-sum(b(:,i,j,k)**2)/2
 !   c=max(c,v+sqrt(abs(  (sum(b(:,i,j,k)**2)*(gamma-1)+gamma*p)/u(1,i,j,k))))
-             c=max(c,v+sqrt(abs(  (sum(b(:,i,j,k)**2)*2+gamma*p)/u(1,i,j,k))))
+             c=max(c,5.0*(v+sqrt(abs(  (sum(b(:,i,j,k)**2)*2+gamma*p)/u(1,i,j,k)))))
           end do
        end do
     end do
@@ -376,7 +376,7 @@ recursive subroutine mhdflux(v,c,u,b,n)
   v(4,:)=u(4,:)*vx-b(3,:)*b(1,:)
   v(5,:)=(u(5,:)+ps)*vx-b(1,:)*sum(b*u(2:4,:),1)/u(1,:)
   p=ps-sum(b**2,1)/2
-  c=1.1*maxval(abs(vx)+sqrt(abs( (sum(b**2,1)+gamma*p)/u(1,:))))
+  c=5.0*maxval(abs(vx)+sqrt(abs( (sum(b**2,1)+gamma*p)/u(1,:))))
   if (c>0) v=v/c
 end subroutine mhdflux
 
