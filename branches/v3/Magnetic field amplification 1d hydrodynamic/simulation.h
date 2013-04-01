@@ -26,6 +26,8 @@ public:
 	double temperature;
 	double gridParameter;
 	double epsilonR;
+	double simulationTime;
+	double deltaT;
 	bool kolmogorovCascading;
 	bool resonantInstability;
 	bool bellInstability;
@@ -93,16 +95,14 @@ public:
 	void updateEnergy();
 	void updateShockWavePoint();
 	void updateCosmicRayBoundMomentum();
-	void evaluateHydrodynamic(double* newDensity, double* newVelocity, double* newPressure);
-	double getQ(int i);
+	void evaluateHydrodynamic(double* newDensity, double* newMomentum, double* newPressure);
 
-	double densityFluxRight(int i, double maxVelocity);
-	double momentumFluxRight(int i, double maxVelocty);
-	double energyFluxRight(int i, double maxVelocity);
 
 	double densityFlux(int i);
 	double momentumFlux(int i);
-	double energyFlux(int i);
+	double pressureFlux(int i);
+	double momentumPressureFlux(int i);
+	double volumeFlux(int i);
 
 	double vanleer(double a, double b);
 	double findMaxVelocity();

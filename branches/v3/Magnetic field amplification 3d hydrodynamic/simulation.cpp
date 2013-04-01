@@ -504,6 +504,10 @@ void Simulation::collectAverageVelocity(){
 
 		bins[i]->pressure = newPressure[i];
 
+		/*if((bins[i]->pressure == 0)){
+			printf("0 pressure\n");
+		}*/
+
 		if(bins[i]->pressure < 0){
 			bins[i]->pressure = epsilon;
 			printf("pressure < 0\n");
@@ -517,6 +521,10 @@ void Simulation::collectAverageVelocity(){
 		if(bins[i]->density < 100*epsilon*density0){
 			bins[i]->pressure = epsilon*newPressure[i];
 		}
+
+		/*if((bins[i]->pressure == 0)){
+			printf("0 pressure\n");
+		}*/
 	}
 
 	delete[] newMomentum;
@@ -663,8 +671,8 @@ void Simulation::evaluateHydrodynamic(double* newDensity, double* newMomentum, d
 	/*double* tempVelocity = new double[rgridNumber];
 	double* tempDensity = new double[rgridNumber];
 	double* tempPressure = new double[rgridNumber];*/
-	double c = 0.05*findMaxVelocity();
-	deltaT = 0.005*deltaR/abs(c);
+	double c = 2*findMaxVelocity();
+	deltaT = 0.5*deltaR/abs(c);
 
 	double* densityFluxes = new double[rgridNumber];
 	double* momentumFluxes = new double[rgridNumber];
@@ -685,14 +693,34 @@ void Simulation::evaluateHydrodynamic(double* newDensity, double* newMomentum, d
 		volumeFluxes[i] = (gamma-1)*volumeFlux(i);
 	}
 
-	tvd(newDensity, densityFluxes, c);
-	tvd(newMomentum, momentumFluxes, c);
-	tvd(newPressure, pressureFluxes, c);
+	convectionTVD(newDensity, densityFluxes);
+	convectionTVD(newMomentum, momentumFluxes);
+	convectionTVD(newPressure, pressureFluxes);
 
 	for(int i = 0; i < rgridNumber; ++i){
 		newDensity[i] = newDensity[i]/(bins[i]->r*bins[i]->r);
 		newMomentum[i] = newMomentum[i]/(bins[i]->r*bins[i]->r);
-		newPressure[i] = newPressure[i]/(bins[i]->pressure);
+		if((bins[i]->pressure != bins[i]->pressure) || (0*bins[i]->pressure != 0*bins[i]->pressure)){
+			printf("NaN pressure\n");
+			Sleep(500);
+		}
+
+		if((bins[i]->pressure == 0)){
+			printf("0 pressure\n");
+		}
+		if((newPressure[i] != newPressure[i]) || (0*newPressure[i] != 0*newPressure[i])){
+			printf("NaN pressure\n");
+			Sleep(500);
+		}
+		if(bins[i]->pressure > epsilon){
+		    newPressure[i] = newPressure[i]/(bins[i]->pressure);
+		} else {
+			newPressure[i] = 0;
+		}
+		if((newPressure[i] != newPressure[i]) || (0*newPressure[i] != 0*newPressure[i])){
+			printf("NaN pressure\n");
+			Sleep(500);
+		}
 	}
 	tvd(newMomentum, momentumPressureFluxes, c);
 	tvd(newPressure, volumeFluxes, c);
@@ -845,7 +873,40 @@ void Simulation::tvd(double* value, double* valueFlux, double maxVelocity){
 	double* fl = new double[rgridNumber];
     double* flux = new double[rgridNumber];
 
-	double* tempValue = new double[rgridNumber];
+	fl[0] = 0;
+
+	for(int i = 0; i < rgridNumber - 1; ++i){
+		fr[i] = (valueFlux[i] + valueFlux[i+1])/2;
+		fl[i+1] = fr[i];
+		/*if(bins[i]->U > 0){
+			if(bins[i+1]->U > 0){
+				fr[i] = (3*valueFlux[i] + valueFlux[i+1])/4;
+				fl[i+1] = fr[i];
+			} else {
+				fr[i] = (valueFlux[i] + valueFlux[i+1])/2;
+				fl[i+1] = fr[i];
+			}
+		} else {
+			if(bins[i+1]->U > 0){
+				fr[i] = (valueFlux[i] + valueFlux[i+1])/2;
+				fl[i+1] = fr[i];
+			} else {				
+				fr[i] = (valueFlux[i] + 3*valueFlux[i+1])/4;
+				fl[i+1] = fr[i];
+			}
+		}*/
+	}
+
+	fr[rgridNumber - 1] = valueFlux[rgridNumber - 1];
+
+	for(int i = 0; i < rgridNumber; ++i){
+		value[i] = value[i] - deltaT*(fr[i] - fl[i])/deltaR;
+		if(value[i] != value[i] || (0*value[i] != 0*value[i])){
+		    printf("NaN value");
+		}
+	}
+
+	/*double* tempValue = new double[rgridNumber];
 
 	if(maxVelocity > 0){
 	  fr[0] = maxVelocity*value[0] + valueFlux[0];
@@ -871,7 +932,7 @@ void Simulation::tvd(double* value, double* valueFlux, double maxVelocity){
 	  for(int i = 1; i < rgridNumber; ++i){
 		  fr[i] = maxVelocity*tempValue[i] + valueFlux[i];
 		  fl[i] = maxVelocity*tempValue[i-1] - valueFlux[i-1];
-	  }*/
+	  }
 
 	  flux[0] = (fr[0] - fl[0])/2;
 	  for(int i = 1; i < rgridNumber - 1; ++i){
@@ -921,7 +982,7 @@ void Simulation::tvd(double* value, double* valueFlux, double maxVelocity){
 		  fl[i] = maxVelocity*tempValue[i] - valueFlux[i];
 	  }
 	  fr[rgridNumber- 1] = maxVelocity*tempValue[rgridNumber - 1] + valueFlux[rgridNumber - 1];
-	  fl[rgridNumber- 1] = maxVelocity*tempValue[rgridNumber - 1] + valueFlux[rgridNumber - 1];*/
+	  fl[rgridNumber- 1] = maxVelocity*tempValue[rgridNumber - 1] + valueFlux[rgridNumber - 1];
 
 	  flux[0] = (fr[0] - fl[0])/2;
 	  for(int i = 1; i < rgridNumber - 1; ++i){
@@ -944,12 +1005,53 @@ void Simulation::tvd(double* value, double* valueFlux, double maxVelocity){
 			  printf("NaN value");
 		  }
 	  }
+	}*/
+
+	delete[] fr;
+	delete[] fl;
+	delete[] flux;
+	//delete[] tempValue;
+}
+
+void Simulation::convectionTVD(double* value, double* valueFlux){
+	double* fr = new double[rgridNumber];
+	double* fl = new double[rgridNumber];
+    double* flux = new double[rgridNumber];
+
+	fl[0] = 0;
+
+	for(int i = 0; i < rgridNumber - 1; ++i){
+		if(bins[i]->U > 0){
+			if(bins[i+1]->U > 0){
+				fr[i] = valueFlux[i];
+				fl[i+1] = fr[i];
+			} else {
+				fr[i] = (valueFlux[i] + valueFlux[i+1])/2;
+				fl[i+1] = fr[i];
+			}
+		} else {
+			if(bins[i+1]->U > 0){
+				fr[i] = 0;
+				fl[i+1] = fr[i];
+			} else {				
+				fr[i] = valueFlux[i+1];
+				fl[i+1] = fr[i];
+			}
+		}
+	}
+
+	fr[rgridNumber - 1] = valueFlux[rgridNumber - 1];
+
+	for(int i = 0; i < rgridNumber; ++i){
+		value[i] = value[i] - deltaT*(fr[i] - fl[i])/deltaR;
+		if(value[i] != value[i] || (0*value[i] != 0*value[i])){
+		    printf("NaN value");
+		}
 	}
 
 	delete[] fr;
 	delete[] fl;
 	delete[] flux;
-	delete[] tempValue;
 }
 
 
