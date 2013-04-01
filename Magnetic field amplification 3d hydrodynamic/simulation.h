@@ -108,6 +108,7 @@ public:
 	double findMaxVelocity();
 
 	void tvd(double* value, double* flux, double maxVelocity);
+	void convectionTVD(double* value, double* flux);
 private:
 	static const int particleMultiply = 20;
 };
