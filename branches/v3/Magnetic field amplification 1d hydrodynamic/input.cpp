@@ -14,7 +14,7 @@ Simulation* readInput(){
 		fscanf(infile,"%lf",&simulation->Rtot);
 		fscanf(infile,"%lf",&simulation->density0);
         fscanf(infile,"%lf",&simulation->B0);
-        fscanf(infile,"%lf",&simulation->temperature);
+        fscanf(infile,"%lf",&simulation->temperature0);
 		//fscanf(infile,"%lf",&simulation->freeEscapeBoundary);
 		fscanf(infile,"%lf",&simulation->upstreamR);
 		fscanf(infile,"%lf",&simulation->downstreamR);

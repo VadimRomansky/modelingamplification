@@ -62,18 +62,26 @@ void Simulation::initializeProfile(){
 			//bins[i][j] = new SpaceBin*[phigridNumber];
 			Phi = deltaPhi/2;
 			//for(int k = 0; k < phigridNumber; ++k){
-				double density = density0;
+			    double density = density0;
+				double temperature = temperature0;
 				double u;
-				if(i < shockWavePoint){
-					//u = U0*sqr((upstreamR + deltaR/2)/R);
+			    //init shock wave
+				if((1 <= i) && (i < 2*shockWavePoint)){
 					u = U0;
-					//density = density0*sqr((upstreamR + deltaR/2)/R);
 				} else {
-					u = U0/R;
-					//u = U0*sqr((upstreamR + deltaR/2)/R)/Rtot;
-					//density = density0*sqr((upstreamR + deltaR/2)/R)/Rtot;
+					//u = U0/R;
+					u = 0;
 				}
-				//u = U0;
+				//
+
+				//init sound wave
+				  /*double c = sqrt(gamma*gasConstant*temperature0); 
+				  density = density0 + 0.01*density0*sin(pi*10.0*i/rgridNumber);
+				  u = c*0.01*density0*sin(pi*10.0*i/rgridNumber)/density0;
+				  temperature = temperature0 + c*u*(gamma - 1)/(gamma*gasConstant);*/
+				//
+
+
 				bins[i] = new SpaceBin(R,Theta,Phi,deltaR,deltaTheta,deltaPhi,u,density,Theta,Phi,temperature,B0,i,0,0,smallAngleScattering);
 				//Phi = Phi + deltaPhi;
 			//}
@@ -190,7 +198,7 @@ void Simulation::simulate(){
 		if(introducedParticles.size() > 0){
 			updateEnergy();
 			updateShockWavePoint();
-			if(itNumber % 10 == 0){
+			if(itNumber % 100 == 0){
 				printf("%s", "outputing\n");
 				outputParticles(introducedParticles,"./output/particles.dat");
 				outputPDF(introducedParticles,"./output/tamc_pdf.dat");
@@ -268,7 +276,8 @@ std::list <Particle> Simulation::getParticleGaussDistribution(int number){
 			theta = pi/2;
 		}
 		double phi = atan2(y,x);
-		Particle particle = Particle(upstreamR*sin(theta)*cos(phi),upstreamR*sin(theta)*sin(phi),upstreamR*cos(theta),temperature,A,Z, U0, theta, phi);
+		//todo!
+		Particle particle = Particle(upstreamR*sin(theta)*cos(phi),upstreamR*sin(theta)*sin(phi),upstreamR*cos(theta),temperature0,A,Z, U0, theta, phi);
 		particle.weight = 1.0/number;
 		l.push_front(particle);
 	}
@@ -480,7 +489,8 @@ void Simulation::collectAverageVelocity(){
 			Sleep(500);
 		}
 
-		bins[i]->U = (newMomentum[i]/bins[i]->density);
+		//bins[i]->U = (newMomentum[i]/bins[i]->density);
+		bins[i]->U = (newMomentum[i]/newDensity[i]);
 
 		if(newDensity[i] < 0){
 			bins[i]->density = epsilon;
@@ -502,6 +512,7 @@ void Simulation::collectAverageVelocity(){
 		//bins[i]->U = newMomentum[i]/bins[i]->density;
 
 
+		//bins[i]->pressure = (gamma - 1)*(newPressure[i] - bins[i]->density*bins[i]->U*bins[i]->U/2);
 		bins[i]->pressure = newPressure[i];
 
 		if(bins[i]->pressure < 0){
@@ -664,7 +675,55 @@ void Simulation::evaluateHydrodynamic(double* newDensity, double* newMomentum, d
 	double* tempDensity = new double[rgridNumber];
 	double* tempPressure = new double[rgridNumber];
 	double c = 2*findMaxVelocity();
-	deltaT = 0.05*deltaR/abs(c);
+	if(abs(c) < epsilon){
+		c = scaleParameter*deltaR/defaultTimeStep;
+	} 
+	deltaT = scaleParameter*deltaR/abs(c);
+	//deltaT = min(deltaT, defaultTimeStep);
+	//deltaT = min(deltaT, kurzrockMinDeltaT());
+	//deltaT = max(deltaT, defaultTimeStep);
+
+	for(int i = 0; i < rgridNumber; ++i){
+		//in new U = U + c
+		bins[i]->U = bins[i]->U + c;
+		newDensity[i] = bins[i]->density;
+		newMomentum[i] = bins[i]->density*bins[i]->U;
+		newPressure[i] = bins[i]->pressure;
+		//newPressure[i] = bins[i]->fullEnergy();
+	}
+
+	//LaxVendorf(newDensity, newMomentum, newPressure);
+
+
+	/*if(bins[0]->U > 0){
+		newDensity[0] = newDensity[0] - deltaT*(densityFlux(0) - densityFlux(rgridNumber-1))/deltaR;
+		newMomentum[0] = newMomentum[0] - deltaT*(momentumFlux(0) - momentumFlux(rgridNumber-1) + 0.5*(bins[1]->pressure - bins[rgridNumber-1]->pressure))/deltaR;
+		newPressure[0] = newPressure[0]- deltaT*(pressureFlux(0) - pressureFlux(rgridNumber-1) + (gamma-1)*bins[0]->pressure*(volumeFlux(0) - volumeFlux(rgridNumber-1)))/deltaR;
+	} else {
+		newDensity[0] = newDensity[0] - deltaT*(densityFlux(1) - densityFlux(0))/deltaR;
+		newMomentum[0] = newMomentum[0] - deltaT*(momentumFlux(1) - momentumFlux(0) + 0.5*(bins[1]->pressure - bins[0]->pressure))/deltaR;
+		newPressure[0] = newPressure[0]- deltaT*(pressureFlux(1) - pressureFlux(0) + (gamma-1)*bins[0]->pressure*(volumeFlux(1) - volumeFlux(0)))/deltaR;
+	}
+	for(int i = 1; i < rgridNumber - 1; ++i){
+		if(bins[i]->U > 0){
+			newDensity[i] = newDensity[i] - deltaT*(densityFlux(i) - densityFlux(i-1))/deltaR;
+			newMomentum[i] = newMomentum[i] - deltaT*(momentumFlux(i) - momentumFlux(i-1) + (bins[i]->pressure - bins[i-1]->pressure))/deltaR;
+			newPressure[i] = newPressure[i]- deltaT*(pressureFlux(i) - pressureFlux(i-1) + (gamma-1)*bins[i]->pressure*(volumeFlux(i) - volumeFlux(i-1)))/deltaR;
+		} else {
+			newDensity[i] = newDensity[i] - deltaT*(densityFlux(i+1) - densityFlux(i))/deltaR;
+			newMomentum[i] = newMomentum[i] - deltaT*(momentumFlux(i+1) - momentumFlux(i) + (bins[i+1]->pressure - bins[i]->pressure))/deltaR;
+			newPressure[i] = newPressure[i]- deltaT*(pressureFlux(i+1) - pressureFlux(i) + (gamma-1)*bins[i]->pressure*(volumeFlux(i+1) - volumeFlux(i)))/deltaR;
+		}
+	}
+	if(bins[rgridNumber-1]->U > 0){
+		newDensity[rgridNumber-1] = newDensity[rgridNumber-1] - deltaT*(densityFlux(rgridNumber-1) - densityFlux(rgridNumber-2))/deltaR;
+		newMomentum[rgridNumber-1] = newMomentum[rgridNumber-1] - deltaT*(momentumFlux(rgridNumber-1) - momentumFlux(rgridNumber-2) + 0.5*(bins[0]->pressure - bins[rgridNumber-2]->pressure))/deltaR;
+		newPressure[rgridNumber-1] = newPressure[rgridNumber-1]- deltaT*(pressureFlux(rgridNumber-1) - pressureFlux(rgridNumber-2) + (gamma-1)*bins[rgridNumber-1]->pressure*(volumeFlux(rgridNumber-1) - volumeFlux(rgridNumber-2)))/deltaR;
+	} else {
+		newDensity[rgridNumber-1] = newDensity[rgridNumber-1] - deltaT*(densityFlux(0) - densityFlux(rgridNumber-1))/deltaR;
+		newMomentum[rgridNumber-1] = newMomentum[rgridNumber-1] - deltaT*(momentumFlux(0) - momentumFlux(rgridNumber-1) + 0.5*(bins[0]->pressure - bins[rgridNumber-2]->pressure))/deltaR;
+		newPressure[rgridNumber-1] = newPressure[rgridNumber-1]- deltaT*(pressureFlux(0) - pressureFlux(rgridNumber-1) + (gamma-1)*bins[rgridNumber-1]->pressure*(volumeFlux(0) - volumeFlux(rgridNumber-1)))/deltaR;
+	}*/
 
 
 	double* densityFluxes = new double[rgridNumber];
@@ -679,9 +738,9 @@ void Simulation::evaluateHydrodynamic(double* newDensity, double* newMomentum, d
 		newMomentum[i] = bins[i]->density*bins[i]->U;
 		newPressure[i] = bins[i]->pressure;
 
-		tempDensity[i] = bins[i]->density;
+		/*tempDensity[i] = bins[i]->density;
 		tempMomentum[i] = bins[i]->density*bins[i]->U;
-		tempPressure[i] = bins[i]->pressure;
+		tempPressure[i] = bins[i]->pressure;*/
 
 		densityFluxes[i] = densityFlux(i);
 		momentumFluxes[i] = momentumFlux(i);
@@ -765,9 +824,9 @@ void Simulation::evaluateHydrodynamic(double* newDensity, double* newMomentum, d
 		volumeFluxes[i] = (gamma-1)*volumeFlux(i);
 	}
 
-	tvd(newDensity, densityFluxes, c);
-	tvd(newMomentum, momentumFluxes, c);
-	tvd(newPressure, pressureFluxes, c);
+	convectionTVD(newDensity, densityFluxes);
+	convectionTVD(newMomentum, momentumFluxes);
+	convectionTVD(newPressure, pressureFluxes);
 
 	for(int i = 0; i < rgridNumber; ++i){
 		newDensity[i] = newDensity[i];
@@ -780,6 +839,22 @@ void Simulation::evaluateHydrodynamic(double* newDensity, double* newMomentum, d
 		newMomentum[i] = newMomentum[i];
 		newPressure[i] = newPressure[i]*bins[i]->pressure;
 	}
+
+	for(int i = 0; i < rgridNumber - 1; ++i){
+		tempDensity[i] = (1 - scaleParameter)*newDensity[i] + scaleParameter*newDensity[i+1];
+		tempMomentum[i] = (1 - scaleParameter)*newMomentum[i] + scaleParameter*newMomentum[i+1];
+		tempPressure[i] = (1 - scaleParameter)*newPressure[i] + scaleParameter*newPressure[i+1];
+	}
+	tempDensity[rgridNumber - 1] = (1 - scaleParameter)*newDensity[rgridNumber-1] + scaleParameter*newDensity[0];
+	tempMomentum[rgridNumber - 1] = (1 - scaleParameter)*newMomentum[rgridNumber-1] + scaleParameter*newMomentum[0];
+	tempPressure[rgridNumber - 1] = (1 - scaleParameter)*newPressure[rgridNumber-1] + scaleParameter*newPressure[0];
+
+	for(int i = 0; i < rgridNumber; ++i){
+		newDensity[i] = tempDensity[i];
+		newMomentum[i] = tempMomentum[i] - newDensity[i]*c;
+		newPressure[i] = tempPressure[i];
+	}
+
 
 
 
@@ -846,6 +921,14 @@ double Simulation::volumeFlux(int i){
 	return flux;
 }
 
+double Simulation::fullMomentumFlux(int i){
+	return (bins[i]->density*bins[i]->U*bins[i]->U + bins[i]->pressure);
+}
+
+double Simulation::fullEnergyFlux(int i){
+	return (bins[i]->U*(bins[i]->pressure/(gamma-1) + bins[i]->density*bins[i]->U*bins[i]->U/2 + bins[i]->pressure));
+}
+
 double Simulation::vanleer(double a, double b){
 	if(abs(a + b) < epsilon){
 		return 0;
@@ -859,8 +942,8 @@ double Simulation::vanleer(double a, double b){
 double Simulation::findMaxVelocity(){
 	double maxVelocity = 0;
 	for(int i = 0; i < rgridNumber; ++i){
-		if( abs(bins[i]->U) > abs(maxVelocity)){
-			maxVelocity = bins[i]->U;
+		if( abs(bins[i]->U) + bins[i]->soundSpeed() > abs(maxVelocity)){
+			maxVelocity = abs(bins[i]->U) + bins[i]->soundSpeed();
 		}
 	}
 	return maxVelocity;
@@ -871,9 +954,14 @@ void Simulation::tvd(double* value, double* valueFlux, double maxVelocity){
 	double* fl = new double[rgridNumber];
     double* flux = new double[rgridNumber];
 
-	fl[0] = 0;
-
 	for(int i = 0; i < rgridNumber - 1; ++i){
+		fr[i] = (valueFlux[i] + valueFlux[i+1])/2;
+		fl[i+1] = fr[i];
+	}
+	fr[rgridNumber - 1] = (valueFlux[rgridNumber - 1] + valueFlux[0])/2;
+	fl[0] = fr[rgridNumber - 1];
+
+	/*for(int i = 0; i < rgridNumber - 1; ++i){
 		if(bins[i]->U > 0){
 			if(bins[i+1]->U > 0){
 				fr[i] = valueFlux[i];
@@ -891,9 +979,27 @@ void Simulation::tvd(double* value, double* valueFlux, double maxVelocity){
 				fl[i+1] = fr[i];
 			}
 		}
+
+		
 	}
 
-	fr[rgridNumber - 1] = valueFlux[rgridNumber - 1];
+	if(bins[rgridNumber - 1]->U > 0){
+		if(bins[0]->U > 0){
+			fr[rgridNumber - 1] = valueFlux[rgridNumber - 1];
+			fl[0] = fr[rgridNumber - 1];
+		} else {
+			fr[rgridNumber - 1] = (valueFlux[rgridNumber - 1] + valueFlux[0])/2;
+			fl[0] = fr[rgridNumber - 1];
+		}
+	} else {
+		if(bins[0]->U > 0){
+			fr[rgridNumber - 1] = (valueFlux[rgridNumber - 1] + valueFlux[0])/2;
+			fl[0] = fr[rgridNumber - 1];
+		} else {				
+			fr[rgridNumber - 1] = valueFlux[0];
+			fl[0] = fr[rgridNumber - 1];
+		}
+	}*/
 
 	for(int i = 0; i < rgridNumber; ++i){
 		value[i] = value[i] - deltaT*(fr[i] - fl[i])/deltaR;
@@ -906,33 +1012,31 @@ void Simulation::tvd(double* value, double* valueFlux, double maxVelocity){
 
 	if(maxVelocity > 0){
 	  fr[0] = maxVelocity*value[0] + valueFlux[0];
-	  fl[0] = 0;
 	  for(int i = 1; i < rgridNumber; ++i){
 		  fr[i] = maxVelocity*value[i] + valueFlux[i];
 		  fl[i] = maxVelocity*value[i-1] - valueFlux[i-1];
 	  }
+      fl[0] = maxVelocity*value[rgridNumber - 1] - valueFlux[rgridNumber - 1];
 
-	  flux[0] = (fr[0] - fl[0])/2;
-	  for(int i = 1; i < rgridNumber - 1; ++i){
+	  for(int i = 0; i < rgridNumber; ++i){
 		  flux[i] = (fr[i] - fl[i])/2;
 	  }
-	  flux[rgridNumber - 1] = (fr[rgridNumber - 1] - fl[rgridNumber - 1])/2;
 
-	  tempValue[0] = value[0] - deltaT*0.5*(flux[0])/deltaR;
+	  tempValue[0] = value[0] - deltaT*0.5*(flux[0] - flux[rgridNumber - 1])/deltaR;
 	  for(int i = 1; i < rgridNumber; ++i){
 		  tempValue[i] = value[i] - deltaT*0.5*(flux[i] - flux[i-1])/deltaR;
 	  }
 
 	  fr[0] = maxVelocity*tempValue[0] + valueFlux[0];
-	  fl[0] = 0;
 	  for(int i = 1; i < rgridNumber; ++i){
 		  fr[i] = maxVelocity*tempValue[i] + valueFlux[i];
 		  fl[i] = maxVelocity*tempValue[i-1] - valueFlux[i-1];
 	  }
+      fl[0] = maxVelocity*tempValue[rgridNumber - 1] - valueFlux[rgridNumber - 1];
 
 	  flux[0] = (fr[0] - fl[0])/2;
 	  for(int i = 1; i < rgridNumber - 1; ++i){
-		  double dfrp = (fr[i+1] - fr[i])/2;
+		  /*double dfrp = (fr[i+1] - fr[i])/2;
 		  double dfrm = (fr[i] - fr[i-1])/2;
 		  double dfr = vanleer(dfrp, dfrm);
 
@@ -940,13 +1044,13 @@ void Simulation::tvd(double* value, double* valueFlux, double maxVelocity){
 		  double dflm = (fl[i-1] - fl[i])/2;
 		  double dfl = vanleer(dflp, dflm);
 
-		  flux[i] = (fr[i] - fl[i] + dfr - dfl)/2;
-		  flux[i] = (fr[i] - fl[i])/2;
+		  flux[i] = (fr[i] - fl[i] + dfr - dfl)/2;*/
+		  /*flux[i] = (fr[i] - fl[i])/2;
 	  }
 	  flux[rgridNumber - 1] = (fr[rgridNumber - 1] - fl[rgridNumber - 1])/2;
 
 
-	  value[0] = value[0] - deltaT*(flux[0])/deltaR;
+	  value[0] = value[0] - deltaT*(flux[0] - flux[rgridNumber - 1])/deltaR;
 	  if(value[0] != value[0] || (0*value[0] != 0*value[0])){
 	    printf("NaN value");
 	  }
@@ -961,54 +1065,234 @@ void Simulation::tvd(double* value, double* valueFlux, double maxVelocity){
 		  fr[i] = maxVelocity*value[i+1] + valueFlux[i+1];
 		  fl[i] = maxVelocity*value[i] - valueFlux[i];
 	  }
-	  fr[rgridNumber - 1] = maxVelocity*value[rgridNumber - 1] + valueFlux[rgridNumber - 1];
-	  fl[rgridNumber - 1] = maxVelocity*value[rgridNumber - 1] + valueFlux[rgridNumber - 1];
+	  fr[rgridNumber - 1] = maxVelocity*value[0] + valueFlux[0];
+	  fl[rgridNumber - 1] = maxVelocity*value[rgridNumber - 1] - valueFlux[rgridNumber - 1];
 
-	  for(int i = 0; i < rgridNumber - 1; ++i){
+	  for(int i = 0; i < rgridNumber; ++i){
 		  flux[i] = (fr[i] - fl[i])/2;
 	  }
-	  flux[rgridNumber - 1] = (fr[rgridNumber - 1] - fl[rgridNumber - 1])/2;
 
-	  tempValue[0] = value[0] - deltaT*0.5*(flux[0])/deltaR;
-	  for(int i = 1; i < rgridNumber; ++i){
-		  tempValue[i] = value[i] - deltaT*0.5*(flux[i] - flux[i-1])/deltaR;
+	  
+	  for(int i = 0; i < rgridNumber - 1; ++i){
+		  tempValue[i] = value[i] - deltaT*0.5*(flux[i+1] - flux[i])/deltaR;
 	  }
+	  tempValue[rgridNumber - 1] = value[rgridNumber - 1] - deltaT*0.5*(flux[0] - flux[rgridNumber - 1])/deltaR;
 
 	  for(int i = 0; i < rgridNumber-1; ++i){
 		  fr[i] = maxVelocity*tempValue[i+1] + valueFlux[i+1];
 		  fl[i] = maxVelocity*tempValue[i] - valueFlux[i];
 	  }
-	  fr[rgridNumber- 1] = maxVelocity*tempValue[rgridNumber - 1] + valueFlux[rgridNumber - 1];
-	  fl[rgridNumber- 1] = maxVelocity*tempValue[rgridNumber - 1] + valueFlux[rgridNumber - 1];
+	  fr[rgridNumber- 1] = maxVelocity*tempValue[0] + valueFlux[0];
+	  fl[rgridNumber- 1] = maxVelocity*tempValue[rgridNumber - 1] - valueFlux[rgridNumber - 1];
 
 	  flux[0] = (fr[0] - fl[0])/2;
-	  for(int i = 1; i < rgridNumber - 1; ++i){
-	 	  double dfrp = -(fr[i+2] - fr[i+1])/2;
+	  for(int i = 0; i < rgridNumber - 2; ++i){
+	 	  /*double dfrp = -(fr[i+2] - fr[i+1])/2;
 		  double dfrm = -(fr[i+1] - fr[i])/2;
 		  double dfr = vanleer(dfrp, dfrm);
 
-		  double dflp = (fr[i+2] - fr[i+1])/2;
-		  double dflm = (fr[i+1] - fr[i])/2;
+		  double dflp = (fl[i+2] - fl[i+1])/2;
+		  double dflm = (fl[i+1] - fl[i])/2;
 		  double dfl = vanleer(dflp, dflm);
-
-		  flux[i] = (fr[i] - fl[i] + dfr - dfl)/2;
-		  flux[i] = (fr[i] - fl[i])/2;
+		  
+		  flux[i] = (fr[i] - fl[i] + dfr - dfl)/2;*/
+		  /*flux[i] = (fr[i] - fl[i])/2;
 	  }
+	  flux[rgridNumber - 2] = (fr[rgridNumber - 2] - fl[rgridNumber - 2])/2;
 	  flux[rgridNumber - 1] = (fr[rgridNumber - 1] - fl[rgridNumber - 1])/2;
 
-	  value[0] = value[0] - deltaT*(flux[0])/deltaR;
-	  for(int i = 1; i < rgridNumber; ++i){
-		  value[i] = value[i] - deltaT*(flux[i] - flux[i-1])/deltaR;
+	  for(int i = 0; i < rgridNumber - 1; ++i){
+		  value[i] = value[i] - deltaT*(flux[i+1] - flux[i])/deltaR;
 		  if(value[i] != value[i] || (0*value[i] != 0*value[i])){
 			  printf("NaN value");
 		  }
 	  }
+	  value[rgridNumber - 1] = value[rgridNumber - 1] - deltaT*(flux[0] - flux[rgridNumber - 1])/deltaR;
 	}*/
 
 	delete[] fr;
 	delete[] fl;
 	delete[] flux;
 	//delete[] tempValue;
+}
+
+void Simulation::convectionTVD(double* value, double* valueFlux){
+	double* fr = new double[rgridNumber];
+	double* fl = new double[rgridNumber];
+    double* flux = new double[rgridNumber];
+
+	for(int i = 0; i < rgridNumber - 1; ++i){
+		if(bins[i]->U > 0){
+			if(bins[i+1]->U > 0){
+				fr[i] = valueFlux[i];
+				fl[i+1] = fr[i];
+			} else {
+				fr[i] = (valueFlux[i] + valueFlux[i+1])/2;
+				fl[i+1] = fr[i];
+			}
+		} else {
+			if(bins[i+1]->U > 0){
+				fr[i] = (valueFlux[i] + valueFlux[i+1])/2;;
+				fl[i+1] = fr[i];
+			} else {				
+				fr[i] = valueFlux[i+1];
+				fl[i+1] = fr[i];
+			}
+		}
+	}
+
+	if(bins[rgridNumber - 1]->U > 0){
+		if(bins[0]->U > 0){
+			fr[rgridNumber - 1] = valueFlux[rgridNumber - 1];
+			fl[0] = fr[rgridNumber - 1];
+		} else {
+			fr[rgridNumber - 1] = (valueFlux[rgridNumber - 1] + valueFlux[0])/2;
+			fl[0] = fr[rgridNumber - 1];
+		}
+	} else {
+		if(bins[0]->U > 0){
+			fr[rgridNumber - 1] = (valueFlux[rgridNumber - 1] + valueFlux[0])/2;
+			fl[0] = fr[rgridNumber - 1];
+		} else {				
+			fr[rgridNumber - 1] = valueFlux[0];
+			fl[0] = fr[rgridNumber - 1];
+		}
+	}
+
+	for(int i = 0; i < rgridNumber; ++i){
+		value[i] = value[i] - deltaT*(fr[i] - fl[i])/deltaR;
+		if(value[i] != value[i] || (0*value[i] != 0*value[i])){
+		    printf("NaN value");
+		}
+	}
+
+	delete[] fr;
+	delete[] fl;
+	delete[] flux;
+}
+
+double Simulation::kurzrockMinDeltaT(){
+	double minDeltaT = abs(bins[0]->U)*deltaR/((abs(bins[0]->U) + sqrt(2.0)*bins[0]->soundSpeed())*(abs(bins[0]->U) + sqrt(2.0)*bins[0]->soundSpeed()));
+	for(int i = 1; i < rgridNumber; ++i){
+		if(abs(bins[i]->U)*deltaR/((abs(bins[i]->U) + sqrt(2.0)*bins[i]->soundSpeed())*(abs(bins[i]->U) + sqrt(2.0)*bins[i]->soundSpeed())) < minDeltaT){
+			minDeltaT = abs(bins[i]->U)*deltaR/((abs(bins[i]->U) + sqrt(2.0)*bins[i]->soundSpeed())*(abs(bins[i]->U) + sqrt(2.0)*bins[i]->soundSpeed()));
+		}
+	}
+	return minDeltaT;
+}
+
+void Simulation::LaxVendorf(double* newDensity, double* newMomentum, double* newEnergy){
+	// P.Rouch Computative Hydrodyamic 5.5.5
+
+	//modifization for u > < 0
+
+		/*newDensity[0] = newDensity[0] - deltaT*0.5*(densityFlux(1) - densityFlux(rgridNumber-1))/deltaR 
+			+ 0.25*deltaT*deltaT*((2*(fullMomentumFlux(1) - fullMomentumFlux(0)) - 2*(fullMomentumFlux(0) - fullMomentumFlux(rgridNumber-1))))/(deltaR*deltaR);
+		newMomentum[0] = newMomentum[0] - deltaT*0.5*(fullMomentumFlux(1) - fullMomentumFlux(rgridNumber-1))/deltaR 
+			+ 0.25*deltaT*deltaT*((-0.5*(3-gamma)*(bins[1]->U*bins[1]->U + bins[0]->U*bins[0]->U)*(densityFlux(1) - densityFlux(0)) + 0.5*(3-gamma)*(bins[0]->U*bins[0]->U + bins[rgridNumber-1]->U*bins[rgridNumber-1]->U)*(densityFlux(0) - densityFlux(rgridNumber-1))) 
+			+ (2*(3-gamma)*(bins[1]->U + bins[0]->U)*(fullMomentumFlux(1) - fullMomentumFlux(0)) - 2*(3-gamma)*(bins[0]->U+bins[rgridNumber-1]->U)*(fullMomentumFlux(0) - fullMomentumFlux(rgridNumber-1))) 
+			+ (2*(gamma - 1)*(fullEnergyFlux(1) - fullEnergyFlux(0)) - 2*(gamma - 1)*(fullEnergyFlux(0) - fullEnergyFlux(rgridNumber-1))))/(deltaR*deltaR);
+		newEnergy[0] = newEnergy[0] - deltaT*0.5*(fullEnergyFlux(1) - fullEnergyFlux(rgridNumber-1))/deltaR 
+			+ 0.25*deltaT*deltaT*(((-gamma*bins[1]->U*bins[1]->fullEnergy()/bins[1]->density + (gamma - 1)*bins[0+1]->U*bins[0+1]->U*bins[0+1]->U - gamma*bins[0]->U*bins[0]->fullEnergy()/bins[0]->density + (gamma - 1)*bins[0]->U*bins[0]->U*bins[0]->U)*(densityFlux(0+1) - densityFlux(0)) - (-gamma*bins[0]->U*bins[0]->fullEnergy()/bins[0]->density + (gamma - 1)*bins[0]->U*bins[0]->U*bins[0]->U - gamma*bins[rgridNumber-1]->U*bins[rgridNumber-1]->fullEnergy()/bins[rgridNumber-1]->density + (gamma - 1)*bins[rgridNumber-1]->U*bins[rgridNumber-1]->U*bins[rgridNumber-1]->U)*(densityFlux(0) - densityFlux(rgridNumber-1))) 
+			+ ((gamma*bins[1]->fullEnergy()/bins[1]->density - 3*(gamma-1)*bins[1]->U*bins[1]->U/2 + gamma*bins[0]->fullEnergy()/bins[0]->density - 3*(gamma-1)*bins[0]->U*bins[0]->U/2)*(fullMomentumFlux(1) - fullMomentumFlux(0)) - (gamma*bins[0]->fullEnergy()/bins[0]->density - 3*(gamma-1)*bins[0]->U*bins[0]->U/2 + gamma*bins[rgridNumber-1]->fullEnergy()/bins[rgridNumber-1]->density - 3*(gamma-1)*bins[rgridNumber-1]->U*bins[rgridNumber-1]->U/2)*(fullMomentumFlux(0) - fullMomentumFlux(rgridNumber-1))) 
+			+ (gamma*(bins[1]->U + bins[0]->U)*(fullEnergyFlux(1) - fullEnergyFlux(0)) - gamma*(bins[0]->U + bins[rgridNumber-1]->U)*(fullEnergyFlux(0) - fullEnergyFlux(rgridNumber-1))))/(deltaR*deltaR);*/
+	if(bins[0]->U >= 0){
+		newDensity[0] = newDensity[0] - deltaT*(densityFlux(0) - densityFlux(rgridNumber-1))/deltaR 
+			+ 0.25*deltaT*deltaT*((2*(fullMomentumFlux(1) - fullMomentumFlux(0)) - 2*(fullMomentumFlux(0) - fullMomentumFlux(rgridNumber-1))))/(deltaR*deltaR);
+		newMomentum[0] = newMomentum[0] - deltaT*(fullMomentumFlux(0) - fullMomentumFlux(rgridNumber-1))/deltaR 
+			+ 0.25*deltaT*deltaT*((-0.5*(3-gamma)*(bins[1]->U*bins[1]->U + bins[0]->U*bins[0]->U)*(densityFlux(1) - densityFlux(0)) + 0.5*(3-gamma)*(bins[0]->U*bins[0]->U + bins[rgridNumber-1]->U*bins[rgridNumber-1]->U)*(densityFlux(0) - densityFlux(rgridNumber-1))) 
+			+ (2*(3-gamma)*(bins[1]->U + bins[0]->U)*(fullMomentumFlux(1) - fullMomentumFlux(0)) - 2*(3-gamma)*(bins[0]->U+bins[rgridNumber-1]->U)*(fullMomentumFlux(0) - fullMomentumFlux(rgridNumber-1))) 
+			+ (2*(gamma - 1)*(fullEnergyFlux(1) - fullEnergyFlux(0)) - 2*(gamma - 1)*(fullEnergyFlux(0) - fullEnergyFlux(rgridNumber-1))))/(deltaR*deltaR);
+		newEnergy[0] = newEnergy[0] - deltaT*(fullEnergyFlux(0) - fullEnergyFlux(rgridNumber-1))/deltaR 
+			+ 0.25*deltaT*deltaT*(((-gamma*bins[1]->U*bins[1]->fullEnergy()/bins[1]->density + (gamma - 1)*bins[0+1]->U*bins[0+1]->U*bins[0+1]->U - gamma*bins[0]->U*bins[0]->fullEnergy()/bins[0]->density + (gamma - 1)*bins[0]->U*bins[0]->U*bins[0]->U)*(densityFlux(0+1) - densityFlux(0)) - (-gamma*bins[0]->U*bins[0]->fullEnergy()/bins[0]->density + (gamma - 1)*bins[0]->U*bins[0]->U*bins[0]->U - gamma*bins[rgridNumber-1]->U*bins[rgridNumber-1]->fullEnergy()/bins[rgridNumber-1]->density + (gamma - 1)*bins[rgridNumber-1]->U*bins[rgridNumber-1]->U*bins[rgridNumber-1]->U)*(densityFlux(0) - densityFlux(rgridNumber-1))) 
+			+ ((gamma*bins[1]->fullEnergy()/bins[1]->density - 3*(gamma-1)*bins[1]->U*bins[1]->U/2 + gamma*bins[0]->fullEnergy()/bins[0]->density - 3*(gamma-1)*bins[0]->U*bins[0]->U/2)*(fullMomentumFlux(1) - fullMomentumFlux(0)) - (gamma*bins[0]->fullEnergy()/bins[0]->density - 3*(gamma-1)*bins[0]->U*bins[0]->U/2 + gamma*bins[rgridNumber-1]->fullEnergy()/bins[rgridNumber-1]->density - 3*(gamma-1)*bins[rgridNumber-1]->U*bins[rgridNumber-1]->U/2)*(fullMomentumFlux(0) - fullMomentumFlux(rgridNumber-1))) 
+			+ (gamma*(bins[1]->U + bins[0]->U)*(fullEnergyFlux(1) - fullEnergyFlux(0)) - gamma*(bins[0]->U + bins[rgridNumber-1]->U)*(fullEnergyFlux(0) - fullEnergyFlux(rgridNumber-1))))/(deltaR*deltaR);
+	} else {
+		newDensity[0] = newDensity[0] - deltaT*(densityFlux(1) - densityFlux(0))/deltaR 
+			+ 0.25*deltaT*deltaT*((2*(fullMomentumFlux(1) - fullMomentumFlux(0)) - 2*(fullMomentumFlux(0) - fullMomentumFlux(rgridNumber-1))))/(deltaR*deltaR);
+		newMomentum[0] = newMomentum[0] - deltaT*(fullMomentumFlux(1) - fullMomentumFlux(0))/deltaR 
+			+ 0.25*deltaT*deltaT*((-0.5*(3-gamma)*(bins[1]->U*bins[1]->U + bins[0]->U*bins[0]->U)*(densityFlux(1) - densityFlux(0)) + 0.5*(3-gamma)*(bins[0]->U*bins[0]->U + bins[rgridNumber-1]->U*bins[rgridNumber-1]->U)*(densityFlux(0) - densityFlux(rgridNumber-1))) 
+			+ (2*(3-gamma)*(bins[1]->U + bins[0]->U)*(fullMomentumFlux(1) - fullMomentumFlux(0)) - 2*(3-gamma)*(bins[0]->U+bins[rgridNumber-1]->U)*(fullMomentumFlux(0) - fullMomentumFlux(rgridNumber-1))) 
+			+ (2*(gamma - 1)*(fullEnergyFlux(1) - fullEnergyFlux(0)) - 2*(gamma - 1)*(fullEnergyFlux(0) - fullEnergyFlux(rgridNumber-1))))/(deltaR*deltaR);
+		newEnergy[0] = newEnergy[0] - deltaT*(fullEnergyFlux(1) - fullEnergyFlux(0))/deltaR 
+			+ 0.25*deltaT*deltaT*(((-gamma*bins[1]->U*bins[1]->fullEnergy()/bins[1]->density + (gamma - 1)*bins[0+1]->U*bins[0+1]->U*bins[0+1]->U - gamma*bins[0]->U*bins[0]->fullEnergy()/bins[0]->density + (gamma - 1)*bins[0]->U*bins[0]->U*bins[0]->U)*(densityFlux(0+1) - densityFlux(0)) - (-gamma*bins[0]->U*bins[0]->fullEnergy()/bins[0]->density + (gamma - 1)*bins[0]->U*bins[0]->U*bins[0]->U - gamma*bins[rgridNumber-1]->U*bins[rgridNumber-1]->fullEnergy()/bins[rgridNumber-1]->density + (gamma - 1)*bins[rgridNumber-1]->U*bins[rgridNumber-1]->U*bins[rgridNumber-1]->U)*(densityFlux(0) - densityFlux(rgridNumber-1))) 
+			+ ((gamma*bins[1]->fullEnergy()/bins[1]->density - 3*(gamma-1)*bins[1]->U*bins[1]->U/2 + gamma*bins[0]->fullEnergy()/bins[0]->density - 3*(gamma-1)*bins[0]->U*bins[0]->U/2)*(fullMomentumFlux(1) - fullMomentumFlux(0)) - (gamma*bins[0]->fullEnergy()/bins[0]->density - 3*(gamma-1)*bins[0]->U*bins[0]->U/2 + gamma*bins[rgridNumber-1]->fullEnergy()/bins[rgridNumber-1]->density - 3*(gamma-1)*bins[rgridNumber-1]->U*bins[rgridNumber-1]->U/2)*(fullMomentumFlux(0) - fullMomentumFlux(rgridNumber-1))) 
+			+ (gamma*(bins[1]->U + bins[0]->U)*(fullEnergyFlux(1) - fullEnergyFlux(0)) - gamma*(bins[0]->U + bins[rgridNumber-1]->U)*(fullEnergyFlux(0) - fullEnergyFlux(rgridNumber-1))))/(deltaR*deltaR);
+	}
+			
+	for(int i = 1; i < rgridNumber - 1; ++i){
+
+
+				/*newDensity[i] = newDensity[i] - deltaT*0.5*(densityFlux(i+1) - densityFlux(i-1))/deltaR 
+			+ 0.25*deltaT*deltaT*((2*(fullMomentumFlux(i+1) - fullMomentumFlux(i)) - 2*(fullMomentumFlux(i) - fullMomentumFlux(i-1))))/(deltaR*deltaR);
+		newMomentum[i] = newMomentum[i] - deltaT*0.5*(fullMomentumFlux(i+1) - fullMomentumFlux(i-1))/deltaR 
+			+ 0.25*deltaT*deltaT*((-0.5*(3-gamma)*(bins[i+1]->U*bins[i+1]->U + bins[i]->U*bins[i]->U)*(densityFlux(i+1) - densityFlux(i)) + 0.5*(3-gamma)*(bins[i]->U*bins[i]->U + bins[i-1]->U*bins[i-1]->U)*(densityFlux(i) - densityFlux(i-1))) 
+			+ (2*(3-gamma)*(bins[i+1]->U + bins[i]->U)*(fullMomentumFlux(i+1) - fullMomentumFlux(i)) - 2*(3-gamma)*(bins[i]->U+bins[i-1]->U)*(fullMomentumFlux(i) - fullMomentumFlux(i-1))) 
+			+ (2*(gamma - 1)*(fullEnergyFlux(i+1) - fullEnergyFlux(i)) - 2*(gamma - 1)*(fullEnergyFlux(i) - fullEnergyFlux(i-1))))/(deltaR*deltaR);
+		newEnergy[i] = newEnergy[i] - deltaT*0.5*(fullEnergyFlux(i+1) - fullEnergyFlux(i-1))/deltaR 
+			+ 0.25*deltaT*deltaT*(((-gamma*bins[i+1]->U*bins[i+1]->fullEnergy()/bins[i+1]->density + (gamma - 1)*bins[i+1]->U*bins[i+1]->U*bins[i+1]->U - gamma*bins[i]->U*bins[i]->fullEnergy()/bins[i]->density + (gamma - 1)*bins[i]->U*bins[i]->U*bins[i]->U)*(densityFlux(i+1) - densityFlux(i)) - (-gamma*bins[i]->U*bins[i]->fullEnergy()/bins[i]->density + (gamma - 1)*bins[i]->U*bins[i]->U*bins[i]->U - gamma*bins[i-1]->U*bins[i-1]->fullEnergy()/bins[i-1]->density + (gamma - 1)*bins[i-1]->U*bins[i-1]->U*bins[i-1]->U)*(densityFlux(i) - densityFlux(i-1))) 
+			+ ((gamma*bins[i+1]->fullEnergy()/bins[i+1]->density - 3*(gamma-1)*bins[i+1]->U*bins[i+1]->U/2 + gamma*bins[i]->fullEnergy()/bins[i]->density - 3*(gamma-1)*bins[i]->U*bins[i]->U/2)*(fullMomentumFlux(i+1) - fullMomentumFlux(i)) - (gamma*bins[i]->fullEnergy()/bins[i]->density - 3*(gamma-1)*bins[i]->U*bins[i]->U/2 + gamma*bins[i-1]->fullEnergy()/bins[i-1]->density - 3*(gamma-1)*bins[i-1]->U*bins[i-1]->U/2)*(fullMomentumFlux(i) - fullMomentumFlux(i-1))) 
+			+ (gamma*(bins[i+1]->U + bins[i]->U)*(fullEnergyFlux(i+1) - fullEnergyFlux(i)) - gamma*(bins[i]->U + bins[i-1]->U)*(fullEnergyFlux(i) - fullEnergyFlux(i-1))))/(deltaR*deltaR);*/
+		if(bins[i]->U >= 0){
+		newDensity[i] = newDensity[i] - deltaT*(densityFlux(i) - densityFlux(i-1))/deltaR 
+			+ 0.25*deltaT*deltaT*((2*(fullMomentumFlux(i+1) - fullMomentumFlux(i)) - 2*(fullMomentumFlux(i) - fullMomentumFlux(i-1))))/(deltaR*deltaR);
+		newMomentum[i] = newMomentum[i] - deltaT*(fullMomentumFlux(i) - fullMomentumFlux(i-1))/deltaR 
+			+ 0.25*deltaT*deltaT*((-0.5*(3-gamma)*(bins[i+1]->U*bins[i+1]->U + bins[i]->U*bins[i]->U)*(densityFlux(i+1) - densityFlux(i)) + 0.5*(3-gamma)*(bins[i]->U*bins[i]->U + bins[i-1]->U*bins[i-1]->U)*(densityFlux(i) - densityFlux(i-1))) 
+			+ (2*(3-gamma)*(bins[i+1]->U + bins[i]->U)*(fullMomentumFlux(i+1) - fullMomentumFlux(i)) - 2*(3-gamma)*(bins[i]->U+bins[i-1]->U)*(fullMomentumFlux(i) - fullMomentumFlux(i-1))) 
+			+ (2*(gamma - 1)*(fullEnergyFlux(i+1) - fullEnergyFlux(i)) - 2*(gamma - 1)*(fullEnergyFlux(i) - fullEnergyFlux(i-1))))/(deltaR*deltaR);
+		newEnergy[i] = newEnergy[i] - deltaT*(fullEnergyFlux(i) - fullEnergyFlux(i-1))/deltaR 
+			+ 0.25*deltaT*deltaT*(((-gamma*bins[i+1]->U*bins[i+1]->fullEnergy()/bins[i+1]->density + (gamma - 1)*bins[i+1]->U*bins[i+1]->U*bins[i+1]->U - gamma*bins[i]->U*bins[i]->fullEnergy()/bins[i]->density + (gamma - 1)*bins[i]->U*bins[i]->U*bins[i]->U)*(densityFlux(i+1) - densityFlux(i)) - (-gamma*bins[i]->U*bins[i]->fullEnergy()/bins[i]->density + (gamma - 1)*bins[i]->U*bins[i]->U*bins[i]->U - gamma*bins[i-1]->U*bins[i-1]->fullEnergy()/bins[i-1]->density + (gamma - 1)*bins[i-1]->U*bins[i-1]->U*bins[i-1]->U)*(densityFlux(i) - densityFlux(i-1))) 
+			+ ((gamma*bins[i+1]->fullEnergy()/bins[i+1]->density - 3*(gamma-1)*bins[i+1]->U*bins[i+1]->U/2 + gamma*bins[i]->fullEnergy()/bins[i]->density - 3*(gamma-1)*bins[i]->U*bins[i]->U/2)*(fullMomentumFlux(i+1) - fullMomentumFlux(i)) - (gamma*bins[i]->fullEnergy()/bins[i]->density - 3*(gamma-1)*bins[i]->U*bins[i]->U/2 + gamma*bins[i-1]->fullEnergy()/bins[i-1]->density - 3*(gamma-1)*bins[i-1]->U*bins[i-1]->U/2)*(fullMomentumFlux(i) - fullMomentumFlux(i-1))) 
+			+ (gamma*(bins[i+1]->U + bins[i]->U)*(fullEnergyFlux(i+1) - fullEnergyFlux(i)) - gamma*(bins[i]->U + bins[i-1]->U)*(fullEnergyFlux(i) - fullEnergyFlux(i-1))))/(deltaR*deltaR);
+		} else {
+		newDensity[i] = newDensity[i] - deltaT*(densityFlux(i+1) - densityFlux(i))/deltaR 
+			+ 0.25*deltaT*deltaT*((2*(fullMomentumFlux(i+1) - fullMomentumFlux(i)) - 2*(fullMomentumFlux(i) - fullMomentumFlux(i-1))))/(deltaR*deltaR);
+		newMomentum[i] = newMomentum[i] - deltaT*(fullMomentumFlux(i+1) - fullMomentumFlux(i))/deltaR 
+			+ 0.25*deltaT*deltaT*((-0.5*(3-gamma)*(bins[i+1]->U*bins[i+1]->U + bins[i]->U*bins[i]->U)*(densityFlux(i+1) - densityFlux(i)) + 0.5*(3-gamma)*(bins[i]->U*bins[i]->U + bins[i-1]->U*bins[i-1]->U)*(densityFlux(i) - densityFlux(i-1))) 
+			+ (2*(3-gamma)*(bins[i+1]->U + bins[i]->U)*(fullMomentumFlux(i+1) - fullMomentumFlux(i)) - 2*(3-gamma)*(bins[i]->U+bins[i-1]->U)*(fullMomentumFlux(i) - fullMomentumFlux(i-1))) 
+			+ (2*(gamma - 1)*(fullEnergyFlux(i+1) - fullEnergyFlux(i)) - 2*(gamma - 1)*(fullEnergyFlux(i) - fullEnergyFlux(i-1))))/(deltaR*deltaR);
+		newEnergy[i] = newEnergy[i] - deltaT*(fullEnergyFlux(i+1) - fullEnergyFlux(i))/deltaR 
+			+ 0.25*deltaT*deltaT*(((-gamma*bins[i+1]->U*bins[i+1]->fullEnergy()/bins[i+1]->density + (gamma - 1)*bins[i+1]->U*bins[i+1]->U*bins[i+1]->U - gamma*bins[i]->U*bins[i]->fullEnergy()/bins[i]->density + (gamma - 1)*bins[i]->U*bins[i]->U*bins[i]->U)*(densityFlux(i+1) - densityFlux(i)) - (-gamma*bins[i]->U*bins[i]->fullEnergy()/bins[i]->density + (gamma - 1)*bins[i]->U*bins[i]->U*bins[i]->U - gamma*bins[i-1]->U*bins[i-1]->fullEnergy()/bins[i-1]->density + (gamma - 1)*bins[i-1]->U*bins[i-1]->U*bins[i-1]->U)*(densityFlux(i) - densityFlux(i-1))) 
+			+ ((gamma*bins[i+1]->fullEnergy()/bins[i+1]->density - 3*(gamma-1)*bins[i+1]->U*bins[i+1]->U/2 + gamma*bins[i]->fullEnergy()/bins[i]->density - 3*(gamma-1)*bins[i]->U*bins[i]->U/2)*(fullMomentumFlux(i+1) - fullMomentumFlux(i)) - (gamma*bins[i]->fullEnergy()/bins[i]->density - 3*(gamma-1)*bins[i]->U*bins[i]->U/2 + gamma*bins[i-1]->fullEnergy()/bins[i-1]->density - 3*(gamma-1)*bins[i-1]->U*bins[i-1]->U/2)*(fullMomentumFlux(i) - fullMomentumFlux(i-1))) 
+			+ (gamma*(bins[i+1]->U + bins[i]->U)*(fullEnergyFlux(i+1) - fullEnergyFlux(i)) - gamma*(bins[i]->U + bins[i-1]->U)*(fullEnergyFlux(i) - fullEnergyFlux(i-1))))/(deltaR*deltaR);
+		}
+
+	}
+
+		/*newDensity[rgridNumber-1] = newDensity[rgridNumber-1] - deltaT*0.5*(densityFlux(0) - densityFlux(rgridNumber-2))/deltaR 
+			+ 0.25*deltaT*deltaT*((2*(fullMomentumFlux(0) - fullMomentumFlux(rgridNumber-1)) - 2*(fullMomentumFlux(rgridNumber-1) - fullMomentumFlux(rgridNumber-2))))/(deltaR*deltaR);
+		newMomentum[rgridNumber-1] = newMomentum[rgridNumber-1] - deltaT*0.5*(fullMomentumFlux(0) - fullMomentumFlux(rgridNumber-2))/deltaR 
+			+ 0.25*deltaT*deltaT*((-0.5*(3-gamma)*(bins[0]->U*bins[0]->U + bins[rgridNumber-1]->U*bins[rgridNumber-1]->U)*(densityFlux(0) - densityFlux(rgridNumber-1)) + 0.5*(3-gamma)*(bins[rgridNumber-1]->U*bins[rgridNumber-1]->U + bins[rgridNumber-2]->U*bins[rgridNumber-2]->U)*(densityFlux(rgridNumber-1) - densityFlux(rgridNumber-2))) 
+			+ (2*(3-gamma)*(bins[0]->U + bins[rgridNumber-1]->U)*(fullMomentumFlux(0) - fullMomentumFlux(rgridNumber-1)) - 2*(3-gamma)*(bins[rgridNumber-1]->U+bins[rgridNumber-2]->U)*(fullMomentumFlux(rgridNumber-1) - fullMomentumFlux(rgridNumber-2))) 
+			+ (2*(gamma - 1)*(fullEnergyFlux(0) - fullEnergyFlux(rgridNumber-1)) - 2*(gamma - 1)*(fullEnergyFlux(rgridNumber-1) - fullEnergyFlux(rgridNumber-2))))/(deltaR*deltaR);
+		newEnergy[rgridNumber-1] = newEnergy[rgridNumber-1] - deltaT*0.5*(fullEnergyFlux(0) - fullEnergyFlux(rgridNumber-2))/deltaR 
+			+ 0.25*deltaT*deltaT*(((-gamma*bins[0]->U*bins[0]->fullEnergy()/bins[0]->density + (gamma - 1)*bins[0]->U*bins[0]->U*bins[0]->U - gamma*bins[rgridNumber-1]->U*bins[rgridNumber-1]->fullEnergy()/bins[rgridNumber-1]->density + (gamma - 1)*bins[rgridNumber-1]->U*bins[rgridNumber-1]->U*bins[rgridNumber-1]->U)*(densityFlux(0) - densityFlux(rgridNumber-1)) - (-gamma*bins[rgridNumber-1]->U*bins[rgridNumber-1]->fullEnergy()/bins[rgridNumber-1]->density + (gamma - 1)*bins[rgridNumber-1]->U*bins[rgridNumber-1]->U*bins[rgridNumber-1]->U - gamma*bins[rgridNumber-2]->U*bins[rgridNumber-2]->fullEnergy()/bins[rgridNumber-2]->density + (gamma - 1)*bins[rgridNumber-2]->U*bins[rgridNumber-2]->U*bins[rgridNumber-2]->U)*(densityFlux(rgridNumber-1) - densityFlux(rgridNumber-2))) 
+			+ ((gamma*bins[0]->fullEnergy()/bins[0]->density - 3*(gamma-1)*bins[0]->U*bins[0]->U/2 + gamma*bins[rgridNumber-1]->fullEnergy()/bins[rgridNumber-1]->density - 3*(gamma-1)*bins[rgridNumber-1]->U*bins[rgridNumber-1]->U/2)*(fullMomentumFlux(0) - fullMomentumFlux(rgridNumber-1)) - (gamma*bins[rgridNumber-1]->fullEnergy()/bins[rgridNumber-1]->density - 3*(gamma-1)*bins[rgridNumber-1]->U*bins[rgridNumber-1]->U/2 + gamma*bins[rgridNumber-2]->fullEnergy()/bins[rgridNumber-2]->density - 3*(gamma-1)*bins[rgridNumber-2]->U*bins[rgridNumber-2]->U/2)*(fullMomentumFlux(rgridNumber-1) - fullMomentumFlux(rgridNumber-2))) 
+			+ (gamma*(bins[0]->U + bins[rgridNumber-1]->U)*(fullEnergyFlux(0) - fullEnergyFlux(rgridNumber-1)) - gamma*(bins[rgridNumber-1]->U + bins[rgridNumber-2]->U)*(fullEnergyFlux(rgridNumber-1) - fullEnergyFlux(rgridNumber-2))))/(deltaR*deltaR);*/
+
+	if(bins[rgridNumber - 1]->U >= 0){
+		newDensity[rgridNumber-1] = newDensity[rgridNumber-1] - deltaT*(densityFlux(rgridNumber - 1) - densityFlux(rgridNumber-2))/deltaR 
+			+ 0.25*deltaT*deltaT*((2*(fullMomentumFlux(0) - fullMomentumFlux(rgridNumber-1)) - 2*(fullMomentumFlux(rgridNumber-1) - fullMomentumFlux(rgridNumber-2))))/(deltaR*deltaR);
+		newMomentum[rgridNumber-1] = newMomentum[rgridNumber-1] - deltaT*(fullMomentumFlux(rgridNumber - 1) - fullMomentumFlux(rgridNumber-2))/deltaR 
+			+ 0.25*deltaT*deltaT*((-0.5*(3-gamma)*(bins[0]->U*bins[0]->U + bins[rgridNumber-1]->U*bins[rgridNumber-1]->U)*(densityFlux(0) - densityFlux(rgridNumber-1)) + 0.5*(3-gamma)*(bins[rgridNumber-1]->U*bins[rgridNumber-1]->U + bins[rgridNumber-2]->U*bins[rgridNumber-2]->U)*(densityFlux(rgridNumber-1) - densityFlux(rgridNumber-2))) 
+			+ (2*(3-gamma)*(bins[0]->U + bins[rgridNumber-1]->U)*(fullMomentumFlux(0) - fullMomentumFlux(rgridNumber-1)) - 2*(3-gamma)*(bins[rgridNumber-1]->U+bins[rgridNumber-2]->U)*(fullMomentumFlux(rgridNumber-1) - fullMomentumFlux(rgridNumber-2))) 
+			+ (2*(gamma - 1)*(fullEnergyFlux(0) - fullEnergyFlux(rgridNumber-1)) - 2*(gamma - 1)*(fullEnergyFlux(rgridNumber-1) - fullEnergyFlux(rgridNumber-2))))/(deltaR*deltaR);
+		newEnergy[rgridNumber-1] = newEnergy[rgridNumber-1] - deltaT*(fullEnergyFlux(rgridNumber - 1) - fullEnergyFlux(rgridNumber-2))/deltaR 
+			+ 0.25*deltaT*deltaT*(((-gamma*bins[0]->U*bins[0]->fullEnergy()/bins[0]->density + (gamma - 1)*bins[0]->U*bins[0]->U*bins[0]->U - gamma*bins[rgridNumber-1]->U*bins[rgridNumber-1]->fullEnergy()/bins[rgridNumber-1]->density + (gamma - 1)*bins[rgridNumber-1]->U*bins[rgridNumber-1]->U*bins[rgridNumber-1]->U)*(densityFlux(0) - densityFlux(rgridNumber-1)) - (-gamma*bins[rgridNumber-1]->U*bins[rgridNumber-1]->fullEnergy()/bins[rgridNumber-1]->density + (gamma - 1)*bins[rgridNumber-1]->U*bins[rgridNumber-1]->U*bins[rgridNumber-1]->U - gamma*bins[rgridNumber-2]->U*bins[rgridNumber-2]->fullEnergy()/bins[rgridNumber-2]->density + (gamma - 1)*bins[rgridNumber-2]->U*bins[rgridNumber-2]->U*bins[rgridNumber-2]->U)*(densityFlux(rgridNumber-1) - densityFlux(rgridNumber-2))) 
+			+ ((gamma*bins[0]->fullEnergy()/bins[0]->density - 3*(gamma-1)*bins[0]->U*bins[0]->U/2 + gamma*bins[rgridNumber-1]->fullEnergy()/bins[rgridNumber-1]->density - 3*(gamma-1)*bins[rgridNumber-1]->U*bins[rgridNumber-1]->U/2)*(fullMomentumFlux(0) - fullMomentumFlux(rgridNumber-1)) - (gamma*bins[rgridNumber-1]->fullEnergy()/bins[rgridNumber-1]->density - 3*(gamma-1)*bins[rgridNumber-1]->U*bins[rgridNumber-1]->U/2 + gamma*bins[rgridNumber-2]->fullEnergy()/bins[rgridNumber-2]->density - 3*(gamma-1)*bins[rgridNumber-2]->U*bins[rgridNumber-2]->U/2)*(fullMomentumFlux(rgridNumber-1) - fullMomentumFlux(rgridNumber-2))) 
+			+ (gamma*(bins[0]->U + bins[rgridNumber-1]->U)*(fullEnergyFlux(0) - fullEnergyFlux(rgridNumber-1)) - gamma*(bins[rgridNumber-1]->U + bins[rgridNumber-2]->U)*(fullEnergyFlux(rgridNumber-1) - fullEnergyFlux(rgridNumber-2))))/(deltaR*deltaR);
+	} else {
+		newDensity[rgridNumber-1] = newDensity[rgridNumber-1] - deltaT*(densityFlux(0) - densityFlux(rgridNumber - 1))/deltaR 
+			+ 0.25*deltaT*deltaT*((2*(fullMomentumFlux(0) - fullMomentumFlux(rgridNumber-1)) - 2*(fullMomentumFlux(rgridNumber-1) - fullMomentumFlux(rgridNumber-2))))/(deltaR*deltaR);
+		newMomentum[rgridNumber-1] = newMomentum[rgridNumber-1] - deltaT*(fullMomentumFlux(0) - fullMomentumFlux(rgridNumber - 1))/deltaR 
+			+ 0.25*deltaT*deltaT*((-0.5*(3-gamma)*(bins[0]->U*bins[0]->U + bins[rgridNumber-1]->U*bins[rgridNumber-1]->U)*(densityFlux(0) - densityFlux(rgridNumber-1)) + 0.5*(3-gamma)*(bins[rgridNumber-1]->U*bins[rgridNumber-1]->U + bins[rgridNumber-2]->U*bins[rgridNumber-2]->U)*(densityFlux(rgridNumber-1) - densityFlux(rgridNumber-2))) 
+			+ (2*(3-gamma)*(bins[0]->U + bins[rgridNumber-1]->U)*(fullMomentumFlux(0) - fullMomentumFlux(rgridNumber-1)) - 2*(3-gamma)*(bins[rgridNumber-1]->U+bins[rgridNumber-2]->U)*(fullMomentumFlux(rgridNumber-1) - fullMomentumFlux(rgridNumber-2))) 
+			+ (2*(gamma - 1)*(fullEnergyFlux(0) - fullEnergyFlux(rgridNumber-1)) - 2*(gamma - 1)*(fullEnergyFlux(rgridNumber-1) - fullEnergyFlux(rgridNumber-2))))/(deltaR*deltaR);
+		newEnergy[rgridNumber-1] = newEnergy[rgridNumber-1] - deltaT*(fullEnergyFlux(0) - fullEnergyFlux(rgridNumber - 1))/deltaR 
+			+ 0.25*deltaT*deltaT*(((-gamma*bins[0]->U*bins[0]->fullEnergy()/bins[0]->density + (gamma - 1)*bins[0]->U*bins[0]->U*bins[0]->U - gamma*bins[rgridNumber-1]->U*bins[rgridNumber-1]->fullEnergy()/bins[rgridNumber-1]->density + (gamma - 1)*bins[rgridNumber-1]->U*bins[rgridNumber-1]->U*bins[rgridNumber-1]->U)*(densityFlux(0) - densityFlux(rgridNumber-1)) - (-gamma*bins[rgridNumber-1]->U*bins[rgridNumber-1]->fullEnergy()/bins[rgridNumber-1]->density + (gamma - 1)*bins[rgridNumber-1]->U*bins[rgridNumber-1]->U*bins[rgridNumber-1]->U - gamma*bins[rgridNumber-2]->U*bins[rgridNumber-2]->fullEnergy()/bins[rgridNumber-2]->density + (gamma - 1)*bins[rgridNumber-2]->U*bins[rgridNumber-2]->U*bins[rgridNumber-2]->U)*(densityFlux(rgridNumber-1) - densityFlux(rgridNumber-2))) 
+			+ ((gamma*bins[0]->fullEnergy()/bins[0]->density - 3*(gamma-1)*bins[0]->U*bins[0]->U/2 + gamma*bins[rgridNumber-1]->fullEnergy()/bins[rgridNumber-1]->density - 3*(gamma-1)*bins[rgridNumber-1]->U*bins[rgridNumber-1]->U/2)*(fullMomentumFlux(0) - fullMomentumFlux(rgridNumber-1)) - (gamma*bins[rgridNumber-1]->fullEnergy()/bins[rgridNumber-1]->density - 3*(gamma-1)*bins[rgridNumber-1]->U*bins[rgridNumber-1]->U/2 + gamma*bins[rgridNumber-2]->fullEnergy()/bins[rgridNumber-2]->density - 3*(gamma-1)*bins[rgridNumber-2]->U*bins[rgridNumber-2]->U/2)*(fullMomentumFlux(rgridNumber-1) - fullMomentumFlux(rgridNumber-2))) 
+			+ (gamma*(bins[0]->U + bins[rgridNumber-1]->U)*(fullEnergyFlux(0) - fullEnergyFlux(rgridNumber-1)) - gamma*(bins[rgridNumber-1]->U + bins[rgridNumber-2]->U)*(fullEnergyFlux(rgridNumber-1) - fullEnergyFlux(rgridNumber-2))))/(deltaR*deltaR);
+	}
 }
 
 

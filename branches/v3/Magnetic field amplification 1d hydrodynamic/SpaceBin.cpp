@@ -1152,6 +1152,14 @@ void SpaceBin::updateTemperature(double* distribution, double deltap){
 	//temperature = T;
 }
 
+double SpaceBin::soundSpeed(){
+	return sqrt(gamma*gasConstant*temperature);
+}
+
+double SpaceBin::fullEnergy(){
+	return pressure/(gamma - 1) + density*U*U/2;
+}
+
 
 	
 

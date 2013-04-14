@@ -23,7 +23,7 @@ public:
 	double deltaR;
 	double deltaTheta;
 	double deltaPhi;
-	double temperature;
+	double temperature0;
 	double gridParameter;
 	double epsilonR;
 	double simulationTime;
@@ -103,11 +103,19 @@ public:
 	double pressureFlux(int i);
 	double momentumPressureFlux(int i);
 	double volumeFlux(int i);
+    
+	double fullMomentumFlux(int i);
+	double fullEnergyFlux(int i);
 
 	double vanleer(double a, double b);
 	double findMaxVelocity();
 
 	void tvd(double* value, double* flux, double maxVelocity);
+	void convectionTVD(double* value, double* flux);
+
+	void LaxVendorf(double* newDensity, double* newMomentum, double* newEnergy);
+
+	double kurzrockMinDeltaT();
 private:
 	static const int particleMultiply = 20;
 };
