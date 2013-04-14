@@ -124,6 +124,9 @@ public:
 
 	void largeAngleScattering(Particle* particle, double& time, double timeStep);
 
+	double soundSpeed();
+	double fullEnergy();
+
 	//void operator=(Xbin bin);
 
 };

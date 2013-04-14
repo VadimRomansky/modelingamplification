@@ -3,6 +3,7 @@
 
 const double massProton = 1.67262177E-24;
 const double kBoltzman = 1.3806488E-16;
+const double gasConstant = 8.31E7;
 const int randomSeed = 128;
 const double speed_of_light = 2.99792458E10;
 const double c2 = speed_of_light*speed_of_light;
@@ -25,5 +26,6 @@ const double defaultMinK = 0.1E-8;
 const double turbulenceSeed = 0.000000000001;
 const int generationSize = 2;
 const double momentumParameter = 5;
+const double scaleParameter = 0.01;
 
 #endif
