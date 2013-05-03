@@ -190,7 +190,7 @@ void Simulation::simulate(){
 		if(introducedParticles.size() > 0){
 			updateEnergy();
 			updateShockWavePoint();
-			if(itNumber % 10 == 0){
+			if(itNumber % 100 == 0){
 				printf("%s", "outputing\n");
 				outputParticles(introducedParticles,"./output/particles.dat");
 				outputPDF(introducedParticles,"./output/tamc_pdf.dat");
@@ -480,7 +480,7 @@ void Simulation::collectAverageVelocity(){
 			Sleep(500);
 		}
 
-		bins[i]->U = (newMomentum[i]/bins[i]->density);
+		//bins[i]->U = (newMomentum[i]/bins[i]->density);
 
 		if(newDensity[i] < 0){
 			bins[i]->density = epsilon;
@@ -493,7 +493,7 @@ void Simulation::collectAverageVelocity(){
 			bins[i]->density = newDensity[i];
 		}
 
-		//bins[i]->U = newMomentum[i]/bins[i]->density;
+		bins[i]->U = newMomentum[i]/bins[i]->density;
 
 		if(bins[i]->density < 100*epsilon*density0){
 			bins[i]->U = 0;
@@ -674,7 +674,7 @@ void Simulation::evaluateHydrodynamic(double* newDensity, double* newMomentum, d
 
 	for(int i = 0; i < rgridNumber; ++i){
 		double sound2r2 = gamma*bins[i]->pressure/(bins[i]->r*bins[i]->r*bins[i]->density);
-		riemannVariable[i].x = bins[i]->U*(bins[i]->density*bins[i]->r*bins[i]->r - bins[i]->pressure/(sound2r2));
+		riemannVariable[i].x = (bins[i]->density*bins[i]->r*bins[i]->r - bins[i]->pressure/(sound2r2));
 		if(riemannVariable[i].x != riemannVariable[i].x){
 			printf("NaN riemannVariable.x\n");
 		}
@@ -690,11 +690,11 @@ void Simulation::evaluateHydrodynamic(double* newDensity, double* newMomentum, d
 		tempRiemannVariable[i] = riemannVariable[i];
 
 		riemannVelocity[i].x = bins[i]->U;
-		riemannVelocity[i].y = bins[i]->U - bins[i]->r*sound2r2;
-		riemannVelocity[i].z = bins[i]->U + bins[i]->r*sound2r2;
+		riemannVelocity[i].y = bins[i]->U - bins[i]->r*sqrt(sound2r2);
+		riemannVelocity[i].z = bins[i]->U + bins[i]->r*sqrt(sound2r2);
 	}
 
-	if(riemannVelocity[0].x > 0){
+if(riemannVelocity[0].x > 0){
 		riemannVariable[0].x -= tempRiemannVariable[0].x*riemannVelocity[0].x*deltaT/deltaR;
 	}
 
@@ -731,7 +731,24 @@ void Simulation::evaluateHydrodynamic(double* newDensity, double* newMomentum, d
 
 	for(int i = 0; i < rgridNumber; ++i){
 		double sound2r2 = gamma*bins[i]->pressure/(bins[i]->r*bins[i]->r*bins[i]->density);
-		if(abs(bins[i]->U) < epsilon){
+
+		newPressure[i] = sqrt(sound2r2)*(riemannVariable[i].y - riemannVariable[i].z)/(2*bins[i]->r);
+		alertNaNOrInfinity(newPressure[i],"NaN newPressure");
+		newDensity[i] = (riemannVariable[i].x + (riemannVariable[i].y - riemannVariable[i].z)/(2*sqrt(sound2r2)*bins[i]->r))/(bins[i]->r*bins[i]->r);
+		alertNaNOrInfinity(newDensity[i],"NaN newDensity");
+		//newMomentum[i] = (riemannVariable[i].x*bins[i]->U -((-bins[i]->U + bins[i]->r*sqrt(sound2r2))*riemannVariable[i].y + (bins[i]->U + bins[i]->r*sqrt(sound2r2))*riemannVariable[i].z)/(2*sqrt(sound2r2)*bins[i]->r))/(bins[i]->r*bins[i]->r);
+		double a = 2*bins[i]->r*bins[i]->r*newDensity[i] - 2*riemannVariable[i].x;
+		if( abs(a) < epsilon*epsilon){			
+			newMomentum[i] = (riemannVariable[i].x*bins[i]->U -((-bins[i]->U + bins[i]->r*sqrt(sound2r2))*riemannVariable[i].y + (bins[i]->U + bins[i]->r*sqrt(sound2r2))*riemannVariable[i].z)/(2*sqrt(sound2r2)*bins[i]->r))/(bins[i]->r*bins[i]->r);
+			if(abs(riemannVariable[i].y + riemannVariable[i].z) > epsilon) {
+				printf("a = 0 in newMomentum\n");
+			}
+		} else {
+			newMomentum[i] = -newDensity[i]*(riemannVariable[i].y*(1 - bins[i]->U/(bins[i]->r*sqrt(sound2r2))) + riemannVariable[i].z*(1 + bins[i]->U/(bins[i]->r*sqrt(sound2r2))))/(a);
+		}
+
+		alertNaNOrInfinity(newMomentum[i],"NaN newMomentum");
+		/*if(abs(bins[i]->U) < epsilon){
 			if(abs(riemannVariable[i].x) > epsilon){
 				printf("U = 0, riemannVariable != 0\n");
 			} else {
@@ -744,7 +761,7 @@ void Simulation::evaluateHydrodynamic(double* newDensity, double* newMomentum, d
 		newMomentum[i] = (riemannVariable[i].x -((-bins[i]->U + bins[i]->r*sqrt(sound2r2))*riemannVariable[i].y + (bins[i]->U + bins[i]->r*sqrt(sound2r2))*riemannVariable[i].z)/(2*sqrt(sound2r2)*bins[i]->r))/(bins[i]->r*bins[i]->r);
 		alertNaNOrInfinity(newMomentum[i],"NaN newMomentum");
 		newPressure[i] = (riemannVariable[i].y - riemannVariable[i].z)*sqrt(sound2r2)/(2*bins[i]->r);
-		alertNaNOrInfinity(newPressure[i],"NaN newPressure");
+		alertNaNOrInfinity(newPressure[i],"NaN newPressure");*/
 	}
 
 	delete[] riemannVariable;
