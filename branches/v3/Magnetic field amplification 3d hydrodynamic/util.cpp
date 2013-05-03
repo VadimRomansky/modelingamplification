@@ -95,3 +95,10 @@ double min4(double a, double b,double c, double d){
 double maxwell(double momentum, double mass, double temperature){
 	return exp(-momentum*momentum/(2*mass*kBoltzman*temperature))/sqrt(2*pi*mass*kBoltzman*temperature);
 }
+
+void alertNaNOrInfinity(double value, const char* s){
+	if(value != value || 0*value != 0*value){
+		printf(s);
+		printf("\n");
+	}
+}
