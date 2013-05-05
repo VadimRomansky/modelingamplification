@@ -2,6 +2,8 @@
 #define SIMULATION_H
 
 #include "stdafx.h"
+#include "SpaceBin.h"
+#include "particle.h"
 
 class Simulation{
 public:
@@ -44,16 +46,23 @@ public:
 	double particlesWeight;
 
 	int rgridNumber;
-	int shockWavePoint;
-	int currentShockWavePoint;
+	double forwardShockWavePoint;
+	double reverseShockWavePoint;
+	double contactDiscontPoin;
+
+	double xiMin;
+	double xiMax;
 
 	Particle* Particles;
-	SpaceBin** bins;
-	double** pressureSpectralDensity;
-	std::list <Particle*> startPDF;
-	std::vector<Particle*> introducedParticles;
+	SpaceBin** upstreamBins1;
+	SpaceBin** upstreamBins2;
+	SpaceBin** downstreamBins1;
+	SpaceBin** downstreamBins2;
 
-	double* averageVelocity;
+    void solveUpstream1();
+	void solveUpstream2();
+	void solveDownstream1();
+	void solveDownstream2();
 
 	Simulation();
 	~Simulation();
