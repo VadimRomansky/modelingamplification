@@ -79,6 +79,7 @@
     <ClInclude Include="input.h" />
     <ClInclude Include="matrix3d.h" />
     <ClInclude Include="particle.h" />
+    <ClInclude Include="random.h" />
     <ClInclude Include="simulation.h" />
     <ClInclude Include="SpaceBin.h" />
     <ClInclude Include="stdafx.h" />
@@ -90,6 +91,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="matrix3d.cpp" />
     <ClCompile Include="particle.cpp" />
+    <ClCompile Include="random.cpp" />
     <ClCompile Include="Simulation.cpp" />
     <ClCompile Include="SpaceBin.cpp" />
     <ClCompile Include="stdafx.cpp">
