@@ -8,6 +8,7 @@
 class Simulation{
 public:
 	double timeStep;
+	double tau;
 	int iterationNumber;
 	int particlesNumber;
 	int allParticlesNumber;
@@ -46,9 +47,13 @@ public:
 	double particlesWeight;
 
 	int rgridNumber;
-	double forwardShockWavePoint;
-	double reverseShockWavePoint;
-	double contactDiscontPoin;
+	double forwardShockWaveR;
+	double reverseShockWaveR;
+	double contactDiscontR;
+
+	double forwardV;
+	double reverceV;
+	double contactDiscV;
 
 	double xiMin;
 	double xiMax;
