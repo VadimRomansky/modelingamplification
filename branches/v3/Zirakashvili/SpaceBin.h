@@ -15,6 +15,8 @@ class SpaceBin{
 public:
 	static const int defaultTimeRelation = 5;
 
+	double xi;
+
 	double r;
 	double r1;
 	double r2;
