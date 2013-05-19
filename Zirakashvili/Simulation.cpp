@@ -5,11 +5,24 @@
 #include "output.h"
 
 Simulation::Simulation(){
+	time = 0;
 	timeStep = defaultTimeStep;
 	tau = defaultTimeStep;
 }
 
+Simulation::~Simulation(){
+	delete[] upstreamBins2;
+	delete[] downstreamBins2;
+	delete[] downstreamBins1;
+	delete[] upstreamBins1;
+}
+
 void Simulation::initializeProfile(){
+	upstreamBins2 = new SpaceBin*[rgridNumber];
+	downstreamBins2 = new SpaceBin*[rgridNumber];
+	downstreamBins1 = new SpaceBin*[rgridNumber];
+	upstreamBins1 = new SpaceBin*[rgridNumber];
+
 	forwardV = U0;
 	reverseV = 0.5*forwardV;
 	contactDiscontV = 0.75*forwardV;
@@ -20,24 +33,29 @@ void Simulation::initializeProfile(){
 
 	double p0 = density0*kBoltzman*temperature/massProton;
 	for(int i = 0; i < rgridNumber; ++i){
+
+		upstreamBins2[i] = new SpaceBin();
 		upstreamBins2[i]->r = forwardShockWaveR + (i + 0.5)*(upstreamR - forwardShockWaveR)/rgridNumber;
 		upstreamBins2[i]->xi = upstreamBins2[i]->r/forwardShockWaveR;
 		upstreamBins2[i]->density = density0;
 		upstreamBins2[i]->U = 0;
 		upstreamBins2[i]->pressure = p0;
 
+		downstreamBins2[i] = new SpaceBin();
 		downstreamBins2[i]->r = contactDiscontR + (i + 0.5)*(forwardShockWaveR - contactDiscontR)/rgridNumber;
-		downstreamBins2[i]->xi = (downstreamBins1[i]->r - contactDiscontR)/(forwardShockWaveR - contactDiscontR);
+		downstreamBins2[i]->xi = (downstreamBins2[i]->r - contactDiscontR)/(forwardShockWaveR - contactDiscontR);
 		downstreamBins2[i]->density = 4*density0;
 		downstreamBins2[i]->U = 0.75*U0;
 		downstreamBins2[i]->pressure = 0.75*density0*U0*U0;
 
+		downstreamBins1[i] = new SpaceBin();
 		downstreamBins1[i]->r = reverseShockWaveR +(i + 0.5)*(contactDiscontR - reverseShockWaveR)/rgridNumber;
 		downstreamBins1[i]->xi = (downstreamBins1[i]->r - contactDiscontR)/(contactDiscontR - reverseShockWaveR);
 		downstreamBins1[i]->density = 4*density0;
 		downstreamBins1[i]->U = 0.75*U0;
 		downstreamBins1[i]->pressure = 0.75*density0*U0*U0;
 
+		upstreamBins1[i] = new SpaceBin();
 		upstreamBins1[i]->r = reverseShockWaveR*(i + 0.5)/rgridNumber;
 		upstreamBins1[i]->xi = upstreamBins1[i]->r/reverseShockWaveR;
 		upstreamBins1[i]->density = density0*sqr(upstreamBins2[i]->r/reverseShockWaveR);
@@ -54,7 +72,8 @@ void Simulation::simulate(){
 	fclose(outFile);
 	moveShockWaves();
 	for(int i = 0; i < iterationNumber; ++i){
-		printf("iteration ¹ %d", i);
+		printf("iteration ¹ %d\n", i);
+		printf("time = %lf\n", time);
 		printf("solving upstream\n");
 		solveUpstream1();
 		solveUpstream2();
@@ -63,10 +82,12 @@ void Simulation::simulate(){
 		solveDownstream2();
 		printf("moving shock waves\n");
 		moveShockWaves();
-		printf("outputing\n");
-		outFile = fopen("./output/zprofile.dat","a");
-		output(outFile, this);
-		fclose(outFile);
+		if(i % 120 == 0){
+			printf("outputing\n");
+			outFile = fopen("./output/zprofile.dat","a");
+			output(outFile, this);
+			fclose(outFile);
+		}
 	}
 }
 
@@ -74,7 +95,11 @@ void Simulation::solveUpstream1(){
 	double* density = new double[rgridNumber];
 	double* velocity = new double[rgridNumber];
 	double* pressure = new double[rgridNumber];
-	for(int i = 0; i < rgridNumber; ++i){
+
+	density[0] = upstreamBins2[0]->density;
+	velocity[0] = upstreamBins2[0]->U;
+	pressure[0] = upstreamBins2[0]->pressure;
+	for(int i = 1; i < rgridNumber; ++i){
 		double xi1 = upstreamBins1[i]->xi;
 		double xi2 = upstreamBins1[i-1]->xi;
 		double H1 = 1 + forwardShockWaveR*tau*(upstreamBins1[1]->U - reverseV*xi1)/(reverseShockWaveR*forwardV*(xi1 - xi2));
@@ -101,12 +126,16 @@ void Simulation::solveUpstream2(){
 	double* density = new double[rgridNumber];
 	double* velocity = new double[rgridNumber];
 	double* pressure = new double[rgridNumber];
-	for(int i = rgridNumber - 1; i >= 0; --i){
+	density[rgridNumber - 1] = upstreamBins2[rgridNumber - 1]->density;
+	velocity[rgridNumber - 1] = upstreamBins2[rgridNumber - 1]->U;
+	pressure[rgridNumber - 1] = upstreamBins2[rgridNumber - 1]->pressure;
+	for(int i = rgridNumber - 2; i >= 0; --i){
 		double G = upstreamBins2[i]->density*cube(oldForwardShockWaveR/forwardShockWaveR) - density[i+1]*(3*tau*upstreamBins2[i+1]->xi*upstreamBins2[i+1]->xi*(velocity[i+1] - forwardV*upstreamBins2[i+1]->xi)/(forwardV*(cube(upstreamBins2[i+1]->xi) - cube(upstreamBins2[i]->xi))));
 		velocity[i] = (upstreamBins2[i]->density*upstreamBins2[i]->U*cube(oldForwardShockWaveR/forwardShockWaveR) - density[i+1]*velocity[i+1]*3*tau*upstreamBins2[i+1]->xi*upstreamBins2[i+1]->xi*(velocity[i+1]-forwardV*upstreamBins2[i+1]->xi)/(forwardV*(cube(upstreamBins2[i+1]->xi) - cube(upstreamBins2[i]->xi)))-(upstreamBins2[i+1]->pressure - upstreamBins2[i]->pressure)*tau/(forwardV*(upstreamBins2[i+1]->xi - upstreamBins2[i]->xi)))/G;
 		density[i] = G/(1 - 3*tau*upstreamBins2[i+1]->xi*upstreamBins2[i+1]->xi*(velocity[i] - forwardV*upstreamBins2[i]->xi)/(forwardV*(cube(upstreamBins2[i+1]->xi) - cube(upstreamBins2[i]->xi))));
-		pressure[i] = (upstreamBins2[i]->pressure*cube(oldForwardShockWaveR/forwardShockWaveR) - pressure[i+1]*3*tau*sqr(upstreamBins2[i+1]->xi)*(velocity[i+1] - forwardV*upstreamBins2[i+1]->xi)/(forwardV*(cube(upstreamBins2[i+1]->xi) - cube(upstreamBins2[i]->xi))))*
+		pressure[i] = (upstreamBins2[i]->pressure*cube(oldForwardShockWaveR/forwardShockWaveR) - pressure[i+1]*3*tau*sqr(upstreamBins2[i+1]->xi)*(velocity[i+1] - forwardV*upstreamBins2[i+1]->xi)/(forwardV*(cube(upstreamBins2[i+1]->xi) - cube(upstreamBins2[i]->xi))))/
 			(1 - 3*tau*(sqr(upstreamBins2[i]->xi)*(velocity[i] - forwardV*upstreamBins2[i]->xi) + (gamma - 1)*(sqr(upstreamBins2[i+1]->xi)*velocity[i+1] - sqr(upstreamBins2[i]->xi)*velocity[i]))/(forwardV*(cube(upstreamBins2[i+1]->xi) - cube(upstreamBins2[i]->xi))));
+		alertNaNOrInfinity(pressure[i],"pressure\n");
 	}
 
 	for(int i = 0; i < rgridNumber; ++i){
@@ -195,7 +224,7 @@ void Simulation::TracPen(double* u, double* flux, double cs, double deltaXi){
 	double* fplus = new double[rgridNumber];
 	double* fminus = new double[rgridNumber];
 
-	for(int i = 0; i < rgridNumber; ++i){
+	for(int i = 2; i < rgridNumber-2; ++i){
 		uplus[i] = cs*u[i] + flux[i];
 		uminus[i] = cs*u[i] - flux[i];
 
@@ -204,7 +233,7 @@ void Simulation::TracPen(double* u, double* flux, double cs, double deltaXi){
 
 	}
 
-	for(int i = 0; i < rgridNumber; ++i){
+	for(int i = 2; i < rgridNumber-3; ++i){
 		u[i] -= tau*0.5*(fplus[i+1] + fminus[i+1] - fplus[i] - fminus[i])/deltaXi;;
 	}
 
@@ -212,7 +241,7 @@ void Simulation::TracPen(double* u, double* flux, double cs, double deltaXi){
 	delete[] uminus;
 
 	delete[] fplus;
-	delete[] uminus;
+	delete[] fminus;
 }
 
 double Simulation::minmod(double a, double b){
