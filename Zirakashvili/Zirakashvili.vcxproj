@@ -78,6 +78,7 @@
     <ClInclude Include="constants.h" />
     <ClInclude Include="input.h" />
     <ClInclude Include="matrix3d.h" />
+    <ClInclude Include="output.h" />
     <ClInclude Include="particle.h" />
     <ClInclude Include="random.h" />
     <ClInclude Include="simulation.h" />
@@ -88,8 +89,10 @@
     <ClInclude Include="vector3d.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="input.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="matrix3d.cpp" />
+    <ClCompile Include="output.cpp" />
     <ClCompile Include="particle.cpp" />
     <ClCompile Include="random.cpp" />
     <ClCompile Include="Simulation.cpp" />

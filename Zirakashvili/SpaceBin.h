@@ -4,9 +4,7 @@
 #include "stdafx.h"
 #include "constants.h"
 #include "random.h"
-#include "BinFlux.h"
 #include "matrix3d.h"
-//#include "particle2.h"
 #include <list>
 
 class Particle;
@@ -49,22 +47,6 @@ public:
 
 	bool smallAngleScattering;
 
-	BinFlux crMassFlux;
-	BinFlux particleMassFlux;
-	BinFlux bulkMassFlux;
-	BinFlux particleMomentaFlux;
-	BinFlux bulkMomentaFlux;
-	BinFlux thMomentaFlux;
-	BinFlux magMomentaFlux;
-	BinFlux particleEnergyFlux;
-	BinFlux bulkEnergyFlux;
-	BinFlux thEnergyFlux;
-	BinFlux magEnergyFlux;
-
-	BinFlux massFlux;
-	BinFlux momentaFlux;
-	BinFlux energyFlux;
-
 	std::list <Particle*> detectedParticlesR2;
 	std::list <Particle*> detectedParticlesR1;
 	std::list <Particle*> detectedParticlesTheta2;
@@ -75,9 +57,6 @@ public:
 	std::list <Particle*> particles;
 	double* magneticField;
 	std::list <Particle*>* sortedParticles;
-
-	std::vector<double> particleMomentaZ;
-	std::vector<double> particleWeights;
 
 	double minK;
 	double maxK;
@@ -97,12 +76,6 @@ public:
 	bool isInThisOrNear(double r, double theta, double phi);
 	static int binByCoordinates(double r, double theta, double phi, double r0, double deltar, double deltatheta, double deltaphi, const int rgridNumber); 
 	void scattering(Particle* particle, double maxTheta);
-	void updateFluxes();
-	void updateCosmicRayFluxes();
-	void updateBulkFluxes();
-	void updateThermalFluxes();
-	void updateMagneticFluxes();
-	void updateMagneticField();
 	void multiplyParticleWeights(double value);
 	void sortParticles(double minK, double maxK);
 	void resetDetectors();
@@ -114,14 +87,8 @@ public:
 	double getMaxLocalP();
 	double getMinLocalP();
 
-	void detectParticleR1(Particle* particle);
-	void detectParticleR2(Particle* particle);
-	void detectParticleTheta1(Particle* particle);
-	void detectParticleTheta2(Particle* particle);
-	void detectParticlePhi1(Particle* particle);
-	void detectParticlePhi2(Particle* particle);
+	double getEnergy();
 
-	void updateCosmicRayBoundMomentum();
 	void updateTemperature(double* distribution, double deltap);
 
 	void largeAngleScattering(Particle* particle, double& time, double timeStep);

@@ -47,13 +47,22 @@ public:
 	double particlesWeight;
 
 	int rgridNumber;
+
+	double R0;
+	double time;
+
 	double forwardShockWaveR;
+	double oldForwardShockWaveR;
 	double reverseShockWaveR;
+	double oldReverseShockWaveR;
 	double contactDiscontR;
+	double oldContactDiscontR;
 
 	double forwardV;
-	double reverceV;
-	double contactDiscV;
+	double reverseV;
+	double contactDiscontV;
+
+	double maxSoundSpeed;
 
 	double xiMin;
 	double xiMax;
@@ -74,6 +83,10 @@ public:
 
 	void initializeProfile();
 	void simulate();
+	void moveShockWaves();
+	void TracPen(double* u, double* flux, double cs, double deltaXi);
+	double minmod(double a, double b);
+	void updateMaxSoundSpeed();
 };
 
 #endif
