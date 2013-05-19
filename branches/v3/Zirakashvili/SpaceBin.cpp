@@ -14,6 +14,15 @@ SpaceBin::SpaceBin(){
 	}
 	//sortedParticles = new std::list<Particle*>[kgridNumber];
 }
+
+SpaceBin::SpaceBin(double R, double Xi, double u, double rho, double p){
+	r = R;
+	xi = Xi;
+	U = u;
+	density = rho;
+	pressure = p;
+	temperature = pressure*massProton/(density*kBoltzman);
+}
 SpaceBin::SpaceBin(double R, double Theta, double Phi, double deltar, double deltatheta, double deltaphi, double u, double rho, double utheta,double uphi, double t, double b, int i, int j, int k, bool scattering){
 	r = R;
 	theta = Theta;
