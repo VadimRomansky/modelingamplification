@@ -4,7 +4,7 @@
 
 double power(double v, double p);
 double sqr(double v);
-double qube(double v);
+double cube(double v);
 int lowerInt(double v);
 vector3d summVelocity(vector3d v, double u);
 bool order(double a, double b, double c);

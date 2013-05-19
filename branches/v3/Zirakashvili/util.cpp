@@ -11,7 +11,7 @@ double sqr(double v){
 	return v*v;
 }
 
-double qube(double v){
+double cube(double v){
 	return v*v*v;
 }
 

@@ -4,7 +4,6 @@
 #include "constants.h"
 #include "simulation.h"
 #include "util.h"
-#include "BinFlux.h"
 #include "matrix3d.h"
 
 
@@ -445,56 +444,6 @@ void SpaceBin::scattering(Particle* particle, double maxTheta){
 	particle->setAbsoluteMomentum(this);
 }
 
-void SpaceBin::updateFluxes(){
-	updateCosmicRayFluxes();
-}
-////////// I don't sure how to do it
-
-
-
-void SpaceBin::updateCosmicRayFluxes(){
-	//particleMassFlux.reset();
-	//particleMomentaFlux.reset();
-	//particleEnergyFlux.reset();
-	//crMassFlux.reset();
-	//double c2 = speed_of_light*speed_of_light;
-	if((thetagridNumber == 1) && (phigridNumber == 1)){
-		std::list<Particle*>::iterator it = detectedParticlesR1.begin();
-
-		while(it != detectedParticlesR1.end()){
-			Particle particle = **it;
-			if(particle.isCosmicRay){
-				crMassFlux.fluxR1 += particle.mass*particle.weight;
-			}
-			particleMassFlux.fluxR1 += particle.mass*particle.weight;
-			double v = particle.getAbsoluteV();
-			double vr = particle.getRadialSpeed(); 
-			particleMomentaFlux.fluxR1 += vr*particle.mass*particle.weight/sqrt(1 - (v*v)/c2);
-			particleEnergyFlux.fluxR1 += particle.weight*particle.getEnergy();
-		}
-		it = detectedParticlesR2.begin();
-		while(it != detectedParticlesR2.end()){
-			Particle particle = **it;
-			if(particle.isCosmicRay){
-				crMassFlux.fluxR2 += particle.mass*particle.weight;
-			}
-			particleMassFlux.fluxR2 += particle.mass*particle.weight;
-			double v = particle.getAbsoluteV();
-			double vr = particle.getRadialSpeed(); 
-			particleMomentaFlux.fluxR2 += vr*vr*particle.mass*particle.weight/sqrt(1 - (v*v)/c2);
-			particleEnergyFlux.fluxR2 += particle.weight*particle.getEnergy();
-		}
-	}
-
-
-}
-
-void SpaceBin::updateBulkFluxes(){
-
-}
-void SpaceBin::updateThermalFluxes(){
-
-}
 void SpaceBin::resetDetectors(){
 	detectedParticlesR1.clear();
 	detectedParticlesR2.clear();
@@ -502,9 +451,6 @@ void SpaceBin::resetDetectors(){
 	detectedParticlesTheta2.clear();
 	detectedParticlesPhi1.clear();
 	detectedParticlesPhi2.clear();
-
-	particleMomentaZ.clear();
-	particleWeights.clear();
 
 	std::list<Particle*>::iterator it = particles.begin();
 	while(it != particles.end()){
@@ -517,48 +463,6 @@ void SpaceBin::resetDetectors(){
 	for(int j = 0; j < kgridNumber; ++j){
 		//sortedParticles[j].clear();
 	}
-	massFlux.fluxR1 = 0;
-	massFlux.fluxR2 = 0;
-	massFlux.fluxTheta1 = 0;
-	massFlux.fluxTheta2 = 0;
-	massFlux.fluxPhi1 = 0;
-	massFlux.fluxPhi2 = 0;
-	momentaFlux.fluxR1 = 0;
-	momentaFlux.fluxR2 = 0;
-	momentaFlux.fluxTheta1 = 0;
-	momentaFlux.fluxTheta2 = 0;
-	momentaFlux.fluxPhi1 = 0;
-	momentaFlux.fluxPhi2 = 0;
-	energyFlux.fluxR1 = 0;
-	energyFlux.fluxR2 = 0;
-	energyFlux.fluxTheta1 = 0;
-	energyFlux.fluxTheta2 = 0;
-	energyFlux.fluxPhi1 = 0;
-	energyFlux.fluxPhi2 = 0;
-	particleMassFlux.fluxR1 = 0;
-	particleMassFlux.fluxR2 = 0;
-	particleMassFlux.fluxTheta1 = 0;
-	particleMassFlux.fluxTheta2 = 0;
-	particleMassFlux.fluxPhi1 = 0;
-	particleMassFlux.fluxPhi2 = 0;
-	particleMomentaFlux.fluxR1 = 0;
-	particleMomentaFlux.fluxR2 = 0;
-	particleMomentaFlux.fluxTheta1 = 0;
-	particleMomentaFlux.fluxTheta2 = 0;
-	particleMomentaFlux.fluxPhi1 = 0;
-	particleMomentaFlux.fluxPhi2 = 0;
-	particleEnergyFlux.fluxR1 = 0;
-	particleEnergyFlux.fluxR2 = 0;
-	particleEnergyFlux.fluxTheta1 = 0;
-	particleEnergyFlux.fluxTheta2 = 0;
-	particleEnergyFlux.fluxPhi1 = 0;
-	particleEnergyFlux.fluxPhi2 = 0;
-	crMassFlux.fluxR1 = 0;
-	crMassFlux.fluxR2 = 0;
-	crMassFlux.fluxTheta1 = 0;
-	crMassFlux.fluxTheta2 = 0;
-	crMassFlux.fluxPhi1 = 0;
-	crMassFlux.fluxPhi2 = 0;
 
 	double ux;
 	double uy;
@@ -596,27 +500,12 @@ void SpaceBin::resetDetectors(){
 	//energyFlux.reset();
 }
 
-/////// I don't know how to do it
-void SpaceBin::updateMagneticFluxes(){
-
-}
-
 void SpaceBin::multiplyParticleWeights(double value){
 
 }
 
 void SpaceBin::resetProfile(double massFlux0, double momentaFlux0, double energyFlux0, double density0, double U0){
 
-}
-////интегрирует спектральную плотность и вычисляет эффективное поле 
-void SpaceBin::updateMagneticField(){
-	W =0;
-	double dk = (maxK - minK)/(kgridNumber - 1);
-	for(int i = 0; i < kgridNumber; ++i){
-		W +=magneticField[i]*dk;
-	}
-	/////////// TODO 4 или 8?
-	B =sqrt(B0*B0 + 4*pi*W);
 }
 
 //// Возвращает плотность давления, создаваемого частицами в близости резонанса
@@ -880,44 +769,7 @@ void SpaceBin::sortParticles(double minK, double maxK){
 }
 
 bool SpaceBin::isInBin(Particle* particle){
-	double r = particle->getAbsoluteR();
-	double theta = particle->getAbsoluteTheta();
-	double phi = particle->getAbsolutePhi();
-	if(r > r2) {
-		//detectedParticlesR2.push_back(new Particle(*particle));
-		detectParticleR2(particle);
-		return false;
-	}
-	if(r < r1) {
-		//detectedParticlesR1.push_back(new Particle(*particle));
-		detectParticleR1(particle);
-		return false;
-	}
-	if(thetagridNumber > 1){
-		if(theta > theta2) {
-			//detectedParticlesTheta2.push_back(new Particle(*particle));
-			detectParticleTheta2(particle);
-			return false;
-		}
-		if(theta < theta1){
-			//detectedParticlesTheta1.push_back(new Particle(*particle));
-			detectParticleTheta1(particle);
-			return false;
-		}
-	}
-	if(phigridNumber > 1){
-		if(phi > phi2) {
-			//detectedParticlesPhi2.push_back(new Particle(*particle));
-			detectParticlePhi2(particle);
-			return false;
-		}
-		if(phi < phi1){
-			//detectedParticlesPhi1.push_back(new Particle(*particle));
-			detectParticlePhi1(particle);
-			return false;
-		}
-	}
-	return true;
+	return false;
 }
 
 bool SpaceBin::isInThisOrNear(double r, double theta, double phi){
@@ -934,186 +786,6 @@ bool SpaceBin::isInThisOrNear(double r, double theta, double phi){
 		return (order(theta1, theta, theta2) || order(phi1, phi, phi2));
 	} else {
 		return (order(theta1, theta, theta2) && order(phi1, phi, phi2));
-	}
-}
-
-void SpaceBin::detectParticleR1(Particle* particle){
-	//detectedParticlesR1.push_back(new Particle(*particle));
-	//double c2 = speed_of_light*speed_of_light;
-	if(particle->isCosmicRay){
-		crMassFlux.fluxR1 += particle->mass*particle->weight;
-	}
-	particleMassFlux.fluxR1 += particle->mass*particle->weight;
-	double v = particle->getAbsoluteV();
-	double vr = particle->getRadialSpeed(); 
-	particleMomentaFlux.fluxR1 += vr*particle->mass*particle->weight/sqrt(1 - (v*v)/c2);
-	particleEnergyFlux.fluxR1 += particle->weight*particle->getEnergy();
-}
-
-void SpaceBin::detectParticleR2(Particle* particle){
-	//detectedParticlesR2.push_back(new Particle(*particle));
-	//double c2 = speed_of_light*speed_of_light;
-	if(particle->isCosmicRay){
-		crMassFlux.fluxR2 += particle->mass*particle->weight;
-	}
-	particleMassFlux.fluxR2 += particle->mass*particle->weight;
-	double v = particle->getAbsoluteV();
-	double vr = particle->getRadialSpeed(); 
-	particleMomentaFlux.fluxR2 += vr*particle->mass*particle->weight/sqrt(1 - (v*v)/c2);
-	particleEnergyFlux.fluxR2 += particle->weight*particle->getEnergy();
-}
-
-void SpaceBin::detectParticleTheta1(Particle* particle){
-}
-
-void SpaceBin::detectParticleTheta2(Particle* particle){
-}
-
-void SpaceBin::detectParticlePhi1(Particle* particle){
-}
-
-void SpaceBin::detectParticlePhi2(Particle* particle){
-}
-
-void SpaceBin::updateCosmicRayBoundMomentum(){
-
-	if( particleMomentaZ.size() > 0){
-		double maxp;
-		maxp = particleMomentaZ[0];
-		double weight = 0;
-		weight += particleWeights[0];
-		for(int i = 1; i < particleMomentaZ.size(); ++i){
-			if(maxp < abs(particleMomentaZ[i])){
-				maxp = abs(particleMomentaZ[i]);
-			}
-			weight += particleWeights[i];
-		}
-		double* distribution = new double[pgridNumber];
-		for (int i = 0; i < pgridNumber; ++i){
-			distribution[i] = 0;
-		}
-		int particleNumber = 0;
-		double mass;
-		double deltap = (2*maxp)/(pgridNumber);
-
-		for(int i = 0; i < particleMomentaZ.size(); ++i){
-			double p = particleMomentaZ[i];
-			double particleWeight = particleWeights[i];
-			if (abs(p) >= maxp){
-				continue;
-			}
-			for(int j =0; j< pgridNumber; ++j){
-				if (p <-maxp + deltap*(j + 1)){
-					distribution[j] += particleWeight/(weight*deltap);
-					break;
-				}
-			}
-		}
-
-		double a = 0;
-		for(int i = 1; i < pgridNumber - 1; ++i){
-			a = a + distribution[i]*deltap;
-			distribution[i] = (distribution[i-1] + distribution[i] + distribution[i+1])/3;
-		}
-
-		updateTemperature(distribution, deltap);
-
-		double maxDistribution = 0;
-		for(int i = pgridNumber/2; i < pgridNumber-2; ++i){
-			if(maxDistribution < (distribution[i])){
-				maxDistribution = distribution[i];
-			}
-		}
-		double scale = maxDistribution/(maxwell(0.0, massProton, temperature)) ;
-
-		if(numberR == 10){
-			FILE* outPDF = fopen("./output/zpdf1.dat","w");
-			for(int i = 0; i < pgridNumber; ++i){
-				fprintf(outPDF,"%lf %lf %lf\n", 100000000000000000000.0*(-maxp + i*deltap), distribution[i], scale*maxwell(-maxp + (i + 1/2)*deltap - centralMomentum, massProton, temperature));
-			} 
-			fclose(outPDF);
-		}
-		if(numberR == 20){
-			FILE* outPDF = fopen("./output/zpdf2.dat","w");
-			for(int i = 0; i < pgridNumber; ++i){
-				fprintf(outPDF,"%lf %lf %lf\n", 100000000000000000000.0*(-maxp + i*deltap), distribution[i], scale*maxwell(-maxp + (i + 1/2)*deltap - centralMomentum, massProton, temperature));
-			}
-			fclose(outPDF);
-		}
-		if(numberR == 30){
-			FILE* outPDF = fopen("./output/zpdf3.dat","w");
-			for(int i = 0; i < pgridNumber; ++i){
-				fprintf(outPDF,"%lf %lf %lf\n", 100000000000000000000.0*(-maxp + i*deltap - centralMomentum), scale*distribution[i], maxwell(-maxp + (i + 1/2)*deltap - centralMomentum, massProton, temperature));
-			}
-			fclose(outPDF);
-		}
-		if(numberR == 40){
-			FILE* outPDF = fopen("./output/zpdf4.dat","w");
-			for(int i = 0; i < pgridNumber; ++i){
-				fprintf(outPDF,"%lf %lf %lf\n", 100000000000000000000.0*(-maxp + i*deltap), distribution[i], scale*maxwell(-maxp + (i + 1/2)*deltap - centralMomentum, massProton, temperature));
-			}
-			fclose(outPDF);
-		}
-		if(numberR == 50){
-			FILE* outPDF = fopen("./output/zpdf5.dat","w");
-			for(int i = 0; i < pgridNumber; ++i){
-				fprintf(outPDF,"%lf %lf %lf\n", 100000000000000000000.0*(-maxp + i*deltap), distribution[i], scale*maxwell(-maxp + (i + 1/2)*deltap - centralMomentum, massProton, temperature));
-			}
-			fclose(outPDF);
-		}
-		if(numberR == 60){
-			FILE* outPDF = fopen("./output/zpdf6.dat","w");
-			for(int i = 0; i < pgridNumber; ++i){
-				fprintf(outPDF,"%lf %lf %lf\n", 100000000000000000000.0*(-maxp + i*deltap), distribution[i], scale*maxwell(-maxp + (i + 1/2)*deltap - centralMomentum, massProton, temperature));
-			}
-			fclose(outPDF);
-		}
-		if(numberR == 70){
-			FILE* outPDF = fopen("./output/zpdf7.dat","w");
-			for(int i = 0; i < pgridNumber; ++i){
-				fprintf(outPDF,"%lf %lf %lf\n", 100000000000000000000.0*(-maxp + i*deltap), distribution[i], scale*maxwell(-maxp + (i + 1/2)*deltap - centralMomentum, massProton, temperature));
-			}
-			fclose(outPDF);
-		}
-		if(numberR == 80){
-			FILE* outPDF = fopen("./output/zpdf8.dat","w");
-			for(int i = 0; i < pgridNumber; ++i){
-				fprintf(outPDF,"%lf %lf %lf\n", 100000000000000000000.0*(-maxp + i*deltap), distribution[i], scale*maxwell(-maxp + (i + 1/2)*deltap - centralMomentum, massProton, temperature));
-			}
-			fclose(outPDF);
-		}
-		if(numberR == 90){
-			FILE* outPDF = fopen("./output/zpdf9.dat","w");
-			for(int i = 0; i < pgridNumber; ++i){
-				fprintf(outPDF,"%lf %lf %lf\n", 100000000000000000000.0*(-maxp + i*deltap), distribution[i], scale*maxwell(-maxp + (i + 1/2)*deltap - centralMomentum, massProton, temperature));
-			}
-			fclose(outPDF);
-		}
-		if(numberR == 249){
-			FILE* outPDF = fopen("./output/zpdf0.dat","w");
-			for(int i = 0; i < pgridNumber; ++i){
-				fprintf(outPDF,"%lf %lf %lf\n", 100000000000000000000.0*(-maxp + i*deltap), distribution[i], scale*maxwell(-maxp + (i + 1/2)*deltap - centralMomentum, massProton, temperature));
-			}
-			fclose(outPDF);
-		}
-
-		/*FILE* outPDF = fopen(fileName,"w");
-		for(int i = 0; i < pgridNumber; ++i){
-			fprintf(outPDF,"%lf %lf %lf\n", 100000000000000000000.0*(-maxp + i*deltap), distribution[i], scale*maxwell(-maxp + (i + 1/2)*deltap - centralMomentum, massProton, temperature));
-		}
-		fclose(outPDF);*/
-
-
-		double j = 0;
-
-		for(int i = 0; i < pgridNumber; ++i){
-			distribution[i] -= scale*maxwell(-maxp + (i + 1/2)*deltap - centralMomentum, massProton, temperature);
-			j += weight*((-maxp + (i + 1/2)*deltap)/massProton)*electron_charge*distribution[i]*deltap;
-		}
-
-		crFlux = j/volume;
-
-		delete[] distribution;
 	}
 }
 
@@ -1150,6 +822,10 @@ void SpaceBin::updateTemperature(double* distribution, double deltap){
 	//double maxT = (deltap*pgridNumber)*(deltap*pgridNumber)/(8*kBoltzman*massProton);
 	//double T = findTemperature(minT,maxT,distribution, deltap);
 	//temperature = T;
+}
+
+double SpaceBin::getEnergy(){
+	return density*U*U/2 + pressure/(gamma - 1);
 }
 
 

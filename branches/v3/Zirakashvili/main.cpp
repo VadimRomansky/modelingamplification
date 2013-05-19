@@ -2,8 +2,9 @@
 //#include <crtdbg.h>
 #include "input.h"
 #include "simulation.h"
+#include "input.h"
 #include <omp.h>
-
+#include <time.h>
 
 
 int main()
