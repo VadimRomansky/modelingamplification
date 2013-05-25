@@ -32,14 +32,20 @@ void Simulation::initializeProfile(){
 	reverseShockWaveR = 0.9*forwardShockWaveR;
 
 	double p0 = density0*kBoltzman*temperature/massProton;
+	double xiMin = 0.00000000001;
+	double xiMax = upstreamR/forwardShockWaveR;
+	double k2 = log((xiMax + xiMin - 1)/xiMin)/(rgridNumber - 1);
+	double k1 = 1.0/(rgridNumber - 1);
 	for(int i = 0; i < rgridNumber; ++i){
 
 		upstreamBins2[i] = new SpaceBin();
-		upstreamBins2[i]->r = forwardShockWaveR + (i + 0.5)*(upstreamR - forwardShockWaveR)/rgridNumber;
-		upstreamBins2[i]->xi = upstreamBins2[i]->r/forwardShockWaveR;
+		//upstreamBins2[i]->r = forwardShockWaveR + (i + 0.5)*(upstreamR - forwardShockWaveR)/rgridNumber;
+		upstreamBins2[i]->xi = 1 - xiMin + xiMin*exp(i*k2);
+		upstreamBins2[i]->r = upstreamBins2[i]->xi*forwardShockWaveR;
 		upstreamBins2[i]->density = density0;
 		upstreamBins2[i]->U = 0;
 		upstreamBins2[i]->pressure = p0;
+		upstreamBins2[i]->temperature = upstreamBins2[i]->pressure*massProton/(upstreamBins2[i]->density*kBoltzman);
 
 		downstreamBins2[i] = new SpaceBin();
 		downstreamBins2[i]->r = contactDiscontR + (i + 0.5)*(forwardShockWaveR - contactDiscontR)/rgridNumber;
@@ -47,20 +53,24 @@ void Simulation::initializeProfile(){
 		downstreamBins2[i]->density = 4*density0;
 		downstreamBins2[i]->U = 0.75*U0;
 		downstreamBins2[i]->pressure = 0.75*density0*U0*U0;
+		downstreamBins2[i]->temperature = downstreamBins2[i]->pressure*massProton/(downstreamBins2[i]->density*kBoltzman);
 
 		downstreamBins1[i] = new SpaceBin();
-		downstreamBins1[i]->r = reverseShockWaveR +(i + 0.5)*(contactDiscontR - reverseShockWaveR)/rgridNumber;
+		downstreamBins1[i]->r = contactDiscontR +(i - 0.5)*(contactDiscontR - reverseShockWaveR)/rgridNumber;
 		downstreamBins1[i]->xi = (downstreamBins1[i]->r - contactDiscontR)/(contactDiscontR - reverseShockWaveR);
 		downstreamBins1[i]->density = 4*density0;
 		downstreamBins1[i]->U = 0.75*U0;
 		downstreamBins1[i]->pressure = 0.75*density0*U0*U0;
+		downstreamBins1[i]->temperature = downstreamBins1[i]->pressure*massProton/(downstreamBins1[i]->density*kBoltzman);
 
 		upstreamBins1[i] = new SpaceBin();
-		upstreamBins1[i]->r = reverseShockWaveR*(i + 0.5)/rgridNumber;
-		upstreamBins1[i]->xi = upstreamBins1[i]->r/reverseShockWaveR;
+		//upstreamBins1[i]->r = reverseShockWaveR*(i + 0.5)/rgridNumber;
+		upstreamBins1[i]->xi = 2*i*k1 + (log(1 + power(2*xiMin, 1 - 2*i*k1)) - log(1 + 2*xiMin))/log(2*xiMin);
+		upstreamBins1[i]->r = upstreamBins1[i]->xi*reverseShockWaveR;
 		upstreamBins1[i]->density = density0*sqr(upstreamBins2[i]->r/reverseShockWaveR);
 		upstreamBins1[i]->U = 1.5*forwardV*upstreamBins1[i]->r/reverseShockWaveR;
 		upstreamBins1[i]->pressure = 0;
+		upstreamBins1[i]->temperature = upstreamBins1[i]->pressure*massProton/(upstreamBins1[i]->density*kBoltzman);
 	}
 }
 
@@ -274,6 +284,13 @@ void Simulation::moveShockWaves(){
 	forwardShockWaveR *= exp(tau);
 	reverseShockWaveR += oldForwardShockWaveR*tau*(reverseV + oldReverseV)*exp(0.5*tau)/(forwardV + oldForwardV);
 	time += 2*oldForwardShockWaveR*tau*exp(0.5*tau)/(forwardV + oldForwardV);
+
+	for(int i = 0; i < rgridNumber; ++i){
+		upstreamBins2[i]->r = upstreamBins2[i]->xi*forwardShockWaveR;
+		downstreamBins2[i]->r = contactDiscontR + downstreamBins2[i]->xi*(forwardShockWaveR - contactDiscontR);
+		downstreamBins1[i]->r = contactDiscontR + downstreamBins2[i]->xi*(contactDiscontR - reverseShockWaveR);
+		downstreamBins1[i]->r = downstreamBins1[i]->xi*reverseShockWaveR;
+	}
 }
 
 void Simulation::updateMaxSoundSpeed(){
