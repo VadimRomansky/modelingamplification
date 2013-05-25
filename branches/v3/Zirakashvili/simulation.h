@@ -84,7 +84,7 @@ public:
 	void initializeProfile();
 	void simulate();
 	void moveShockWaves();
-	void TracPen(double* u, double* flux, double cs, double deltaXi);
+	void TracPen(double* u, double* flux, double cs, double deltaXi, double leftFlux, double rightFlux);
 	double minmod(double a, double b);
 	void updateMaxSoundSpeed();
 };
