@@ -31,8 +31,8 @@ void Simulation::initializeProfile(){
 	contactDiscontR = 0.95*forwardShockWaveR;
 	reverseShockWaveR = 0.9*forwardShockWaveR;
 
-	double p0 = density0*kBoltzman*temperature/massProton;
-	double xiMin = 0.00000000001;
+	double p0 = 2*((gamma + 1)*0.75/2 - 1)*density0*U0*U0/(gamma - 1);
+	double xiMin = 0.000001;
 	double xiMax = upstreamR/forwardShockWaveR;
 	double k2 = log((xiMax + xiMin - 1)/xiMin)/(rgridNumber - 1);
 	double k1 = 1.0/(rgridNumber - 1);
@@ -67,11 +67,15 @@ void Simulation::initializeProfile(){
 		//upstreamBins1[i]->r = reverseShockWaveR*(i + 0.5)/rgridNumber;
 		upstreamBins1[i]->xi = 2*i*k1 + (log(1 + power(2*xiMin, 1 - 2*i*k1)) - log(1 + 2*xiMin))/log(2*xiMin);
 		upstreamBins1[i]->r = upstreamBins1[i]->xi*reverseShockWaveR;
-		upstreamBins1[i]->density = density0*sqr(upstreamBins2[i]->r/reverseShockWaveR);
+		if( i > 0){
+			upstreamBins1[i]->density = density0*power(upstreamBins1[i]->r/reverseShockWaveR, -7);
+		} else {
+		}
 		upstreamBins1[i]->U = 1.5*forwardV*upstreamBins1[i]->r/reverseShockWaveR;
 		upstreamBins1[i]->pressure = 0;
 		upstreamBins1[i]->temperature = upstreamBins1[i]->pressure*massProton/(upstreamBins1[i]->density*kBoltzman);
 	}
+	upstreamBins1[0]->density = density0*power(upstreamBins1[1]->r/reverseShockWaveR, -7);
 }
 
 void Simulation::simulate(){
@@ -106,9 +110,9 @@ void Simulation::solveUpstream1(){
 	double* velocity = new double[rgridNumber];
 	double* pressure = new double[rgridNumber];
 
-	density[0] = upstreamBins2[0]->density;
-	velocity[0] = upstreamBins2[0]->U;
-	pressure[0] = upstreamBins2[0]->pressure;
+	density[0] = upstreamBins1[0]->density;
+	velocity[0] = upstreamBins1[0]->U;
+	pressure[0] = upstreamBins1[0]->pressure;
 	for(int i = 1; i < rgridNumber; ++i){
 		double xi1 = upstreamBins1[i]->xi;
 		double xi2 = upstreamBins1[i-1]->xi;
@@ -117,7 +121,11 @@ void Simulation::solveUpstream1(){
 
 		double H2 = upstreamBins1[i]->density*cube(oldReverseShockWaveR/reverseShockWaveR) + density[i-1]*3*forwardShockWaveR*tau*xi2*xi2*(velocity[i-1]-reverseV*xi2)/(reverseShockWaveR*forwardV*(cube(xi1) - cube(xi2)));
 		//todo u old or new?
-		density[i] = H2/(1 + 3*forwardShockWaveR*tau*xi1*xi1*(velocity[i-1] - reverseV*xi1)/(reverseShockWaveR*forwardV*(cube(xi1) - cube(xi2))));
+		density[i] = H2/(1 + 3*forwardShockWaveR*tau*xi1*xi1*(upstreamBins1[i]->U - reverseV*xi1)/(reverseShockWaveR*forwardV*(cube(xi1) - cube(xi2))));
+		if(density[i] <= 0){
+			printf("density < 0 i = %d \n", i);
+			density[i] = epsilon*density0;
+		}
 		pressure[i] = (upstreamBins1[i]->pressure*cube(oldReverseShockWaveR/reverseShockWaveR) + pressure[i-1]*3*forwardShockWaveR*tau*xi2*xi2*(velocity[i-1] - reverseV*xi2)/(reverseShockWaveR*forwardV*(cube(xi1) - cube(xi2))))/
 			(1 + 3*forwardShockWaveR*tau*(xi1*xi1*(velocity[i] - reverseV*xi1) + (gamma - 1)*(xi1*xi1*velocity[i] - xi2*xi2*velocity[i-1]))/(reverseShockWaveR*forwardV*(cube(xi1) - cube(xi2))));
 	}
@@ -144,6 +152,10 @@ void Simulation::solveUpstream2(){
 		double G = upstreamBins2[i]->density*cube(oldForwardShockWaveR/forwardShockWaveR) - density[i+1]*(3*tau*upstreamBins2[i+1]->xi*upstreamBins2[i+1]->xi*(velocity[i+1] - forwardV*upstreamBins2[i+1]->xi)/(forwardV*(cube(upstreamBins2[i+1]->xi) - cube(upstreamBins2[i]->xi))));
 		velocity[i] = (upstreamBins2[i]->density*upstreamBins2[i]->U*cube(oldForwardShockWaveR/forwardShockWaveR) - density[i+1]*velocity[i+1]*3*tau*upstreamBins2[i+1]->xi*upstreamBins2[i+1]->xi*(velocity[i+1]-forwardV*upstreamBins2[i+1]->xi)/(forwardV*(cube(upstreamBins2[i+1]->xi) - cube(upstreamBins2[i]->xi)))-(upstreamBins2[i+1]->pressure - upstreamBins2[i]->pressure)*tau/(forwardV*(upstreamBins2[i+1]->xi - upstreamBins2[i]->xi)))/G;
 		density[i] = G/(1 - 3*tau*upstreamBins2[i+1]->xi*upstreamBins2[i+1]->xi*(velocity[i] - forwardV*upstreamBins2[i]->xi)/(forwardV*(cube(upstreamBins2[i+1]->xi) - cube(upstreamBins2[i]->xi))));
+		if(density[i] <= 0){
+			printf("density < 0 i = %d \n", i);
+			density[i] = epsilon*density0;
+		}
 		pressure[i] = (upstreamBins2[i]->pressure*cube(oldForwardShockWaveR/forwardShockWaveR) - pressure[i+1]*3*tau*sqr(upstreamBins2[i+1]->xi)*(velocity[i+1] - forwardV*upstreamBins2[i+1]->xi)/(forwardV*(cube(upstreamBins2[i+1]->xi) - cube(upstreamBins2[i]->xi))))/
 			(1 - 3*tau*(sqr(upstreamBins2[i]->xi)*(velocity[i] - forwardV*upstreamBins2[i]->xi) + (gamma - 1)*(sqr(upstreamBins2[i+1]->xi)*velocity[i+1] - sqr(upstreamBins2[i]->xi)*velocity[i]))/(forwardV*(cube(upstreamBins2[i+1]->xi) - cube(upstreamBins2[i]->xi))));
 		alertNaNOrInfinity(pressure[i],"pressure\n");
@@ -202,7 +214,7 @@ void Simulation::solveDownstream1(){
 
 	for(int i = 1; i < rgridNumber; ++i){
 		downstreamBins1[i]->density = u1[i]/(downstreamBins1[i]->r*downstreamBins1[i]->r*deltaB);
-		downstreamBins1[i]->U = u2[i]/downstreamBins1[i]->density;
+		downstreamBins1[i]->U = u2[i]/(downstreamBins1[i]->density*downstreamBins1[i]->r*downstreamBins1[i]->r*deltaB);
 		downstreamBins1[i]->pressure = (gamma - 1)*(u3[i]/(downstreamBins1[i]->r*downstreamBins1[i]->r*deltaB) - downstreamBins1[i]->density*downstreamBins1[i]->U*downstreamBins1[i]->U/2);
 	}
 
@@ -253,9 +265,9 @@ void Simulation::solveDownstream2(){
 	}
 	TracPen(u3, F3, maxSoundSpeed, deltaXi, leftFlux3, rightFlux3);
 
-	for(int i = 0; i < rgridNumber; ++i){
+	for(int i = 1; i < rgridNumber; ++i){
 		downstreamBins1[i]->density = u1[i]/(downstreamBins2[i]->r*downstreamBins2[i]->r*deltaF);
-		downstreamBins1[i]->U = u2[i]/downstreamBins2[i]->density;
+		downstreamBins1[i]->U = u2[i]/(downstreamBins2[i]->density*downstreamBins2[i]->r*downstreamBins2[i]->r*deltaF);;
 		downstreamBins1[i]->pressure = (gamma - 1)*(u3[i]/(downstreamBins2[i]->r*downstreamBins2[i]->r*deltaF) - downstreamBins2[i]->density*downstreamBins2[i]->U*downstreamBins2[i]->U/2);
 	}
 
@@ -275,9 +287,12 @@ void Simulation::TracPen(double* u, double* flux, double cs, double deltaXi, dou
 	double* fplus = new double[rgridNumber];
 	double* fminus = new double[rgridNumber];
 
-	for(int i = 1; i < rgridNumber-1; ++i){
+	for(int i = 0; i < rgridNumber; ++i){
 		uplus[i] = cs*u[i] + flux[i];
 		uminus[i] = cs*u[i] - flux[i];
+	}
+
+	for(int i = 1; i < rgridNumber-1; ++i){
 
 		if(i == 1){
 			fplus[i] = uplus[i-1];
@@ -286,18 +301,18 @@ void Simulation::TracPen(double* u, double* flux, double cs, double deltaXi, dou
 		}
 
 		if(i == rgridNumber - 1){
-			fminus[i] = -uplus[i];
+			fminus[i] = -uminus[i];
 		} else {
-		fminus[i] = -uplus[i] + 0.5*minmod(uminus[i] - uminus[i-1], uminus[i+1] - uminus[i]);
+		    fminus[i] = -uminus[i] + 0.5*minmod(uminus[i] - uminus[i-1], uminus[i+1] - uminus[i]);
 		}
 
 	}
 
-	u[0] -= tau*0.5*(fplus[0] + fminus[0] - leftFlux);
+	u[0] -= tau*(0.5*(fplus[1] + fminus[1]) - leftFlux);
 	for(int i = 1; i < rgridNumber-2; ++i){
-		u[i] -= tau*0.5*(fplus[i] + fminus[i] - fplus[i] - fminus[i])/deltaXi;;
+		u[i] -= tau*0.5*(fplus[i] + fminus[i] - fplus[i] - fminus[i])/deltaXi;
 	}
-	u[rgridNumber - 1] -= tau*(rightFlux - fplus[rgridNumber - 1] - fminus[rgridNumber - 1]);
+	u[rgridNumber - 1] -= tau*(rightFlux - 0.5*(fplus[rgridNumber - 2] - fminus[rgridNumber - 2]));
 
 	delete[] uplus;
 	delete[] uminus;
@@ -328,7 +343,9 @@ void Simulation::moveShockWaves(){
 	oldContactDiscontR = contactDiscontR;
 
 	forwardV = upstreamBins2[0]->U + sqrt((gamma + 1)*downstreamBins2[rgridNumber - 1]->pressure/2 + (gamma - 1)*upstreamBins2[0]->pressure/2)/sqrt(upstreamBins2[0]->density);
+	alertNaNOrInfinity(forwardV,"forwardV");
 	reverseV = upstreamBins1[rgridNumber - 1]->U - sqrt((gamma + 1)*downstreamBins1[0]->pressure/2 + (gamma - 1)*upstreamBins1[rgridNumber - 1]->pressure)/sqrt(upstreamBins1[rgridNumber-1]->density);
+	alertNaNOrInfinity(reverseV,"reverseV");
 	SpaceBin* leftBin = downstreamBins1[rgridNumber - 1];
 	SpaceBin* rightBin = downstreamBins2[0];
 	contactDiscontV = (leftBin->U*sqrt(leftBin->density) + rightBin->U*sqrt(rightBin->density) + (leftBin->pressure - rightBin->pressure)/(sqrt(gamma*(leftBin->pressure + rightBin->pressure)/2)))/(sqrt(leftBin->density) + sqrt(rightBin->density));
@@ -361,5 +378,5 @@ void Simulation::updateMaxSoundSpeed(){
 		} 
 	}
 
-	tau = 0.5*max(deltaF,deltaB)/(rgridNumber*maxSoundSpeed);
+	tau = 0.000000005*max(deltaF,deltaB)/(rgridNumber*maxSoundSpeed);
 }
