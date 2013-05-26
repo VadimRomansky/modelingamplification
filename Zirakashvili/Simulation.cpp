@@ -56,7 +56,7 @@ void Simulation::initializeProfile(){
 		downstreamBins2[i]->temperature = downstreamBins2[i]->pressure*massProton/(downstreamBins2[i]->density*kBoltzman);
 
 		downstreamBins1[i] = new SpaceBin();
-		downstreamBins1[i]->r = contactDiscontR +(i - 0.5)*(contactDiscontR - reverseShockWaveR)/rgridNumber;
+		downstreamBins1[i]->r = reverseShockWaveR + (i + 0.5)*(contactDiscontR - reverseShockWaveR)/rgridNumber;
 		downstreamBins1[i]->xi = (downstreamBins1[i]->r - contactDiscontR)/(contactDiscontR - reverseShockWaveR);
 		downstreamBins1[i]->density = 4*density0;
 		downstreamBins1[i]->U = 0.75*U0;
@@ -92,7 +92,7 @@ void Simulation::simulate(){
 		solveDownstream2();
 		printf("moving shock waves\n");
 		moveShockWaves();
-		if(i % 120 == 0){
+		if(i % 100 == 0){
 			printf("outputing\n");
 			outFile = fopen("./output/zprofile.dat","a");
 			output(outFile, this);
@@ -173,6 +173,10 @@ void Simulation::solveDownstream1(){
 
 	for(int i = 0; i < rgridNumber; ++i){
 		double vb = downstreamBins1[i]->U - contactDiscontV*(1+downstreamBins1[i]->xi) + downstreamBins1[i]->xi*reverseV;
+		u1[i] = downstreamBins1[i]->density*downstreamBins1[i]->r*downstreamBins1[i]->r*deltaB;
+		u2[i] = u1[i]*downstreamBins1[i]->U;
+		u3[i] = downstreamBins1[i]->r*downstreamBins1[i]->r*downstreamBins1[i]->getEnergy()*deltaB;
+
 		F1[i] = forwardShockWaveR*downstreamBins1[i]->density*downstreamBins1[i]->r*downstreamBins1[i]->r*vb/forwardV;
 		F2[i] = forwardShockWaveR*downstreamBins1[i]->r*downstreamBins1[i]->r*(downstreamBins1[i]->density*downstreamBins1[i]->U*vb + downstreamBins1[i]->pressure)/forwardV;
 		F3[i] = forwardShockWaveR*downstreamBins1[i]->r*downstreamBins1[i]->r*(downstreamBins1[i]->getEnergy()*vb + downstreamBins1[i]->U*downstreamBins1[i]->pressure)/forwardV;
@@ -196,6 +200,12 @@ void Simulation::solveDownstream1(){
 	}
 	TracPen(u3, F3, maxSoundSpeed, deltaXi, leftFlux3, rightFlux3);
 
+	for(int i = 0; i < rgridNumber; ++i){
+		downstreamBins1[i]->density = u1[i]/(downstreamBins1[i]->r*downstreamBins1[i]->r*deltaB);
+		downstreamBins1[i]->U = u2[i]/downstreamBins1[i]->density;
+		downstreamBins1[i]->pressure = (gamma - 1)*(u3[i]/(downstreamBins1[i]->r*downstreamBins1[i]->r*deltaB) - downstreamBins1[i]->density*downstreamBins1[i]->U*downstreamBins1[i]->U/2);
+	}
+
 	delete[] u1;
 	delete[] u2;
 	delete[] u3;
@@ -205,7 +215,6 @@ void Simulation::solveDownstream1(){
 }
 
 void Simulation::solveDownstream2(){	
-	double deltaB = contactDiscontR - reverseShockWaveR;
 	double deltaF = forwardShockWaveR - contactDiscontR;
 	double deltaXi = deltaF/rgridNumber;
 	double* u1 = new double[rgridNumber];
@@ -218,6 +227,10 @@ void Simulation::solveDownstream2(){
 
 	for(int i = 0; i < rgridNumber; ++i){
 		double vf = downstreamBins2[i]->U - contactDiscontV*(1-downstreamBins2[i]->xi) - downstreamBins2[i]->xi*forwardV;
+		u1[i] = downstreamBins2[i]->density*downstreamBins2[i]->r*downstreamBins2[i]->r*deltaF;
+		u2[i] = u1[i]*downstreamBins2[i]->U;
+		u3[i] = downstreamBins2[i]->r*downstreamBins2[i]->r*downstreamBins2[i]->getEnergy()*deltaF;
+
 		F1[i] = forwardShockWaveR*downstreamBins2[i]->density*downstreamBins2[i]->r*downstreamBins2[i]->r*vf/forwardV;
 		F2[i] = forwardShockWaveR*downstreamBins2[i]->r*downstreamBins2[i]->r*(downstreamBins2[i]->density*downstreamBins2[i]->U*vf + downstreamBins2[i]->pressure)/forwardV;
 		F3[i] = forwardShockWaveR*downstreamBins2[i]->r*downstreamBins2[i]->r*(downstreamBins2[i]->getEnergy()*vf + downstreamBins2[i]->U*downstreamBins2[i]->pressure)/forwardV;
@@ -239,6 +252,12 @@ void Simulation::solveDownstream2(){
 		u2[i] += tau*downstreamBins1[i]->r*forwardShockWaveR*2*downstreamBins2[i]->pressure*deltaF/forwardV;
 	}
 	TracPen(u3, F3, maxSoundSpeed, deltaXi, leftFlux3, rightFlux3);
+
+	for(int i = 0; i < rgridNumber; ++i){
+		downstreamBins1[i]->density = u1[i]/(downstreamBins2[i]->r*downstreamBins2[i]->r*deltaF);
+		downstreamBins1[i]->U = u2[i]/downstreamBins2[i]->density;
+		downstreamBins1[i]->pressure = (gamma - 1)*(u3[i]/(downstreamBins2[i]->r*downstreamBins2[i]->r*deltaF) - downstreamBins2[i]->density*downstreamBins2[i]->U*downstreamBins2[i]->U/2);
+	}
 
 	delete[] u1;
 	delete[] u2;
