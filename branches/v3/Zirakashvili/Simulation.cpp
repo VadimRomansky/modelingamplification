@@ -113,10 +113,11 @@ void Simulation::solveUpstream1(){
 		double xi1 = upstreamBins1[i]->xi;
 		double xi2 = upstreamBins1[i-1]->xi;
 		double H1 = 1 + forwardShockWaveR*tau*(upstreamBins1[1]->U - reverseV*xi1)/(reverseShockWaveR*forwardV*(xi1 - xi2));
-		double H2 = upstreamBins1[i]->density*cube(oldReverseShockWaveR/reverseShockWaveR) + density[i-1]*3*forwardShockWaveR*tau*xi2*xi2*(velocity[i-1]-reverseV*xi2)/(reverseShockWaveR*forwardV*(cube(xi1) - cube(xi2)));
 		velocity[i] = (upstreamBins1[i]->U + velocity[i-1]*forwardShockWaveR*tau*(upstreamBins1[i]->U - reverseV*xi1)/(reverseShockWaveR*forwardV*(xi1 - xi2)) - forwardShockWaveR*tau*(upstreamBins1[i]->pressure - upstreamBins1[i-1]->pressure)/(reverseShockWaveR*forwardV*(xi1 - xi2)))/H1;
+
+		double H2 = upstreamBins1[i]->density*cube(oldReverseShockWaveR/reverseShockWaveR) + density[i-1]*3*forwardShockWaveR*tau*xi2*xi2*(velocity[i-1]-reverseV*xi2)/(reverseShockWaveR*forwardV*(cube(xi1) - cube(xi2)));
 		//todo u old or new?
-		density[i] = H2/(1 + 3*forwardShockWaveR*tau*xi1*xi1*(velocity[i] - reverseV*xi1)/(reverseShockWaveR*forwardV*(cube(xi1) - cube(xi2))));
+		density[i] = H2/(1 + 3*forwardShockWaveR*tau*xi1*xi1*(velocity[i-1] - reverseV*xi1)/(reverseShockWaveR*forwardV*(cube(xi1) - cube(xi2))));
 		pressure[i] = (upstreamBins1[i]->pressure*cube(oldReverseShockWaveR/reverseShockWaveR) + pressure[i-1]*3*forwardShockWaveR*tau*xi2*xi2*(velocity[i-1] - reverseV*xi2)/(reverseShockWaveR*forwardV*(cube(xi1) - cube(xi2))))/
 			(1 + 3*forwardShockWaveR*tau*(xi1*xi1*(velocity[i] - reverseV*xi1) + (gamma - 1)*(xi1*xi1*velocity[i] - xi2*xi2*velocity[i-1]))/(reverseShockWaveR*forwardV*(cube(xi1) - cube(xi2))));
 	}
