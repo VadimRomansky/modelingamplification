@@ -112,7 +112,7 @@ void Simulation::solveUpstream1(){
 	for(int i = 1; i < rgridNumber; ++i){
 		double xi1 = upstreamBins1[i]->xi;
 		double xi2 = upstreamBins1[i-1]->xi;
-		double H1 = 1 + forwardShockWaveR*tau*(upstreamBins1[1]->U - reverseV*xi1)/(reverseShockWaveR*forwardV*(xi1 - xi2));
+		double H1 = 1 + forwardShockWaveR*tau*(upstreamBins1[i]->U - reverseV*xi1)/(reverseShockWaveR*forwardV*(xi1 - xi2));
 		velocity[i] = (upstreamBins1[i]->U + velocity[i-1]*forwardShockWaveR*tau*(upstreamBins1[i]->U - reverseV*xi1)/(reverseShockWaveR*forwardV*(xi1 - xi2)) - forwardShockWaveR*tau*(upstreamBins1[i]->pressure - upstreamBins1[i-1]->pressure)/(reverseShockWaveR*forwardV*(xi1 - xi2)))/H1;
 
 		double H2 = upstreamBins1[i]->density*cube(oldReverseShockWaveR/reverseShockWaveR) + density[i-1]*3*forwardShockWaveR*tau*xi2*xi2*(velocity[i-1]-reverseV*xi2)/(reverseShockWaveR*forwardV*(cube(xi1) - cube(xi2)));
