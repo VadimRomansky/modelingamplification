@@ -343,6 +343,7 @@ void Simulation::moveShockWaves(){
 		downstreamBins1[i]->r = contactDiscontR + downstreamBins1[i]->xi*(contactDiscontR - reverseShockWaveR);
 		upstreamBins1[i]->r = upstreamBins1[i]->xi*reverseShockWaveR;
 	}
+	updateMaxSoundSpeed();
 }
 
 void Simulation::updateMaxSoundSpeed(){
@@ -360,5 +361,5 @@ void Simulation::updateMaxSoundSpeed(){
 		} 
 	}
 
-	tau = 0.05*max(deltaF,deltaB)/(rgridNumber*maxSoundSpeed);
+	tau = 0.5*max(deltaF,deltaB)/(rgridNumber*maxSoundSpeed);
 }
