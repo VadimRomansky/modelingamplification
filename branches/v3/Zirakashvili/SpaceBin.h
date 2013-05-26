@@ -73,12 +73,9 @@ public:
 	int propagateParticle(Particle* particle ,double& time, double timeStep, const int rgridNumber);
 	double getFreePath(Particle* particle);
 	void makeOneStep(Particle* particle, double deltat, double& time);
-	bool isInBin(Particle* particle);
-	bool isInThisOrNear(double r, double theta, double phi);
 	static int binByCoordinates(double r, double theta, double phi, double r0, double deltar, double deltatheta, double deltaphi, const int rgridNumber); 
 	void scattering(Particle* particle, double maxTheta);
 	void multiplyParticleWeights(double value);
-	void sortParticles(double minK, double maxK);
 	void resetDetectors();
 
 	void resetProfile(double massFlux0, double momentaFlux0, double energyFlux0,double density0, double U0);
