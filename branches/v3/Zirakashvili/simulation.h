@@ -46,6 +46,12 @@ public:
 	double theorMomentumY;
 	double particlesWeight;
 
+	double mass;
+	double downstreamMass1;
+	double downstreamMass2;
+	double upstreamMass1;
+	double upstreamMass2;
+
 	int rgridNumber;
 
 	double R0;
@@ -86,7 +92,10 @@ public:
 	void moveShockWaves();
 	void TracPen(double* u, double* flux, double cs, double deltaXi, double leftFlux, double rightFlux);
 	double minmod(double a, double b);
+	void updateBinsVolume();
 	void updateMaxSoundSpeed();
+
+	void updateParameters();
 };
 
 #endif
