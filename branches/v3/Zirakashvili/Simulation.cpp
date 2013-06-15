@@ -343,15 +343,26 @@ void Simulation::moveShockWaves(){
 	oldContactDiscontR = contactDiscontR;
 
 	forwardV = upstreamBins2[0]->U + sqrt((gamma + 1)*downstreamBins2[rgridNumber - 1]->pressure/2 + (gamma - 1)*upstreamBins2[0]->pressure/2)/sqrt(upstreamBins2[0]->density);
+	if(forwardV <= 0){
+		printf("forwardV <= 0\n");
+	}
 	alertNaNOrInfinity(forwardV,"forwardV");
 	reverseV = upstreamBins1[rgridNumber - 1]->U - sqrt((gamma + 1)*downstreamBins1[0]->pressure/2 + (gamma - 1)*upstreamBins1[rgridNumber - 1]->pressure)/sqrt(upstreamBins1[rgridNumber-1]->density);
+	if(reverseV <= 0){
+	    printf("reverseV <= 0\n");
+	}
 	alertNaNOrInfinity(reverseV,"reverseV");
 	SpaceBin* leftBin = downstreamBins1[rgridNumber - 1];
 	SpaceBin* rightBin = downstreamBins2[0];
 	contactDiscontV = (leftBin->U*sqrt(leftBin->density) + rightBin->U*sqrt(rightBin->density) + (leftBin->pressure - rightBin->pressure)/(sqrt(gamma*(leftBin->pressure + rightBin->pressure)/2)))/(sqrt(leftBin->density) + sqrt(rightBin->density));
+	if(contactDiscontV <= 0){
+	    printf("contactDiscontV <= 0\n");
+	}
+	alertNaNOrInfinity(contactDiscontV, "contactDiscontV");
 
 	forwardShockWaveR *= exp(tau);
 	reverseShockWaveR += oldForwardShockWaveR*tau*(reverseV + oldReverseV)*exp(0.5*tau)/(forwardV + oldForwardV);
+	contactDiscontR += oldContactDiscontR*tau*(contactDiscontV + oldContactDiscontV)*exp(0.5*tau)/(forwardV + oldForwardV);
 	time += 2*oldForwardShockWaveR*tau*exp(0.5*tau)/(forwardV + oldForwardV);
 
 	for(int i = 0; i < rgridNumber; ++i){
@@ -378,5 +389,5 @@ void Simulation::updateMaxSoundSpeed(){
 		} 
 	}
 
-	tau = 0.000000005*max(deltaF,deltaB)/(rgridNumber*maxSoundSpeed);
+	tau = 0.000000005*min(deltaF,deltaB)/(rgridNumber*maxSoundSpeed);
 }
