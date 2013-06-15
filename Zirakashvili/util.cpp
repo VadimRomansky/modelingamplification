@@ -64,6 +64,14 @@ double max(double a, double b){
 	}
 }
 
+double min(double a, double b){
+	if(a >= b){
+		return b;
+	} else {
+		return a;
+	}
+}
+
 double min4(double a, double b,double c, double d){
 	if( a <  b ){
 		if( c < d){
@@ -102,6 +110,13 @@ double maxwell(double momentum, double mass, double temperature){
 
 void alertNaNOrInfinity(double value, const char* s){
 	if(value != value || 0*value != 0*value){
+		printf(s);
+		printf("\n");
+	}
+}
+
+void alertNotPositive(double value, const char* s){
+	if(value <= 0){
 		printf(s);
 		printf("\n");
 	}
