@@ -90,6 +90,7 @@ public:
 	void initializeProfile();
 	void simulate();
 	void moveShockWaves();
+	void updateDownstreamValues();
 	void TracPen(double* u, double* flux, double cs, double deltaXi, double leftFlux, double rightFlux);
 	double minmod(double a, double b);
 	void updateBinsVolume();
