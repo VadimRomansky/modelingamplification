@@ -18,23 +18,18 @@ public:
 	double r;
 	double r1;
 	double r2;
-	double theta;
-	double theta1;
-	double theta2;
-	double phi;
-	double phi1;
-	double phi2;
 
 	double U;
-	double UTheta;
-	double UPhi;
 	double density;
 	double volume;
 	double temperature;
 	double pressure;
-	double B;
+
 	double B0;
-	double W;
+
+	double u1;
+	double u2;
+	double u3;
 
 	double initialMomentum;
 
@@ -68,7 +63,6 @@ public:
 
 	SpaceBin();
 	SpaceBin(double r, double xi, double u, double rho, double p);
-	SpaceBin(double r, double theta, double phi, double deltar, double deltatheta, double deltaphi, double u, double rho, double utheta,double uphi, double temperature, double b, int i, int j, int k, bool scattering);
 	~SpaceBin();
 	int propagateParticle(Particle* particle ,double& time, double timeStep, const int rgridNumber);
 	double getFreePath(Particle* particle);

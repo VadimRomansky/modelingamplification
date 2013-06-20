@@ -102,6 +102,7 @@ void Simulation::simulate(){
 		solveDownstream2();
 		printf("moving shock waves\n");
 		moveShockWaves();
+		updateDownstreamValues();
 		updateParameters();
 		if(i % 100 == 0){
 			printf("outputing\n");
@@ -227,9 +228,9 @@ void Simulation::solveDownstream1(){
 	TracPen(u3, F3, maxSoundSpeed, deltaXi, leftFlux3, rightFlux3);
 
 	for(int i = 0; i < rgridNumber; ++i){
-		downstreamBins1[i]->density = u1[i]/(downstreamBins1[i]->r*downstreamBins1[i]->r*deltaB);
-		downstreamBins1[i]->U = u2[i]/(downstreamBins1[i]->density*downstreamBins1[i]->r*downstreamBins1[i]->r*deltaB);
-		downstreamBins1[i]->pressure = (gamma - 1)*(u3[i]/(downstreamBins1[i]->r*downstreamBins1[i]->r*deltaB) - downstreamBins1[i]->density*downstreamBins1[i]->U*downstreamBins1[i]->U/2);
+		downstreamBins1[i]->u1 = u1[i];
+		downstreamBins1[i]->u2 = u2[i];
+		downstreamBins1[i]->u3 = u3[i];
 	}
 
 	delete[] u1;
@@ -280,9 +281,9 @@ void Simulation::solveDownstream2(){
 	TracPen(u3, F3, maxSoundSpeed, deltaXi, leftFlux3, rightFlux3);
 
 	for(int i = 0; i < rgridNumber; ++i){
-		downstreamBins2[i]->density = u1[i]/(downstreamBins2[i]->r*downstreamBins2[i]->r*deltaF);
-		downstreamBins2[i]->U = u2[i]/(downstreamBins2[i]->density*downstreamBins2[i]->r*downstreamBins2[i]->r*deltaF);;
-		downstreamBins2[i]->pressure = (gamma - 1)*(u3[i]/(downstreamBins2[i]->r*downstreamBins2[i]->r*deltaF) - downstreamBins2[i]->density*downstreamBins2[i]->U*downstreamBins2[i]->U/2);
+		downstreamBins2[i]->u1 = u1[i];
+		downstreamBins2[i]->u2 = u2[i];
+		downstreamBins2[i]->u3 = u3[i];
 	}
 
 	delete[] u1;
@@ -441,4 +442,18 @@ void Simulation::updateParameters(){
 		upstreamMass1 += upstreamBins1[i]->density*upstreamBins1[i]->volume;
 	}
 	mass = downstreamMass1 + downstreamMass2 + upstreamMass1 + upstreamMass2;
+}
+
+void Simulation::updateDownstreamValues(){
+	double deltaF = forwardShockWaveR - contactDiscontR;
+	double deltaB = contactDiscontR - reverseShockWaveR;
+	for(int i = 0; i < rgridNumber; ++i){
+		downstreamBins1[i]->density = downstreamBins1[i]->u1/(downstreamBins1[i]->r*downstreamBins1[i]->r*deltaB);
+		downstreamBins1[i]->U = downstreamBins1[i]->u2/(downstreamBins1[i]->density*downstreamBins1[i]->r*downstreamBins1[i]->r*deltaB);;
+		downstreamBins1[i]->pressure = (gamma - 1)*(downstreamBins1[i]->u3/(downstreamBins1[i]->r*downstreamBins1[i]->r*deltaB) - downstreamBins1[i]->density*downstreamBins1[i]->U*downstreamBins1[i]->U/2);
+
+		downstreamBins2[i]->density = downstreamBins2[i]->u1/(downstreamBins2[i]->r*downstreamBins2[i]->r*deltaF);
+		downstreamBins2[i]->U = downstreamBins2[i]->u2/(downstreamBins2[i]->density*downstreamBins2[i]->r*downstreamBins2[i]->r*deltaF);;
+		downstreamBins2[i]->pressure = (gamma - 1)*(downstreamBins2[i]->u3/(downstreamBins2[i]->r*downstreamBins2[i]->r*deltaF) - downstreamBins2[i]->density*downstreamBins2[i]->U*downstreamBins2[i]->U/2);
+	}
 }

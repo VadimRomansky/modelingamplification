@@ -188,75 +188,6 @@ Particle::Particle(double x, double y, double z, double temperature, int a, int 
 	writePath = wPath;
 }
 
-Particle::Particle(int a, int znumber, SpaceBin* bin, bool wpath, int n){
-	number = n;
-	double x = bin->r2*2*(uniRandom() - 0.5);
-	double y = bin->r2*2*(uniRandom() - 0.5);
-	double z = bin->r2*2*(uniRandom() - 0.5);
-	double theta = acos(z/sqrt(x*x + y*y +z*z));
-	if(abs(x*x + y*y + z*z) < epsilon){
-		theta = pi/2;
-	}
-	double phi = atan2(y,x);
-	if(phi < 0){
-		phi = phi + 2*pi;
-	}
-	double r = sqrt(x*x + y*y + z*z);
-	while(!(order(bin->r1,r,bin->r2) && order(bin->theta1, theta, bin->theta2) && order(bin->phi1, phi, bin->phi2))){
-		x = bin->r2*2*(uniRandom() - 0.5);
-		y = bin->r2*2*(uniRandom() - 0.5);
-		z = bin->r2*2*(uniRandom() - 0.5);
-		theta = acos(z/sqrt(x*x + y*y +z*z));
-		if(abs(x*x + y*y + z*z) < epsilon){
-			theta = pi/2;
-		}
-		phi = atan2(y,x);
-		if(phi < 0){
-			phi = phi + 2*pi;
-		}
-		r = sqrt(x*x + y*y + z*z);
-	}
-
-	absoluteX = x;
-	absoluteY = y;
-	absoluteZ = z;
-	A = a;
-	Z = znumber;
-	mass = A*massProton;
-	weight = bin->density*bin->volume/mass;
-
-	double px = randomMaxwell(bin->temperature, mass);
-	double py = randomMaxwell(bin->temperature, mass);
-	double pz = randomMaxwell(bin->temperature, mass);
-
-	localMomentum = sqrt(px*px+py*py+pz*pz);
-	initialLocalMomentum = localMomentum;
-	double localMomentumPhi = 2*pi*uniRandom();
-	if(localMomentumPhi >= 2*pi){
-		localMomentumPhi -=2*pi;
-	}
-	double localMomentumCosTheta = 2*(uniRandom() - 0.5);
-	if( localMomentumCosTheta > 1){
-		localMomentumCosTheta = 1;
-	}
-	if( localMomentumCosTheta < -1){
-		localMomentumCosTheta = -1;
-	}
-	double localMomentumSinTheta = sqrt(1 - localMomentumCosTheta*localMomentumCosTheta);
-
-	localMomentumX = localMomentum*localMomentumSinTheta*cos(localMomentumPhi);
-	localMomentumY = localMomentum*localMomentumSinTheta*sin(localMomentumPhi);
-	localMomentumZ = localMomentum*localMomentumCosTheta;
-
-	isCosmicRay = false;
-	setAbsoluteMomentum(bin->U,bin->UTheta,bin->UPhi);
-	initialMomentum = absoluteMomentum;
-	previousAbsoluteMomentum = initialMomentum;
-	path = std::list<double>();
-	writePath = wpath;
-
-}
-
 void Particle::setAbsoluteMomentum(double U, double Utheta, double Uphi){
 	double sqrm = mass*mass;
 	double sqrc = speed_of_light*speed_of_light;
@@ -415,10 +346,6 @@ void Particle::setAbsoluteMomentum(SpaceBin* bin){
 		uz = bin->U;		
 	} else {
 		//double c2 = speed_of_light*speed_of_light;
-
-		ux = bin->U*sin(bin->UTheta)*cos(bin->UPhi);
-		uy = bin->U*sin(bin->UTheta)*sin(bin->UPhi);
-		uz = bin->U*cos(bin->UTheta);
 	}	
 	
 	//u - скорость плазмы в абсолютной СО. Локальная ось z направлена по скорости плазмы
@@ -478,10 +405,6 @@ void Particle::setLocalMomentum(SpaceBin* bin){
 		uz = bin->U;		
 	} else {
 		//double c2 = speed_of_light*speed_of_light;
-
-		ux = bin->U*sin(bin->UTheta)*cos(bin->UPhi);
-		uy = bin->U*sin(bin->UTheta)*sin(bin->UPhi);
-		uz = bin->U*cos(bin->UTheta);
 	}
 
 	double localV1 = getLocalV();
