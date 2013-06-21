@@ -104,7 +104,7 @@ void Simulation::simulate(){
 		moveShockWaves();
 		updateDownstreamValues();
 		updateParameters();
-		if(i % 100 == 0){
+		if(i % 1000 == 0){
 			printf("outputing\n");
 			outFile = fopen("./output/zprofile.dat","a");
 			output(outFile, this);
@@ -199,7 +199,8 @@ void Simulation::solveDownstream1(){
 	double* F3 = new double[rgridNumber];
 
 	for(int i = 0; i < rgridNumber; ++i){
-		double vb = downstreamBins1[i]->U - contactDiscontV*(1+downstreamBins1[i]->xi) + downstreamBins1[i]->xi*reverseV;
+		//double vb = downstreamBins1[i]->U - contactDiscontV*(1+downstreamBins1[i]->xi) + downstreamBins1[i]->xi*reverseV;
+		double vb = downstreamBins1[i]->U;
 		u1[i] = downstreamBins1[i]->density*downstreamBins1[i]->r*downstreamBins1[i]->r*deltaB;
 		u2[i] = u1[i]*downstreamBins1[i]->U;
 		u3[i] = downstreamBins1[i]->r*downstreamBins1[i]->r*downstreamBins1[i]->getEnergy()*deltaB;
@@ -253,7 +254,8 @@ void Simulation::solveDownstream2(){
 	double* F3 = new double[rgridNumber];
 
 	for(int i = 0; i < rgridNumber; ++i){
-		double vf = downstreamBins2[i]->U - contactDiscontV*(1-downstreamBins2[i]->xi) - downstreamBins2[i]->xi*forwardV;
+		//double vf = downstreamBins2[i]->U - contactDiscontV*(1-downstreamBins2[i]->xi) - downstreamBins2[i]->xi*forwardV;
+		double vf = downstreamBins2[i]->U;
 		u1[i] = downstreamBins2[i]->density*downstreamBins2[i]->r*downstreamBins2[i]->r*deltaF;
 		u2[i] = u1[i]*downstreamBins2[i]->U;
 		u3[i] = downstreamBins2[i]->r*downstreamBins2[i]->r*downstreamBins2[i]->getEnergy()*deltaF;
