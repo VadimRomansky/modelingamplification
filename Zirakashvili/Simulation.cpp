@@ -189,7 +189,7 @@ void Simulation::solveUpstream2(){
 
 void Simulation::solveDownstream1(){
 	double deltaB = contactDiscontR - reverseShockWaveR;
-	double deltaXi = deltaB/rgridNumber;
+	double deltaXi = 1.0/(rgridNumber-1);
 	double* u1 = new double[rgridNumber];
 	double* u2 = new double[rgridNumber];
 	double* u3 = new double[rgridNumber];
@@ -244,7 +244,7 @@ void Simulation::solveDownstream1(){
 
 void Simulation::solveDownstream2(){	
 	double deltaF = forwardShockWaveR - contactDiscontR;
-	double deltaXi = deltaF/rgridNumber;
+	double deltaXi = 1.0/(rgridNumber-1);
 	double* u1 = new double[rgridNumber];
 	double* u2 = new double[rgridNumber];
 	double* u3 = new double[rgridNumber];
@@ -428,7 +428,8 @@ void Simulation::updateMaxSoundSpeed(){
 		} 
 	}
 
-	tau = 0.00000000000000005*min(deltaF,deltaB)/(rgridNumber*maxSoundSpeed);
+	//tau = 0.00000000000000005*min(deltaF,deltaB)/(rgridNumber*maxSoundSpeed);
+	tau = 0.0000005*1.0/((rgridNumber-1)*maxSoundSpeed);
 }
 
 void Simulation::updateParameters(){
