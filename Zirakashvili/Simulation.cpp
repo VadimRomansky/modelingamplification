@@ -90,7 +90,9 @@ void Simulation::simulate(){
 	initializeProfile();
 	output(outFile,this);
 	fclose(outFile);
+	updateMaxSoundSpeed();
 	moveShockWaves();
+	updateMaxSoundSpeed();
 	for(int i = 0; i < iterationNumber; ++i){
 		printf("iteration ¹ %d\n", i);
 		printf("time = %lf\n", time);
@@ -102,6 +104,7 @@ void Simulation::simulate(){
 		solveDownstream2();
 		printf("moving shock waves\n");
 		moveShockWaves();
+		updateMaxSoundSpeed();
 		updateDownstreamValues();
 		updateParameters();
 		if(i % 1000 == 0){
@@ -389,7 +392,6 @@ void Simulation::moveShockWaves(){
 		upstreamBins1[i]->r = upstreamBins1[i]->xi*reverseShockWaveR;
 	}
 	updateBinsVolume();
-	updateMaxSoundSpeed();
 }
 
 void Simulation::updateBinsVolume(){
@@ -429,7 +431,7 @@ void Simulation::updateMaxSoundSpeed(){
 	}
 
 	//tau = 0.00000000000000005*min(deltaF,deltaB)/(rgridNumber*maxSoundSpeed);
-	tau = 0.0000005*1.0/((rgridNumber-1)*maxSoundSpeed);
+	tau = 0.0000000000000005*1.0/((rgridNumber-1)*maxSoundSpeed);
 }
 
 void Simulation::updateParameters(){
