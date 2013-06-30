@@ -107,7 +107,7 @@ void Simulation::simulate(){
 		updateMaxSoundSpeed();
 		updateDownstreamValues();
 		updateParameters();
-		if(i % 10000 == 0){
+		if(i % 1000 == 0){
 			printf("outputing\n");
 			outFile = fopen("./output/zprofile.dat","a");
 			output(outFile, this);
@@ -302,12 +302,12 @@ void Simulation::solveDownstream2(){
 
 void Simulation::TracPen(double* u, double* flux, double cs, double deltaXi, double leftFlux, double rightFlux){
 
-	u[0] -= tau*((flux[0] + flux[1])/2 - leftFlux)/deltaXi;
+	/*u[0] -= tau*((flux[0] + flux[1])/2 - leftFlux)/deltaXi;
 	for(int i = 1; i < rgridNumber - 1; ++i){
 		u[i] -= tau*0.5*(flux[i+1] - flux[i-1])/deltaXi;
 	}
-	u[rgridNumber - 1] -= tau*(rightFlux - (flux[rgridNumber - 1] + flux[rgridNumber - 2])/2)/deltaXi;
-	/*double* uplus = new double[rgridNumber];
+	u[rgridNumber - 1] -= tau*(rightFlux - (flux[rgridNumber - 1] + flux[rgridNumber - 2])/2)/deltaXi;*/
+	double* uplus = new double[rgridNumber];
 	double* uminus = new double[rgridNumber];
 
 	double* fplus = new double[rgridNumber];
@@ -319,7 +319,7 @@ void Simulation::TracPen(double* u, double* flux, double cs, double deltaXi, dou
 	}
 
 	fplus[0] = uplus[0];
-	fminus[0] = uminus[0];
+	fminus[0] = -uminus[0];
 	for(int i = 1; i < rgridNumber-1; ++i){
 
 		if(i == 1){
@@ -336,19 +336,19 @@ void Simulation::TracPen(double* u, double* flux, double cs, double deltaXi, dou
 
 	}
 	fplus[rgridNumber - 1] = uplus[rgridNumber - 1];
-	fminus[rgridNumber - 1] = uminus[rgridNumber - 1];
+	fminus[rgridNumber - 1] = -uminus[rgridNumber - 1];
 
 	u[0] -= tau*(0.5*(fplus[0] + fminus[0]) - leftFlux)/deltaXi;
 	for(int i = 1; i < rgridNumber-2; ++i){
-		u[i] -= tau*0.5*(fplus[i+1] + fminus[i+1] - fplus[i] - fminus[i])/deltaXi;
+		u[i] -= tau*0.5*(fplus[i+1] + fminus[i+1] - (fplus[i] + fminus[i]))/deltaXi;
 	}
-	u[rgridNumber - 1] -= tau*(rightFlux - 0.5*(fplus[rgridNumber - 1] - fminus[rgridNumber - 1]))/deltaXi;
+	u[rgridNumber - 1] -= tau*(rightFlux - 0.5*(fplus[rgridNumber - 1] + fminus[rgridNumber - 1]))/deltaXi;
 
 	delete[] uplus;
 	delete[] uminus;
 
 	delete[] fplus;
-	delete[] fminus;*/
+	delete[] fminus;
 }
 
 double Simulation::minmod(double a, double b){
@@ -441,7 +441,7 @@ void Simulation::updateMaxSoundSpeed(){
 	}
 
 	//tau = 0.00000000000000005*min(deltaF,deltaB)/(rgridNumber*maxSoundSpeed);
-	tau = 0.0005*1.0/((rgridNumber-1)*maxSoundSpeed);
+	tau = 0.005*1.0/((rgridNumber-1)*maxSoundSpeed);
 }
 
 void Simulation::updateParameters(){
