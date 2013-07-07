@@ -47,7 +47,9 @@ void Simulation::initializeProfile(){
 		upstreamBins2[i]->density = density0;
 		upstreamBins2[i]->U = 0;
 		upstreamBins2[i]->pressure = p0;
-		upstreamBins2[i]->temperature = upstreamBins2[i]->pressure*massProton/(upstreamBins2[i]->density*kBoltzman);
+		//upstreamBins2[i]->temperature = upstreamBins2[i]->pressure*massProton/(upstreamBins2[i]->density*kBoltzman);
+		upstreamBins2[i]->temperature = 10000;
+		upstreamBins2[i]->pressure = upstreamBins2[i]->density*kBoltzman*upstreamBins2[i]->temperature/massProton;
 
 		downstreamBins2[i] = new SpaceBin();
 		downstreamBins2[i]->r = contactDiscontR + (i + 0.5)*(forwardShockWaveR - contactDiscontR)/rgridNumber;
@@ -335,10 +337,10 @@ void Simulation::TracPen(double* u, double* flux, double cs, double deltaXi, dou
 		}
 
 	}
-	fplus[rgridNumber - 1] = uplus[rgridNumber - 1];
+	fplus[rgridNumber - 1] = uplus[rgridNumber - 2] + 0.5*minmod(uplus[rgridNumber - 1] - uplus[rgridNumber - 2], uplus[rgridNumber - 2] - uplus[rgridNumber - 3]);
 	fminus[rgridNumber - 1] = -uminus[rgridNumber - 1];
 
-	u[0] -= tau*(0.5*(fplus[0] + fminus[0]) - leftFlux)/deltaXi;
+	u[0] -= tau*(0.5*(fplus[1] + fminus[1]) - leftFlux)/deltaXi;
 	for(int i = 1; i <= rgridNumber-2; ++i){
 		u[i] -= tau*0.5*(fplus[i+1] + fminus[i+1] - (fplus[i] + fminus[i]))/deltaXi;
 	}
@@ -441,7 +443,7 @@ void Simulation::updateMaxSoundSpeed(){
 	}
 
 	//tau = 0.00000000000000005*min(deltaF,deltaB)/(rgridNumber*maxSoundSpeed);
-	tau = 0.0005*1.0/((rgridNumber-1)*maxSoundSpeed);
+	tau = 0.005*1.0/((rgridNumber-1)*maxSoundSpeed);
 }
 
 void Simulation::updateParameters(){
