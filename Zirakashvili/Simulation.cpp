@@ -339,7 +339,7 @@ void Simulation::TracPen(double* u, double* flux, double cs, double deltaXi, dou
 	fminus[rgridNumber - 1] = -uminus[rgridNumber - 1];
 
 	u[0] -= tau*(0.5*(fplus[0] + fminus[0]) - leftFlux)/deltaXi;
-	for(int i = 1; i < rgridNumber-2; ++i){
+	for(int i = 1; i <= rgridNumber-2; ++i){
 		u[i] -= tau*0.5*(fplus[i+1] + fminus[i+1] - (fplus[i] + fminus[i]))/deltaXi;
 	}
 	u[rgridNumber - 1] -= tau*(rightFlux - 0.5*(fplus[rgridNumber - 1] + fminus[rgridNumber - 1]))/deltaXi;
@@ -441,7 +441,7 @@ void Simulation::updateMaxSoundSpeed(){
 	}
 
 	//tau = 0.00000000000000005*min(deltaF,deltaB)/(rgridNumber*maxSoundSpeed);
-	tau = 0.005*1.0/((rgridNumber-1)*maxSoundSpeed);
+	tau = 0.0005*1.0/((rgridNumber-1)*maxSoundSpeed);
 }
 
 void Simulation::updateParameters(){
