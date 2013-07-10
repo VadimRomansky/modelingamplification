@@ -443,7 +443,7 @@ void Simulation::updateMaxSoundSpeed(){
 	}
 
 	//tau = 0.00000000000000005*min(deltaF,deltaB)/(rgridNumber*maxSoundSpeed);
-	tau = 0.005*1.0/((rgridNumber-1)*maxSoundSpeed);
+	tau = 0.05*1.0/((rgridNumber-1)*maxSoundSpeed);
 }
 
 void Simulation::updateParameters(){
