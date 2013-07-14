@@ -71,17 +71,18 @@ void Simulation::initializeProfile(){
 		//upstreamBins1[i]->r = reverseShockWaveR*(i + 0.5)/rgridNumber;
 		upstreamBins1[i]->xi = 2*i*k1 + (log(1 + power(2*xiMin, 1 - 2*i*k1)) - log(1 + 2*xiMin))/log(2*xiMin);
 		upstreamBins1[i]->r = upstreamBins1[i]->xi*reverseShockWaveR;
-		if( i > ejectaR){
-			upstreamBins1[i]->density = density0*power(upstreamBins1[i]->r/reverseShockWaveR, -7);
-		} else {
-		}
+		//if( i > ejectaR){
+		//	upstreamBins1[i]->density = density0*power(upstreamBins1[i]->r/reverseShockWaveR, -7);
+		//} else {
+		//}
+		upstreamBins1[i]->density = density0;
 		upstreamBins1[i]->U = 1.5*forwardV*upstreamBins1[i]->r/reverseShockWaveR;
 		upstreamBins1[i]->pressure = 0;
 		upstreamBins1[i]->temperature = upstreamBins1[i]->pressure*massProton/(upstreamBins1[i]->density*kBoltzman);
 	}
-	for(int i = 0; i <= ejectaR; ++i){
+	/*for(int i = 0; i <= ejectaR; ++i){
 		upstreamBins1[i]->density = density0*power(upstreamBins1[ejectaR]->r/reverseShockWaveR, -7);
-	}
+	}*/
 }
 
 void Simulation::simulate(){
@@ -394,7 +395,7 @@ void Simulation::moveShockWaves(){
 
 	forwardShockWaveR *= exp(tau);
 	reverseShockWaveR += oldForwardShockWaveR*tau*(reverseV + oldReverseV)*exp(0.5*tau)/(forwardV + oldForwardV);
-	contactDiscontR += oldContactDiscontR*tau*(contactDiscontV + oldContactDiscontV)*exp(0.5*tau)/(forwardV + oldForwardV);
+	contactDiscontR += oldForwardShockWaveR*tau*(contactDiscontV + oldContactDiscontV)*exp(0.5*tau)/(forwardV + oldForwardV);
 	time += 2*oldForwardShockWaveR*tau*exp(0.5*tau)/(forwardV + oldForwardV);
 
 	for(int i = 0; i < rgridNumber; ++i){
