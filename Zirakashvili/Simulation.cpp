@@ -37,7 +37,7 @@ void Simulation::initializeProfile(){
 	double k2 = log((xiMax + xiMin - 1)/xiMin)/(rgridNumber - 1);
 	double k1 = 1.0/(rgridNumber - 1);
 
-	int ejectaR = rgridNumber - 700;
+	int ejectaR = rgridNumber - 500;
 	for(int i = 0; i < rgridNumber; ++i){
 
 		upstreamBins2[i] = new SpaceBin();
@@ -283,7 +283,7 @@ void Simulation::solveDownstream2(){
 	TracPen(u1, F1, maxSoundSpeed, deltaXi, leftFlux1, rightFlux1);
 	TracPen(u2, F2, maxSoundSpeed, deltaXi, leftFlux2, rightFlux2);
 	for(int i = 0; i < rgridNumber; ++i){
-		u2[i] += tau*downstreamBins1[i]->r*forwardShockWaveR*2*downstreamBins2[i]->pressure*deltaF/forwardV;
+		u2[i] += tau*downstreamBins2[i]->r*forwardShockWaveR*2*downstreamBins2[i]->pressure*deltaF/forwardV;
 	}
 	TracPen(u3, F3, maxSoundSpeed, deltaXi, leftFlux3, rightFlux3);
 
