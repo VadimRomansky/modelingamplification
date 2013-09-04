@@ -31,6 +31,7 @@ void Simulation::initializeProfile(){
 	contactDiscontR = 0.95*forwardShockWaveR;
 	reverseShockWaveR = 0.9*forwardShockWaveR;
 
+	//maybe replace downstreamR and upstreamR?
 	double p0 = 2*(1 - (gamma + 1)*0.75/2)*density0*U0*U0/(gamma - 1);
 	double xiMin = 0.000001;
 	double xiMax = upstreamR/forwardShockWaveR;
