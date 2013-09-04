@@ -69,7 +69,8 @@ void Simulation::initializeProfile(){
 					u = U0;
 					//density = density0*sqr((upstreamR + deltaR/2)/R);
 				} else {
-					u = U0/R;
+					//u = U0/R;
+					u = 0;
 					//u = U0*sqr((upstreamR + deltaR/2)/R)/Rtot;
 					//density = density0*sqr((upstreamR + deltaR/2)/R)/Rtot;
 				}

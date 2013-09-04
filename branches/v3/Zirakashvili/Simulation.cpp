@@ -71,18 +71,18 @@ void Simulation::initializeProfile(){
 		//upstreamBins1[i]->r = reverseShockWaveR*(i + 0.5)/rgridNumber;
 		upstreamBins1[i]->xi = 2*i*k1 + (log(1 + power(2*xiMin, 1 - 2*i*k1)) - log(1 + 2*xiMin))/log(2*xiMin);
 		upstreamBins1[i]->r = upstreamBins1[i]->xi*reverseShockWaveR;
-		//if( i > ejectaR){
-		//	upstreamBins1[i]->density = density0*power(upstreamBins1[i]->r/reverseShockWaveR, -7);
-		//} else {
-		//}
-		upstreamBins1[i]->density = density0;
+		if( i > ejectaR){
+			upstreamBins1[i]->density = density0*power(upstreamBins1[i]->r/reverseShockWaveR, -7);
+		} else {
+		}
+		//upstreamBins1[i]->density = density0;
 		upstreamBins1[i]->U = 1.5*forwardV*upstreamBins1[i]->r/reverseShockWaveR;
 		upstreamBins1[i]->pressure = 0;
 		upstreamBins1[i]->temperature = upstreamBins1[i]->pressure*massProton/(upstreamBins1[i]->density*kBoltzman);
 	}
-	/*for(int i = 0; i <= ejectaR; ++i){
+	for(int i = 0; i <= ejectaR; ++i){
 		upstreamBins1[i]->density = density0*power(upstreamBins1[ejectaR]->r/reverseShockWaveR, -7);
-	}*/
+	}
 }
 
 void Simulation::simulate(){
@@ -116,7 +116,7 @@ void Simulation::simulate(){
 			output(outFile, this);
 			fclose(outFile);
 			outIteration = fopen("./output/iterations.dat","a");
-			fprintf(outIteration, "%d %lf %lf %lf %lf %lf %lf\n", i, time, mass, upstreamMass1, downstreamMass1, downstreamMass2, upstreamMass2);
+			fprintf(outIteration, "%d %lf %lf %lf %lf %lf %lf\n", i, time, mass - density0*4*pi*(cube(2*forwardShockWaveR)-cube(upstreamR))/3, upstreamMass1, downstreamMass1, downstreamMass2, upstreamMass2);
 			fclose(outIteration);
 		}
 	}
