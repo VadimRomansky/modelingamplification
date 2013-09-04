@@ -21,6 +21,7 @@ SpaceBin::SpaceBin(double R, double deltaR, double u, double rho, double T, doub
 	B0 = B;
 	numberR = i;
 	smallAngleScattering = scattering;
+	volume = 4*pi*(cube(r2) - cube(r1))/3;
 }
 
 SpaceBin::~SpaceBin(){

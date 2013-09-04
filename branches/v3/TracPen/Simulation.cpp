@@ -33,7 +33,7 @@ void Simulation::initializeProfile(){
 }
 
 void Simulation::simulate(){
-	FILE* outFile = fopen("./output/zprofile.dat","w");
+	FILE* outFile = fopen("./output/tamc_radial_profile.dat","w");
 	FILE* outIteration = fopen("./output/iterations.dat","w");
 	fclose(outIteration);
 	printf("initialization\n");
@@ -52,7 +52,7 @@ void Simulation::simulate(){
 		updateParameters();
 		if(i % 1000 == 0){
 			printf("outputing\n");
-			outFile = fopen("./output/zprofile.dat","a");
+			outFile = fopen("./output/tamc_radial_profile.dat","a");
 			output(outFile, this);
 			fclose(outFile);
 			outIteration = fopen("./output/iterations.dat","a");
@@ -76,10 +76,10 @@ void Simulation::evaluateHydrodynamic(){
 		u2[i] = u1[i]*bins[i]->U;
 		u3[i] = bins[i]->getEnergy()*bins[i]->volume;
 
-		F1[i] = bins[i]->density*bins[i]->r*bins[i]->r*bins[i]->U;
+		F1[i] = bins[i]->density*4*pi*bins[i]->r*bins[i]->r*bins[i]->U;
 		//todo pressure?
 		F2[i] = F1[i]*bins[i]->U + bins[i]->pressure;
-		F3[i] = bins[i]->U*bins[i]->getEnergy()*bins[i]->volume + bins[i]->U*bins[i]->pressure;
+		F3[i] = bins[i]->U*bins[i]->getEnergy()*4*pi*bins[i]->r*bins[i]->r + bins[i]->U*bins[i]->pressure;
 	}
 
 	double leftFlux1 = 0;
@@ -114,12 +114,12 @@ void Simulation::evaluateHydrodynamic(){
 
 void Simulation::TracPen(double* u, double* flux, double cs, double leftFlux, double rightFlux){
 
-	/*u[0] -= tau*((flux[0] + flux[1])/2 - leftFlux)/deltaXi;
+	u[0] -= tau*((flux[0] + flux[1])/2 - leftFlux);
 	for(int i = 1; i < rgridNumber - 1; ++i){
-		u[i] -= tau*0.5*(flux[i+1] - flux[i-1])/deltaXi;
+		u[i] -= tau*0.5*(flux[i+1] - flux[i-1]);
 	}
-	u[rgridNumber - 1] -= tau*(rightFlux - (flux[rgridNumber - 1] + flux[rgridNumber - 2])/2)/deltaXi;*/
-	tau = deltaT;
+	u[rgridNumber - 1] -= tau*(rightFlux - (flux[rgridNumber - 1] + flux[rgridNumber - 2])/2);
+	/*tau = deltaT;
 	double* uplus = new double[rgridNumber];
 	double* uminus = new double[rgridNumber];
 
@@ -161,7 +161,7 @@ void Simulation::TracPen(double* u, double* flux, double cs, double leftFlux, do
 	delete[] uminus;
 
 	delete[] fplus;
-	delete[] fminus;
+	delete[] fminus;*/
 }
 
 double Simulation::minmod(double a, double b){
