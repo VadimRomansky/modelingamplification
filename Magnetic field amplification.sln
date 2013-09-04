@@ -15,6 +15,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Magnetic field amplificatio
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Zirakashvili", "Zirakashvili\Zirakashvili.vcxproj", "{B4E7EDF7-66A5-43D2-8A52-9A02FC3CC541}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TracPen", "TracPen\TracPen.vcxproj", "{5FA18B8B-3A6F-4E95-9563-3E857E7FDDCC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -49,6 +51,10 @@ Global
 		{B4E7EDF7-66A5-43D2-8A52-9A02FC3CC541}.Debug|Win32.Build.0 = Debug|Win32
 		{B4E7EDF7-66A5-43D2-8A52-9A02FC3CC541}.Release|Win32.ActiveCfg = Release|Win32
 		{B4E7EDF7-66A5-43D2-8A52-9A02FC3CC541}.Release|Win32.Build.0 = Release|Win32
+		{5FA18B8B-3A6F-4E95-9563-3E857E7FDDCC}.Debug|Win32.ActiveCfg = Debug|Win32
+		{5FA18B8B-3A6F-4E95-9563-3E857E7FDDCC}.Debug|Win32.Build.0 = Debug|Win32
+		{5FA18B8B-3A6F-4E95-9563-3E857E7FDDCC}.Release|Win32.ActiveCfg = Release|Win32
+		{5FA18B8B-3A6F-4E95-9563-3E857E7FDDCC}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
