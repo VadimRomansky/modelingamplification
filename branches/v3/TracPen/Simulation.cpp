@@ -44,13 +44,13 @@ void Simulation::simulate(){
 	for(int i = 0; i < iterationNumber; ++i){
 		printf("iteration ¹ %d\n", i);
 		printf("time = %lf\n", time);
-		printf("solving upstream\n");
+		printf("solving\n");
 		time = time + deltaT;
 		evaluateHydrodynamic();
 		updateValues();
 		updateMaxSoundSpeed();
 		updateParameters();
-		if(i % 1000 == 0){
+		if(i % 100 == 0){
 			printf("outputing\n");
 			outFile = fopen("./output/tamc_radial_profile.dat","a");
 			output(outFile, this);
@@ -113,14 +113,13 @@ void Simulation::evaluateHydrodynamic(){
 }
 
 void Simulation::TracPen(double* u, double* flux, double cs, double leftFlux, double rightFlux){
-
+	tau = deltaT;
 	u[0] -= tau*((flux[0] + flux[1])/2 - leftFlux);
 	for(int i = 1; i < rgridNumber - 1; ++i){
-		u[i] -= tau*0.5*(flux[i+1] - flux[i-1]);
+		u[i] -= tau*0.5*(flux[i] - flux[i-1]);
 	}
 	u[rgridNumber - 1] -= tau*(rightFlux - (flux[rgridNumber - 1] + flux[rgridNumber - 2])/2);
-	/*tau = deltaT;
-	double* uplus = new double[rgridNumber];
+	/*double* uplus = new double[rgridNumber];
 	double* uminus = new double[rgridNumber];
 
 	double* fplus = new double[rgridNumber];
@@ -151,11 +150,13 @@ void Simulation::TracPen(double* u, double* flux, double cs, double leftFlux, do
 	fplus[rgridNumber - 1] = uplus[rgridNumber - 2] + 0.5*minmod(uplus[rgridNumber - 1] - uplus[rgridNumber - 2], uplus[rgridNumber - 2] - uplus[rgridNumber - 3]);
 	fminus[rgridNumber - 1] = -uminus[rgridNumber - 1];
 
-	u[0] -= tau*(0.5*(fplus[1] + fminus[1]) - leftFlux);
+	//u[0] -= tau*(0.5*(fplus[1] + fminus[1]) - leftFlux);
+	u[0] -= tau*((flux[0] + flux[1])/2 - leftFlux);
 	for(int i = 1; i <= rgridNumber-2; ++i){
 		u[i] -= tau*0.5*(fplus[i+1] + fminus[i+1] - (fplus[i] + fminus[i]));
 	}
-	u[rgridNumber - 1] -= tau*(rightFlux - 0.5*(fplus[rgridNumber - 1] + fminus[rgridNumber - 1]));
+	//u[rgridNumber - 1] -= tau*(rightFlux - 0.5*(fplus[rgridNumber - 1] + fminus[rgridNumber - 1]));
+	u[rgridNumber - 1] -= tau*(rightFlux - (flux[rgridNumber - 1] + flux[rgridNumber - 2])/2);
 
 	delete[] uplus;
 	delete[] uminus;
@@ -165,6 +166,7 @@ void Simulation::TracPen(double* u, double* flux, double cs, double leftFlux, do
 }
 
 double Simulation::minmod(double a, double b){
+	return 0;
 	if(a*b > 0){
 		if(abs(a) < abs(b)){
 			return a;
@@ -186,7 +188,7 @@ void Simulation::updateMaxSoundSpeed(){
 			maxSoundSpeed = cs;
 		} 
 	}
-	deltaT = 0.5*deltaR/maxSoundSpeed;
+	deltaT = 0.0005*deltaR/maxSoundSpeed;
 }
 
 void Simulation::updateParameters(){
