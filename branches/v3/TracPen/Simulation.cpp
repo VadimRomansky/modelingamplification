@@ -188,7 +188,7 @@ void Simulation::updateMaxSoundSpeed(){
 			maxSoundSpeed = cs;
 		} 
 	}
-	deltaT = 0.0005*deltaR/maxSoundSpeed;
+	deltaT = 0.005*deltaR/maxSoundSpeed;
 }
 
 void Simulation::updateParameters(){
