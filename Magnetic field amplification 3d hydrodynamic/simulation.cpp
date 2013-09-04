@@ -48,7 +48,7 @@ void Simulation::initializeProfile(){
 	currentShockWavePoint = shockWavePoint;
  	minK = defaultMinK;
 	maxK = defaultMaxK;
-	deltaR = (downstreamR - upstreamR)/(rgridNumber );
+	deltaR = (upstreamR - downstreamR)/(rgridNumber );
 	deltaTheta = pi/(thetagridNumber );
 	deltaPhi = 2*pi/(phigridNumber );
 	double R = upstreamR + deltaR/2;

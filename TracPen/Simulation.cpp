@@ -15,8 +15,9 @@ Simulation::~Simulation(){
 }
 
 void Simulation::initializeProfile(){
-	deltaR = (downstreamR - upstreamR)/(rgridNumber );
-	double R = upstreamR + deltaR/2;
+	downstreamR = 0;
+	deltaR = (upstreamR - downstreamR)/(rgridNumber - 1);
+	double R = downstreamR + deltaR/2;
 	bins = new SpaceBin*[rgridNumber];
     for(int i = 0; i < rgridNumber; ++i){
 		double density = density0;
@@ -44,6 +45,7 @@ void Simulation::simulate(){
 		printf("iteration ¹ %d\n", i);
 		printf("time = %lf\n", time);
 		printf("solving upstream\n");
+		time = time + deltaT;
 		evaluateHydrodynamic();
 		updateValues();
 		updateMaxSoundSpeed();
@@ -184,7 +186,7 @@ void Simulation::updateMaxSoundSpeed(){
 			maxSoundSpeed = cs;
 		} 
 	}
-	deltaT = 05*deltaR/maxSoundSpeed;
+	deltaT = 0.5*deltaR/maxSoundSpeed;
 }
 
 void Simulation::updateParameters(){
