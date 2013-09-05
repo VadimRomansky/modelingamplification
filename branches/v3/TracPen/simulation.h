@@ -26,7 +26,7 @@ public:
 	int A;
 	int Z;
 
-	int shockWavePoint;
+	int simulationType;
 
 	bool smallAngleScattering;
 

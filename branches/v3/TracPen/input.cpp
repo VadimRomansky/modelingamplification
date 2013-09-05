@@ -16,7 +16,7 @@ Simulation* readInput(){
         fscanf(infile,"%lf",&simulation->temperature);
 		fscanf(infile,"%lf",&simulation->upstreamR);
 		fscanf(infile,"%d",&simulation->rgridNumber);
-		fscanf(infile,"%d",&simulation->shockWavePoint);
+		fscanf(infile,"%d",&simulation->simulationType);
 		fclose(infile);
 		return simulation;
 	} else {
