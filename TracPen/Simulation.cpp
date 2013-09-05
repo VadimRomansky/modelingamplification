@@ -59,10 +59,10 @@ void Simulation::simulate(){
 		printf("solving\n");
 		time = time + deltaT;
 		evaluateHydrodynamic();
-		updateValues();
+		//updateValues();
 		updateMaxSoundSpeed();
 		updateParameters();
-		if(i % 100 == 0){
+		if(i % 30 == 0){
 			printf("outputing\n");
 			outFile = fopen("./output/tamc_radial_profile.dat","a");
 			output(outFile, this);
@@ -75,54 +75,28 @@ void Simulation::simulate(){
 }
 
 void Simulation::evaluateHydrodynamic(){	
-	double* u1 = new double[rgridNumber];
-	double* u2 = new double[rgridNumber];
-	double* u3 = new double[rgridNumber];
-
-	double* F1 = new double[rgridNumber];
-	double* F2 = new double[rgridNumber];
-	double* F3 = new double[rgridNumber];
+	double* newDensity = new double[rgridNumber];
+	double* newVelocity = new double[rgridNumber];
+	double* newPressure = new double[rgridNumber];
+	
+	newDensity[0] = bins[0]->density - deltaT*(2*bins[0]->U*bins[0]->density/bins[0]->r + bins[0]->density*(bins[1]->U - bins[0]->U)/deltaR + bins[0]->U*(bins[1]->density - bins[0]->density)/deltaR);
+    newVelocity[0] = bins[0]->U - deltaT*(bins[0]->U*(bins[1]->U - bins[0]->U)/deltaR + (bins[1]->pressure - bins[0]->pressure)/(bins[0]->density*deltaR));
+	newPressure[0] = bins[0]->pressure - deltaT*(bins[0]->U*(bins[1]->pressure - bins[0]->pressure)/deltaR + 2*gamma*bins[0]->pressure*bins[0]->U/bins[0]->r + gamma*bins[0]->pressure*(bins[1]->U - bins[0]->U)/deltaR);
+	for(int i = 1; i < rgridNumber; ++i){
+		newDensity[i] = bins[i]->density - deltaT*(2*bins[i]->U*bins[i]->density/bins[i]->r + bins[i]->density*(bins[i]->U - bins[i-1]->U)/deltaR + bins[i]->U*(bins[i]->density - bins[i-1]->density)/deltaR);
+		newVelocity[i] = bins[i]->U - deltaT*(bins[i]->U*(bins[i]->U - bins[i-1]->U)/deltaR + (bins[i]->pressure - bins[i-1]->pressure)/(bins[i]->density*deltaR));
+		newPressure[i] = bins[i]->pressure - deltaT*(bins[i]->U*(bins[i]->pressure - bins[i-1]->pressure)/deltaR + 2*gamma*bins[i]->pressure*bins[i]->U/bins[i]->r + gamma*bins[i]->pressure*(bins[i]->U - bins[i-1]->U)/deltaR);
+	}
 
 	for(int i = 0; i < rgridNumber; ++i){
-		u1[i] = bins[i]->density*bins[i]->volume;
-		u2[i] = u1[i]*bins[i]->U;
-		u3[i] = bins[i]->getEnergy()*bins[i]->volume;
-
-		F1[i] = bins[i]->density*4*pi*bins[i]->r*bins[i]->r*bins[i]->U;
-		//todo pressure?
-		//F2[i] = F1[i]*bins[i]->U + bins[i]->pressure*4*pi*bins[i]->r*bins[i]->r;
-		F2[i] = F1[i]*bins[i]->U;
-		F3[i] = bins[i]->U*bins[i]->getEnergy()*4*pi*bins[i]->r*bins[i]->r + bins[i]->U*bins[i]->pressure*4*pi*bins[i]->r*bins[i]->r;
+		bins[i]->density = newDensity[i];
+		bins[i]->U = newVelocity[i];
+		bins[i]->pressure = newPressure[i];
 	}
 
-	double leftFlux1 = 0;
-	double leftFlux2 = 0;
-	double leftFlux3 = 0;
-
-	double rightFlux1 = 0;
-	double rightFlux2 = 0;
-	double rightFlux3 = 0;
-
-	TracPen(u1, F1, maxSoundSpeed, leftFlux1, rightFlux1);
-	TracPen(u2, F2, maxSoundSpeed, leftFlux2, rightFlux2);
-	for(int i = 1; i < rgridNumber-1; ++i){
-		u2[i] += bins[i]->volume*(bins[i+1]->pressure - bins[i-1]->pressure)/(2*deltaR);
-	}
-	TracPen(u3, F3, maxSoundSpeed, leftFlux3, rightFlux3);
-
-	for(int i = 0; i < rgridNumber; ++i){
-		bins[i]->u1 = u1[i];
-		bins[i]->u2 = u2[i];
-		bins[i]->u3 = u3[i];
-	}
-
-	delete[] u1;
-	delete[] u2;
-	delete[] u3;
-	delete[] F1;
-	delete[] F2;
-	delete[] F3;
-
+	delete[] newDensity;
+	delete[] newPressure;
+	delete[] newVelocity;
 }
 
 void Simulation::TracPen(double* u, double* flux, double cs, double leftFlux, double rightFlux){
