@@ -21,14 +21,26 @@ void Simulation::initializeProfile(){
 	bins = new SpaceBin*[rgridNumber];
     for(int i = 0; i < rgridNumber; ++i){
 		double density = density0;
-		double u;
-		if(i < shockWavePoint){
-			u = U0;
+		switch(simulationType){
+		case 1:
+			//int shockWavePoint = rgridNumber/10;
+			double u;
+			if(i < rgridNumber/10){
+				u = U0;
 			} else {
-			u = 0;
+				u = 0;
+			}
+			bins[i] = new SpaceBin(R, deltaR, u, density, temperature, B0, i, smallAngleScattering);
+			R = R + deltaR;
+			break;
+		default:
+			if(i == 0){
+				bins[i] = new SpaceBin(R, deltaR, 0, density, 100000000, B0, i, smallAngleScattering);
+			} else {
+				bins[i] = new SpaceBin(R, deltaR, 0, density, temperature, B0, i, smallAngleScattering);
+			}
+			R = R + deltaR;
 		}
-		bins[i] = new SpaceBin(R, deltaR, u, density, temperature,B0, i,smallAngleScattering);
-		R = R + deltaR;
 	}
 }
 
@@ -78,8 +90,9 @@ void Simulation::evaluateHydrodynamic(){
 
 		F1[i] = bins[i]->density*4*pi*bins[i]->r*bins[i]->r*bins[i]->U;
 		//todo pressure?
-		F2[i] = F1[i]*bins[i]->U + bins[i]->pressure;
-		F3[i] = bins[i]->U*bins[i]->getEnergy()*4*pi*bins[i]->r*bins[i]->r + bins[i]->U*bins[i]->pressure;
+		//F2[i] = F1[i]*bins[i]->U + bins[i]->pressure*4*pi*bins[i]->r*bins[i]->r;
+		F2[i] = F1[i]*bins[i]->U;
+		F3[i] = bins[i]->U*bins[i]->getEnergy()*4*pi*bins[i]->r*bins[i]->r + bins[i]->U*bins[i]->pressure*4*pi*bins[i]->r*bins[i]->r;
 	}
 
 	double leftFlux1 = 0;
@@ -92,9 +105,9 @@ void Simulation::evaluateHydrodynamic(){
 
 	TracPen(u1, F1, maxSoundSpeed, leftFlux1, rightFlux1);
 	TracPen(u2, F2, maxSoundSpeed, leftFlux2, rightFlux2);
-	/*for(int i = 0; i < rgridNumber; ++i){
-		u2[i] += tau*bins[i]->r*forwardShockWaveR*2*bins[i]->pressure*deltaF/forwardV;
-	}*/
+	for(int i = 1; i < rgridNumber-1; ++i){
+		u2[i] += bins[i]->volume*(bins[i+1]->pressure - bins[i-1]->pressure)/(2*deltaR);
+	}
 	TracPen(u3, F3, maxSoundSpeed, leftFlux3, rightFlux3);
 
 	for(int i = 0; i < rgridNumber; ++i){
@@ -204,5 +217,11 @@ void Simulation::updateValues(){
 		bins[i]->density = bins[i]->u1/(bins[i]->volume);
 		bins[i]->U = bins[i]->u2/(bins[i]->density*bins[i]->volume);
 		bins[i]->pressure = (gamma - 1)*(bins[i]->u3/(bins[i]->volume) - bins[i]->density*bins[i]->U*bins[i]->U/2);
+		if(bins[i]->density < 0){
+			printf("density < 0 bin number %d\n", i);
+			bins[i]->density = density0*epsilon;
+			bins[i]->U = 0;
+			bins[i]->pressure = 0;
+		}
 	}
 }
