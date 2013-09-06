@@ -17,6 +17,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Zirakashvili", "Zirakashvil
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TracPen", "TracPen\TracPen.vcxproj", "{5FA18B8B-3A6F-4E95-9563-3E857E7FDDCC}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Godunov1d", "Godunov1d\Godunov1d.vcxproj", "{5540CCD7-D99B-41BA-943F-74642481173D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -55,6 +57,10 @@ Global
 		{5FA18B8B-3A6F-4E95-9563-3E857E7FDDCC}.Debug|Win32.Build.0 = Debug|Win32
 		{5FA18B8B-3A6F-4E95-9563-3E857E7FDDCC}.Release|Win32.ActiveCfg = Release|Win32
 		{5FA18B8B-3A6F-4E95-9563-3E857E7FDDCC}.Release|Win32.Build.0 = Release|Win32
+		{5540CCD7-D99B-41BA-943F-74642481173D}.Debug|Win32.ActiveCfg = Debug|Win32
+		{5540CCD7-D99B-41BA-943F-74642481173D}.Debug|Win32.Build.0 = Debug|Win32
+		{5540CCD7-D99B-41BA-943F-74642481173D}.Release|Win32.ActiveCfg = Release|Win32
+		{5540CCD7-D99B-41BA-943F-74642481173D}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
