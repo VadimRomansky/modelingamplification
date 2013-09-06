@@ -7,11 +7,8 @@
 
 class Simulation{
 public:
-	double timeStep;
-	double tau;
 	int iterationNumber;
 	int particlesNumber;
-	int allParticlesNumber;
 	double U0;
 	double density0;
 	double B0;
@@ -19,13 +16,12 @@ public:
 	double downstreamR;
 	double deltaR;
 	double temperature;
-	double gridParameter;
 	double epsilonR;
-	double simulationTime;
 	double deltaT;
 	int A;
 	int Z;
 
+	bool cycleBound;
 	int simulationType;
 
 	bool smallAngleScattering;
@@ -63,6 +59,7 @@ public:
 
 	double momentumAtPoint(int i);
 	double energyAtPoint(int i);
+	double temperatureAtPoint(int i);
 
 	Simulation();
 	~Simulation();
