@@ -5,9 +5,8 @@
 #include "output.h"
 
 Simulation::Simulation(){
+	cycleBound = true;
 	time = 0;
-	timeStep = defaultTimeStep;
-	tau = defaultTimeStep;
 }
 
 Simulation::~Simulation(){
@@ -38,12 +37,17 @@ void Simulation::initializeProfile(){
 		switch(simulationType){
 		case 1 :
 			pointDensity[i] = density0;
-			if(i < rgridNumber/10){
+			if(i > rgridNumber/100 && i < rgridNumber/10){
 				pointVelocity[i] = U0;
 			} else {
 				pointVelocity[i] = 0;
 			}
 			pointPressure[i] = pressure0;
+			break;
+		case 2 :
+			pointDensity[i] = density0 + density0*0.1*sin(i*10*2*pi/rgridNumber);
+			pointVelocity[i] = sqrt(gamma*pressure0/density0)*density0*0.1*sin(i*10*2*pi/rgridNumber)/density0;
+			pointPressure[i] = pressure0 + (gamma*pressure0/density0)*density0*0.1*sin(i*10*2*pi/rgridNumber);
 			break;
 		default:
 			pointDensity[i] = density0;
@@ -54,6 +58,12 @@ void Simulation::initializeProfile(){
 				pointPressure[i] = pressure0;
 			}
 		}
+	}
+	//cycle bounds
+	if(cycleBound){
+		pointDensity[rgridNumber] = pointDensity[0];
+		pointVelocity[rgridNumber] = pointVelocity[0];
+		pointPressure[rgridNumber] = pointPressure[0];
 	}
 
 	for(int i = 0; i < rgridNumber; ++i){
@@ -89,7 +99,7 @@ void Simulation::simulate(){
 		//updateValues();
 		updateMaxSoundSpeed();
 		//updateParameters();
-		if(i % 1000 == 0){
+		if(i % 100 == 0){
 			printf("outputing\n");
 			outFile = fopen("./output/tamc_radial_profile.dat","a");
 			output(outFile, this);
@@ -106,6 +116,11 @@ void Simulation::evaluateHydrodynamic(){
 		middleDensity[i] -= deltaT*(pointDensity[i+1]*pointVelocity[i+1] - pointDensity[i]*pointVelocity[i])/deltaR;
 		middleMomentum[i] -= deltaT*(pointPressure[i+1] + pointDensity[i+1]*pointVelocity[i+1]*pointVelocity[i+1] - pointPressure[i] - pointDensity[i]*pointVelocity[i]*pointVelocity[i])/deltaR;
 		middleEnergy[i] -= deltaT*(pointPressure[i+1]*pointVelocity[i+1]*gamma/(gamma - 1) + pointDensity[i+1]*pointVelocity[i+1]*pointVelocity[i+1]*pointVelocity[i+1]/2 - pointPressure[i]*pointVelocity[i]*gamma/(gamma - 1) - pointDensity[i]*pointVelocity[i]*pointVelocity[i]*pointVelocity[i]/2)/deltaR;
+		if(middleDensity[i] <= epsilon*density0){
+			middleDensity[i] = epsilon*density0;
+			middleMomentum[i]= 0;
+			middleEnergy[i] = 0;
+		}
 	}
 
 	//at zero pint is constant
@@ -121,15 +136,22 @@ void Simulation::evaluateHydrodynamic(){
 		pointVelocity[i] = pointMomentum/pointDensity[i];
 		pointPressure[i] = (pointEnergy - pointDensity[i]*pointVelocity[i]*pointVelocity[i]/2)*(gamma - 1)/gamma;
 	}
+
+	//cycle bond condition
+	if(cycleBound){
+		pointDensity[0] = pointDensity[rgridNumber];
+		pointVelocity[0] = pointVelocity[rgridNumber];
+		pointPressure[0] = pointPressure[rgridNumber];
+	}
 }
 
 void Simulation::TracPen(double* u, double* flux, double cs, double leftFlux, double rightFlux){
-	tau = deltaT;
+	/*tau = deltaT;
 	u[0] -= tau*((flux[0] + flux[1])/2 - leftFlux);
 	for(int i = 1; i < rgridNumber - 1; ++i){
 		u[i] -= tau*0.5*(flux[i] - flux[i-1]);
 	}
-	u[rgridNumber - 1] -= tau*(rightFlux - (flux[rgridNumber - 1] + flux[rgridNumber - 2])/2);
+	u[rgridNumber - 1] -= tau*(rightFlux - (flux[rgridNumber - 1] + flux[rgridNumber - 2])/2);*/
 	/*double* uplus = new double[rgridNumber];
 	double* uminus = new double[rgridNumber];
 
@@ -192,6 +214,17 @@ double Simulation::energyAtPoint(int i){
 		printf("i < 0");
 	} else if(i >= 0 && i <= rgridNumber) {
 		return pointPressure[i]*gamma/(gamma - 1) + pointDensity[i]*pointVelocity[i]*pointVelocity[i]/2;
+	} else if(i > rgridNumber) {
+		printf("i > rgridNumber");
+	}
+	return 0;
+}
+
+double Simulation::temperatureAtPoint(int i){
+	if(i < 0){
+		printf("i < 0");
+	} else if(i >= 0 && i <= rgridNumber) {
+		return pointPressure[i]*massProton/(kBoltzman*pointDensity[i]);
 	} else if(i > rgridNumber) {
 		printf("i > rgridNumber");
 	}
