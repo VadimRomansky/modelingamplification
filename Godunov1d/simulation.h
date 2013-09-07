@@ -24,19 +24,6 @@ public:
 	bool cycleBound;
 	int simulationType;
 
-	bool smallAngleScattering;
-
-	double energy;
-	double theorEnergy;
-
-	double momentumZ;
-	double theorMomentumZ;
-	double momentumX;
-	double theorMomentumX;
-	double momentumY;
-	double theorMomentumY;
-	double particlesWeight;
-
 	double mass;
 
 	int rgridNumber;
@@ -45,9 +32,6 @@ public:
 	double time;
 
 	double maxSoundSpeed;
-
-	Particle* Particles;
-	SpaceBin** bins;
 
 	double* grid;
 	double* pointDensityLeft;
@@ -58,9 +42,9 @@ public:
 	double* pointPressure;
 	double* middlePressure;
 
-	double momentumAtPoint(int i);
-	double energyAtPoint(int i);
-	double temperatureAtPoint(int i);
+	double momentum(int i);
+	double energy(int i);
+	double temperatureIn(int i);
 
 	Simulation();
 	~Simulation();
@@ -68,6 +52,7 @@ public:
 	void initializeProfile();
 	void simulate();
 	void evaluateHydrodynamic();
+	void solveDiscontinious();
 	void TracPen(double* u, double* flux, double cs, double leftFlux, double rightFlux);
 	void updateValues();
 	double minmod(double a, double b);
