@@ -67,17 +67,9 @@ void Simulation::initializeProfile(){
 	}
 
 	for(int i = 0; i < rgridNumber; ++i){
-		double left = pointDensity[i];
-		double right = pointDensity[i + 1];
-		middleDensity[i] = (left + right)/2;
-
-		left = pointDensity[i]*pointVelocity[i];
-		right = pointDensity[i+1]*pointVelocity[i+1];
-		middleMomentum[i] = (left + right)/2;
-
-		left = pointPressure[i]/(gamma - 1) + pointDensity[i]*pointVelocity[i]*pointVelocity[i]/2;
-		right = pointPressure[i+1]/(gamma - 1) + pointDensity[i+1]*pointVelocity[i+1]*pointVelocity[i+1]/2;
-		middleEnergy[i] = (left + right)/2;
+		middleDensity[i] = pointDensity[i+1];
+		middleMomentum[i] = momentumAtPoint(i+1);
+		middleEnergy[i] = energyAtPoint(i+1);
 	}
 }
 
@@ -99,7 +91,7 @@ void Simulation::simulate(){
 		//updateValues();
 		updateMaxSoundSpeed();
 		//updateParameters();
-		if(i % 100 == 0){
+		if(i % 1000 == 0){
 			printf("outputing\n");
 			outFile = fopen("./output/tamc_radial_profile.dat","a");
 			output(outFile, this);
