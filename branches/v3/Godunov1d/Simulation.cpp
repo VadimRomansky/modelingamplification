@@ -122,10 +122,10 @@ void Simulation::evaluateHydrodynamic(){
 		double pointEnergy = 2*middleEnergy[i-1] - energyAtPoint(i);
 		pointVelocity[i] = pointMomentum/pointDensity[i];
 		pointPressure[i] = (pointEnergy - pointDensity[i]*pointVelocity[i]*pointVelocity[i]/2)*(gamma - 1)/gamma;*/
-		pointDensity[i] = middleDensity[i-1];
 		double pointMomentum = middleMomentum[i-1];
 		double pointEnergy = middleEnergy[i-1];
 		pointVelocity[i] = pointMomentum/pointDensity[i];
+		pointDensity[i] = middleDensity[i-1];
 		pointPressure[i] = (pointEnergy - pointDensity[i]*pointVelocity[i]*pointVelocity[i]/2)*(gamma - 1)/gamma;
 	}
 

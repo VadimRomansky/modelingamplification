@@ -50,12 +50,13 @@ public:
 	SpaceBin** bins;
 
 	double* grid;
-	double* pointDensity;
+	double* pointDensityLeft;
+	double* pointDensityRight;
 	double* middleDensity;
 	double* pointVelocity;
-	double* middleMomentum;
+	double* middleVelocity;
 	double* pointPressure;
-	double* middleEnergy;
+	double* middlePressure;
 
 	double momentumAtPoint(int i);
 	double energyAtPoint(int i);
