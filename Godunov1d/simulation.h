@@ -45,6 +45,7 @@ public:
 	double momentum(int i);
 	double energy(int i);
 	double temperatureIn(int i);
+	double soundSpeed(int i);
 
 	Simulation();
 	~Simulation();
@@ -53,6 +54,7 @@ public:
 	void simulate();
 	void evaluateHydrodynamic();
 	void solveDiscontinious();
+	void evaluatePressureAndVelocity();
 	void TracPen(double* u, double* flux, double cs, double leftFlux, double rightFlux);
 	void updateValues();
 	double minmod(double a, double b);
