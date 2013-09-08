@@ -162,22 +162,37 @@ void Simulation::evaluatePressureAndVelocity(){
 		if(p > p1){
 			alpha1 = sqrt(rho1*((gamma + 1)*p/2 + (gamma - 1)*p1/2));
 		} else {
-			alpha1 = ((gamma-1)/(2*gamma))*rho1*c1*(1 - p/p1)/(1 - power(p/p1, (gamma-1)/(2*gamma)));
+			if(abs(p/p1 - 1) < epsilon){
+				alpha1 = rho1*c1;
+			} else {
+				alpha1 = ((gamma-1)/(2*gamma))*rho1*c1*(1 - p/p1)/(1 - power(p/p1, (gamma-1)/(2*gamma)));
+			}
 		}
 		if(p > p2){
-			alpha2 = ((gamma-1)/(2*gamma))*rho2*c2*(1 - p/p2)/(1 - power(p/p2, (gamma-1)/(2*gamma)));
+			if(abs(p/p2 - 1) < epsilon){
+				alpha2 = rho2*c2;
+			} else {
+				alpha2 = ((gamma-1)/(2*gamma))*rho2*c2*(1 - p/p2)/(1 - power(p/p2, (gamma-1)/(2*gamma)));
+			}
 		} else {
 			alpha2 = sqrt(rho2*((gamma + 1)*p/2 + (gamma - 1)*p2/2));
 		}
 		for(int j = 0; j < 25; ++j){
-			p = (alpha2*p1 + alpha1*p2 + alpha1*alpha2*(u1 - u2))/(alpha1 + alpha2);
 			if(p > p1){
 				alpha1 = sqrt(rho1*((gamma + 1)*p/2 + (gamma - 1)*p1/2));
 			} else {
-				alpha1 = ((gamma-1)/(2*gamma))*rho1*c1*(1 - p/p1)/(1 - power(p/p1, (gamma-1)/(2*gamma)));
+				if(abs(p/p1 - 1) < epsilon){
+					alpha1 = rho1*c1;
+				} else {
+					alpha1 = ((gamma-1)/(2*gamma))*rho1*c1*(1 - p/p1)/(1 - power(p/p1, (gamma-1)/(2*gamma)));
+				}
 			}
 			if(p > p2){
-				alpha2 = ((gamma-1)/(2*gamma))*rho2*c2*(1 - p/p2)/(1 - power(p/p2, (gamma-1)/(2*gamma)));
+				if(abs(p/p2 - 1) < epsilon){
+					alpha2 = rho2*c2;
+				} else {
+					alpha2 = ((gamma-1)/(2*gamma))*rho2*c2*(1 - p/p2)/(1 - power(p/p2, (gamma-1)/(2*gamma)));
+				}
 			} else {
 				alpha2 = sqrt(rho2*((gamma + 1)*p/2 + (gamma - 1)*p2/2));
 			}
