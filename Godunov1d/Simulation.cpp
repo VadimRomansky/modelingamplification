@@ -117,10 +117,10 @@ void Simulation::evaluateHydrodynamic(){
 
 	for(int i = 0; i < rgridNumber; ++i){
 		//middleDensity[i] -= deltaT*(pointDensityLeft[i+1]*pointVelocity[i+1] - pointDensityRight[i]*pointVelocity[i])/deltaR;
-		double middleMomentum = momentum(i) - deltaT*(pointPressure[i+1] + 0.5*(pointDensityLeft[i+1] + pointDensityRight[i+1])*pointVelocity[i+1]*pointVelocity[i+1] - pointPressure[i] - 0.5*(pointDensityRight[i]+ pointDensityLeft[i])*pointVelocity[i]*pointVelocity[i])/deltaR;
-		double middleEnergy = energy(i) - deltaT*(pointPressure[i+1]*pointVelocity[i+1]*gamma/(gamma - 1) + 0.5*(pointDensityLeft[i+1] + pointDensityRight[i+1])*pointVelocity[i+1]*pointVelocity[i+1]*pointVelocity[i+1]/2 - pointPressure[i]*pointVelocity[i]*gamma/(gamma - 1) - 0.5*(pointDensityRight[i] + pointDensityLeft[i])*pointVelocity[i]*pointVelocity[i]*pointVelocity[i]/2)/deltaR;
+		double middleMomentum = momentum(i) - deltaT*(pointPressure[i+1] + pointDensityLeft[i+1]*pointVelocity[i+1]*pointVelocity[i+1] - pointPressure[i] - pointDensityRight[i]*pointVelocity[i]*pointVelocity[i])/deltaR;
+		double middleEnergy = energy(i) - deltaT*(pointPressure[i+1]*pointVelocity[i+1]*gamma/(gamma - 1) + pointDensityLeft[i+1]*pointVelocity[i+1]*pointVelocity[i+1]*pointVelocity[i+1]/2 - pointPressure[i]*pointVelocity[i]*gamma/(gamma - 1) - pointDensityRight[i]*pointVelocity[i]*pointVelocity[i]*pointVelocity[i]/2)/deltaR;
 		middleVelocity[i] = middleMomentum/middleDensity[i];
-		middleDensity[i] -= deltaT*(0.5*(pointDensityLeft[i+1] + pointDensityRight[i+1])*pointVelocity[i+1] - 0.5*(pointDensityRight[i] + pointDensityLeft[i])*pointVelocity[i])/deltaR;
+		middleDensity[i] -= deltaT*(pointDensityLeft[i+1]*pointVelocity[i+1] - pointDensityRight[i]*pointVelocity[i])/deltaR;
 		middlePressure[i] = (middleEnergy - middleDensity[i]*middleVelocity[i]*middleVelocity[i]/2)*(gamma - 1);
 
 		if(middleDensity[i] <= epsilon*density0){
@@ -136,7 +136,7 @@ void Simulation::evaluateHydrodynamic(){
 
 void Simulation::solveDiscontinious(){
 	evaluatePressureAndVelocity();
-	for(int i = 1; i < rgridNumber; ++i){
+	/*for(int i = 1; i < rgridNumber; ++i){
 		pointDensityLeft[i] = middleDensity[i-1]*((gamma + 1)*pointPressure[i] + (gamma - 1)*middlePressure[i-1])/((gamma - 1)*pointPressure[i] + (gamma + 1)*middlePressure[i-1]);
 		pointDensityRight[i] = middleDensity[i]*((gamma + 1)*pointPressure[i] + (gamma - 1)*middlePressure[i])/((gamma - 1)*pointPressure[i] + (gamma + 1)*middlePressure[i]);
 	}
@@ -147,7 +147,7 @@ void Simulation::solveDiscontinious(){
 		pointDensityLeft[rgridNumber] = pointDensityLeft[0];
 		pointDensityRight[rgridNumber] = pointDensityRight[0];
 	} else {
-	}
+	}*/
 }
 
 void Simulation::evaluatePressureAndVelocity(){
@@ -160,9 +160,13 @@ void Simulation::evaluatePressureAndVelocity(){
 		double u1 = middleVelocity[i-1];
 		double u2 = middleVelocity[i];
 		double u;
+		double R1;
+		double R2;
 		
-		successiveApproximatonPressure(p, u, p1, p2, u1, u2, rho1, rho2);
+		successiveApproximatonPressure(p, u, R1, R2, p1, p2, u1, u2, rho1, rho2);
 
+		pointDensityLeft[i] = R1;
+		pointDensityRight[i] = R2;
 		pointVelocity[i] = u;
 		pointPressure[i] = p;
 	}
@@ -176,18 +180,24 @@ void Simulation::evaluatePressureAndVelocity(){
 		double u1 = middleVelocity[rgridNumber-1];
 		double u2 = middleVelocity[0];
 		double u;
+		double R1;
+		double R2;
 		
-		successiveApproximatonPressure(p, u, p1, p2, u1, u2, rho1, rho2);
+		successiveApproximatonPressure(p, u, R1, R2, p1, p2, u1, u2, rho1, rho2);
 
+		pointDensityLeft[0] = R1;
+		pointDensityRight[0] = R2;
 		pointVelocity[0] = u;
 		pointPressure[0] = p;
+		pointDensityLeft[rgridNumber] = pointDensityLeft[0];
+		pointDensityRight[rgridNumber] = pointDensityRight[0];
 		pointVelocity[rgridNumber] = pointVelocity[0];
 		pointPressure[rgridNumber] = pointPressure[0];
 	} else {
 	}
 }
 
-void Simulation::successiveApproximatonPressure(double& p, double& u, double p1, double p2, double u1, double u2, double rho1, double rho2){
+void Simulation::successiveApproximatonPressure(double& p, double& u, double& R1, double& R2, double p1, double p2, double u1, double u2, double rho1, double rho2){
 	double c1 = sqrt(gamma*p1/rho1);
 	double c2 = sqrt(gamma*p2/rho2);
 
@@ -232,6 +242,18 @@ void Simulation::successiveApproximatonPressure(double& p, double& u, double p1,
 		}
 	}
 	u = (alpha1*u1 + alpha2*u2 + p1 - p2)/(alpha1 + alpha2);
+
+	if(p > p1){
+		R1 = rho1*((gamma + 1)*p + (gamma - 1)*p1)/((gamma - 1)*p + (gamma + 1)*p1);
+	} else {
+		R1 = gamma*p/sqr(c1 + (gamma - 1)*(u1 - u)/2);
+	}
+
+	if(p > p2){
+		R2 = rho1*((gamma + 1)*p + (gamma - 1)*p2)/((gamma - 1)*p + (gamma + 1)*p2);
+	} else {
+		R2 = gamma*p/sqr(c2 + (gamma - 1)*(u2 - u)/2);
+	}
 }
 
 void Simulation::TracPen(double* u, double* flux, double cs, double leftFlux, double rightFlux){
