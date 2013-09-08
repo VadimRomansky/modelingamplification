@@ -100,7 +100,7 @@ void Simulation::simulate(){
 		//updateValues();
 		updateMaxSoundSpeed();
 		//updateParameters();
-		if(i % 1 == 0){
+		if(i % 10 == 0){
 			printf("outputing\n");
 			outFile = fopen("./output/tamc_radial_profile.dat","a");
 			output(outFile, this);
@@ -116,10 +116,11 @@ void Simulation::evaluateHydrodynamic(){
 	solveDiscontinious();
 
 	for(int i = 0; i < rgridNumber; ++i){
-		middleDensity[i] -= deltaT*(pointDensityLeft[i+1]*pointVelocity[i+1] - pointDensityRight[i]*pointVelocity[i])/deltaR;
-		double middleMomentum = momentum(i) - deltaT*(pointPressure[i+1] + pointDensityLeft[i+1]*pointVelocity[i+1]*pointVelocity[i+1] - pointPressure[i] - pointDensityRight[i]*pointVelocity[i]*pointVelocity[i])/deltaR;
-		double middleEnergy = energy(i) - deltaT*(pointPressure[i+1]*pointVelocity[i+1]*gamma/(gamma - 1) + pointDensityLeft[i+1]*pointVelocity[i+1]*pointVelocity[i+1]*pointVelocity[i+1]/2 - pointPressure[i]*pointVelocity[i]*gamma/(gamma - 1) - pointDensityRight[i]*pointVelocity[i]*pointVelocity[i]*pointVelocity[i]/2)/deltaR;
+		//middleDensity[i] -= deltaT*(pointDensityLeft[i+1]*pointVelocity[i+1] - pointDensityRight[i]*pointVelocity[i])/deltaR;
+		double middleMomentum = momentum(i) - deltaT*(pointPressure[i+1] + 0.5*(pointDensityLeft[i+1] + pointDensityRight[i+1])*pointVelocity[i+1]*pointVelocity[i+1] - pointPressure[i] - 0.5*(pointDensityRight[i]+ pointDensityLeft[i])*pointVelocity[i]*pointVelocity[i])/deltaR;
+		double middleEnergy = energy(i) - deltaT*(pointPressure[i+1]*pointVelocity[i+1]*gamma/(gamma - 1) + 0.5*(pointDensityLeft[i+1] + pointDensityRight[i+1])*pointVelocity[i+1]*pointVelocity[i+1]*pointVelocity[i+1]/2 - pointPressure[i]*pointVelocity[i]*gamma/(gamma - 1) - 0.5*(pointDensityRight[i] + pointDensityLeft[i])*pointVelocity[i]*pointVelocity[i]*pointVelocity[i]/2)/deltaR;
 		middleVelocity[i] = middleMomentum/middleDensity[i];
+		middleDensity[i] -= deltaT*(0.5*(pointDensityLeft[i+1] + pointDensityRight[i+1])*pointVelocity[i+1] - 0.5*(pointDensityRight[i] + pointDensityLeft[i])*pointVelocity[i])/deltaR;
 		middlePressure[i] = (middleEnergy - middleDensity[i]*middleVelocity[i]*middleVelocity[i]/2)*(gamma - 1);
 
 		if(middleDensity[i] <= epsilon*density0){
@@ -156,51 +157,13 @@ void Simulation::evaluatePressureAndVelocity(){
 		double p2 = middlePressure[i];
 		double rho1 = middleDensity[i-1];
 		double rho2 = middleDensity[i];
-		double c1 = soundSpeed(i-1);
-		double c2 = soundSpeed(i);
 		double u1 = middleVelocity[i-1];
 		double u2 = middleVelocity[i];
-		double alpha1;
-		double alpha2;
-		if(p > p1){
-			alpha1 = sqrt(rho1*((gamma + 1)*p/2 + (gamma - 1)*p1/2));
-		} else {
-			if(abs(p/p1 - 1) < epsilon){
-				alpha1 = rho1*c1;
-			} else {
-				alpha1 = ((gamma-1)/(2*gamma))*rho1*c1*(1 - p/p1)/(1 - power(p/p1, (gamma-1)/(2*gamma)));
-			}
-		}
-		if(p > p2){
-			if(abs(p/p2 - 1) < epsilon){
-				alpha2 = rho2*c2;
-			} else {
-				alpha2 = ((gamma-1)/(2*gamma))*rho2*c2*(1 - p/p2)/(1 - power(p/p2, (gamma-1)/(2*gamma)));
-			}
-		} else {
-			alpha2 = sqrt(rho2*((gamma + 1)*p/2 + (gamma - 1)*p2/2));
-		}
-		for(int j = 0; j < 25; ++j){
-			if(p > p1){
-				alpha1 = sqrt(rho1*((gamma + 1)*p/2 + (gamma - 1)*p1/2));
-			} else {
-				if(abs(p/p1 - 1) < epsilon){
-					alpha1 = rho1*c1;
-				} else {
-					alpha1 = ((gamma-1)/(2*gamma))*rho1*c1*(1 - p/p1)/(1 - power(p/p1, (gamma-1)/(2*gamma)));
-				}
-			}
-			if(p > p2){
-				if(abs(p/p2 - 1) < epsilon){
-					alpha2 = rho2*c2;
-				} else {
-					alpha2 = ((gamma-1)/(2*gamma))*rho2*c2*(1 - p/p2)/(1 - power(p/p2, (gamma-1)/(2*gamma)));
-				}
-			} else {
-				alpha2 = sqrt(rho2*((gamma + 1)*p/2 + (gamma - 1)*p2/2));
-			}
-		}
-		pointVelocity[i] = (alpha1*u1 + alpha2*u2 + p1 - p2)/(alpha1 + alpha2);
+		double u;
+		
+		successiveApproximatonPressure(p, u, p1, p2, u1, u2, rho1, rho2);
+
+		pointVelocity[i] = u;
 		pointPressure[i] = p;
 	}
 
@@ -210,12 +173,45 @@ void Simulation::evaluatePressureAndVelocity(){
 		double p2 = middlePressure[0];
 		double rho1 = middleDensity[rgridNumber-1];
 		double rho2 = middleDensity[0];
-		double c1 = soundSpeed(rgridNumber-1);
-		double c2 = soundSpeed(0);
 		double u1 = middleVelocity[rgridNumber-1];
 		double u2 = middleVelocity[0];
-		double alpha1;
-		double alpha2;
+		double u;
+		
+		successiveApproximatonPressure(p, u, p1, p2, u1, u2, rho1, rho2);
+
+		pointVelocity[0] = u;
+		pointPressure[0] = p;
+		pointVelocity[rgridNumber] = pointVelocity[0];
+		pointPressure[rgridNumber] = pointPressure[0];
+	} else {
+	}
+}
+
+void Simulation::successiveApproximatonPressure(double& p, double& u, double p1, double p2, double u1, double u2, double rho1, double rho2){
+	double c1 = sqrt(gamma*p1/rho1);
+	double c2 = sqrt(gamma*p2/rho2);
+
+	double alpha1;
+	double alpha2;
+	if(p > p1){
+		alpha1 = sqrt(rho1*((gamma + 1)*p/2 + (gamma - 1)*p1/2));
+	} else {
+		if(abs(p/p1 - 1) < epsilon){
+			alpha1 = rho1*c1;
+		} else {
+			alpha1 = ((gamma-1)/(2*gamma))*rho1*c1*(1 - p/p1)/(1 - power(p/p1, (gamma-1)/(2*gamma)));
+		}
+	}
+	if(p > p2){
+		if(abs(p/p2 - 1) < epsilon){
+			alpha2 = rho2*c2;
+		} else {
+			alpha2 = ((gamma-1)/(2*gamma))*rho2*c2*(1 - p/p2)/(1 - power(p/p2, (gamma-1)/(2*gamma)));
+		}
+	} else {
+		alpha2 = sqrt(rho2*((gamma + 1)*p/2 + (gamma - 1)*p2/2));
+	}
+	for(int j = 0; j < 25; ++j){
 		if(p > p1){
 			alpha1 = sqrt(rho1*((gamma + 1)*p/2 + (gamma - 1)*p1/2));
 		} else {
@@ -234,32 +230,8 @@ void Simulation::evaluatePressureAndVelocity(){
 		} else {
 			alpha2 = sqrt(rho2*((gamma + 1)*p/2 + (gamma - 1)*p2/2));
 		}
-		for(int j = 0; j < 1000; ++j){
-			if(p > p1){
-				alpha1 = sqrt(rho1*((gamma + 1)*p/2 + (gamma - 1)*p1/2));
-			} else {
-				if(abs(p/p1 - 1) < epsilon){
-					alpha1 = rho1*c1;
-				} else {
-					alpha1 = ((gamma-1)/(2*gamma))*rho1*c1*(1 - p/p1)/(1 - power(p/p1, (gamma-1)/(2*gamma)));
-				}
-			}
-			if(p > p2){
-				if(abs(p/p2 - 1) < epsilon){
-					alpha2 = rho2*c2;
-				} else {
-					alpha2 = ((gamma-1)/(2*gamma))*rho2*c2*(1 - p/p2)/(1 - power(p/p2, (gamma-1)/(2*gamma)));
-				}
-			} else {
-				alpha2 = sqrt(rho2*((gamma + 1)*p/2 + (gamma - 1)*p2/2));
-			}
-		}
-		pointVelocity[0] = (alpha1*u1 + alpha2*u2 + p1 - p2)/(alpha1 + alpha2);
-		pointPressure[0] = p;
-		pointVelocity[rgridNumber] = pointVelocity[0];
-		pointPressure[rgridNumber] = pointPressure[0];
-	} else {
 	}
+	u = (alpha1*u1 + alpha2*u2 + p1 - p2)/(alpha1 + alpha2);
 }
 
 void Simulation::TracPen(double* u, double* flux, double cs, double leftFlux, double rightFlux){
@@ -310,6 +282,39 @@ double Simulation::soundSpeed(int i){
 	return 0;
 }
 
+double Simulation::densityFlux(int i){
+	if(i < 0){
+		printf("i < 0");
+	} else if(i >= 0 && i <= rgridNumber) {
+		return 0.5*(pointDensityRight[i] + pointDensityLeft[i])*pointVelocity[i];
+	} else {
+		printf("i > rgridNumber");
+	}
+	return 0;
+}
+
+double Simulation::momentumFlux(int i){
+	if(i < 0){
+		printf("i < 0");
+	} else if(i >= 0 && i <= rgridNumber) {
+		return pointPressure[i] + 0.5*(pointDensityRight[i] + pointDensityLeft[i])*pointVelocity[i]*pointVelocity[i];
+	} else {
+		printf("i > rgridNumber");
+	}
+	return 0;
+}
+
+double Simulation::energyFlux(int i){
+	if(i < 0){
+		printf("i < 0");
+	} else if(i >= 0 && i <= rgridNumber) {
+		return pointPressure[i]*pointVelocity[i]*gamma/(gamma - 1) + 0.5*(pointDensityRight[i] + pointDensityLeft[i])*pointVelocity[i]*pointVelocity[i]*pointVelocity[i]/2;
+	} else {
+		printf("i > rgridNumber");
+	}
+	return 0;
+}
+
 double Simulation::minmod(double a, double b){
 	return 0;
 	if(a*b > 0){
@@ -331,5 +336,5 @@ void Simulation::updateMaxSoundSpeed(){
 			maxSoundSpeed = cs;
 		} 
 	}
-	deltaT = 0.005*deltaR/maxSoundSpeed;
+	deltaT = 0.05*deltaR/maxSoundSpeed;
 }
