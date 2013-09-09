@@ -34,8 +34,7 @@ public:
 	double maxSoundSpeed;
 
 	double* grid;
-	double* pointDensityLeft;
-	double* pointDensityRight;
+	double* pointDensity;
 	double* middleDensity;
 	double* pointVelocity;
 	double* middleVelocity;
@@ -58,8 +57,7 @@ public:
 	void simulate();
 	void evaluateHydrodynamic();
 	void solveDiscontinious();
-	void evaluatePressureAndVelocity();
-	void successiveApproximatonPressure(double& p, double& u, double& R1, double& R2, double p1, double p2, double u1, double u2, double rho1, double rho2);
+	void successiveApproximatonPressure(double& p, double& u, double& R1, double& R2, double& alpha1, double& alpha2, double p1, double p2, double u1, double u2, double rho1, double rho2);
 	void TracPen(double* u, double* flux, double cs, double leftFlux, double rightFlux);
 	void updateValues();
 	double minmod(double a, double b);
