@@ -57,7 +57,11 @@ public:
 	void simulate();
 	void evaluateHydrodynamic();
 	void solveDiscontinious();
-	void successiveApproximatonPressure(double& p, double& u, double& R1, double& R2, double& alpha1, double& alpha2, double p1, double p2, double u1, double u2, double rho1, double rho2);
+	double pressureFunction(double p, double p1, double rho1);
+	double pressureFunctionDerivative(double p, double p1, double rho1);
+	double pressureFunctionDerivative2(double p, double p1, double rho1);
+	void successiveApproximationPressure(double& p, double& u, double& R1, double& R2, double& alpha1, double& alpha2, double p1, double p2, double u1, double u2, double rho1, double rho2);
+	double firstApproximationPressure(double rho1, double rho2, double u1, double u2, double p1, double p2);
 	void TracPen(double* u, double* flux, double cs, double leftFlux, double rightFlux);
 	void updateValues();
 	double minmod(double a, double b);
