@@ -95,7 +95,7 @@ void Simulation::simulate(){
 		//updateValues();
 		updateMaxSoundSpeed();
 		//updateParameters();
-		if(i % 10 == 0){
+		if(i % 100 == 0){
 			printf("outputing\n");
 			outFile = fopen("./output/tamc_radial_profile.dat","a");
 			output(outFile, this);
@@ -111,11 +111,14 @@ void Simulation::evaluateHydrodynamic(){
 	solveDiscontinious();
 
 	for(int i = 0; i < rgridNumber; ++i){
-		middleDensity[i] -= deltaT*(densityFlux(i+1) - densityFlux(i))/deltaR;
-		double middleMomentum = momentum(i) - deltaT*(momentumFlux(i+1) - momentumFlux(i))/deltaR;
-		double middleEnergy = energy(i) - deltaT*(energyFlux(i+1) - energyFlux(i))/deltaR;
-		middleVelocity[i] = middleMomentum/middleDensity[i];
 		//middleDensity[i] -= deltaT*(densityFlux(i+1) - densityFlux(i))/deltaR;
+		alertNaNOrInfinity(middleDensity[i], "density = NaN");
+		double middleMomentum = momentum(i) - deltaT*(momentumFlux(i+1) - momentumFlux(i))/deltaR;
+		alertNaNOrInfinity(middleMomentum, "momentum = NaN");
+		double middleEnergy = energy(i) - deltaT*(energyFlux(i+1) - energyFlux(i))/deltaR;
+		alertNaNOrInfinity(middleEnergy, "energy = NaN");
+		middleVelocity[i] = middleMomentum/middleDensity[i];
+		middleDensity[i] -= deltaT*(densityFlux(i+1) - densityFlux(i))/deltaR;
 		middlePressure[i] = (middleEnergy - middleDensity[i]*middleVelocity[i]*middleVelocity[i]/2)*(gamma - 1);
 
 		if(middleDensity[i] <= epsilon*density0){
@@ -138,13 +141,25 @@ void Simulation::solveDiscontinious(){
 		double rho2 = middleDensity[i];
 		double u1 = middleVelocity[i-1];
 		double u2 = middleVelocity[i];
+		double c1 = sqrt(gamma*p1/rho1);
+		double c2 = sqrt(gamma*p2/rho2);
 		double u;
 		double R1;
 		double R2;
 		double alpha1;
 		double alpha2;
+
+		double Uvacuum = -2*c1/(gamma - 1) - 2*c2/(gamma - 1);
+
+		if( u1 - u2 < Uvacuum){
+			pointDensity[i] = 0;
+			pointVelocity[i] = 0;
+			pointPressure[i] = 0;
+			continue;
+		}
+
 		
-		successiveApproximatonPressure(p, u, R1, R2, alpha1, alpha2, p1, p2, u1, u2, rho1, rho2);
+		successiveApproximationPressure(p, u, R1, R2, alpha1, alpha2, p1, p2, u1, u2, rho1, rho2);
 
 		bool isLeftShockWave = (p < p1);
 		bool isRightShockWave = (p < p2);
@@ -152,8 +167,6 @@ void Simulation::solveDiscontinious(){
 		double D1;
 		double D2;
 
-		double c1 = sqrt(gamma*p1/rho1);
-		double c2 = sqrt(gamma*p2/rho2);
 		if(isLeftShockWave){
 			D1 = u1 - alpha1/rho1;
 		} else {
@@ -168,33 +181,40 @@ void Simulation::solveDiscontinious(){
 
 		if(D1 > 0){
 			pointDensity[i] = middleDensity[i - 1];
+			alertNaNOrInfinity(pointDensity[i], "pointDensity = NaN");
 			pointVelocity[i] = middleVelocity[i - 1];
 			pointPressure[i] = middlePressure[i - 1];
 		} else if(D2 < 0){
 			pointDensity[i] = middleDensity[i];
+			alertNaNOrInfinity(pointDensity[i], "pointDensity = NaN");
 			pointVelocity[i] = middleVelocity[i];
 			pointPressure[i] = middlePressure[i];
 		} else {
 			if(u > 0){
 				if(isLeftShockWave){
 					pointDensity[i] = R1;
+					alertNaNOrInfinity(pointDensity[i], "pointDensity = NaN");
 					pointVelocity[i] = u;
 					pointPressure[i] = p;
 				} else {
 					double D3 = u - c1 - (gamma - 1)*(u1 - u)/2;
 					if(D3 < 0){
 						pointDensity[i] = R1;
+						alertNaNOrInfinity(pointDensity[i], "pointDensity = NaN");
 						pointVelocity[i] = u;
 						pointPressure[i] = p;
 					} else {
 						pointVelocity[i] = (gamma - 1)*middleVelocity[i-1]/(gamma + 1) + 2*c1/(gamma + 1);
-						pointPressure[i] = middlePressure[i-1]*power(pointVelocity[i]/c1, 2*gamma/(gamma - 1));
+						//abs?
+						pointPressure[i] = middlePressure[i-1]*power(abs(pointVelocity[i]/c1), 2*gamma/(gamma - 1));
 						pointDensity[i] = gamma*pointPressure[i]/(pointVelocity[i]*pointVelocity[i]);
+						alertNaNOrInfinity(pointDensity[i], "pointDensity = NaN");
 					}
 				}
 			} else {
 				if(isRightShockWave){
 					pointDensity[i] = R2;
+					alertNaNOrInfinity(pointDensity[i], "pointDensity = NaN");
 					pointVelocity[i] = u;
 					pointPressure[i] = p;
 				} else {
@@ -204,8 +224,10 @@ void Simulation::solveDiscontinious(){
 						pointVelocity[i] = (gamma - 1)*middleVelocity[i]/(gamma + 1) + 2*c2/(gamma + 1);
 						pointPressure[i] = middlePressure[i]*power(pointVelocity[i]/c2, 2*gamma/(gamma - 1));
 						pointDensity[i] = gamma*pointPressure[i]/(pointVelocity[i]*pointVelocity[i]);
+						alertNaNOrInfinity(pointDensity[i], "pointDensity = NaN");
 					} else {
 						pointDensity[i] = R2;
+						alertNaNOrInfinity(pointDensity[i], "pointDensity = NaN");
 						pointVelocity[i] = u;
 						pointPressure[i] = p;
 					}
@@ -228,7 +250,7 @@ void Simulation::solveDiscontinious(){
 		double alpha1;
 		double alpha2;
 		
-		successiveApproximatonPressure(p, u, R1, R2, alpha1, alpha2, p1, p2, u1, u2, rho1, rho2);
+		successiveApproximationPressure(p, u, R1, R2, alpha1, alpha2, p1, p2, u1, u2, rho1, rho2);
 
 		double c1 = sqrt(gamma*p1/rho1);
 		double c2 = sqrt(gamma*p2/rho2);
@@ -305,60 +327,98 @@ void Simulation::solveDiscontinious(){
 	}
 }
 
-void Simulation::successiveApproximatonPressure(double& p, double& u, double& R1, double& R2, double& alpha1, double& alpha2, double p1, double p2, double u1, double u2, double rho1, double rho2){
-	double c1 = sqrt(gamma*p1/rho1);
-	double c2 = sqrt(gamma*p2/rho2);
+void Simulation::successiveApproximationPressure(double& p, double& u, double& R1, double& R2, double& alpha1, double& alpha2, double p1, double p2, double u1, double u2, double rho1, double rho2){
+	if(p1 <= p2){
+		double c1 = sqrt(gamma*p1/rho1);
+		double c2 = sqrt(gamma*p2/rho2);
 
-	if(p > p1){
-		alpha1 = sqrt(rho1*((gamma + 1)*p/2 + (gamma - 1)*p1/2));
-	} else {
-		if(abs(p/p1 - 1) < epsilon){
-			alpha1 = rho1*c1;
-		} else {
-			alpha1 = ((gamma-1)/(2*gamma))*rho1*c1*(1 - p/p1)/(1 - power(p/p1, (gamma-1)/(2*gamma)));
+		p = firstApproximationPressure(rho1, rho2, u1, u2, p1, p2);
+
+		for(int i = 1; i < 25; ++i){
+			double tempP = p - (pressureFunction(p, p1, rho1) + pressureFunction(p, p2, rho2) - (u1 - u2))/(pressureFunctionDerivative(p, p1, rho1) + pressureFunctionDerivative(p, p2, rho2));
+			if(tempP < 0){
+				p = p/2;
+			} else {
+				p = tempP;
+			}
 		}
-	}
-	if(p > p2){
-		if(abs(p/p2 - 1) < epsilon){
-			alpha2 = rho2*c2;
-		} else {
-			alpha2 = ((gamma-1)/(2*gamma))*rho2*c2*(1 - p/p2)/(1 - power(p/p2, (gamma-1)/(2*gamma)));
-		}
-	} else {
-		alpha2 = sqrt(rho2*((gamma + 1)*p/2 + (gamma - 1)*p2/2));
-	}
-	for(int j = 0; j < 25; ++j){
-		if(p > p1){
+
+		if(p >= p1){
 			alpha1 = sqrt(rho1*((gamma + 1)*p/2 + (gamma - 1)*p1/2));
 		} else {
 			if(abs(p/p1 - 1) < epsilon){
 				alpha1 = rho1*c1;
 			} else {
-				alpha1 = ((gamma-1)/(2*gamma))*rho1*c1*(1 - p/p1)/(1 - power(p/p1, (gamma-1)/(2*gamma)));
+				alpha1 = ((gamma - 1)/(2*gamma))*rho1*c1*((1 - p/p1)/(1 - power(p/p1, (gamma - 1)/(2*gamma))));
 			}
 		}
-		if(p > p2){
+
+		if(p >= p2){
+			alpha2 = sqrt(rho2*((gamma + 1)*p/2 + (gamma - 1)*p2/2));
+		} else {
 			if(abs(p/p2 - 1) < epsilon){
 				alpha2 = rho2*c2;
 			} else {
-				alpha2 = ((gamma-1)/(2*gamma))*rho2*c2*(1 - p/p2)/(1 - power(p/p2, (gamma-1)/(2*gamma)));
+				alpha2 = ((gamma - 1)/(2*gamma))*rho2*c2*((1 - p/p2)/(1 - power(p/p2, (gamma - 1)/(2*gamma))));
 			}
-		} else {
-			alpha2 = sqrt(rho2*((gamma + 1)*p/2 + (gamma - 1)*p2/2));
 		}
-	}
-	u = (alpha1*u1 + alpha2*u2 + p1 - p2)/(alpha1 + alpha2);
 
-	if(p > p1){
-		R1 = rho1*((gamma + 1)*p + (gamma - 1)*p1)/((gamma - 1)*p + (gamma + 1)*p1);
-	} else {
-		R1 = gamma*p/sqr(c1 + (gamma - 1)*(u1 - u)/2);
-	}
+		u = (alpha1*u1 + alpha2*u2 + p1 - p2)/(alpha1 + alpha2);
 
-	if(p > p2){
-		R2 = rho1*((gamma + 1)*p + (gamma - 1)*p2)/((gamma - 1)*p + (gamma + 1)*p2);
+		if(p >= p1){
+			R1 = rho1*(((gamma + 1)*p + (gamma - 1)*p1)/((gamma - 1)*p + (gamma - 1)*p1));
+		} else {
+			R1 = gamma*p/sqr(c1 + (gamma - 1)*(u1 - u)/2);
+		}
+
+		if(p >= p2){
+			R2 = rho2*(((gamma + 1)*p + (gamma - 1)*p2)/((gamma - 1)*p + (gamma - 1)*p2));
+		} else {
+			R2 = gamma*p/sqr(c1 - (gamma - 1)*(u2 - u)/2);
+		}
 	} else {
-		R2 = gamma*p/sqr(c2 - (gamma - 1)*(u2 - u)/2);
+		successiveApproximationPressure(p, u, R2, R1, alpha2, alpha1, p2, p1, -u2, -u1, rho2, rho1);
+		u = -u;
+		alpha1 = -alpha1;
+		alpha2 = -alpha2;
+	}
+}
+
+double Simulation::firstApproximationPressure(double rho1, double rho2, double u1, double u2, double p1, double p2){
+	double c1 = sqrt(gamma*p1/rho1);
+	double c2 = sqrt(gamma*p2/rho2);
+
+	double p = (p1*rho2*c2 + p2*rho1*c1 + (u1 - u2)*rho1*rho2*c1*c2)/(rho1*c1 + rho2*c2);
+	if(p > 0){
+		return p;
+	}
+	return (p1 + p2)/2;
+}
+
+double Simulation::pressureFunction(double p, double p1, double rho1){
+	double c1 = sqrt(gamma*p1/rho1);
+	if(p >= p1){
+		return (p - p1)/(rho1*c1*sqrt((gamma + 1)*p/(2*gamma*p1) + (gamma - 1)/(2*gamma)));
+	} else {
+		return 2*c1*(power(p/p1, (gamma - 1)/(2*gamma)) - 1)/(gamma - 1);
+	}
+}
+
+double Simulation::pressureFunctionDerivative(double p, double p1, double rho1){
+	double c1 = sqrt(gamma*p1/rho1);
+	if(p >= p1){
+		return ((gamma + 1)*p/p1 + 3*gamma - 1)/(4*gamma*rho1*c1*sqrt(cube((gamma + 1)*p/(2*gamma*p1) + (gamma - 1)/(2*gamma))));
+	} else {
+		return c1*power(p/p1, (gamma - 1)/(2*gamma))/(gamma*p);
+	}
+}
+
+double Simulation::pressureFunctionDerivative2(double p, double p1, double rho1){
+	double c1 = sqrt(gamma*p1/rho1);
+	if(p >= p1){
+		return - (gamma + 1)*((gamma + 1)*p/p1 + 7*gamma - 1)/(16*gamma*sqr(rho1)*cube(c1)*power((gamma + 1)*p/(2*gamma*p1) + (gamma - 1)/(2*gamma), 2.5));
+	} else {
+		return - (gamma + 1)*c1*power(p/p1, (gamma - 1)/(2*gamma))/(2*gamma*gamma*p*p);
 	}
 }
 
