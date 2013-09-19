@@ -24,7 +24,6 @@ public:
 	bool cycleBound;
 	int simulationType;
 
-	double mass;
 
 	int rgridNumber;
 
@@ -32,6 +31,10 @@ public:
 	double time;
 
 	double maxSoundSpeed;
+
+	double mass;
+	double totalMomentum;
+	double totalEnergy;
 
 	double* grid;
 	double* pointDensity;
