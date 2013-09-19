@@ -29,7 +29,7 @@ void Simulation::initializeProfile(){
 	middleVelocity = new double[rgridNumber];
 	middlePressure = new double[rgridNumber];
 	deltaR = (upstreamR - downstreamR)/rgridNumber;
-	double r = downstreamR;
+	double r = downstreamR + deltaR/2;
 	double pressure0 = density0*kBoltzman*temperature/massProton;
 	for(int i = 0; i < rgridNumber + 1; ++i){
 		grid[i] = r;
@@ -48,6 +48,17 @@ void Simulation::initializeProfile(){
 			middleDensity[i] = density0 + density0*0.01*sin(i*10*2*pi/rgridNumber);
 			middleVelocity[i] = sqrt(gamma*pressure0/density0)*density0*0.01*sin(i*10*2*pi/rgridNumber)/density0;
 			middlePressure[i] = pressure0 + (gamma*pressure0/density0)*density0*0.01*sin(i*10*2*pi/rgridNumber);
+			break;
+		case 3 :
+			middleDensity[i] = density0;
+			if(i <= rgridNumber/10){
+				middleVelocity[i] = 10*i*U0/rgridNumber;
+			} else if(i > rgridNumber/10 && i < 2*rgridNumber/10){
+				middleVelocity[i] = U0;
+			} else {
+				middleVelocity[i] = 0;
+			}
+			middlePressure[i] = pressure0;
 			break;
 		default:
 			middleDensity[i] = density0;
@@ -94,14 +105,14 @@ void Simulation::simulate(){
 		evaluateHydrodynamic();
 		//updateValues();
 		updateMaxSoundSpeed();
-		//updateParameters();
+		updateParameters();
 		if(i % 100 == 0){
 			printf("outputing\n");
 			outFile = fopen("./output/tamc_radial_profile.dat","a");
 			output(outFile, this);
 			fclose(outFile);
 			outIteration = fopen("./output/iterations.dat","a");
-			fprintf(outIteration, "%d %lf %lf\n", i, time, mass);
+			fprintf(outIteration, "%d %28.20lf %28.20lf %28.20lf %28.20lf\n", i, time, mass, totalMomentum, totalEnergy);
 			fclose(outIteration);
 		}
 	}
@@ -111,20 +122,22 @@ void Simulation::evaluateHydrodynamic(){
 	solveDiscontinious();
 
 	for(int i = 0; i < rgridNumber; ++i){
-		//middleDensity[i] -= deltaT*(densityFlux(i+1) - densityFlux(i))/deltaR;
+		middleDensity[i] -= deltaT*(densityFlux(i+1) - densityFlux(i))/deltaR;
 		alertNaNOrInfinity(middleDensity[i], "density = NaN");
 		double middleMomentum = momentum(i) - deltaT*(momentumFlux(i+1) - momentumFlux(i))/deltaR;
 		alertNaNOrInfinity(middleMomentum, "momentum = NaN");
 		double middleEnergy = energy(i) - deltaT*(energyFlux(i+1) - energyFlux(i))/deltaR;
 		alertNaNOrInfinity(middleEnergy, "energy = NaN");
 		middleVelocity[i] = middleMomentum/middleDensity[i];
-		middleDensity[i] -= deltaT*(densityFlux(i+1) - densityFlux(i))/deltaR;
+		//middleDensity[i] -= deltaT*(densityFlux(i+1) - densityFlux(i))/deltaR;
 		middlePressure[i] = (middleEnergy - middleDensity[i]*middleVelocity[i]*middleVelocity[i]/2)*(gamma - 1);
 
 		if(middleDensity[i] <= epsilon*density0){
 			middleDensity[i] = epsilon*density0;
 			middleVelocity[i] = 0;
+			//middleVelocity[i] = middleMomentum/middleDensity[i];
 			middlePressure[i] = middleDensity[i]*kBoltzman*temperature/massProton;
+			//middlePressure[i] = (middleEnergy - middleDensity[i]*middleVelocity[i]*middleVelocity[i]/2)*(gamma - 1);
 		}
 		if(middlePressure[i] <= 0){
 			middlePressure[i] = epsilon*middleDensity[i]*kBoltzman*temperature/massProton;
@@ -221,8 +234,9 @@ void Simulation::solveDiscontinious(){
 					double D3 = u + c2 - (gamma - 1)*(u2 - u)/2;
 					if(D3 < 0){
 						/////????????
-						pointVelocity[i] = (gamma - 1)*middleVelocity[i]/(gamma + 1) + 2*c2/(gamma + 1);
-						pointPressure[i] = middlePressure[i]*power(pointVelocity[i]/c2, 2*gamma/(gamma - 1));
+						//pointVelocity[i] = (gamma - 1)*middleVelocity[i]/(gamma + 1) + 2*c2/(gamma + 1);
+						pointVelocity[i] = (gamma - 1)*middleVelocity[i]/(gamma + 1) - 2*c2/(gamma + 1);
+						pointPressure[i] = middlePressure[i]*power(abs(pointVelocity[i]/c2), 2*gamma/(gamma - 1));
 						pointDensity[i] = gamma*pointPressure[i]/(pointVelocity[i]*pointVelocity[i]);
 						alertNaNOrInfinity(pointDensity[i], "pointDensity = NaN");
 					} else {
@@ -334,7 +348,7 @@ void Simulation::successiveApproximationPressure(double& p, double& u, double& R
 
 		p = firstApproximationPressure(rho1, rho2, u1, u2, p1, p2);
 
-		for(int i = 1; i < 25; ++i){
+		for(int i = 1; i < 100; ++i){
 			double tempP = p - (pressureFunction(p, p1, rho1) + pressureFunction(p, p2, rho2) - (u1 - u2))/(pressureFunctionDerivative(p, p1, rho1) + pressureFunctionDerivative(p, p2, rho2));
 			if(tempP < 0){
 				p = p/2;
@@ -366,13 +380,13 @@ void Simulation::successiveApproximationPressure(double& p, double& u, double& R
 		u = (alpha1*u1 + alpha2*u2 + p1 - p2)/(alpha1 + alpha2);
 
 		if(p >= p1){
-			R1 = rho1*(((gamma + 1)*p + (gamma - 1)*p1)/((gamma - 1)*p + (gamma - 1)*p1));
+			R1 = rho1*(((gamma + 1)*p + (gamma - 1)*p1)/((gamma - 1)*p + (gamma + 1)*p1));
 		} else {
 			R1 = gamma*p/sqr(c1 + (gamma - 1)*(u1 - u)/2);
 		}
 
 		if(p >= p2){
-			R2 = rho2*(((gamma + 1)*p + (gamma - 1)*p2)/((gamma - 1)*p + (gamma - 1)*p2));
+			R2 = rho2*(((gamma + 1)*p + (gamma - 1)*p2)/((gamma - 1)*p + (gamma + 1)*p2));
 		} else {
 			R2 = gamma*p/sqr(c1 - (gamma - 1)*(u2 - u)/2);
 		}
@@ -525,4 +539,15 @@ void Simulation::updateMaxSoundSpeed(){
 		} 
 	}
 	deltaT = 0.05*deltaR/maxSoundSpeed;
+}
+
+void Simulation::updateParameters(){
+	mass = 0;
+	totalMomentum = 0;
+	totalEnergy = 0;
+	for(int i = 0; i < rgridNumber; ++i){
+		mass += middleDensity[i]*deltaR;
+		totalMomentum += momentum(i)*deltaR;
+		totalEnergy += energy(i)*deltaR;
+	}
 }
