@@ -348,7 +348,7 @@ void Simulation::successiveApproximationPressure(double& p, double& u, double& R
 
 		p = firstApproximationPressure(rho1, rho2, u1, u2, p1, p2);
 
-		for(int i = 1; i < 100; ++i){
+		for(int i = 1; i < 25; ++i){
 			double tempP = p - (pressureFunction(p, p1, rho1) + pressureFunction(p, p2, rho2) - (u1 - u2))/(pressureFunctionDerivative(p, p1, rho1) + pressureFunctionDerivative(p, p2, rho2));
 			if(tempP < 0){
 				p = p/2;
