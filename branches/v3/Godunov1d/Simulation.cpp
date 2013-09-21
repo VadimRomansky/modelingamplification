@@ -217,8 +217,8 @@ void Simulation::solveDiscontinious(){
 		
 		successiveApproximationPressure(p, u, R1, R2, alpha1, alpha2, p1, p2, u1, u2, rho1, rho2);
 
-		bool isLeftShockWave = (p < p1);
-		bool isRightShockWave = (p < p2);
+		bool isLeftShockWave = (p > p1);
+		bool isRightShockWave = (p > p2);
 
 		double D1;
 		double D2;
@@ -436,8 +436,8 @@ void Simulation::successiveApproximationPressure(double& p, double& u, double& R
 	} else {
 		successiveApproximationPressure(p, u, R2, R1, alpha2, alpha1, p2, p1, -u2, -u1, rho2, rho1);
 		u = -u;
-		alpha1 = -alpha1;
-		alpha2 = -alpha2;
+		//alpha1 = -alpha1;
+		//alpha2 = -alpha2;
 	}
 }
 
@@ -480,6 +480,7 @@ double Simulation::pressureFunctionDerivative2(double p, double p1, double rho1)
 }
 
 void Simulation::TracPen(double* u, double* flux, double cs){
+	cs = 0.00000000001*cs;
     double* uplus = new double[rgridNumber];
 	double* uminus = new double[rgridNumber];
 
@@ -511,11 +512,11 @@ void Simulation::TracPen(double* u, double* flux, double cs){
 	fplus[rgridNumber - 1] = uplus[rgridNumber - 2] + 0.5*minmod(uplus[rgridNumber - 1] - uplus[rgridNumber - 2], uplus[rgridNumber - 2] - uplus[rgridNumber - 3]);
 	fminus[rgridNumber - 1] = -uminus[rgridNumber - 1] + 0.5*minmod(uminus[rgridNumber - 1] - uminus[rgridNumber - 2], uminus[0] - uminus[rgridNumber - 1]);
 
-	u[0] -= deltaT*(0.5*(fplus[1] + fminus[1]) - 0.5*(fplus[0] + fminus[0]));
+	u[0] -= deltaT*(0.5*(fplus[1] + fminus[1]) - 0.5*(fplus[0] + fminus[0]))/deltaR;
 	for(int i = 1; i <= rgridNumber-2; ++i){
-		u[i] -= deltaT*0.5*(fplus[i+1] + fminus[i+1] - (fplus[i] + fminus[i]));
+		u[i] -= deltaT*0.5*(fplus[i+1] + fminus[i+1] - (fplus[i] + fminus[i]))/deltaR;
 	}
-	u[rgridNumber - 1] -= deltaT*(0.5*(fplus[0] + fminus[0]) - 0.5*(fplus[rgridNumber - 1] + fminus[rgridNumber - 1]));
+	u[rgridNumber - 1] -= deltaT*(0.5*(fplus[0] + fminus[0]) - 0.5*(fplus[rgridNumber - 1] + fminus[rgridNumber - 1]))/deltaR;
 
 	delete[] uplus;
 	delete[] uminus;
@@ -602,7 +603,6 @@ double Simulation::energyFlux(int i){
 }
 
 double Simulation::minmod(double a, double b){
-	return 0;
 	if(a*b > 0){
 		if(abs(a) < abs(b)){
 			return a;
