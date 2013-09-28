@@ -7,7 +7,7 @@
 Simulation::Simulation(){
 	cycleBound = true;
 	time = 0;
-	tracPen = false;
+	tracPen = true;
 }
 
 Simulation::~Simulation(){
@@ -90,8 +90,10 @@ void Simulation::initializeProfile(){
 }
 
 void Simulation::simulate(){
-	FILE* outFile = fopen("./output/tamc_radial_profile.dat","w");
-	FILE* outIteration = fopen("./output/iterations.dat","w");
+	FILE* outFile;
+	fopen_s(&outFile, "./output/tamc_radial_profile.dat","w");
+	FILE* outIteration;
+	fopen_s(&outIteration, "./output/iterations.dat","w");
 	fclose(outIteration);
 	printf("initialization\n");
 	initializeProfile();
@@ -109,10 +111,10 @@ void Simulation::simulate(){
 		updateParameters();
 		if(i % 100 == 0){
 			printf("outputing\n");
-			outFile = fopen("./output/tamc_radial_profile.dat","a");
+			fopen_s(&outFile, "./output/tamc_radial_profile.dat","a");
 			output(outFile, this);
 			fclose(outFile);
-			outIteration = fopen("./output/iterations.dat","a");
+			fopen_s(&outIteration, "./output/iterations.dat","a");
 			fprintf(outIteration, "%d %28.20lf %28.20lf %28.20lf %28.20lf\n", i, time, mass, totalMomentum, totalEnergy);
 			fclose(outIteration);
 		}
@@ -123,6 +125,7 @@ void Simulation::evaluateHydrodynamic(){
 	solveDiscontinious();
 
 	if(! tracPen){
+		CheckNegativeDensity();
 		for(int i = 0; i < rgridNumber; ++i){
 			double tempMomentum = momentum(i);
 			double tempEnergy = energy(i);
@@ -177,6 +180,16 @@ void Simulation::evaluateHydrodynamic(){
 			alertNaNOrInfinity(middleEnergy, "energy = NaN");
 			middleVelocity[i] = middleMomentum/middleDensity[i];
 			middlePressure[i] = (middleEnergy - middleDensity[i]*middleVelocity[i]*middleVelocity[i]/2)*(gamma - 1);
+			if(middleDensity[i] <= epsilon*density0){
+				middleDensity[i] = epsilon*density0;
+				middleVelocity[i] = 0;
+				//middleVelocity[i] = middleMomentum/middleDensity[i];
+				middlePressure[i] = middleDensity[i]*kBoltzman*temperature/massProton;
+				//middlePressure[i] = (middleEnergy - middleDensity[i]*middleVelocity[i]*middleVelocity[i]/2)*(gamma - 1);
+			}
+			if(middlePressure[i] <= 0){
+				middlePressure[i] = epsilon*middleDensity[i]*kBoltzman*temperature/massProton;
+			}
 		}
 
 		delete[] tempDensity;
@@ -391,11 +404,14 @@ void Simulation::successiveApproximationPressure(double& p, double& u, double& R
 
 		p = firstApproximationPressure(rho1, rho2, u1, u2, p1, p2);
 
-		for(int i = 1; i < 25; ++i){
+		for(int i = 1; i < 1000; ++i){
 			double tempP = p - (pressureFunction(p, p1, rho1) + pressureFunction(p, p2, rho2) - (u1 - u2))/(pressureFunctionDerivative(p, p1, rho1) + pressureFunctionDerivative(p, p2, rho2));
 			if(tempP < 0){
 				p = p/2;
 			} else {
+				if(abs(tempP/p - 1) < 0.01*epsilon){
+					break;
+				}
 				p = tempP;
 			}
 		}
@@ -433,11 +449,15 @@ void Simulation::successiveApproximationPressure(double& p, double& u, double& R
 		} else {
 			R2 = gamma*p/sqr(c1 - (gamma - 1)*(u2 - u)/2);
 		}
+		alertNaNOrInfinity(R1, "R1 = NaN\n");
+		alertNaNOrInfinity(R2, "R2 = NaN\n");
+		alertNaNOrInfinity(p, "point p = NaN\n");
+		alertNaNOrInfinity(u, "point u = NaN\n");
 	} else {
 		successiveApproximationPressure(p, u, R2, R1, alpha2, alpha1, p2, p1, -u2, -u1, rho2, rho1);
 		u = -u;
-		//alpha1 = -alpha1;
-		//alpha2 = -alpha2;
+		alpha1 = alpha1;
+		alpha2 = alpha2;
 	}
 }
 
@@ -479,8 +499,21 @@ double Simulation::pressureFunctionDerivative2(double p, double p1, double rho1)
 	}
 }
 
+void Simulation::CheckNegativeDensity(){
+	double dt = deltaT;
+	for(int i = 0; i < rgridNumber; ++i){
+		if(middleDensity[i] - dt*(densityFlux(i+1) - densityFlux(i))/deltaR < 0){
+			dt= 0.5*(middleDensity[i]*deltaR/(densityFlux(i+1) - densityFlux(i)));
+		}
+		/*if(energy(i) - dt*(energyFlux(i+1) - energyFlux(i))/deltaR < 0){
+			dt= 0.5*(energy(i)*deltaR/(energyFlux(i+1) - energyFlux(i)));
+		}*/
+	}
+	deltaT = dt;
+}
+
 void Simulation::TracPen(double* u, double* flux, double cs){
-	cs = 0.00000000001*cs;
+	cs = cs;
     double* uplus = new double[rgridNumber];
 	double* uminus = new double[rgridNumber];
 
