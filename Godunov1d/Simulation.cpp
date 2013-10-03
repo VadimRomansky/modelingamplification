@@ -109,7 +109,7 @@ void Simulation::simulate(){
 		//updateValues();
 		updateMaxSoundSpeed();
 		updateParameters();
-		if(i % 100 == 0){
+		if(i % 500 == 0){
 			printf("outputing\n");
 			fopen_s(&outFile, "./output/tamc_radial_profile.dat","a");
 			output(outFile, this);
@@ -123,7 +123,7 @@ void Simulation::simulate(){
 
 void Simulation::evaluateHydrodynamic(){
 	solveDiscontinious();
-
+	//CheckNegativeDensity();
 	if(! tracPen){
 		CheckNegativeDensity();
 		for(int i = 0; i < rgridNumber; ++i){
