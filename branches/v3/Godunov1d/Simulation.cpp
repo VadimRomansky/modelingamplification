@@ -97,9 +97,10 @@ void Simulation::simulate(){
 	fclose(outIteration);
 	printf("initialization\n");
 	initializeProfile();
+	updateMaxSoundSpeed();
+	updateParameters();
 	output(outFile,this);
 	fclose(outFile);
-	updateMaxSoundSpeed();
 	for(int i = 0; i < iterationNumber; ++i){
 		printf("iteration ¹ %d\n", i);
 		printf("time = %lf\n", time);
@@ -503,7 +504,7 @@ void Simulation::CheckNegativeDensity(){
 	double dt = deltaT;
 	for(int i = 0; i < rgridNumber; ++i){
 		if(middleDensity[i] - dt*(densityFlux(i+1) - densityFlux(i))/deltaR < 0){
-			dt= 0.5*(middleDensity[i]*deltaR/(densityFlux(i+1) - densityFlux(i)));
+			dt = 0.5*(middleDensity[i]*deltaR/(densityFlux(i+1) - densityFlux(i)));
 		}
 		/*if(energy(i) - dt*(energyFlux(i+1) - energyFlux(i))/deltaR < 0){
 			dt= 0.5*(energy(i)*deltaR/(energyFlux(i+1) - energyFlux(i)));
@@ -525,7 +526,7 @@ void Simulation::TracPen(double* u, double* flux, double cs){
 		uminus[i] = cs*u[i] - flux[i];
 	}
 
-	fplus[0] = uplus[0] + 0.5*minmod(uplus[0] - uplus[rgridNumber - 1], uplus[rgridNumber - 1] - uplus[rgridNumber - 2]);
+	fplus[0] = uplus[rgridNumber - 1] + 0.5*minmod(uplus[0] - uplus[rgridNumber - 1], uplus[rgridNumber - 1] - uplus[rgridNumber - 2]);
 	fminus[0] = -uminus[0] + 0.5*minmod(uminus[0] - uminus[rgridNumber - 1], uminus[1] - uminus[0]);
 	for(int i = 1; i < rgridNumber-1; ++i){
 
