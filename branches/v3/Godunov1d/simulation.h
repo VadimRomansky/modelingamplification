@@ -35,6 +35,11 @@ public:
 	double mass;
 	double totalMomentum;
 	double totalEnergy;
+	double totalKineticEnergy;
+	double totalTermalEnergy;
+
+	double minP;
+	double maxP;
 
 	double* grid;
 	double* pointDensity;
@@ -44,8 +49,12 @@ public:
 	double* pointPressure;
 	double* middlePressure;
 
+	double** distributionFunction;
+
 	double momentum(int i);
 	double energy(int i);
+	double kineticEnergy(int i);
+	double termalEnergy(int i);
 	double temperatureIn(int i);
 	double soundSpeed(int i);
 
