@@ -113,14 +113,19 @@ void Simulation::initializeProfile(){
 }
 
 void Simulation::simulate(){
+	printf("creating files\n");
 	FILE* outFile;
 	fopen_s(&outFile, "./output/tamc_radial_profile.dat","w");
+	fclose(outFile);
 	FILE* outIteration;
 	fopen_s(&outIteration, "./output/iterations.dat","w");
 	fclose(outIteration);
 	FILE* outExtraIteration;
 	fopen_s(&outExtraIteration, "./output/extra_iterations.dat","w");
 	fclose(outExtraIteration);
+	FILE* outDistribution;
+	fopen_s(&outDistribution, "./output/distribution.dat","w");
+	fclose(outDistribution);
 	printf("initialization\n");
 	initializeProfile();
 	updateMaxSoundSpeed();
@@ -141,6 +146,9 @@ void Simulation::simulate(){
 			fopen_s(&outFile, "./output/tamc_radial_profile.dat","a");
 			output(outFile, this);
 			fclose(outFile);
+			fopen_s(&outDistribution, "./output/distribution.dat","w");
+			outputDistribution(outDistribution, this);
+			fclose(outDistribution);
 			fopen_s(&outIteration, "./output/iterations.dat","a");
 			fprintf(outIteration, "%d %28.20lf %28.20lf %28.20lf %28.20lf\n", i, time, mass, totalMomentum, totalEnergy);
 			fclose(outIteration);
