@@ -18,6 +18,10 @@ Simulation::~Simulation(){
 	delete[] middleDensity;
 	delete[] middleVelocity;
 	delete[] middlePressure;
+	for(int i = 0; i < rgridNumber; ++i){
+		delete[] distributionFunction[i];
+	}
+	delete[] distributionFunction;
 }
 
 void Simulation::initializeProfile(){
@@ -29,9 +33,28 @@ void Simulation::initializeProfile(){
 	middleDensity = new double[rgridNumber];
 	middleVelocity = new double[rgridNumber];
 	middlePressure = new double[rgridNumber];
+	distributionFunction = new double*[rgridNumber];
+	for(int i = 0; i < rgridNumber; i ++){
+		distributionFunction[i] = new double[pgridNumber];
+		for(int j = 0; j < pgridNumber; ++j){
+			distributionFunction[i][j] = 0;
+		}
+	}
 	deltaR = (upstreamR - downstreamR)/rgridNumber;
 	double r = downstreamR + deltaR/2;
 	double pressure0 = density0*kBoltzman*temperature/massProton;
+	minP = 0;
+	switch(simulationType){
+	case 1:
+		maxP = 1000*massProton*U0;
+	case 2:
+		maxP = 1000*sqrt(kBoltzman*massProton*temperature);
+	case 3:
+		maxP = 1000*massProton*U0;
+	default:
+		maxP = 1000000000000*sqrt(kBoltzman*massProton*temperature);
+	}
+
 	for(int i = 0; i < rgridNumber + 1; ++i){
 		grid[i] = r;
 		r += deltaR;
@@ -95,6 +118,9 @@ void Simulation::simulate(){
 	FILE* outIteration;
 	fopen_s(&outIteration, "./output/iterations.dat","w");
 	fclose(outIteration);
+	FILE* outExtraIteration;
+	fopen_s(&outExtraIteration, "./output/extra_iterations.dat","w");
+	fclose(outExtraIteration);
 	printf("initialization\n");
 	initializeProfile();
 	updateMaxSoundSpeed();
@@ -118,6 +144,9 @@ void Simulation::simulate(){
 			fopen_s(&outIteration, "./output/iterations.dat","a");
 			fprintf(outIteration, "%d %28.20lf %28.20lf %28.20lf %28.20lf\n", i, time, mass, totalMomentum, totalEnergy);
 			fclose(outIteration);
+			fopen_s(&outExtraIteration, "./output/extra_iterations.dat","a");
+			fprintf(outExtraIteration, "%d %28.20lf %28.20lf %28.20lf %28.20lf %28.20lf %28.20lf\n", i, time, mass, totalMomentum, totalEnergy, totalKineticEnergy, totalTermalEnergy);
+			fclose(outExtraIteration);
 		}
 	}
 }
@@ -581,6 +610,28 @@ double Simulation::energy(int i){
 	return 0;
 }
 
+double Simulation::kineticEnergy(int i){
+	if(i < 0){
+		printf("i < 0");
+	} else if(i >= 0 && i < rgridNumber) {
+		return middleDensity[i]*middleVelocity[i]*middleVelocity[i]/2;
+	} else {
+		printf("i >= rgridNumber");
+	}
+	return 0;
+}
+
+double Simulation::termalEnergy(int i){
+	if(i < 0){
+		printf("i < 0");
+	} else if(i >= 0 && i < rgridNumber) {
+		return middlePressure[i]/(gamma - 1);
+	} else {
+		printf("i >= rgridNumber");
+	}
+	return 0;
+}
+
 double Simulation::temperatureIn(int i){
 	if(i < 0){
 		printf("i < 0");
@@ -663,9 +714,13 @@ void Simulation::updateParameters(){
 	mass = 0;
 	totalMomentum = 0;
 	totalEnergy = 0;
+	totalKineticEnergy = 0;
+	totalTermalEnergy = 0;
 	for(int i = 0; i < rgridNumber; ++i){
 		mass += middleDensity[i]*deltaR;
 		totalMomentum += momentum(i)*deltaR;
 		totalEnergy += energy(i)*deltaR;
+		totalKineticEnergy += kineticEnergy(i)*deltaR;
+		totalTermalEnergy += termalEnergy(i)*deltaR;
 	}
 }
