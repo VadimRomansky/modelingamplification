@@ -503,7 +503,7 @@ double Particle::getAbsolutePhi(){
 
 double Particle::getEnergy(){
 	double v = getAbsoluteV();
-	//double c2 = speed_of_light*speed_of_light;
+	double c2 = speed_of_light*speed_of_light;
 	return (mass*c2/(sqrt(1 - (v*v)/c2)) - mass*c2);
 }
 
