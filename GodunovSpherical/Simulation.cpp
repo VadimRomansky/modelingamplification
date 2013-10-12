@@ -474,25 +474,25 @@ void Simulation::TracPen(double* u, double* flux, double cs){
 		uminus[i] = cs*u[i] - flux[i];
 	}
 
-	fplus[0] = uplus[rgridNumber - 1] + 0.5*minmod(uplus[0] - uplus[rgridNumber - 1], uplus[rgridNumber - 1] - uplus[rgridNumber - 2]);
-	fminus[0] = -uminus[0] + 0.5*minmod(uminus[0] - uminus[rgridNumber - 1], uminus[1] - uminus[0]);
+	fplus[0] = uplus[rgridNumber - 1];
+	fminus[0] = -uminus[0];
 	for(int i = 1; i < rgridNumber-1; ++i){
 
 		if(i == 1){
-			fplus[i] = uplus[i-1] + 0.5*minmod(uplus[i] - uplus[i-1], uplus[0] - uplus[rgridNumber - 1]);
+			fplus[i] = uplus[i-1];
 		} else {
 			fplus[i] = uplus[i-1] + 0.5*minmod(uplus[i] - uplus[i-1], uplus[i-1] - uplus[i-2]);
 		}
 
 		if(i == rgridNumber - 1){
-			fminus[i] = -uminus[i] + 0.5*minmod(uminus[i] - uminus[i-1], uminus[0] - uminus[i]);
+			fminus[i] = -uminus[i];
 		} else {
 		    fminus[i] = -uminus[i] + 0.5*minmod(uminus[i] - uminus[i-1], uminus[i+1] - uminus[i]);
 		}
 
 	}
 	fplus[rgridNumber - 1] = uplus[rgridNumber - 2] + 0.5*minmod(uplus[rgridNumber - 1] - uplus[rgridNumber - 2], uplus[rgridNumber - 2] - uplus[rgridNumber - 3]);
-	fminus[rgridNumber - 1] = -uminus[rgridNumber - 1] + 0.5*minmod(uminus[rgridNumber - 1] - uminus[rgridNumber - 2], uminus[0] - uminus[rgridNumber - 1]);
+	fminus[rgridNumber - 1] = -uminus[rgridNumber - 1];
 
 	u[0] -= deltaT*(0.5*(fplus[1] + fminus[1]) - 0.5*(fplus[0] + fminus[0]))/deltaR;
 	for(int i = 1; i <= rgridNumber-2; ++i){
