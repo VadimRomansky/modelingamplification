@@ -136,8 +136,8 @@ void Simulation::simulate(){
 		printf("iteration ¹ %d\n", i);
 		printf("time = %lf\n", time);
 		printf("solving\n");
-		time = time + deltaT;
 		evaluateHydrodynamic();
+		time = time + deltaT;
 		//updateValues();
 		updateMaxSoundSpeed();
 		updateParameters();

@@ -21,7 +21,6 @@ public:
 	int A;
 	int Z;
 
-	bool cycleBound;
 	int simulationType;
 	bool tracPen;
 
@@ -42,6 +41,7 @@ public:
 	double maxP;
 
 	double* grid;
+	double* middleGrid;
 	double* pointDensity;
 	double* middleDensity;
 	double* pointVelocity;
@@ -57,9 +57,10 @@ public:
 	double termalEnergy(int i);
 	double temperatureIn(int i);
 	double soundSpeed(int i);
+	double volume(int i);
 
 	double densityFlux(int i);
-	double momentumFlux(int i);
+	double momentumConvectiveFlux(int i);
 	double energyFlux(int i);
 
 	Simulation();
