@@ -139,7 +139,7 @@ void Simulation::simulate(){
 		//updateValues();
 		updateMaxSoundSpeed();
 		updateParameters();
-		if(i % 10 == 0){
+		if(i % 1000 == 0){
 			printf("outputing\n");
 			fopen_s(&outFile, "./output/tamc_radial_profile.dat","a");
 			output(outFile, this);
@@ -474,7 +474,7 @@ void Simulation::TracPen(double* u, double* flux, double cs){
 		uminus[i] = cs*u[i] - flux[i];
 	}
 
-	fplus[0] = uplus[rgridNumber - 1];
+	fplus[0] = 0;
 	fminus[0] = -uminus[0];
 	for(int i = 1; i < rgridNumber-1; ++i){
 
@@ -494,11 +494,12 @@ void Simulation::TracPen(double* u, double* flux, double cs){
 	fplus[rgridNumber - 1] = uplus[rgridNumber - 2] + 0.5*minmod(uplus[rgridNumber - 1] - uplus[rgridNumber - 2], uplus[rgridNumber - 2] - uplus[rgridNumber - 3]);
 	fminus[rgridNumber - 1] = -uminus[rgridNumber - 1];
 
-	u[0] -= deltaT*(0.5*(fplus[1] + fminus[1]) - 0.5*(fplus[0] + fminus[0]))/deltaR;
+	//u[0] -= deltaT*(0.5*(fplus[1] + fminus[1]) - 0.5*(fplus[0] + fminus[0]))/deltaR;
+	u[0] -= deltaT*(0.5*(fplus[1] + fminus[1]))/deltaR;
 	for(int i = 1; i <= rgridNumber-2; ++i){
 		u[i] -= deltaT*0.5*(fplus[i+1] + fminus[i+1] - (fplus[i] + fminus[i]))/deltaR;
 	}
-	u[rgridNumber - 1] -= deltaT*(0.5*(fplus[0] + fminus[0]) - 0.5*(fplus[rgridNumber - 1] + fminus[rgridNumber - 1]))/deltaR;
+	u[rgridNumber - 1] -= deltaT*(- 0.5*(fplus[rgridNumber - 1] + fminus[rgridNumber - 1]))/deltaR;
 
 	delete[] uplus;
 	delete[] uminus;
@@ -621,6 +622,7 @@ double Simulation::volume(int i){
 }
 
 double Simulation::minmod(double a, double b){
+	return 0;
 	if(a*b > 0){
 		if(abs(a) < abs(b)){
 			return a;
@@ -640,7 +642,7 @@ void Simulation::updateMaxSoundSpeed(){
 			maxSoundSpeed = cs;
 		} 
 	}
-	deltaT = 0.05*deltaR/maxSoundSpeed;
+	deltaT = 0.01*deltaR/maxSoundSpeed;
 }
 
 void Simulation::updateParameters(){
