@@ -39,6 +39,7 @@ public:
 
 	double minP;
 	double maxP;
+	double* pgrid;
 
 	double* grid;
 	double* middleGrid;
@@ -50,6 +51,7 @@ public:
 	double* middlePressure;
 
 	double** distributionFunction;
+	double** tempDistribution;
 
 	double momentum(int i);
 	double energy(int i);
@@ -62,6 +64,8 @@ public:
 	double densityFlux(int i);
 	double momentumConvectiveFlux(int i);
 	double energyFlux(int i);
+
+	double diffussionCoef(int i, int j);
 
 	Simulation();
 	~Simulation();
@@ -79,7 +83,9 @@ public:
 	void CheckNegativeDensity();
 	void TracPen(double* u, double* flux, double cs);
 	void modifiedTracPen(double* u, double* flux, double cs);
-	void updateValues();
+
+	void evaluateCR();
+
 	double minmod(double a, double b);
 	void updateMaxSoundSpeed();
 

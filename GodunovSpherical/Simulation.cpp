@@ -10,6 +10,7 @@ Simulation::Simulation(){
 }
 
 Simulation::~Simulation(){
+	delete[] pgrid;
 	delete[] grid;
 	delete[] middleGrid;
 	delete[] pointDensity;
@@ -20,12 +21,15 @@ Simulation::~Simulation(){
 	delete[] middlePressure;
 	for(int i = 0; i < rgridNumber; ++i){
 		delete[] distributionFunction[i];
+		delete[] tempDistribution[i];
 	}
 	delete[] distributionFunction;
+	delete[] tempDistribution;
 }
 
 void Simulation::initializeProfile(){
 	downstreamR = 0;
+	pgrid = new double[pgridNumber + 1];
 	grid = new double[rgridNumber +1];
 	middleGrid = new double[rgridNumber];
 	pointDensity = new double[rgridNumber + 1];
@@ -35,8 +39,10 @@ void Simulation::initializeProfile(){
 	middleVelocity = new double[rgridNumber];
 	middlePressure = new double[rgridNumber];
 	distributionFunction = new double*[rgridNumber];
+	tempDistribution = new double*[rgridNumber];
 	for(int i = 0; i < rgridNumber; i ++){
 		distributionFunction[i] = new double[pgridNumber];
+		tempDistribution[i] = new double[pgridNumber];
 		for(int j = 0; j < pgridNumber; ++j){
 			distributionFunction[i][j] = 0;
 		}
@@ -44,7 +50,6 @@ void Simulation::initializeProfile(){
 	deltaR = (upstreamR - downstreamR)/rgridNumber;
 	double r = downstreamR;
 	double pressure0 = density0*kBoltzman*temperature/massProton;
-	minP = 0;
 	switch(simulationType){
 	case 1:
 		maxP = 1000*massProton*U0;
@@ -55,6 +60,7 @@ void Simulation::initializeProfile(){
 	default:
 		maxP = 1000000000000*sqrt(kBoltzman*massProton*temperature);
 	}
+	minP = maxP/1000000;
 
 	for(int i = 0; i < rgridNumber + 1; ++i){
 		grid[i] = r;
@@ -108,6 +114,12 @@ void Simulation::initializeProfile(){
 	pointPressure[rgridNumber] = pointPressure[rgridNumber - 1];
 	grid[rgridNumber] = upstreamR;
 
+	double pstep = exp(log(maxP/minP)/rgridNumber);
+	pgrid[0] = minP;
+	for(int i = 1; i <= pgridNumber; ++i){
+		pgrid[i] = pgrid[i - 1]*pstep;
+	}
+	pgrid[rgridNumber] = maxP;
 }
 
 void Simulation::simulate(){
@@ -135,6 +147,7 @@ void Simulation::simulate(){
 		printf("time = %lf\n", time);
 		printf("solving\n");
 		evaluateHydrodynamic();
+		evaluateCR();
 		time = time + deltaT;
 		//updateValues();
 		updateMaxSoundSpeed();
@@ -144,9 +157,9 @@ void Simulation::simulate(){
 			fopen_s(&outFile, "./output/tamc_radial_profile.dat","a");
 			output(outFile, this);
 			fclose(outFile);
-			//fopen_s(&outDistribution, "./output/distribution.dat","w");
-			//outputDistribution(outDistribution, this);
-			//fclose(outDistribution);
+			fopen_s(&outDistribution, "./output/distribution.dat","w");
+			outputDistribution(outDistribution, this);
+			fclose(outDistribution);
 			fopen_s(&outIteration, "./output/iterations.dat","a");
 			fprintf(outIteration, "%d %28.20lf %28.20lf %28.20lf %28.20lf\n", i, time, mass, totalMomentum, totalEnergy);
 			fclose(outIteration);
@@ -712,6 +725,30 @@ double Simulation::minmod(double a, double b){
 	} else {
 		return 0;
 	}
+}
+
+double Simulation::diffussionCoef(int i, int j){
+	return 1.0;
+}
+
+void Simulation::evaluateCR(){
+	for(int j = 1; j < pgridNumber; ++j){
+		tempDistribution[0][j] = distributionFunction[0][j];
+		for(int i = 1; i < rgridNumber - 1; ++i){
+			tempDistribution[i][j] = distributionFunction[i][j] - deltaT*(deltaR/(middleGrid[i]*middleGrid[i]))*(
+				sqr(grid[i+1])*diffussionCoef(i+1,j)*(distributionFunction[i+1][j] - distributionFunction[i][j])/deltaR
+				- sqr(grid[i])*diffussionCoef(i,j)*(distributionFunction[i][j] - distributionFunction[i-1][j])/deltaR
+				- middleGrid[i]*middleGrid[i]*middleVelocity[i]*0.5*(distributionFunction[i+1][j] - distributionFunction[i-1][j])/deltaR
+				+ ((distributionFunction[i][j] - distributionFunction[i][j-1])/(0.5*(pgrid[j+1] - pgrid[j-1])))*((pgrid[j] + pgrid[j-1])/(2*3))*(grid[i+1]*grid[i+1]*pointVelocity[i+1] - grid[i]*grid[i]*pointVelocity[i]));
+		}
+		tempDistribution[rgridNumber - 1][j] = distributionFunction[rgridNumber - 1][j];
+	}
+	for(int j = 1; j < pgridNumber; ++j){
+		for(int i = 0; i < rgridNumber; ++i){
+			distributionFunction[i][j] = tempDistribution[i][j];
+		}
+	}
+
 }
 
 void Simulation::updateMaxSoundSpeed(){
