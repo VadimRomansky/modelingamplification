@@ -30,7 +30,7 @@ Simulation::~Simulation(){
 void Simulation::initializeProfile(){
 	downstreamR = 0;
 	pgrid = new double[pgridNumber + 1];
-	grid = new double[rgridNumber +1];
+	grid = new double[rgridNumber + 1];
 	middleGrid = new double[rgridNumber];
 	pointDensity = new double[rgridNumber + 1];
 	pointVelocity = new double[rgridNumber + 1];
@@ -114,12 +114,12 @@ void Simulation::initializeProfile(){
 	pointPressure[rgridNumber] = pointPressure[rgridNumber - 1];
 	grid[rgridNumber] = upstreamR;
 
-	double pstep = exp(log(maxP/minP)/rgridNumber);
+	double pstep = exp(log(maxP/minP)/pgridNumber);
 	pgrid[0] = minP;
 	for(int i = 1; i <= pgridNumber; ++i){
 		pgrid[i] = pgrid[i - 1]*pstep;
 	}
-	pgrid[rgridNumber] = maxP;
+	pgrid[pgridNumber] = maxP;
 }
 
 void Simulation::simulate(){
@@ -546,6 +546,7 @@ void Simulation::CheckNegativeDensity(){
 	for(int i = 0; i < rgridNumber; ++i){
 		if(middleDensity[i]*volume(i) - dt*(densityFlux(i+1) - densityFlux(i))< 0){
 			dt = 0.5*(middleDensity[i]*volume(i)/(densityFlux(i+1) - densityFlux(i)));
+			alertNaNOrInfinity(dt, "dt = NaN");
 		}
 		/*if(energy(i) - dt*(energyFlux(i+1) - energyFlux(i))/deltaR < 0){
 			dt= 0.5*(energy(i)*deltaR/(energyFlux(i+1) - energyFlux(i)));
