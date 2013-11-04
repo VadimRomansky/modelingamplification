@@ -15,7 +15,7 @@ void outputDistribution(FILE* distributionFile, Simulation* simulation){
 	for(int i = 0; i < simulation->rgridNumber; ++i){
 		for(int j = 0; j < pgridNumber; ++j){
 			double p = (simulation->pgrid[j+1] + simulation->pgrid[j])/2;
-			fprintf(distributionFile, "%20.15lf %20.15lf\n", p, simulation->distributionFunction[i][j]);
+			fprintf(distributionFile, "%25.17lf %25.17lf\n", p, simulation->distributionFunction[i][j]);
 		}
 	}
 }

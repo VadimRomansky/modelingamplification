@@ -52,15 +52,15 @@ void Simulation::initializeProfile(){
 	double pressure0 = density0*kBoltzman*temperature/massProton;
 	switch(simulationType){
 	case 1:
-		maxP = 1000*massProton*U0;
+		maxP = 100*massProton*U0;
 	case 2:
-		maxP = 1000*sqrt(kBoltzman*massProton*temperature);
+		maxP = 100*sqrt(kBoltzman*massProton*temperature);
 	case 3:
-		maxP = 1000*massProton*U0;
+		maxP = 100*massProton*U0;
 	default:
-		maxP = 1000000000000*sqrt(kBoltzman*massProton*temperature);
+		maxP = 100000*sqrt(kBoltzman*massProton*temperature);
 	}
-	minP = maxP/1000000;
+	minP = maxP/10000;
 
 	for(int i = 0; i < rgridNumber + 1; ++i){
 		grid[i] = r;
@@ -102,8 +102,19 @@ void Simulation::initializeProfile(){
 			}
 		}
 	}
+	double pstep = exp(log(maxP/minP)/pgridNumber);
+	pgrid[0] = minP;
+	for(int i = 1; i <= pgridNumber; ++i){
+		pgrid[i] = pgrid[i - 1]*pstep;
+	}
+	pgrid[pgridNumber] = maxP;
 
 	for(int i = 0; i < rgridNumber; ++i){
+		for(int j = 0; j < pgridNumber; ++j){
+			double p = (pgrid[j] + pgrid[j + 1])/2;
+			//distributionFunction[i][j] = (middleDensity[i]/massProton)*exp(-sqrt(sqr(p*speed_of_light) + sqr(massProton*speed_of_light*speed_of_light))/(kBoltzman*temperatureIn(i)));
+			distributionFunction[i][j] = (middleDensity[i]/massProton)*exp(-p*speed_of_light/(kBoltzman*temperatureIn(i)));
+		}
 		pointDensity[i] = middleDensity[i];
 		pointVelocity[i] = middleVelocity[i];
 		pointPressure[i] = middlePressure[i];
@@ -113,13 +124,6 @@ void Simulation::initializeProfile(){
 	pointVelocity[rgridNumber] = pointVelocity[rgridNumber - 1];
 	pointPressure[rgridNumber] = pointPressure[rgridNumber - 1];
 	grid[rgridNumber] = upstreamR;
-
-	double pstep = exp(log(maxP/minP)/pgridNumber);
-	pgrid[0] = minP;
-	for(int i = 1; i <= pgridNumber; ++i){
-		pgrid[i] = pgrid[i - 1]*pstep;
-	}
-	pgrid[pgridNumber] = maxP;
 }
 
 void Simulation::simulate(){
@@ -152,7 +156,7 @@ void Simulation::simulate(){
 		//updateValues();
 		updateMaxSoundSpeed();
 		updateParameters();
-		if(i % 100 == 0){
+		if(i % 1 == 0){
 			printf("outputing\n");
 			fopen_s(&outFile, "./output/tamc_radial_profile.dat","a");
 			output(outFile, this);
@@ -739,8 +743,14 @@ void Simulation::evaluateCR(){
 			tempDistribution[i][j] = distributionFunction[i][j] - deltaT*(deltaR/(middleGrid[i]*middleGrid[i]))*(
 				sqr(grid[i+1])*diffussionCoef(i+1,j)*(distributionFunction[i+1][j] - distributionFunction[i][j])/deltaR
 				- sqr(grid[i])*diffussionCoef(i,j)*(distributionFunction[i][j] - distributionFunction[i-1][j])/deltaR
-				- middleGrid[i]*middleGrid[i]*middleVelocity[i]*0.5*(distributionFunction[i+1][j] - distributionFunction[i-1][j])/deltaR
+				- middleGrid[i]*middleGrid[i]*middleVelocity[i]*(distributionFunction[i][j] - distributionFunction[i-1][j])/deltaR
 				+ ((distributionFunction[i][j] - distributionFunction[i][j-1])/(0.5*(pgrid[j+1] - pgrid[j-1])))*((pgrid[j] + pgrid[j-1])/(2*3))*(grid[i+1]*grid[i+1]*pointVelocity[i+1] - grid[i]*grid[i]*pointVelocity[i]));
+			alertNaNOrInfinity(tempDistribution[i][j], "distribution = NaN");
+			if(tempDistribution[i][j] < 0){
+				tempDistribution[i][j] = 0;
+				distributionFunction[i][j] = 0;
+				printf("distribution %d %d < 0\n", i, j);
+			}
 		}
 		tempDistribution[rgridNumber - 1][j] = distributionFunction[rgridNumber - 1][j];
 	}
