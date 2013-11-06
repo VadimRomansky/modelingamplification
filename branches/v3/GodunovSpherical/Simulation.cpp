@@ -113,7 +113,8 @@ void Simulation::initializeProfile(){
 		for(int j = 0; j < pgridNumber; ++j){
 			double p = (pgrid[j] + pgrid[j + 1])/2;
 			//distributionFunction[i][j] = (middleDensity[i]/massProton)*exp(-sqrt(sqr(p*speed_of_light) + sqr(massProton*speed_of_light*speed_of_light))/(kBoltzman*temperatureIn(i)));
-			distributionFunction[i][j] = (middleDensity[i]/massProton)*exp(-p*speed_of_light/(kBoltzman*temperatureIn(i)));
+			//distributionFunction[i][j] = (middleDensity[i]/massProton)*exp(-p*speed_of_light/(kBoltzman*temperatureIn(i)));
+			distributionFunction[i][j] = (middleDensity[i]/massProton)*exp(-p*speed_of_light/(kBoltzman*temperatureIn(0)));
 		}
 		pointDensity[i] = middleDensity[i];
 		pointVelocity[i] = middleVelocity[i];
