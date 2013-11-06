@@ -737,10 +737,10 @@ double Simulation::diffussionCoef(int i, int j){
 }
 
 void Simulation::evaluateCR(){
-	for(int j = 1; j < pgridNumber; ++j){
-		tempDistribution[0][j] = distributionFunction[0][j];
-		for(int i = 1; i < rgridNumber - 1; ++i){
-			tempDistribution[i][j] = distributionFunction[i][j] - deltaT*(deltaR/(middleGrid[i]*middleGrid[i]))*(
+	for(int i = 1; i < rgridNumber - 1; ++i){
+		for(int j = 1; j < pgridNumber; ++j){
+			tempDistribution[0][j] = distributionFunction[0][j];
+			tempDistribution[i][j] = distributionFunction[i][j] - deltaT*(3/(cube(grid[i+1]) - cube(grid[i])))*(
 				sqr(grid[i+1])*diffussionCoef(i+1,j)*(distributionFunction[i+1][j] - distributionFunction[i][j])/deltaR
 				- sqr(grid[i])*diffussionCoef(i,j)*(distributionFunction[i][j] - distributionFunction[i-1][j])/deltaR
 				- middleGrid[i]*middleGrid[i]*middleVelocity[i]*(distributionFunction[i][j] - distributionFunction[i-1][j])/deltaR
@@ -751,8 +751,8 @@ void Simulation::evaluateCR(){
 				distributionFunction[i][j] = 0;
 				printf("distribution %d %d < 0\n", i, j);
 			}
+			tempDistribution[rgridNumber - 1][j] = distributionFunction[rgridNumber - 1][j];
 		}
-		tempDistribution[rgridNumber - 1][j] = distributionFunction[rgridNumber - 1][j];
 	}
 	for(int j = 1; j < pgridNumber; ++j){
 		for(int i = 0; i < rgridNumber; ++i){
