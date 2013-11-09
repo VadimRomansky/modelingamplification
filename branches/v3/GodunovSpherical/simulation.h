@@ -52,6 +52,7 @@ public:
 
 	double** distributionFunction;
 	double** tempDistribution;
+	double** distributionDerivative;
 
 	double momentum(int i);
 	double energy(int i);
@@ -85,6 +86,7 @@ public:
 	void modifiedTracPen(double* u, double* flux, double cs);
 
 	void evaluateCR();
+	double injection();
 
 	double minmod(double a, double b);
 	void updateMaxSoundSpeed();

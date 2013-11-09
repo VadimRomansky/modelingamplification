@@ -3,6 +3,6 @@
 #include "simulation.h"
 
 void output(FILE* outFile, Simulation* simulation);
-void outputDistribution(FILE* distributionFile, Simulation* simulation);
+void outputDistribution(FILE* distributionFile, FILE* fullDistributionFile, Simulation* simulation);
 
 #endif
