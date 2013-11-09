@@ -22,9 +22,11 @@ Simulation::~Simulation(){
 	for(int i = 0; i < rgridNumber; ++i){
 		delete[] distributionFunction[i];
 		delete[] tempDistribution[i];
+		delete[] distributionDerivative[i];
 	}
 	delete[] distributionFunction;
 	delete[] tempDistribution;
+	delete[] distributionDerivative;
 }
 
 void Simulation::initializeProfile(){
@@ -40,9 +42,11 @@ void Simulation::initializeProfile(){
 	middlePressure = new double[rgridNumber];
 	distributionFunction = new double*[rgridNumber];
 	tempDistribution = new double*[rgridNumber];
+	distributionDerivative = new double*[rgridNumber];
 	for(int i = 0; i < rgridNumber; i ++){
 		distributionFunction[i] = new double[pgridNumber];
 		tempDistribution[i] = new double[pgridNumber];
+		distributionDerivative[i] = new double[pgridNumber];
 		for(int j = 0; j < pgridNumber; ++j){
 			distributionFunction[i][j] = 0;
 		}
@@ -112,9 +116,9 @@ void Simulation::initializeProfile(){
 	for(int i = 0; i < rgridNumber; ++i){
 		for(int j = 0; j < pgridNumber; ++j){
 			double p = (pgrid[j] + pgrid[j + 1])/2;
-			//distributionFunction[i][j] = (middleDensity[i]/massProton)*exp(-sqrt(sqr(p*speed_of_light) + sqr(massProton*speed_of_light*speed_of_light))/(kBoltzman*temperatureIn(i)));
 			//distributionFunction[i][j] = (middleDensity[i]/massProton)*exp(-p*speed_of_light/(kBoltzman*temperatureIn(i)));
-			distributionFunction[i][j] = (middleDensity[i]/massProton)*exp(-p*speed_of_light/(kBoltzman*temperatureIn(0)));
+			//distributionFunction[i][j] = (middleDensity[i]/massProton)*exp(-p*speed_of_light/(kBoltzman*temperatureIn(0)));
+			distributionFunction[i][j] = 0;
 		}
 		pointDensity[i] = middleDensity[i];
 		pointVelocity[i] = middleVelocity[i];
@@ -141,6 +145,9 @@ void Simulation::simulate(){
 	FILE* outDistribution;
 	fopen_s(&outDistribution, "./output/distribution.dat","w");
 	fclose(outDistribution);
+	FILE* outFullDistribution;
+	fopen_s(&outFullDistribution, "./output/fullDistribution.dat","w");
+	fclose(outFullDistribution);
 	printf("initialization\n");
 	initializeProfile();
 	updateMaxSoundSpeed();
@@ -157,13 +164,15 @@ void Simulation::simulate(){
 		//updateValues();
 		updateMaxSoundSpeed();
 		updateParameters();
-		if(i % 1 == 0){
+		if(i % 100 == 0){
 			printf("outputing\n");
 			fopen_s(&outFile, "./output/tamc_radial_profile.dat","a");
 			output(outFile, this);
 			fclose(outFile);
 			fopen_s(&outDistribution, "./output/distribution.dat","w");
-			outputDistribution(outDistribution, this);
+			fopen_s(&outFullDistribution, "./output/fullDistribution.dat","w");
+			outputDistribution(outDistribution, outFullDistribution, this);
+			fclose(outFullDistribution);
 			fclose(outDistribution);
 			fopen_s(&outIteration, "./output/iterations.dat","a");
 			fprintf(outIteration, "%d %28.20lf %28.20lf %28.20lf %28.20lf\n", i, time, mass, totalMomentum, totalEnergy);
@@ -557,6 +566,29 @@ void Simulation::CheckNegativeDensity(){
 			dt= 0.5*(energy(i)*deltaR/(energyFlux(i+1) - energyFlux(i)));
 		}*/
 	}
+
+	for(int j = 0; j < pgridNumber; ++j){
+		distributionDerivative[0][j] = 0;
+		distributionDerivative[rgridNumber - 1][j] = 0;
+	}
+	for(int i = 1; i < rgridNumber - 1; ++i){
+		double volumeFactor = (cube(grid[i+1]) - cube(grid[i]))/3;
+		double velocityDerivative = (grid[i+1]*grid[i+1]*pointVelocity[i+1] - grid[i]*grid[i]*pointVelocity[i]);
+		distributionDerivative[i][0] = 0;
+		for(int j = 1; j < pgridNumber; ++j){
+			distributionDerivative[i][j] = (1/volumeFactor)*(
+				sqr(grid[i+1])*diffussionCoef(i+1,j)*(distributionFunction[i+1][j] - distributionFunction[i][j])/deltaR
+				- sqr(grid[i])*diffussionCoef(i,j)*(distributionFunction[i][j] - distributionFunction[i-1][j])/deltaR
+				- volumeFactor*middleVelocity[i]*(distributionFunction[i][j] - distributionFunction[i-1][j])/deltaR
+				+ ((distributionFunction[i][j] - distributionFunction[i][j-1])/(0.5*(pgrid[j+1] - pgrid[j-1])))*((pgrid[j] + pgrid[j-1])/(2*3))*velocityDerivative);
+			alertNaNOrInfinity(distributionDerivative[i][j], "distribution = NaN");
+
+			if(distributionFunction[i][j] + dt*distributionDerivative[i][j] < 0){
+				dt = - 0.5*distributionFunction[i][j]/distributionDerivative[i][j];
+				alertNaNOrInfinity(dt, "dt = NaN");
+			}
+		}
+	}
 	deltaT = dt;
 }
 
@@ -737,30 +769,19 @@ double Simulation::diffussionCoef(int i, int j){
 	return 1.0;
 }
 
-void Simulation::evaluateCR(){
-	for(int i = 1; i < rgridNumber - 1; ++i){
-		for(int j = 1; j < pgridNumber; ++j){
-			tempDistribution[0][j] = distributionFunction[0][j];
-			tempDistribution[i][j] = distributionFunction[i][j] - deltaT*(3/(cube(grid[i+1]) - cube(grid[i])))*(
-				sqr(grid[i+1])*diffussionCoef(i+1,j)*(distributionFunction[i+1][j] - distributionFunction[i][j])/deltaR
-				- sqr(grid[i])*diffussionCoef(i,j)*(distributionFunction[i][j] - distributionFunction[i-1][j])/deltaR
-				- middleGrid[i]*middleGrid[i]*middleVelocity[i]*(distributionFunction[i][j] - distributionFunction[i-1][j])/deltaR
-				+ ((distributionFunction[i][j] - distributionFunction[i][j-1])/(0.5*(pgrid[j+1] - pgrid[j-1])))*((pgrid[j] + pgrid[j-1])/(2*3))*(grid[i+1]*grid[i+1]*pointVelocity[i+1] - grid[i]*grid[i]*pointVelocity[i]));
-			alertNaNOrInfinity(tempDistribution[i][j], "distribution = NaN");
-			if(tempDistribution[i][j] < 0){
-				tempDistribution[i][j] = 0;
-				distributionFunction[i][j] = 0;
-				printf("distribution %d %d < 0\n", i, j);
-			}
-			tempDistribution[rgridNumber - 1][j] = distributionFunction[rgridNumber - 1][j];
-		}
-	}
-	for(int j = 1; j < pgridNumber; ++j){
-		for(int i = 0; i < rgridNumber; ++i){
-			distributionFunction[i][j] = tempDistribution[i][j];
-		}
-	}
+double Simulation::injection(){
+	return 1.0;
+}
 
+void Simulation::evaluateCR(){
+	for(int i = 0; i < rgridNumber; ++i){
+		for(int j = 0; j < pgridNumber; ++j){
+			distributionFunction[i][j] += deltaT*distributionDerivative[i][j];
+			if ((i == (rgridNumber/2)) && (j == (pgridNumber/2))){
+				distributionFunction[i][j] += injection()*deltaT;
+			}
+		}
+	}
 }
 
 void Simulation::updateMaxSoundSpeed(){

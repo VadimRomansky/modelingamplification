@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "output.h"
 #include "constants.h"
+#include "util.h"
 
 void output(FILE* outFile, Simulation* simulation){
 	for(int i = 0; i < simulation->rgridNumber; ++i){
@@ -11,11 +12,24 @@ void output(FILE* outFile, Simulation* simulation){
 	}
 }
 
-void outputDistribution(FILE* distributionFile, Simulation* simulation){
+void outputDistribution(FILE* distributionFile, FILE* fullDistributionFile, Simulation* simulation){
+	double* fullDistribution = new double[pgridNumber];
+	double volume = 4*pi*cube(simulation->upstreamR);
+	for(int j = 0; j < pgridNumber; ++j){
+		fullDistribution[j] = 0;
+	}
 	for(int i = 0; i < simulation->rgridNumber; ++i){
-		for(int j = 0; j < pgridNumber; ++j){
+		for(int j = 0; j < pgridNumber - 1; ++j){
 			double p = (simulation->pgrid[j+1] + simulation->pgrid[j])/2;
-			fprintf(distributionFile, "%25.17lf %25.17lf\n", p, simulation->distributionFunction[i][j]);
+			fprintf(distributionFile, "%30.20lf %30.20lf\n", p, simulation->distributionFunction[i][j]);
+			fullDistribution[j] += simulation->volume(i)*simulation->distributionFunction[i][j];
 		}
 	}
+
+	for(int j = 0; j < pgridNumber; ++j){
+		fullDistribution[j] /= volume;
+		double p = (simulation->pgrid[j+1] + simulation->pgrid[j])/2;
+		fprintf(fullDistributionFile, "%30.20lf %30.20lf\n", p, fullDistribution[j]);
+	}
+	delete[] fullDistribution;
 }
