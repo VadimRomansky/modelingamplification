@@ -12,7 +12,7 @@ void output(FILE* outFile, Simulation* simulation){
 	}
 }
 
-void outputDistribution(FILE* distributionFile, FILE* fullDistributionFile, Simulation* simulation){
+void outputDistribution(FILE* distributionFile, FILE* fullDistributionFile, FILE* coordinateDistributionFile, Simulation* simulation){
 	double* fullDistribution = new double[pgridNumber];
 	double volume = 4*pi*cube(simulation->upstreamR);
 	for(int j = 0; j < pgridNumber; ++j){
@@ -24,6 +24,7 @@ void outputDistribution(FILE* distributionFile, FILE* fullDistributionFile, Simu
 			fprintf(distributionFile, "%30.20lf %30.20lf\n", p, simulation->distributionFunction[i][j]);
 			fullDistribution[j] += simulation->volume(i)*simulation->distributionFunction[i][j];
 		}
+		fprintf(coordinateDistributionFile, "%30.20lf %30.20lf\n", simulation->grid[i], simulation->distributionFunction[i][pgridNumber/10]);
 	}
 
 	for(int j = 0; j < pgridNumber; ++j){

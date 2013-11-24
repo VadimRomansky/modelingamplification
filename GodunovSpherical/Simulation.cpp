@@ -56,15 +56,19 @@ void Simulation::initializeProfile(){
 	double pressure0 = density0*kBoltzman*temperature/massProton;
 	switch(simulationType){
 	case 1:
-		maxP = 100*massProton*U0;
+		minP = 2*massProton*U0;
+		shockWavePoint = rgridNumber/10 - 1;
 	case 2:
-		maxP = 100*sqrt(kBoltzman*massProton*temperature);
+		minP = 2*sqrt(kBoltzman*massProton*temperature);
+		shockWavePoint = -1;
 	case 3:
-		maxP = 100*massProton*U0;
+		minP = 2*massProton*U0;
+		shockWavePoint = rgridNumber/10 - 1;
 	default:
-		maxP = 100000*sqrt(kBoltzman*massProton*temperature);
+		minP = 2*sqrt(kBoltzman*massProton*temperature);
+		shockWavePoint = rgridNumber/100 - 1;
 	}
-	minP = maxP/10000;
+	maxP = minP*100;
 
 	for(int i = 0; i < rgridNumber + 1; ++i){
 		grid[i] = r;
@@ -148,6 +152,9 @@ void Simulation::simulate(){
 	FILE* outFullDistribution;
 	fopen_s(&outFullDistribution, "./output/fullDistribution.dat","w");
 	fclose(outFullDistribution);
+	FILE* outCoordinateDistribution;
+	fopen_s(&outCoordinateDistribution, "./output/coordinateDistribution.dat","w");
+	fclose(outCoordinateDistribution);
 	printf("initialization\n");
 	initializeProfile();
 	updateMaxSoundSpeed();
@@ -163,6 +170,7 @@ void Simulation::simulate(){
 		time = time + deltaT;
 		//updateValues();
 		updateMaxSoundSpeed();
+		updateShockWavePoint();
 		updateParameters();
 		if(i % 100 == 0){
 			printf("outputing\n");
@@ -171,7 +179,9 @@ void Simulation::simulate(){
 			fclose(outFile);
 			fopen_s(&outDistribution, "./output/distribution.dat","w");
 			fopen_s(&outFullDistribution, "./output/fullDistribution.dat","w");
-			outputDistribution(outDistribution, outFullDistribution, this);
+			fopen_s(&outCoordinateDistribution, "./output/coordinateDistribution.dat","w");
+			outputDistribution(outDistribution, outFullDistribution, outCoordinateDistribution, this);
+			fclose(outCoordinateDistribution);
 			fclose(outFullDistribution);
 			fclose(outDistribution);
 			fopen_s(&outIteration, "./output/iterations.dat","a");
@@ -766,19 +776,25 @@ double Simulation::minmod(double a, double b){
 }
 
 double Simulation::diffussionCoef(int i, int j){
-	return 1.0;
+	double p = pgrid[j];
+	double B = B0;
+	return p*p/(massProton*electron_charge*B);
 }
 
 double Simulation::injection(){
-	return 1.0;
+	double pf = pgrid[pgridNumber/10];
+	return middleDensity[shockWavePoint]*abs(middleVelocity[shockWavePoint])/(pf*pf*massProton);
 }
 
 void Simulation::evaluateCR(){
 	for(int i = 0; i < rgridNumber; ++i){
 		for(int j = 0; j < pgridNumber; ++j){
 			distributionFunction[i][j] += deltaT*distributionDerivative[i][j];
-			if ((i == (rgridNumber/2)) && (j == (pgridNumber/2))){
+			if ((i == (rgridNumber/10)) && (j == (pgridNumber/10))){
 				distributionFunction[i][j] += injection()*deltaT;
+			}
+			if(distributionFunction[i][j] < 0){
+				printf("distribution <0\n");
 			}
 		}
 	}
@@ -793,6 +809,17 @@ void Simulation::updateMaxSoundSpeed(){
 		} 
 	}
 	deltaT = 0.05*deltaR/maxSoundSpeed;
+}
+
+void Simulation::updateShockWavePoint(){
+	double maxGrad = 0;
+	for(int i = 9; i < rgridNumber - 1; ++i){
+		double grad = middleVelocity[i] - middleVelocity[i + 1];
+		if(grad > maxGrad){
+			maxGrad = grad;
+			shockWavePoint = i;
+		}
+	}
 }
 
 void Simulation::updateParameters(){
