@@ -25,6 +25,7 @@ public:
 	bool tracPen;
 
 	int rgridNumber;
+	int shockWavePoint;
 
 	double R0;
 	double time;
@@ -90,6 +91,7 @@ public:
 
 	double minmod(double a, double b);
 	void updateMaxSoundSpeed();
+	void updateShockWavePoint();
 
 	void updateParameters();
 };
