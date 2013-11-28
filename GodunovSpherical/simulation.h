@@ -87,6 +87,7 @@ public:
 	void modifiedTracPen(double* u, double* flux, double cs);
 
 	void evaluateCR();
+	void solveThreeDiagonal(double* middle, double* upper, double* lower, double* f, double* x);
 	double injection();
 
 	double minmod(double a, double b);
