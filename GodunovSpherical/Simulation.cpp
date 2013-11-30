@@ -801,18 +801,18 @@ void Simulation::evaluateCR(){
 			double deltaP = (pgrid[j+1] - pgrid[j-1])/2;
 			double volumeFactor = (cube(grid[i+1]) - cube(grid[i]))/3;
 			upper[i] = grid[i+1]*grid[i+1]*diffussionCoef(i+1,j)/deltaR;
-			middle[i] = -((grid[i+1]*grid[i+1]*diffussionCoef(i+1,j) + grid[i]*grid[i]*diffussionCoef(i,j) + volumeFactor/deltaT)/deltaR);
+			middle[i] = -((grid[i+1]*grid[i+1]*diffussionCoef(i+1,j) + grid[i]*grid[i]*diffussionCoef(i,j) + deltaR*volumeFactor/deltaT)/deltaR);
 			lower[i] = grid[i+1]*grid[i+1]*diffussionCoef(i+1,j)/deltaR;
 
-			f[i] = - volumeFactor*distributionFunction[i][j]/(deltaR*deltaT) + volumeFactor*middleVelocity[i]*(distributionFunction[i+1][j] -distributionFunction[i][j])/deltaR
+			f[i] = - volumeFactor*distributionFunction[i][j]/(deltaT) + volumeFactor*middleVelocity[i]*(distributionFunction[i+1][j] -distributionFunction[i][j])/deltaR
 				- (distributionFunction[i][j] - distributionFunction[i][j-1])*(p/(3*deltaP))*(grid[i+1]*grid[i+1]*pointVelocity[i+1] - grid[i]*grid[i]*pointVelocity[i]);
 			alertNaNOrInfinity(f[i],"f = NaN");
 			/*if(abs(f[i]) > epsilon){
 				printf("bbb\n");
 			}*/
 		}
-		middle[rgridNumber - 1] = -((grid[rgridNumber]*grid[rgridNumber]*diffussionCoef(rgridNumber,j) + grid[rgridNumber - 1]*grid[rgridNumber - 1]*diffussionCoef(rgridNumber - 1,j) + (cube(grid[rgridNumber]) - cube(grid[rgridNumber - 1]))/(3*deltaT))/deltaR);
-		f[rgridNumber - 1] = distributionFunction[rgridNumber - 1][j]*(cube(grid[rgridNumber]) - cube(grid[rgridNumber - 1]))/(3*deltaR*deltaT);
+		middle[rgridNumber - 1] = -((grid[rgridNumber]*grid[rgridNumber]*diffussionCoef(rgridNumber,j) + grid[rgridNumber - 1]*grid[rgridNumber - 1]*diffussionCoef(rgridNumber - 1,j) + deltaR*(cube(grid[rgridNumber]) - cube(grid[rgridNumber - 1]))/(3*deltaT))/deltaR);
+		f[rgridNumber - 1] = distributionFunction[rgridNumber - 1][j]*(cube(grid[rgridNumber]) - cube(grid[rgridNumber - 1]))/(3*deltaT);
 		solveThreeDiagonal(middle, upper, lower, f, x);
 		
 		for(int i = 0; i < rgridNumber; ++i){
