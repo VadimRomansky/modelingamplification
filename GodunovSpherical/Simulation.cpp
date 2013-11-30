@@ -172,7 +172,7 @@ void Simulation::simulate(){
 		updateMaxSoundSpeed();
 		updateShockWavePoint();
 		updateParameters();
-		if(i % 100 == 0){
+		if(i % 1 == 0){
 			printf("outputing\n");
 			fopen_s(&outFile, "./output/tamc_radial_profile.dat","a");
 			output(outFile, this);
@@ -599,7 +599,7 @@ void Simulation::CheckNegativeDensity(){
 			}
 		}
 	}*/
-	deltaT = dt;
+	deltaT = 0.00000001*dt;
 }
 
 void Simulation::TracPen(double* u, double* flux, double cs){
@@ -783,7 +783,7 @@ double Simulation::diffussionCoef(int i, int j){
 
 double Simulation::injection(){
 	double pf = pgrid[pgridNumber/10];
-	return middleDensity[shockWavePoint]*abs(middleVelocity[shockWavePoint])/(pf*pf*massProton);
+	return 0.000000000000001*middleDensity[shockWavePoint]*abs(middleVelocity[shockWavePoint])/(pf*pf*massProton);
 }
 
 void Simulation::evaluateCR(){
@@ -804,8 +804,14 @@ void Simulation::evaluateCR(){
 			middle[i] = -((grid[i+1]*grid[i+1]*diffussionCoef(i+1,j) + grid[i]*grid[i]*diffussionCoef(i,j) + deltaR*volumeFactor/deltaT)/deltaR);
 			lower[i] = grid[i+1]*grid[i+1]*diffussionCoef(i+1,j)/deltaR;
 
+<<<<<<< .mine
+			f[i] = - volumeFactor*distributionFunction[i][j]/(deltaT) + volumeFactor*middleVelocity[i]*(distributionFunction[i+1][j] -distributionFunction[i][j])/deltaR
+				- (distributionFunction[i][j] - distributionFunction[i][j-1])*(p/(3*deltaP))*(grid[i+1]*grid[i+1]*pointVelocity[i+1] - grid[i]*grid[i]*pointVelocity[i])
+				;
+=======
 			f[i] = - volumeFactor*distributionFunction[i][j]/(deltaT) + volumeFactor*middleVelocity[i]*(distributionFunction[i+1][j] -distributionFunction[i][j])/deltaR
 				- (distributionFunction[i][j] - distributionFunction[i][j-1])*(p/(3*deltaP))*(grid[i+1]*grid[i+1]*pointVelocity[i+1] - grid[i]*grid[i]*pointVelocity[i]);
+>>>>>>> .r176
 			alertNaNOrInfinity(f[i],"f = NaN");
 			/*if(abs(f[i]) > epsilon){
 				printf("bbb\n");
@@ -848,9 +854,9 @@ void Simulation::solveThreeDiagonal(double* middle, double* upper, double* lower
 	for(int i = rgridNumber - 3; i >= 0; --i){
 		x[i] = (f[i + 1] - middle[i + 1]*x[i + 1] - upper[i + 1]*x[i+2])/lower[i];
 		alertNaNOrInfinity(x[i],"x = NaN");
-		if(abs(x[i]) > epsilon){
+		/*if(abs(x[i]) > epsilon){
 			printf("aaaaaa\n");
-		}
+		}*/
 	}
 }
 
