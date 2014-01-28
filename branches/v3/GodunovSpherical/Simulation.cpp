@@ -103,7 +103,7 @@ void Simulation::initializeProfile(){
 		default:
 			middleDensity[i] = density0;
 			middleVelocity[i] = 0;
-			if(i <= rgridNumber/100){
+			if(i <= rgridNumber/1000){
 				middlePressure[i] = 100000000*pressure0;
 			} else {
 				middlePressure[i] = pressure0;
