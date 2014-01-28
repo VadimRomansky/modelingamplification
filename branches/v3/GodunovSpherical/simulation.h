@@ -75,7 +75,6 @@ public:
 	void initializeProfile();
 	void simulate();
 	void evaluateHydrodynamic();
-	void myScheme();
 	void solveDiscontinious();
 	double pressureFunction(double p, double p1, double rho1);
 	double pressureFunctionDerivative(double p, double p1, double rho1);
@@ -84,7 +83,6 @@ public:
 	double firstApproximationPressure(double rho1, double rho2, double u1, double u2, double p1, double p2);
 	void CheckNegativeDensity();
 	void TracPen(double* u, double* flux, double cs);
-	void modifiedTracPen(double* u, double* flux, double cs);
 
 	void evaluateCR();
 	void solveThreeDiagonal(double* middle, double* upper, double* lower, double* f, double* x);

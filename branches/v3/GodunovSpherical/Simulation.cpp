@@ -166,24 +166,24 @@ void Simulation::simulate(){
 		printf("time = %lf\n", time);
 		printf("solving\n");
 		evaluateHydrodynamic();
-		evaluateCR();
+		//evaluateCR();
 		time = time + deltaT;
 		//updateValues();
 		updateMaxSoundSpeed();
 		updateShockWavePoint();
 		updateParameters();
-		if(i % 1 == 0){
+		if(i % 1000 == 0){
 			printf("outputing\n");
 			fopen_s(&outFile, "./output/tamc_radial_profile.dat","a");
 			output(outFile, this);
 			fclose(outFile);
-			fopen_s(&outDistribution, "./output/distribution.dat","w");
-			fopen_s(&outFullDistribution, "./output/fullDistribution.dat","w");
-			fopen_s(&outCoordinateDistribution, "./output/coordinateDistribution.dat","w");
-			outputDistribution(outDistribution, outFullDistribution, outCoordinateDistribution, this);
-			fclose(outCoordinateDistribution);
-			fclose(outFullDistribution);
-			fclose(outDistribution);
+			//fopen_s(&outDistribution, "./output/distribution.dat","w");
+			//fopen_s(&outFullDistribution, "./output/fullDistribution.dat","w");
+			//fopen_s(&outCoordinateDistribution, "./output/coordinateDistribution.dat","w");
+			//outputDistribution(outDistribution, outFullDistribution, outCoordinateDistribution, this);
+			//fclose(outCoordinateDistribution);
+			//fclose(outFullDistribution);
+			//fclose(outDistribution);
 			fopen_s(&outIteration, "./output/iterations.dat","a");
 			fprintf(outIteration, "%d %28.20lf %28.20lf %28.20lf %28.20lf\n", i, time, mass, totalMomentum, totalEnergy);
 			fclose(outIteration);
@@ -197,49 +197,22 @@ void Simulation::simulate(){
 void Simulation::evaluateHydrodynamic(){
 	solveDiscontinious();
 	CheckNegativeDensity();
-	if(! tracPen){
-		//CheckNegativeDensity();
-		myScheme();
-		/*for(int i = 0; i < rgridNumber; ++i){
-			double tempMomentum = momentum(i);
-			double tempEnergy = energy(i);
-			middleDensity[i] -= deltaT*4*pi*(densityFlux(i+1) - densityFlux(i))/(volume(i));
-			alertNaNOrInfinity(middleDensity[i], "density = NaN");
-			double middleMomentum = tempMomentum - deltaT*(4*pi*(momentumConvectiveFlux(i+1) - momentumConvectiveFlux(i))/(volume(i)) + (pointPressure[i+1] - pointPressure[i])/deltaR);
-			alertNaNOrInfinity(middleMomentum, "momentum = NaN");
-			double middleEnergy = tempEnergy - deltaT*4*pi*(energyFlux(i+1) - energyFlux(i))/volume(i);
-			alertNaNOrInfinity(middleEnergy, "energy = NaN");
-			middleVelocity[i] = middleMomentum/middleDensity[i];
-			middlePressure[i] = (middleEnergy - middleDensity[i]*middleVelocity[i]*middleVelocity[i]/2)*(gamma - 1);
 
-			if(middleDensity[i] <= epsilon*density0){
-				middleDensity[i] = epsilon*density0;
-				middleVelocity[i] = 0;
-				//middleVelocity[i] = middleMomentum/middleDensity[i];
-				middlePressure[i] = middleDensity[i]*kBoltzman*temperature/massProton;
-				//middlePressure[i] = (middleEnergy - middleDensity[i]*middleVelocity[i]*middleVelocity[i]/2)*(gamma - 1);
-			}
-			if(middlePressure[i] <= 0){
-				middlePressure[i] = epsilon*middleDensity[i]*kBoltzman*temperature/massProton;
-			}
-		}*/
-	} else {
+	double* tempDensity = new double[rgridNumber];
+	double* tempMomentum = new double[rgridNumber];
+	double* tempEnergy = new double[rgridNumber];
+	double* dFlux = new double[rgridNumber];
+	double* mFlux = new double[rgridNumber];
+	double* eFlux = new double[rgridNumber];
 
-		double* tempDensity = new double[rgridNumber];
-		double* tempMomentum = new double[rgridNumber];
-		double* tempEnergy = new double[rgridNumber];
-		double* dFlux = new double[rgridNumber];
-		double* mFlux = new double[rgridNumber];
-		double* eFlux = new double[rgridNumber];
-
-		for(int i = 0; i < rgridNumber; ++i){
-			tempDensity[i] = middleDensity[i]*middleGrid[i]*middleGrid[i];
-			tempMomentum[i] = momentum(i)*middleGrid[i]*middleGrid[i];
-			tempEnergy[i] = energy(i)*middleGrid[i]*middleGrid[i];
-			dFlux[i] = densityFlux(i);
-			mFlux[i] = momentumConvectiveFlux(i);
-			eFlux[i] = energyFlux(i);
-		}
+	for(int i = 0; i < rgridNumber; ++i){
+		tempDensity[i] = middleDensity[i]*middleGrid[i]*middleGrid[i];
+		tempMomentum[i] = momentum(i)*middleGrid[i]*middleGrid[i];
+		tempEnergy[i] = energy(i)*middleGrid[i]*middleGrid[i];
+		dFlux[i] = densityFlux(i);
+		mFlux[i] = momentumConvectiveFlux(i);
+		eFlux[i] = energyFlux(i);
+	}
 
 		TracPen(tempDensity, dFlux, maxSoundSpeed);
 		TracPen(tempMomentum, mFlux, maxSoundSpeed);
@@ -277,84 +250,6 @@ void Simulation::evaluateHydrodynamic(){
 		delete[] dFlux;
 		delete[] mFlux;
 		delete[] eFlux;
-	}
-}
-
-void Simulation::myScheme(){
-	double* tempDensity = new double[rgridNumber];
-	double* tempMomentum = new double[rgridNumber];
-	double* tempEnergy = new double[rgridNumber];
-	double* dFlux = new double[rgridNumber + 1];
-	double* mFlux = new double[rgridNumber + 1];
-	double* eFlux = new double[rgridNumber + 1];
-
-	for(int i = 0; i < rgridNumber; ++i){
-		tempDensity[i] = middleDensity[i]*middleGrid[i]*middleGrid[i];
-		tempMomentum[i] = momentum(i)*middleGrid[i]*middleGrid[i];
-		tempEnergy[i] = energy(i)*middleGrid[i]*middleGrid[i];
-		dFlux[i] = densityFlux(i);
-		mFlux[i] = momentumConvectiveFlux(i);
-		eFlux[i] = energyFlux(i);
-	}
-
-	dFlux[0] = 0;
-	mFlux[0] = 0;
-	eFlux[0] = 0;
-	dFlux[rgridNumber] = dFlux[rgridNumber - 1];
-	mFlux[rgridNumber] = mFlux[rgridNumber - 1];
-	eFlux[rgridNumber] = eFlux[rgridNumber - 1];
-
-	modifiedTracPen(tempDensity, dFlux, maxSoundSpeed);
-	modifiedTracPen(tempMomentum, mFlux, maxSoundSpeed);
-	for(int i = 0; i < rgridNumber; ++i){
-		tempMomentum[i] -= deltaT*middleGrid[i]*middleGrid[i]*(pointPressure[i+1] - pointPressure[i])/(deltaR);
-	}
-	modifiedTracPen(tempEnergy, eFlux, maxSoundSpeed);
-
-	for(int i = 0; i < rgridNumber; ++i){
-		middleDensity[i] = tempDensity[i]/(middleGrid[i]*middleGrid[i]);
-		alertNaNOrInfinity(middleDensity[i], "density = NaN");
-		double middleMomentum = tempMomentum[i]/(middleGrid[i]*middleGrid[i]);
-		alertNaNOrInfinity(middleMomentum, "momentum = NaN");
-		double middleEnergy = tempEnergy[i];
-		alertNaNOrInfinity(middleEnergy, "energy = NaN");
-		middleVelocity[i] = middleMomentum/middleDensity[i];
-		middlePressure[i] = (middleEnergy/(middleGrid[i]*middleGrid[i]) - middleDensity[i]*middleVelocity[i]*middleVelocity[i]/2)*(gamma - 1);
-		if(middleDensity[i] <= epsilon*density0){
-			middleDensity[i] = epsilon*density0;
-			middleVelocity[i] = 0;
-			//middleVelocity[i] = middleMomentum/middleDensity[i];
-			middlePressure[i] = middleDensity[i]*kBoltzman*temperature/massProton;
-			//middlePressure[i] = (middleEnergy - middleDensity[i]*middleVelocity[i]*middleVelocity[i]/2)*(gamma - 1);
-		}
-		if(middlePressure[i] <= 0){
-			middlePressure[i] = epsilon*middleDensity[i]*kBoltzman*temperature/massProton;
-		}
-	}
-	middleVelocity[0] = 0;
-
-	delete[] tempDensity;
-	delete[] tempMomentum;
-	delete[] tempEnergy;
-	delete[] dFlux;
-	delete[] mFlux;
-	delete[] eFlux;
-}
-
-void Simulation::modifiedTracPen(double* u, double* flux, double cs){
-	double* tempU = new double[rgridNumber];
-
-	tempU[0] = u[0] - deltaT*(flux[1] - flux[0])/deltaR;
-	for(int i = 1; i < rgridNumber - 1; ++i){
-		tempU[i] = u[i] - deltaT*((flux[i+1] - flux[i])/deltaR - 0*cs*(u[i+1] -2*u[i] + u[i-1])/deltaR);
-	}
-	tempU[rgridNumber - 1] = u[rgridNumber - 1] - deltaT*(flux[rgridNumber] - flux[rgridNumber - 1])/deltaR;
-
-	for(int i = 0; i < rgridNumber; ++i){
-		u[i] = tempU[i];
-	}
-
-	delete[] tempU;
 }
 
 void Simulation::solveDiscontinious(){
@@ -430,7 +325,6 @@ void Simulation::solveDiscontinious(){
 						pointPressure[i] = p;
 					} else {
 						pointVelocity[i] = (gamma - 1)*middleVelocity[i-1]/(gamma + 1) + 2*c1/(gamma + 1);
-						//abs?
 						pointPressure[i] = middlePressure[i-1]*power(abs(pointVelocity[i]/c1), 2*gamma/(gamma - 1));
 						pointDensity[i] = gamma*pointPressure[i]/(pointVelocity[i]*pointVelocity[i]);
 						alertNaNOrInfinity(pointDensity[i], "pointDensity = NaN");
@@ -445,8 +339,6 @@ void Simulation::solveDiscontinious(){
 				} else {
 					double D3 = u + c2 - (gamma - 1)*(u2 - u)/2;
 					if(D3 < 0){
-						/////????????
-						//pointVelocity[i] = (gamma - 1)*middleVelocity[i]/(gamma + 1) + 2*c2/(gamma + 1);
 						pointVelocity[i] = (gamma - 1)*middleVelocity[i]/(gamma + 1) - 2*c2/(gamma + 1);
 						pointPressure[i] = middlePressure[i]*power(abs(pointVelocity[i]/c2), 2*gamma/(gamma - 1));
 						pointDensity[i] = gamma*pointPressure[i]/(pointVelocity[i]*pointVelocity[i]);
@@ -572,34 +464,8 @@ void Simulation::CheckNegativeDensity(){
 			dt = 0.5*(middleDensity[i]*volume(i)/(densityFlux(i+1) - densityFlux(i)));
 			alertNaNOrInfinity(dt, "dt = NaN");
 		}
-		/*if(energy(i) - dt*(energyFlux(i+1) - energyFlux(i))/deltaR < 0){
-			dt= 0.5*(energy(i)*deltaR/(energyFlux(i+1) - energyFlux(i)));
-		}*/
 	}
-
-	for(int j = 0; j < pgridNumber; ++j){
-		distributionDerivative[0][j] = 0;
-		distributionDerivative[rgridNumber - 1][j] = 0;
-	}
-	/*for(int i = 1; i < rgridNumber - 1; ++i){
-		double volumeFactor = (cube(grid[i+1]) - cube(grid[i]))/3;
-		double velocityDerivative = (grid[i+1]*grid[i+1]*pointVelocity[i+1] - grid[i]*grid[i]*pointVelocity[i]);
-		distributionDerivative[i][0] = 0;
-		for(int j = 1; j < pgridNumber; ++j){
-			distributionDerivative[i][j] = (1/volumeFactor)*(
-				sqr(grid[i+1])*diffussionCoef(i+1,j)*(distributionFunction[i+1][j] - distributionFunction[i][j])/deltaR
-				- sqr(grid[i])*diffussionCoef(i,j)*(distributionFunction[i][j] - distributionFunction[i-1][j])/deltaR
-				- volumeFactor*middleVelocity[i]*(distributionFunction[i][j] - distributionFunction[i-1][j])/deltaR
-				+ ((distributionFunction[i][j] - distributionFunction[i][j-1])/(0.5*(pgrid[j+1] - pgrid[j-1])))*((pgrid[j] + pgrid[j-1])/(2*3))*velocityDerivative);
-			alertNaNOrInfinity(distributionDerivative[i][j], "distribution = NaN");
-
-			if(distributionFunction[i][j] + dt*distributionDerivative[i][j] < 0){
-				dt = - 0.5*distributionFunction[i][j]/distributionDerivative[i][j];
-				alertNaNOrInfinity(dt, "dt = NaN");
-			}
-		}
-	}*/
-	deltaT = 0.00000001*dt;
+	deltaT = 0.1*dt;
 }
 
 void Simulation::TracPen(double* u, double* flux, double cs){
@@ -804,14 +670,8 @@ void Simulation::evaluateCR(){
 			middle[i] = -((grid[i+1]*grid[i+1]*diffussionCoef(i+1,j) + grid[i]*grid[i]*diffussionCoef(i,j) + deltaR*volumeFactor/deltaT)/deltaR);
 			lower[i] = grid[i+1]*grid[i+1]*diffussionCoef(i+1,j)/deltaR;
 
-<<<<<<< .mine
-			f[i] = - volumeFactor*distributionFunction[i][j]/(deltaT) + volumeFactor*middleVelocity[i]*(distributionFunction[i+1][j] -distributionFunction[i][j])/deltaR
-				- (distributionFunction[i][j] - distributionFunction[i][j-1])*(p/(3*deltaP))*(grid[i+1]*grid[i+1]*pointVelocity[i+1] - grid[i]*grid[i]*pointVelocity[i])
-				;
-=======
 			f[i] = - volumeFactor*distributionFunction[i][j]/(deltaT) + volumeFactor*middleVelocity[i]*(distributionFunction[i+1][j] -distributionFunction[i][j])/deltaR
 				- (distributionFunction[i][j] - distributionFunction[i][j-1])*(p/(3*deltaP))*(grid[i+1]*grid[i+1]*pointVelocity[i+1] - grid[i]*grid[i]*pointVelocity[i]);
->>>>>>> .r176
 			alertNaNOrInfinity(f[i],"f = NaN");
 			/*if(abs(f[i]) > epsilon){
 				printf("bbb\n");
@@ -868,7 +728,7 @@ void Simulation::updateMaxSoundSpeed(){
 			maxSoundSpeed = cs;
 		} 
 	}
-	deltaT = 0.05*deltaR/maxSoundSpeed;
+	deltaT = 0.5*deltaR/maxSoundSpeed;
 }
 
 void Simulation::updateShockWavePoint(){
