@@ -2,8 +2,6 @@
 #define SIMULATION_H
 
 #include "stdafx.h"
-#include "SpaceBin.h"
-#include "particle.h"
 
 class Simulation{
 public:
@@ -50,6 +48,11 @@ public:
 	double* middleVelocity;
 	double* pointPressure;
 	double* middlePressure;
+
+	double* uplus;
+	double* uminus;
+	double* fplus;
+	double* fminus;
 
 	double** distributionFunction;
 	double** tempDistribution;
