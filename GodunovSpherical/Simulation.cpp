@@ -173,7 +173,7 @@ void Simulation::simulate(){
 		updateMaxSoundSpeed();
 		updateShockWavePoint();
 		updateParameters();
-		if(i % 1000 == 0){
+		if(i % writeParameter == 0){
 			printf("outputing\n");
 			fopen_s(&outFile, "./output/tamc_radial_profile.dat","a");
 			output(outFile, this);
@@ -472,11 +472,12 @@ void Simulation::CheckNegativeDensity(){
 			alertNaNOrInfinity(dt, "dt = NaN");
 		}
 	}
-	deltaT = 0.7*dt;
+	deltaT = 0.5*dt;
 }
 
 void Simulation::TracPen(double* u, double* flux, double cs){
 	cs = cs;
+	double* tempu = new double[rgridNumber];
     double* uplus = new double[rgridNumber];
 	double* uminus = new double[rgridNumber];
 
@@ -509,12 +510,23 @@ void Simulation::TracPen(double* u, double* flux, double cs){
 	fminus[rgridNumber - 1] = -uminus[rgridNumber - 1];
 
 	//u[0] -= deltaT*(0.5*(fplus[1] + fminus[1]) - 0.5*(fplus[0] + fminus[0]))/deltaR;
-	u[0] -= deltaT*(0.5*(fplus[1] + fminus[1]))/deltaR;
+	/*u[0] -= deltaT*(0.5*(fplus[1] + fminus[1]))/deltaR;
 	for(int i = 1; i <= rgridNumber-2; ++i){
 		u[i] -= deltaT*0.5*(fplus[i+1] + fminus[i+1] - (fplus[i] + fminus[i]))/deltaR;
 	}
-	u[rgridNumber - 1] -= deltaT*(- 0.5*(fplus[rgridNumber - 1] + fminus[rgridNumber - 1]))/deltaR;
+	u[rgridNumber - 1] -= deltaT*(- 0.5*(fplus[rgridNumber - 1] + fminus[rgridNumber - 1]))/deltaR;*/
 
+	tempu[0] = u[0] - deltaT*(flux[1] - flux[0])/deltaR;
+	for(int i = 1; i < rgridNumber - 1; ++i){
+		tempu[i] = u[i] - deltaT*((flux[i+1] - flux[i]) - cs*(u[i+1] - 2*u[i] + u[i-1])/2)/deltaR;
+	}
+	tempu[rgridNumber - 1] = u[rgridNumber - 1];
+
+	for(int i = 0; i < rgridNumber; ++i){
+		u[i] = tempu[i];
+	}
+
+	delete[] tempu;
 	delete[] uplus;
 	delete[] uminus;
 
