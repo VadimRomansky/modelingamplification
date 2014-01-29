@@ -15,7 +15,7 @@ const double maxMomentum = 5.0E-19;
 const double weight = 5;
 const double defaultTimeStep = 0.001;
 //const int rgridNumber = 100;
-const int pgridNumber = 100;
+const int pgridNumber = 1000;
 const int phigridNumber = 1;
 const int thetagridNumber = 1;
 const int kgridNumber = 100;
@@ -24,6 +24,5 @@ const double defaultMinK = 0.1E-8;
 const double turbulenceSeed = 0.000000000001;
 const int generationSize = 2;
 const double momentumParameter = 5;
-const int writeParameter = 1000;
 
 #endif
