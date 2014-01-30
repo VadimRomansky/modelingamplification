@@ -20,6 +20,9 @@ Simulation::~Simulation(){
 	delete[] middleDensity;
 	delete[] middleVelocity;
 	delete[] middlePressure;
+
+	delete[] tempU;
+
 	for(int i = 0; i < rgridNumber; ++i){
 		delete[] distributionFunction[i];
 		delete[] tempDistribution[i];
@@ -41,6 +44,7 @@ void Simulation::initializeProfile(){
 	middleDensity = new double[rgridNumber];
 	middleVelocity = new double[rgridNumber];
 	middlePressure = new double[rgridNumber];
+	tempU = new double[rgridNumber];
 	distributionFunction = new double*[rgridNumber];
 	tempDistribution = new double*[rgridNumber];
 	distributionDerivative = new double*[rgridNumber];
@@ -218,7 +222,9 @@ void Simulation::evaluateHydrodynamic(){
 		//tempDensity[i] = middleDensity[i]*middleGrid[i]*middleGrid[i];
 		tempDensity[i] = middleDensity[i];
 		tempMomentum[i] = momentum(i)*middleGrid[i]*middleGrid[i];
+		//tempMomentum[i] = momentum(i);
 		tempEnergy[i] = energy(i)*middleGrid[i]*middleGrid[i];
+		//tempEnergy[i] = energy(i);
 		dFlux[i] = densityFlux(i);
 		mFlux[i] = momentumConvectiveFlux(i);
 		eFlux[i] = energyFlux(i);
@@ -231,8 +237,13 @@ void Simulation::evaluateHydrodynamic(){
 	TracPen(tempMomentum, mFlux, maxSoundSpeed);
 	for(int i = 0; i < rgridNumber - 1; ++i){
 		tempMomentum[i] -= deltaT*middleGrid[i]*middleGrid[i]*(pointPressure[i+1] - pointPressure[i])/(deltaR);
+		//tempMomentum[i] -= deltaT*(pointPressure[i+1] - pointPressure[i])/(deltaR);
+		//tempMomentum[i] -= deltaT*2*middleDensity[i]*middleVelocity[i]*middleVelocity[i]/middleGrid[i];
 	}
 	TracPen(tempEnergy, eFlux, maxSoundSpeed);
+	/*for(int i = 0; i < rgridNumber - 1; ++i){
+		tempEnergy[i] -= deltaT*2*(middlePressure[i]*middleVelocity[i]*gamma/(gamma - 1) + pointDensity[i]*middleVelocity[i]*middleVelocity[i]*middleVelocity[i]/2)/middleGrid[i];
+	}*/
 
 	for(int i = 0; i < rgridNumber; ++i){
 		//middleDensity[i] = tempDensity[i]/(middleGrid[i]*middleGrid[i]);
@@ -241,11 +252,13 @@ void Simulation::evaluateHydrodynamic(){
 		}
 		alertNaNOrInfinity(middleDensity[i], "density = NaN");
 		double middleMomentum = tempMomentum[i]/(middleGrid[i]*middleGrid[i]);
+		//double middleMomentum = tempMomentum[i];
 		alertNaNOrInfinity(middleMomentum, "momentum = NaN");
 		double middleEnergy = tempEnergy[i];
 		alertNaNOrInfinity(middleEnergy, "energy = NaN");
 		middleVelocity[i] = middleMomentum/middleDensity[i];
 		middlePressure[i] = (middleEnergy/(middleGrid[i]*middleGrid[i]) - middleDensity[i]*middleVelocity[i]*middleVelocity[i]/2)*(gamma - 1);
+		//middlePressure[i] = (middleEnergy - middleDensity[i]*middleVelocity[i]*middleVelocity[i]/2)*(gamma - 1);
 		if(middleDensity[i] <= epsilon*density0){
 			middleDensity[i] = epsilon*density0;
 			middleVelocity[i] = 0;
@@ -489,61 +502,16 @@ void Simulation::CheckNegativeDensity(){
 
 void Simulation::TracPen(double* u, double* flux, double cs){
 	cs = cs;
-	double* tempu = new double[rgridNumber];
-    double* uplus = new double[rgridNumber];
-	double* uminus = new double[rgridNumber];
 
-	double* fplus = new double[rgridNumber];
-	double* fminus = new double[rgridNumber];
-
-	for(int i = 0; i < rgridNumber; ++i){
-		uplus[i] = cs*u[i] + flux[i];
-		uminus[i] = cs*u[i] - flux[i];
-	}
-
-	fplus[0] = 0;
-	fminus[0] = -uminus[0];
-	for(int i = 1; i < rgridNumber-1; ++i){
-
-		if(i == 1){
-			fplus[i] = uplus[i-1];
-		} else {
-			fplus[i] = uplus[i-1] + 0.5*minmod(uplus[i] - uplus[i-1], uplus[i-1] - uplus[i-2]);
-		}
-
-		if(i == rgridNumber - 1){
-			fminus[i] = -uminus[i];
-		} else {
-		    fminus[i] = -uminus[i] + 0.5*minmod(uminus[i] - uminus[i-1], uminus[i+1] - uminus[i]);
-		}
-
-	}
-	fplus[rgridNumber - 1] = uplus[rgridNumber - 2] + 0.5*minmod(uplus[rgridNumber - 1] - uplus[rgridNumber - 2], uplus[rgridNumber - 2] - uplus[rgridNumber - 3]);
-	fminus[rgridNumber - 1] = -uminus[rgridNumber - 1];
-
-	//u[0] -= deltaT*(0.5*(fplus[1] + fminus[1]) - 0.5*(fplus[0] + fminus[0]))/deltaR;
-	/*u[0] -= deltaT*(0.5*(fplus[1] + fminus[1]))/deltaR;
-	for(int i = 1; i <= rgridNumber-2; ++i){
-		u[i] -= deltaT*0.5*(fplus[i+1] + fminus[i+1] - (fplus[i] + fminus[i]))/deltaR;
-	}
-	u[rgridNumber - 1] -= deltaT*(- 0.5*(fplus[rgridNumber - 1] + fminus[rgridNumber - 1]))/deltaR;*/
-
-	tempu[0] = u[0] - deltaT*(flux[1] - flux[0])/deltaR;
+	tempU[0] = u[0] - deltaT*(flux[1] - flux[0])/deltaR;
 	for(int i = 1; i < rgridNumber - 1; ++i){
-		tempu[i] = u[i] - deltaT*((flux[i+1] - flux[i]) - cs*(u[i+1] - 2*u[i] + u[i-1])/2)/deltaR;
+		tempU[i] = u[i] - deltaT*((flux[i+1] - flux[i]) - cs*(u[i+1] - 2*u[i] + u[i-1])/2)/deltaR;
 	}
-	tempu[rgridNumber - 1] = u[rgridNumber - 1];
+	tempU[rgridNumber - 1] = u[rgridNumber - 1];
 
 	for(int i = 0; i < rgridNumber; ++i){
-		u[i] = tempu[i];
+		u[i] = tempU[i];
 	}
-
-	delete[] tempu;
-	delete[] uplus;
-	delete[] uminus;
-
-	delete[] fplus;
-	delete[] fminus;
 }
 
 double Simulation::momentum(int i){
@@ -631,6 +599,7 @@ double Simulation::momentumConvectiveFlux(int i){
 	} else if(i >= 0 && i <= rgridNumber) {
 		if(i == 0) return 0;
 		return grid[i]*grid[i]*(pointDensity[i]*pointVelocity[i]*pointVelocity[i]);
+		//return pointDensity[i]*pointVelocity[i]*pointVelocity[i];
 	} else {
 		printf("i > rgridNumber");
 	}
@@ -643,6 +612,7 @@ double Simulation::energyFlux(int i){
 	} else if(i >= 0 && i <= rgridNumber) {
 		if(i == 0) return 0;
 		return grid[i]*grid[i]*(pointPressure[i]*pointVelocity[i]*gamma/(gamma - 1) + pointDensity[i]*pointVelocity[i]*pointVelocity[i]*pointVelocity[i]/2);
+		//return pointPressure[i]*pointVelocity[i]*gamma/(gamma - 1) + pointDensity[i]*pointVelocity[i]*pointVelocity[i]*pointVelocity[i]/2;
 	} else {
 		printf("i > rgridNumber");
 	}
@@ -730,7 +700,7 @@ void Simulation::evaluateCR(){
 
 void Simulation::solveThreeDiagonal(double* middle, double* upper, double* lower, double* f, double* x){
 	double alpha = f[0]/middle[0];
-	double betta = - lower[0]/middle[0];
+	double betta = - upper[0]/middle[0];
 	x[0] = 0;
 	for(int i = 1; i < rgridNumber - 1; ++i){
 		x[i] = 0;
