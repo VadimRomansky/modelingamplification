@@ -50,10 +50,7 @@ public:
 	double* pointPressure;
 	double* middlePressure;
 
-	double* uplus;
-	double* uminus;
-	double* fplus;
-	double* fminus;
+	double* tempU;
 
 	double** distributionFunction;
 	double** tempDistribution;
