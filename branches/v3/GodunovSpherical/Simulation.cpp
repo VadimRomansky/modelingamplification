@@ -5,6 +5,7 @@
 #include "output.h"
 
 Simulation::Simulation(){
+	initialEnergy = 10E51;
 	time = 0;
 	tracPen = true;
 }
@@ -104,7 +105,7 @@ void Simulation::initializeProfile(){
 			middleDensity[i] = density0;
 			middleVelocity[i] = 0;
 			if(i <= 10){
-				middlePressure[i] = 100000000*pressure0;
+				middlePressure[i] = initialEnergy/cube(10*deltaR);
 			} else {
 				middlePressure[i] = pressure0;
 			}
@@ -207,7 +208,8 @@ void Simulation::evaluateHydrodynamic(){
 	double* eFlux = new double[rgridNumber];
 
 	for(int i = 0; i < rgridNumber; ++i){
-		tempDensity[i] = middleDensity[i]*middleGrid[i]*middleGrid[i];
+		//tempDensity[i] = middleDensity[i]*middleGrid[i]*middleGrid[i];
+		tempDensity[i] = middleDensity[i];
 		tempMomentum[i] = momentum(i)*middleGrid[i]*middleGrid[i];
 		tempEnergy[i] = energy(i)*middleGrid[i]*middleGrid[i];
 		dFlux[i] = densityFlux(i);
@@ -216,9 +218,9 @@ void Simulation::evaluateHydrodynamic(){
 	}
 
 	TracPen(tempDensity, dFlux, maxSoundSpeed);
-	/*for(int i = 0; i < rgridNumber - 1; ++i){
+	for(int i = 0; i < rgridNumber - 1; ++i){
 		tempDensity[i] -= deltaT*2*middleDensity[i]*middleVelocity[i]/middleGrid[i];
-	}*/
+	}
 	TracPen(tempMomentum, mFlux, maxSoundSpeed);
 	for(int i = 0; i < rgridNumber - 1; ++i){
 		tempMomentum[i] -= deltaT*middleGrid[i]*middleGrid[i]*(pointPressure[i+1] - pointPressure[i])/(deltaR);
@@ -226,7 +228,10 @@ void Simulation::evaluateHydrodynamic(){
 	TracPen(tempEnergy, eFlux, maxSoundSpeed);
 
 	for(int i = 0; i < rgridNumber; ++i){
-		middleDensity[i] = tempDensity[i]/(middleGrid[i]*middleGrid[i]);
+		//middleDensity[i] = tempDensity[i]/(middleGrid[i]*middleGrid[i]);
+		if(i != 0 || tempDensity[i] < middleDensity[i]){
+			middleDensity[i] = tempDensity[i];
+		}
 		alertNaNOrInfinity(middleDensity[i], "density = NaN");
 		double middleMomentum = tempMomentum[i]/(middleGrid[i]*middleGrid[i]);
 		alertNaNOrInfinity(middleMomentum, "momentum = NaN");
@@ -465,10 +470,10 @@ double Simulation::pressureFunctionDerivative2(double p, double p1, double rho1)
 void Simulation::CheckNegativeDensity(){
 	double dt = deltaT;
 	for(int i = 0; i < rgridNumber; ++i){
-		//if(middleDensity[i]*volume(i) - dt*4*pi*(grid[i+1]*grid[i+1]*densityFlux(i+1) - grid[i]*grid[i]*densityFlux(i))< 0){
-		if(middleDensity[i]*volume(i) - dt*4*pi*(densityFlux(i+1) - densityFlux(i))< 0){
-			//dt = 0.5*(middleDensity[i]*volume(i)/(4*pi*(grid[i+1]*grid[i+1]*densityFlux(i+1) - grid[i]*grid[i]*densityFlux(i))));
-			dt = 0.5*(middleDensity[i]*volume(i)/(4*pi*(densityFlux(i+1) - densityFlux(i))));
+		if(middleDensity[i]*volume(i) - dt*4*pi*(grid[i+1]*grid[i+1]*densityFlux(i+1) - grid[i]*grid[i]*densityFlux(i))< 0){
+		//if(middleDensity[i]*volume(i) - dt*4*pi*(densityFlux(i+1) - densityFlux(i))< 0){
+			dt = 0.5*(middleDensity[i]*volume(i)/(4*pi*(grid[i+1]*grid[i+1]*densityFlux(i+1) - grid[i]*grid[i]*densityFlux(i))));
+			//dt = 0.5*(middleDensity[i]*volume(i)/(4*pi*(densityFlux(i+1) - densityFlux(i))));
 			alertNaNOrInfinity(dt, "dt = NaN");
 		}
 	}
@@ -605,7 +610,8 @@ double Simulation::densityFlux(int i){
 		printf("i < 0");
 	} else if(i >= 0 && i <= rgridNumber) {
 		if(i == 0) return 0;
-		return grid[i]*grid[i]*pointDensity[i]*pointVelocity[i];
+		//return grid[i]*grid[i]*pointDensity[i]*pointVelocity[i];
+		return pointDensity[i]*pointVelocity[i];
 	} else {
 		printf("i > rgridNumber");
 	}

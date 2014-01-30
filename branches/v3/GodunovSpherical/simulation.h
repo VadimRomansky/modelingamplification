@@ -16,6 +16,7 @@ public:
 	double temperature;
 	double epsilonR;
 	double deltaT;
+	double initialEnergy;
 	int A;
 	int Z;
 
