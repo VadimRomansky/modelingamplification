@@ -156,6 +156,9 @@ void Simulation::simulate(){
 	FILE* outCoordinateDistribution;
 	fopen_s(&outCoordinateDistribution, "./output/coordinateDistribution.dat","w");
 	fclose(outCoordinateDistribution);
+	FILE* outShockWave;
+	fopen_s(&outShockWave, "./output/shock_wave.dat","w");
+	fclose(outShockWave);
 	printf("initialization\n");
 	initializeProfile();
 	updateMaxSoundSpeed();
@@ -179,6 +182,10 @@ void Simulation::simulate(){
 			fopen_s(&outFile, "./output/tamc_radial_profile.dat","a");
 			output(outFile, this);
 			fclose(outFile);
+			FILE* outShockWave;
+			fopen_s(&outShockWave, "./output/shock_wave.dat","a");
+			fprintf(outShockWave, "%d %lf %d %lf\n", i, time, shockWavePoint, shockWavePoint*deltaR);
+			fclose(outShockWave);
 			//fopen_s(&outDistribution, "./output/distribution.dat","w");
 			//fopen_s(&outFullDistribution, "./output/fullDistribution.dat","w");
 			//fopen_s(&outCoordinateDistribution, "./output/coordinateDistribution.dat","w");
@@ -477,7 +484,7 @@ void Simulation::CheckNegativeDensity(){
 			alertNaNOrInfinity(dt, "dt = NaN");
 		}
 	}
-	deltaT = 0.5*dt;
+	deltaT = 1*dt;
 }
 
 void Simulation::TracPen(double* u, double* flux, double cs){
@@ -758,11 +765,11 @@ void Simulation::updateMaxSoundSpeed(){
 
 void Simulation::updateShockWavePoint(){
 	double maxGrad = 0;
-	for(int i = 9; i < rgridNumber - 1; ++i){
-		double grad = middleVelocity[i] - middleVelocity[i + 1];
+	for(int i = 15; i < rgridNumber - 1; ++i){
+		double grad = abs(middleDensity[i] - middleDensity[i + 1]);
 		if(grad > maxGrad){
 			maxGrad = grad;
-			shockWavePoint = i;
+			shockWavePoint = i+1;
 		}
 	}
 }
