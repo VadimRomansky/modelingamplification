@@ -61,17 +61,20 @@ void Simulation::initializeProfile(){
 	double pressure0 = density0*kBoltzman*temperature/massProton;
 	switch(simulationType){
 	case 1:
-		minP = 2*massProton*U0;
-		shockWavePoint = rgridNumber/10 - 1;
+		minP = massProton*U0;
+		break;
 	case 2:
 		minP = 2*sqrt(kBoltzman*massProton*temperature);
-		shockWavePoint = -1;
+		break;
 	case 3:
-		minP = 2*massProton*U0;
-		shockWavePoint = rgridNumber/10 - 1;
+		minP = massProton*U0;
+		break;
+	case 4:
+		minP = sqrt(2*massProton*massProton*(initialEnergy/cube(10*deltaR))/density0);
+		break;
 	default:
-		minP = 2*sqrt(kBoltzman*massProton*temperature);
-		shockWavePoint = rgridNumber/100 - 1;
+		minP = massProton*U0;
+		break;
 	}
 	maxP = minP*100;
 
@@ -105,7 +108,7 @@ void Simulation::initializeProfile(){
 			}
 			middlePressure[i] = pressure0;
 			break;
-		default:
+		case 4 :
 			middleDensity[i] = density0;
 			middleVelocity[i] = 0;
 			if(i <= 10){
@@ -113,6 +116,16 @@ void Simulation::initializeProfile(){
 			} else {
 				middlePressure[i] = pressure0;
 			}
+			break;
+		default:
+			middleDensity[i] = density0;
+			if((i > 3*rgridNumber/10) && (i < 5*rgridNumber/10)){
+				middleVelocity[i] = U0;
+			} else {
+				middleVelocity[i] = 0;
+			}
+			middlePressure[i] = pressure0;
+			break;
 		}
 	}
 	double pstep = exp(log(maxP/minP)/pgridNumber);
@@ -166,6 +179,7 @@ void Simulation::simulate(){
 	printf("initialization\n");
 	initializeProfile();
 	updateMaxSoundSpeed();
+	updateShockWavePoint();
 	updateParameters();
 	fopen_s(&outFile, "./output/tamc_radial_profile.dat","a");
 	output(outFile,this);
@@ -175,9 +189,8 @@ void Simulation::simulate(){
 		printf("time = %lf\n", time);
 		printf("solving\n");
 		evaluateHydrodynamic();
-		//evaluateCR();
+		evaluateCR();
 		time = time + deltaT;
-		//updateValues();
 		updateMaxSoundSpeed();
 		updateShockWavePoint();
 		updateParameters();
