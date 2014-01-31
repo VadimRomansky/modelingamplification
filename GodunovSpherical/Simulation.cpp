@@ -510,7 +510,7 @@ void Simulation::CheckNegativeDensity(){
 			alertNaNOrInfinity(dt, "dt = NaN");
 		}
 	}
-	deltaT = 1*dt;
+	deltaT = 0.5*dt;
 }
 
 void Simulation::TracPen(double* u, double* flux, double cs){
@@ -683,7 +683,7 @@ void Simulation::evaluateCR(){
 			double volumeFactor = (cube(grid[i+1]) - cube(grid[i]))/3;
 			upper[i] = grid[i+1]*grid[i+1]*diffussionCoef(i+1,j)/deltaR;
 			middle[i] = -((grid[i+1]*grid[i+1]*diffussionCoef(i+1,j) + grid[i]*grid[i]*diffussionCoef(i,j) + deltaR*volumeFactor/deltaT)/deltaR);
-			lower[i] = grid[i+1]*grid[i+1]*diffussionCoef(i+1,j)/deltaR;
+			lower[i] = grid[i]*grid[i]*diffussionCoef(i,j)/deltaR;
 
 			f[i] = - volumeFactor*distributionFunction[i][j]/(deltaT) + volumeFactor*middleVelocity[i]*(distributionFunction[i+1][j] -distributionFunction[i][j])/deltaR
 				- (distributionFunction[i][j] - distributionFunction[i][j-1])*(p/(3*deltaP))*(grid[i+1]*grid[i+1]*pointVelocity[i+1] - grid[i]*grid[i]*pointVelocity[i]);
@@ -726,13 +726,15 @@ void Simulation::solveThreeDiagonal(double* middle, double* upper, double* lower
 	alertNaNOrInfinity(x[rgridNumber - 1], "x[rgridNumber - 1] = NaN");
 	x[rgridNumber - 2] = (f[rgridNumber - 1] - middle[rgridNumber - 1]*x[rgridNumber - 1])/(lower[rgridNumber - 2]);
 	alertNaNOrInfinity(x[rgridNumber - 2], "x[rgridNumber - 2] = NaN");
-	for(int i = rgridNumber - 3; i >= 0; --i){
+	for(int i = rgridNumber - 3; i > 0; --i){
 		x[i] = (f[i + 1] - middle[i + 1]*x[i + 1] - upper[i + 1]*x[i+2])/lower[i];
 		alertNaNOrInfinity(x[i],"x = NaN");
 		/*if(abs(x[i]) > epsilon){
 			printf("aaaaaa\n");
 		}*/
 	}
+	x[0] = (f[0] - upper[0]*x[1])/middle[0];
+	alertNaNOrInfinity(x[0], "x = NaN");
 }
 
 void Simulation::updateMaxSoundSpeed(){
@@ -743,7 +745,7 @@ void Simulation::updateMaxSoundSpeed(){
 			maxSoundSpeed = cs;
 		} 
 	}
-	deltaT = 0.5*deltaR/maxSoundSpeed;
+	deltaT = 0.1*deltaR/maxSoundSpeed;
 }
 
 void Simulation::updateShockWavePoint(){
