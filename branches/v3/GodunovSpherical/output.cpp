@@ -21,16 +21,16 @@ void outputDistribution(FILE* distributionFile, FILE* fullDistributionFile, FILE
 	for(int i = 0; i < simulation->rgridNumber; ++i){
 		for(int j = 0; j < pgridNumber - 1; ++j){
 			double p = (simulation->pgrid[j+1] + simulation->pgrid[j])/2;
-			//fprintf(distributionFile, "%30.20lf %30.20lf\n", p, simulation->distributionFunction[i][j]);
+			//fprintf(distributionFile, "%30.20lf %g\n", p, simulation->distributionFunction[i][j]);
 			fullDistribution[j] += simulation->volume(i)*simulation->distributionFunction[i][j];
 		}
-		fprintf(coordinateDistributionFile, "%30.20lf %30.20lf\n", simulation->grid[i], simulation->distributionFunction[i][pgridNumber/10]);
+		fprintf(coordinateDistributionFile, "%20.10lf %g\n", simulation->grid[i], simulation->distributionFunction[i][pgridNumber/10]);
 	}
 
 	for(int j = 0; j < pgridNumber; ++j){
 		fullDistribution[j] /= volume;
 		double p = (simulation->pgrid[j+1] + simulation->pgrid[j])/2;
-		fprintf(fullDistributionFile, "%30.20lf %30.20lf\n", p, fullDistribution[j]);
+		fprintf(fullDistributionFile, "%30.20lf %g\n", p, fullDistribution[j]);
 	}
 	delete[] fullDistribution;
 }
