@@ -8,5 +8,6 @@ double max(double a, double b);
 double min(double a, double b);
 void alertNaNOrInfinity(double value, const char* s);
 void alertNotPositive(double value, const char* s);
+void alertNegative(double value, const char* s);
 
 #endif

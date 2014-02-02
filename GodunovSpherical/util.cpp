@@ -43,3 +43,10 @@ void alertNotPositive(double value, const char* s){
 		printf("\n");
 	}
 }
+
+void alertNegative(double value, const char* s){
+	if(value < 0){
+		printf(s);
+		printf("\n");
+	}
+}
