@@ -24,7 +24,7 @@ void outputDistribution(FILE* distributionFile, FILE* fullDistributionFile, FILE
 			//fprintf(distributionFile, "%30.20lf %g\n", p, simulation->distributionFunction[i][j]);
 			fullDistribution[j] += simulation->volume(i)*simulation->distributionFunction[i][j];
 		}
-		fprintf(coordinateDistributionFile, "%20.10lf %g\n", simulation->grid[i], simulation->distributionFunction[i][pgridNumber/10]);
+		fprintf(coordinateDistributionFile, "%20.10lf %g\n", simulation->grid[i], simulation->distributionFunction[i][injectionMomentum]);
 	}
 
 	for(int j = 0; j < pgridNumber; ++j){

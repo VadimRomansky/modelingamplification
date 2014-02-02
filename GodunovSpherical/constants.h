@@ -25,5 +25,6 @@ const double turbulenceSeed = 0.000000000001;
 const int generationSize = 2;
 const double momentumParameter = 5;
 const int writeParameter = 1;
+const int injectionMomentum = 5;
 
 #endif
