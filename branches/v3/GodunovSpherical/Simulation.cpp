@@ -138,9 +138,9 @@ void Simulation::initializeProfile(){
 	for(int i = 0; i < rgridNumber; ++i){
 		for(int j = 0; j < pgridNumber; ++j){
 			double p = (pgrid[j] + pgrid[j + 1])/2;
-			//distributionFunction[i][j] = (middleDensity[i]/massProton)*exp(-p*speed_of_light/(kBoltzman*temperatureIn(i)));
+			distributionFunction[i][j] = 4*pi*(middleDensity[i]/massProton)*exp(-p*p/(2*massProton*kBoltzman*temperatureIn(i)))*p*p/cube(sqrt(2*pi*massProton*kBoltzman*temperatureIn(i)));
 			//distributionFunction[i][j] = (middleDensity[i]/massProton)*exp(-p*speed_of_light/(kBoltzman*temperatureIn(0)));
-			distributionFunction[i][j] = 0;
+			//distributionFunction[i][j] = 0;
 		}
 		pointDensity[i] = middleDensity[i];
 		pointVelocity[i] = middleVelocity[i];
@@ -203,13 +203,13 @@ void Simulation::simulate(){
 			fopen_s(&outShockWave, "./output/shock_wave.dat","a");
 			fprintf(outShockWave, "%d %lf %d %lf\n", i, time, shockWavePoint, shockWavePoint*deltaR);
 			fclose(outShockWave);
-			//fopen_s(&outDistribution, "./output/distribution.dat","w");
-			//fopen_s(&outFullDistribution, "./output/fullDistribution.dat","w");
-			//fopen_s(&outCoordinateDistribution, "./output/coordinateDistribution.dat","w");
-			//outputDistribution(outDistribution, outFullDistribution, outCoordinateDistribution, this);
-			//fclose(outCoordinateDistribution);
-			//fclose(outFullDistribution);
-			//fclose(outDistribution);
+			fopen_s(&outDistribution, "./output/distribution.dat","w");
+			fopen_s(&outFullDistribution, "./output/fullDistribution.dat","w");
+			fopen_s(&outCoordinateDistribution, "./output/coordinateDistribution.dat","w");
+			outputDistribution(outDistribution, outFullDistribution, outCoordinateDistribution, this);
+			fclose(outCoordinateDistribution);
+			fclose(outFullDistribution);
+			fclose(outDistribution);
 			fopen_s(&outIteration, "./output/iterations.dat","a");
 			fprintf(outIteration, "%d %28.20lf %28.20lf %28.20lf %28.20lf\n", i, time, mass, totalMomentum, totalEnergy);
 			fclose(outIteration);
@@ -668,32 +668,46 @@ double Simulation::injection(){
 }
 
 void Simulation::evaluateCR(){
+	//deltaT = 0;
 	double* upper = new double[rgridNumber - 1];
 	double* middle = new double[rgridNumber];
 	double* lower = new double[rgridNumber - 1];
 
 	double* f = new double[rgridNumber];
-	double* x = new double[rgridNumber];
+ 	double* x = new double[rgridNumber];
 
-	for(int j = pgridNumber - 1; j > 0; --j){
+	//for(int j = pgridNumber - 1; j > 0; --j){
+	for(int j = 0; j < pgridNumber - 1; ++j){
 		// -1 ?
 		for(int i = 0; i < rgridNumber - 1; ++i){
 			double p = (pgrid[j] + pgrid[j+1])/2;
 			double deltaP = (pgrid[j+1] - pgrid[j-1])/2;
 			double volumeFactor = (cube(grid[i+1]) - cube(grid[i]))/3;
-			upper[i] = grid[i+1]*grid[i+1]*diffussionCoef(i+1,j)/deltaR;
-			middle[i] = -((grid[i+1]*grid[i+1]*diffussionCoef(i+1,j) + grid[i]*grid[i]*diffussionCoef(i,j) + deltaR*volumeFactor/deltaT)/deltaR);
-			lower[i] = grid[i]*grid[i]*diffussionCoef(i,j)/deltaR;
+			upper[i] = grid[i+1]*grid[i+1]*diffussionCoef(i+1,j)*deltaT/deltaR;
+			middle[i] = -((grid[i+1]*grid[i+1]*diffussionCoef(i+1,j) + grid[i]*grid[i]*diffussionCoef(i,j))*deltaT/deltaR + volumeFactor);
+			lower[i] = grid[i]*grid[i]*diffussionCoef(i,j)*deltaT/deltaR;
 
-			f[i] = - volumeFactor*distributionFunction[i][j]/(deltaT) + volumeFactor*middleVelocity[i]*(distributionFunction[i+1][j] -distributionFunction[i][j])/deltaR
-				- (distributionFunction[i][j] - distributionFunction[i][j-1])*(p/(3*deltaP))*(grid[i+1]*grid[i+1]*pointVelocity[i+1] - grid[i]*grid[i]*pointVelocity[i]);
-			alertNaNOrInfinity(f[i],"f = NaN");
-			/*if(abs(f[i]) > epsilon){
-				printf("bbb\n");
+			double leftDerivative = (distributionFunction[i][j] - distributionFunction[i][j-1])*p/(3*deltaP);
+			double rightDerivative = (distributionFunction[i][j+1] - distributionFunction[i][j])*p/(3*deltaP);
+			double volumeDerivative = (grid[i+1]*grid[i+1]*pointVelocity[i+1] - grid[i]*grid[i]*pointVelocity[i]);
+
+			f[i] = - volumeFactor*distributionFunction[i][j];// + volumeFactor*middleVelocity[i]*(distributionFunction[i+1][j] -distributionFunction[i][j])/deltaR;
+			/*if( (j > 0) && (j < pgridNumber - 1)){
+				f[i] += volumeFactor*middleVelocity[i]*(distributionFunction[i+1][j] -distributionFunction[i][j])/deltaR;
+				if(distributionFunction[i][j-1] > 0){
+					f[i] -= leftDerivative*volumeDerivative;
+				} else {
+					if( leftDerivative*volumeDerivative < 0){
+						f[i] -= leftDerivative*volumeDerivative;
+					} else if(rightDerivative*volumeDerivative < 0){
+						f[i] -= rightDerivative*volumeDerivative;
+					} 
+				}
 			}*/
+			alertNaNOrInfinity(f[i],"f = NaN");
 		}
-		middle[rgridNumber - 1] = -((grid[rgridNumber]*grid[rgridNumber]*diffussionCoef(rgridNumber,j) + grid[rgridNumber - 1]*grid[rgridNumber - 1]*diffussionCoef(rgridNumber - 1,j) + deltaR*(cube(grid[rgridNumber]) - cube(grid[rgridNumber - 1]))/(3*deltaT))/deltaR);
-		f[rgridNumber - 1] = distributionFunction[rgridNumber - 1][j]*(cube(grid[rgridNumber]) - cube(grid[rgridNumber - 1]))/(3*deltaT);
+		middle[rgridNumber - 1] = -((grid[rgridNumber]*grid[rgridNumber]*diffussionCoef(rgridNumber,j) + grid[rgridNumber - 1]*grid[rgridNumber - 1]*diffussionCoef(rgridNumber - 1,j))*deltaT + (cube(grid[rgridNumber]) - cube(grid[rgridNumber - 1]))/3);
+		f[rgridNumber - 1] = -distributionFunction[rgridNumber - 1][j]*(cube(grid[rgridNumber]) - cube(grid[rgridNumber - 1]))/3;
 		solveThreeDiagonal(middle, upper, lower, f, x);
 		
 		for(int i = 0; i < rgridNumber; ++i){
@@ -712,29 +726,28 @@ void Simulation::evaluateCR(){
 }
 
 void Simulation::solveThreeDiagonal(double* middle, double* upper, double* lower, double* f, double* x){
-	double alpha = f[0]/middle[0];
-	double betta = - upper[0]/middle[0];
-	x[0] = 0;
-	for(int i = 1; i < rgridNumber - 1; ++i){
-		x[i] = 0;
-		alpha = (f[i] - lower[i-1]*alpha)/(lower[i-1]*betta + middle[i]);
-		alertNaNOrInfinity(alpha, "aplpha = NaN");
-		betta = - upper[i]/(lower[i-1]*betta + middle[i]);
-		alertNaNOrInfinity(betta, "betta = NaN");
+	double* alpha = new double[rgridNumber];
+	double* beta = new double[rgridNumber];
+
+	alpha[1] = -upper[0]/middle[0];
+	beta[1] = f[0]/middle[0];
+	for(int i = 2; i < rgridNumber; ++i){
+		alpha[i] = -upper[i-1]/(lower[i]*alpha[i-1] + middle[i-1]);
+		beta[i] = (f[i-1] - lower[i]*beta[i-1])/(lower[i]*alpha[i-1] + middle[i-1]);
 	}
-	x[rgridNumber - 1] = (f[rgridNumber - 1] - lower[rgridNumber - 2]*alpha)/(lower[rgridNumber-2]*betta + middle[rgridNumber - 1]);
-	alertNaNOrInfinity(x[rgridNumber - 1], "x[rgridNumber - 1] = NaN");
-	x[rgridNumber - 2] = (f[rgridNumber - 1] - middle[rgridNumber - 1]*x[rgridNumber - 1])/(lower[rgridNumber - 2]);
-	alertNaNOrInfinity(x[rgridNumber - 2], "x[rgridNumber - 2] = NaN");
-	for(int i = rgridNumber - 3; i > 0; --i){
-		x[i] = (f[i + 1] - middle[i + 1]*x[i + 1] - upper[i + 1]*x[i+2])/lower[i];
+
+	x[rgridNumber - 1] = (f[rgridNumber-1] - lower[rgridNumber-21]*beta[rgridNumber-1])/(lower[rgridNumber-2]*alpha[rgridNumber-1] + middle[rgridNumber-1]);
+	alertNaNOrInfinity(x[rgridNumber-1],"x = NaN");
+	alertNegative(x[rgridNumber-1],"x < 0");
+
+	for(int i = rgridNumber - 2; i >= 0; --i){
+		x[i] = alpha[i+1]*x[i+1] + beta[i+1];
 		alertNaNOrInfinity(x[i],"x = NaN");
-		/*if(abs(x[i]) > epsilon){
-			printf("aaaaaa\n");
-		}*/
+		alertNegative(x[i],"x < 0");
 	}
-	x[0] = (f[0] - upper[0]*x[1])/middle[0];
-	alertNaNOrInfinity(x[0], "x = NaN");
+
+	delete[] alpha;
+	delete[] beta;
 }
 
 void Simulation::updateMaxSoundSpeed(){

@@ -13,27 +13,26 @@ void alertNaNOrInfinity(double value, const char* s){
 }
 
 void solveThreeDiagonal(double* middle, double* upper, double* lower, double* f, double* x){
-	double alpha = f[0]/middle[0];
-	double betta = - upper[0]/middle[0];
-	x[0] = 0;
-	for(int i = 1; i < rgridNumber - 1; ++i){
-		x[i] = 0;
-		alpha = (f[i] - lower[i-1]*alpha)/(lower[i-1]*betta + middle[i]);
-		alertNaNOrInfinity(alpha, "aplpha = NaN");
-		betta = - upper[i]/(lower[i-1]*betta + middle[i]);
-		alertNaNOrInfinity(betta, "betta = NaN");
+	double* alpha = new double[rgridNumber];
+	double* beta = new double[rgridNumber];
+
+	alpha[1] = -upper[0]/middle[0];
+	beta[1] = f[0]/middle[0];
+	for(int i = 2; i < rgridNumber; ++i){
+		alpha[i] = -upper[i-1]/(lower[i]*alpha[i-1] + middle[i-1]);
+		beta[i] = (f[i-1] - lower[i]*beta[i-1])/(lower[i]*alpha[i-1] + middle[i-1]);
 	}
-	x[rgridNumber - 1] = (f[rgridNumber - 1] - lower[rgridNumber - 2]*alpha)/(lower[rgridNumber-2]*betta + middle[rgridNumber - 1]);
-	alertNaNOrInfinity(x[rgridNumber - 1], "x[rgridNumber - 1] = NaN");
-	x[rgridNumber - 2] = (f[rgridNumber - 1] - middle[rgridNumber - 1]*x[rgridNumber - 1])/(lower[rgridNumber - 2]);
-	alertNaNOrInfinity(x[rgridNumber - 2], "x[rgridNumber - 2] = NaN");
-	for(int i = rgridNumber - 3; i >= 0; --i){
-		x[i] = (f[i + 1] - middle[i + 1]*x[i + 1] - upper[i + 1]*x[i+2])/lower[i];
+
+	x[rgridNumber - 1] = (f[rgridNumber-1] - lower[rgridNumber-21]*beta[rgridNumber-1])/(lower[rgridNumber-2]*alpha[rgridNumber-1] + middle[rgridNumber-1]);
+	alertNaNOrInfinity(x[rgridNumber-1],"x = NaN");
+
+	for(int i = rgridNumber - 2; i >= 0; --i){
+		x[i] = alpha[i+1]*x[i+1] + beta[i+1];
 		alertNaNOrInfinity(x[i],"x = NaN");
-		/*if(abs(x[i]) > epsilon){
-			printf("aaaaaa\n");
-		}*/
 	}
+
+	delete[] alpha;
+	delete[] beta;
 }
 
 int _tmain(int argc, _TCHAR* argv[])
@@ -43,6 +42,23 @@ int _tmain(int argc, _TCHAR* argv[])
 	double* lower = new double[rgridNumber];
 	double* f = new double[rgridNumber];
 	double* x = new double[rgridNumber];
+
+	/*
+	
+	7 2 0 0     1
+	1 1 3 0     0
+	0 2 1 1     0
+	0 0 1 1     0
+	
+
+	x 
+	=
+
+	0.1426
+	0
+	-0.47619
+	0.47619
+	*/
 	
 	upper[0] = 2;
 	upper[1] = 3;
