@@ -204,7 +204,7 @@ void Simulation::simulate(){
 			fprintf(outShockWave, "%d %lf %d %lf\n", i, time, shockWavePoint, shockWavePoint*deltaR);
 			fclose(outShockWave);
 			fopen_s(&outDistribution, "./output/distribution.dat","w");
-			fopen_s(&outFullDistribution, "./output/fullDistribution.dat","w");
+			fopen_s(&outFullDistribution, "./output/fullDistribution.dat","a");
 			fopen_s(&outCoordinateDistribution, "./output/coordinateDistribution.dat","w");
 			outputDistribution(outDistribution, outFullDistribution, outCoordinateDistribution, this);
 			fclose(outCoordinateDistribution);
@@ -664,11 +664,10 @@ double Simulation::diffussionCoef(int i, int j){
 
 double Simulation::injection(){
 	double pf = pgrid[pgridNumber/10];
-	return 0.000000000000001*middleDensity[shockWavePoint]*abs(middleVelocity[shockWavePoint])/(pf*pf*massProton);
+	return middleDensity[shockWavePoint]*abs(middleVelocity[shockWavePoint])/(pf*pf*massProton);
 }
 
 void Simulation::evaluateCR(){
-	//deltaT = 0;
 	double* upper = new double[rgridNumber - 1];
 	double* middle = new double[rgridNumber];
 	double* lower = new double[rgridNumber - 1];
@@ -691,7 +690,7 @@ void Simulation::evaluateCR(){
 			double rightDerivative = (distributionFunction[i][j+1] - distributionFunction[i][j])*p/(3*deltaP);
 			double volumeDerivative = (grid[i+1]*grid[i+1]*pointVelocity[i+1] - grid[i]*grid[i]*pointVelocity[i]);
 
-			f[i] = - volumeFactor*distributionFunction[i][j];// + volumeFactor*middleVelocity[i]*(distributionFunction[i+1][j] -distributionFunction[i][j])/deltaR;
+			f[i] = - volumeFactor*distributionFunction[i][j] + volumeFactor*middleVelocity[i]*(distributionFunction[i+1][j] - distributionFunction[i][j])/deltaR;
 			/*if( (j > 0) && (j < pgridNumber - 1)){
 				f[i] += volumeFactor*middleVelocity[i]*(distributionFunction[i+1][j] -distributionFunction[i][j])/deltaR;
 				if(distributionFunction[i][j-1] > 0){
@@ -763,7 +762,7 @@ void Simulation::updateMaxSoundSpeed(){
 
 void Simulation::updateShockWavePoint(){
 	double maxGrad = 0;
-	for(int i = 15; i < rgridNumber - 1; ++i){
+	for(int i = 0; i < rgridNumber - 1; ++i){
 		double grad = abs(middleDensity[i] - middleDensity[i + 1]);
 		if(grad > maxGrad){
 			maxGrad = grad;
