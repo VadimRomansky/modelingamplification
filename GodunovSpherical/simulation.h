@@ -53,8 +53,7 @@ public:
 	double* tempU;
 
 	double** distributionFunction;
-	double** tempDistribution;
-	double** distributionDerivative;
+	double** tempDistributionFunction;
 
 	double momentum(int i);
 	double energy(int i);
