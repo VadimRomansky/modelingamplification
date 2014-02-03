@@ -23,7 +23,7 @@ void solveThreeDiagonal(double* middle, double* upper, double* lower, double* f,
 		beta[i] = (f[i-1] - lower[i]*beta[i-1])/(lower[i]*alpha[i-1] + middle[i-1]);
 	}
 
-	x[rgridNumber - 1] = (f[rgridNumber-1] - lower[rgridNumber-21]*beta[rgridNumber-1])/(lower[rgridNumber-2]*alpha[rgridNumber-1] + middle[rgridNumber-1]);
+	x[rgridNumber - 1] = (f[rgridNumber-1] - lower[rgridNumber-2]*beta[rgridNumber-1])/(lower[rgridNumber-2]*alpha[rgridNumber-1] + middle[rgridNumber-1]);
 	alertNaNOrInfinity(x[rgridNumber-1],"x = NaN");
 
 	for(int i = rgridNumber - 2; i >= 0; --i){
