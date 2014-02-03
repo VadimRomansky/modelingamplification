@@ -11,15 +11,10 @@ c = fix(N2/2);
 b = fix(N2/4);
 a = 5;
 
+N4 = size(fullDistribution,1);
 a1 = 1;
-a2 = 2;
-a3 = 3;
-!figure(1);
-!plot (distribution(1:N3,1),distribution(1:N3,2),'cyan',distribution(a*N3 + 1:N3,1),distribution(a*N3 + 1:N3,2),'green',distribution(b*N3 + 1:N3,1),distribution(b*N3 + 1:N3,2),'blue',distribution(c*N3 + 1:N3,1),distribution(c*N3 + 1:N3,2),'black',distribution(d*N3 + 1:N3,1),distribution(d*N3 + 1:N3,2),'yellow',distribution(e*N3 + 1:N3,1),distribution(e*N3 + 1:N3,2),'red');
-!title ('f(p)');
-!xlabel ('p g*cm/s');
-!ylabel ('f');
-!grid ;
+a2 = fix(N4/(2*N3));
+a3 = fix(N4/N3) - 1;
 
 figure(2);
 plot (fullDistribution(1:N3,1),fullDistribution(1:N3,2),'red',fullDistribution(1:N3,1),fullDistribution(a1*N3 + (1:N3),2),'green',fullDistribution(1:N3,1),fullDistribution(a2*N3 + (1:N3),2),'black',fullDistribution(1:N3,1),fullDistribution(a3*N3 + (1:N3),2),'blue');

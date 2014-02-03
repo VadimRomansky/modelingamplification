@@ -154,36 +154,36 @@ void Simulation::initializeProfile(){
 }
 
 void Simulation::simulate(){
+	printf("initialization\n");
+	initializeProfile();
+	updateMaxSoundSpeed();
+	updateShockWavePoint();
+	updateParameters();
+
 	printf("creating files\n");
 	FILE* outFile;
-	fopen_s(&outFile, "./output/tamc_radial_profile.dat","w");
-	fclose(outFile);
 	FILE* outIteration;
 	fopen_s(&outIteration, "./output/iterations.dat","w");
 	fclose(outIteration);
 	FILE* outExtraIteration;
 	fopen_s(&outExtraIteration, "./output/extra_iterations.dat","w");
 	fclose(outExtraIteration);
-	FILE* outDistribution;
-	fopen_s(&outDistribution, "./output/distribution.dat","w");
-	fclose(outDistribution);
-	FILE* outFullDistribution;
-	fopen_s(&outFullDistribution, "./output/fullDistribution.dat","w");
-	fclose(outFullDistribution);
-	FILE* outCoordinateDistribution;
-	fopen_s(&outCoordinateDistribution, "./output/coordinateDistribution.dat","w");
-	fclose(outCoordinateDistribution);
 	FILE* outShockWave;
 	fopen_s(&outShockWave, "./output/shock_wave.dat","w");
 	fclose(outShockWave);
-	printf("initialization\n");
-	initializeProfile();
-	updateMaxSoundSpeed();
-	updateShockWavePoint();
-	updateParameters();
 	fopen_s(&outFile, "./output/tamc_radial_profile.dat","a");
 	output(outFile,this);
 	fclose(outFile);
+	FILE* outDistribution;
+	FILE* outFullDistribution;
+	FILE* outCoordinateDistribution;
+	fopen_s(&outDistribution, "./output/distribution.dat","w");
+	fopen_s(&outFullDistribution, "./output/fullDistribution.dat","w");
+	fopen_s(&outCoordinateDistribution, "./output/coordinateDistribution.dat","w");
+	outputDistribution(outDistribution, outFullDistribution, outCoordinateDistribution, this);
+	fclose(outCoordinateDistribution);
+	fclose(outFullDistribution);
+	fclose(outDistribution);
 	for(int i = 0; i < iterationNumber; ++i){
 		printf("iteration ¹ %d\n", i);
 		printf("time = %lf\n", time);
@@ -690,18 +690,16 @@ void Simulation::evaluateCR(){
 			double rightDerivative = (distributionFunction[i][j+1] - distributionFunction[i][j])*p/(3*deltaP);
 			double volumeDerivative = (grid[i+1]*grid[i+1]*pointVelocity[i+1] - grid[i]*grid[i]*pointVelocity[i]);
 
-			f[i] = - volumeFactor*distributionFunction[i][j] + volumeFactor*middleVelocity[i]*(distributionFunction[i+1][j] - distributionFunction[i][j])/deltaR;
-			/*if( (j > 0) && (j < pgridNumber - 1)){
-				f[i] += volumeFactor*middleVelocity[i]*(distributionFunction[i+1][j] -distributionFunction[i][j])/deltaR;
-				if(distributionFunction[i][j-1] > 0){
-					f[i] -= leftDerivative*volumeDerivative;
-				} else {
-					if( leftDerivative*volumeDerivative < 0){
-						f[i] -= leftDerivative*volumeDerivative;
-					} else if(rightDerivative*volumeDerivative < 0){
-						f[i] -= rightDerivative*volumeDerivative;
-					} 
-				}
+			f[i] = - volumeFactor*distributionFunction[i][j];
+			if(middleVelocity[i] > 0){
+				f[i] += volumeFactor*middleVelocity[i]*(distributionFunction[i][j] - distributionFunction[i-1][j])/deltaR;
+			} else {
+				f[i] += volumeFactor*middleVelocity[i]*(distributionFunction[i+1][j] - distributionFunction[i][j])/deltaR;
+			}
+			/*if(volumeDerivative > 0){
+				f[i] += - volumeDerivative*rightDerivative*deltaT;
+			} else {
+				f[i] += - volumeDerivative*leftDerivative*deltaT;
 			}*/
 			alertNaNOrInfinity(f[i],"f = NaN");
 		}
@@ -735,7 +733,7 @@ void Simulation::solveThreeDiagonal(double* middle, double* upper, double* lower
 		beta[i] = (f[i-1] - lower[i]*beta[i-1])/(lower[i]*alpha[i-1] + middle[i-1]);
 	}
 
-	x[rgridNumber - 1] = (f[rgridNumber-1] - lower[rgridNumber-21]*beta[rgridNumber-1])/(lower[rgridNumber-2]*alpha[rgridNumber-1] + middle[rgridNumber-1]);
+	x[rgridNumber - 1] = (f[rgridNumber-1] - lower[rgridNumber-2]*beta[rgridNumber-1])/(lower[rgridNumber-2]*alpha[rgridNumber-1] + middle[rgridNumber-1]);
 	alertNaNOrInfinity(x[rgridNumber-1],"x = NaN");
 	alertNegative(x[rgridNumber-1],"x < 0");
 
