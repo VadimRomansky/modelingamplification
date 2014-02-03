@@ -72,6 +72,7 @@ void Simulation::initializeProfile(){
 		minP = massProton*U0;
 		break;
 	}
+	//minP = massProton*speed_of_light/1000;
 	maxP = minP*100;
 
 	for(int i = 0; i < rgridNumber + 1; ++i){
@@ -135,7 +136,7 @@ void Simulation::initializeProfile(){
 		for(int j = 0; j < pgridNumber; ++j){
 			double p = (pgrid[j] + pgrid[j + 1])/2;
 			distributionFunction[i][j] = (middleDensity[i]/massProton)*exp(-p*p/(2*massProton*kBoltzman*temperatureIn(i)))/cube(sqrt(2*pi*massProton*kBoltzman*temperatureIn(i)));
-			//distributionFunction[i][j] = (middleDensity[i]/massProton)*exp(-p*speed_of_light/(kBoltzman*temperatureIn(0)));
+			//distributionFunction[i][j] = (middleDensity[i]/massProton)*exp(-p*speed_of_light/(kBoltzman*temperatureIn(i)))/cube(sqrt(2*pi*massProton*kBoltzman*temperatureIn(i)));
 			//distributionFunction[i][j] = 0;
 		}
 		pointDensity[i] = middleDensity[i];
@@ -661,7 +662,7 @@ double Simulation::diffussionCoef(int i, int j){
 double Simulation::injection(){
 	double pf = pgrid[injectionMomentum];
 	//return 0;
-	return 0.01*middleDensity[shockWavePoint]*abs(middleVelocity[shockWavePoint])/(pf*pf*massProton);
+	return 0.1*middleDensity[shockWavePoint]*abs(middleVelocity[shockWavePoint])/(pf*pf*massProton);
 }
 
 void Simulation::evaluateCR(){
