@@ -11,7 +11,7 @@ const double gamma = 1.66666666;
 const double relativistic_gamma = 1.3333333333;
 const int pgridNumber = 100;
 const double momentumParameter = 5;
-const int writeParameter = 10;
+const int writeParameter = 100;
 const int injectionMomentum = 5;
 
 #endif
