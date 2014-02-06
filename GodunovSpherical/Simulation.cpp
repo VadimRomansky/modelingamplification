@@ -55,7 +55,7 @@ void Simulation::initializeProfile(){
 	deltaR = (upstreamR - downstreamR)/rgridNumber;
 	double r = downstreamR;
 	double pressure0 = density0*kBoltzman*temperature/massProton;
-	switch(simulationType){
+	/*switch(simulationType){
 	case 1:
 		minP = massProton*U0;
 		break;
@@ -71,9 +71,9 @@ void Simulation::initializeProfile(){
 	default:
 		minP = massProton*U0;
 		break;
-	}
-	//minP = massProton*speed_of_light/1000;
-	maxP = minP*100;
+	}*/
+	minP = massProton*speed_of_light/1000;
+	maxP = minP*10000;
 
 	for(int i = 0; i < rgridNumber + 1; ++i){
 		grid[i] = r;
@@ -135,9 +135,9 @@ void Simulation::initializeProfile(){
 	for(int i = 0; i < rgridNumber; ++i){
 		for(int j = 0; j < pgridNumber; ++j){
 			double p = (pgrid[j] + pgrid[j + 1])/2;
-			distributionFunction[i][j] = (middleDensity[i]/massProton)*exp(-p*p/(2*massProton*kBoltzman*temperatureIn(i)))/cube(sqrt(2*pi*massProton*kBoltzman*temperatureIn(i)));
+			//distributionFunction[i][j] = (middleDensity[i]/massProton)*exp(-p*p/(2*massProton*kBoltzman*temperatureIn(i)))/cube(sqrt(2*pi*massProton*kBoltzman*temperatureIn(i)));
 			//distributionFunction[i][j] = (middleDensity[i]/massProton)*exp(-p*speed_of_light/(kBoltzman*temperatureIn(i)))/cube(sqrt(2*pi*massProton*kBoltzman*temperatureIn(i)));
-			//distributionFunction[i][j] = 0;
+			distributionFunction[i][j] = 0;
 		}
 		pointDensity[i] = middleDensity[i];
 		pointVelocity[i] = middleVelocity[i];
@@ -663,6 +663,7 @@ double Simulation::injection(){
 	double pf = pgrid[injectionMomentum];
 	//return 0;
 	return 0.1*middleDensity[shockWavePoint]*abs(middleVelocity[shockWavePoint])/(pf*pf*massProton);
+	//return 0.1*middleDensity[shockWavePoint]*abs(middleVelocity[shockWavePoint])*pf/massProton;
 }
 
 void Simulation::evaluateCR(){
@@ -706,19 +707,25 @@ void Simulation::evaluateCR(){
 			double volumeDerivative = (grid[i+1]*grid[i+1]*pointVelocity[i+1] - grid[i]*grid[i]*pointVelocity[i]);
 
 			f[i] = - volumeFactor*distributionFunction[i][j];
-			if(middleVelocity[i] > 0){
-				if(i > 0){
-					f[i] += volumeFactor*middleVelocity[i]*(distributionFunction[i][j] - distributionFunction[i-1][j])/deltaR;
-				}
-			} else {
-				if(i < rgridNumber - 1){
-					f[i] += volumeFactor*middleVelocity[i]*(distributionFunction[i+1][j] - distributionFunction[i][j])/deltaR;
-				}
-			}
+
 			if(volumeDerivative > 0){
 				f[i] += - volumeDerivative*rightDerivative*deltaT;
 			} else {
 				f[i] += - volumeDerivative*leftDerivative*deltaT;
+			}
+
+			if(middleVelocity[i] > 0){
+				if(i > 0){
+					f[i] += volumeFactor*middleVelocity[i]*(distributionFunction[i][j] - distributionFunction[i-1][j])*deltaT/deltaR;
+					//f[i] += (grid[i+1]*grid[i+1]*pointVelocity[i+1]*distributionFunction[i][j] - grid[i]*grid[i]*pointVelocity[i]*distributionFunction[i-1][j])*deltaT;
+					//f[i] += (grid[i+1]*grid[i+1]*middleVelocity[i]*distributionFunction[i][j] - grid[i]*grid[i]*middleVelocity[i-1]*distributionFunction[i-1][j])*deltaT;
+				}
+			} else {
+				if(i < rgridNumber - 1){
+					f[i] += volumeFactor*middleVelocity[i]*(distributionFunction[i+1][j] - distributionFunction[i][j])*deltaT/deltaR;
+					//f[i] += (grid[i+1]*grid[i+1]*pointVelocity[i+1]*distributionFunction[i+1][j] - grid[i]*grid[i]*pointVelocity[i]*distributionFunction[i][j])*deltaT;
+					//f[i] += (grid[i+1]*grid[i+1]*middleVelocity[i+1]*distributionFunction[i+1][j] - grid[i]*grid[i]*middleVelocity[i]*distributionFunction[i][j])*deltaT;
+				}
 			}
 			alertNaNOrInfinity(f[i],"f = NaN");
 		}
