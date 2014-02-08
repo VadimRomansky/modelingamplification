@@ -14,6 +14,7 @@ Simulation::~Simulation(){
 	delete[] pgrid;
 	delete[] grid;
 	delete[] middleGrid;
+	delete[] deltaR;
 	delete[] pointDensity;
 	delete[] pointVelocity;
 	delete[] pointPressure;
@@ -36,6 +37,7 @@ void Simulation::initializeProfile(){
 	pgrid = new double[pgridNumber + 1];
 	grid = new double[rgridNumber + 1];
 	middleGrid = new double[rgridNumber];
+	deltaR = new double[rgridNumber];
 	pointDensity = new double[rgridNumber + 1];
 	pointVelocity = new double[rgridNumber + 1];
 	pointPressure = new double[rgridNumber + 1];
@@ -52,7 +54,6 @@ void Simulation::initializeProfile(){
 			distributionFunction[i][j] = 0;
 		}
 	}
-	deltaR = (upstreamR - downstreamR)/rgridNumber;
 	double r = downstreamR;
 	double pressure0 = density0*kBoltzman*temperature/massProton;
 	/*switch(simulationType){
@@ -75,10 +76,12 @@ void Simulation::initializeProfile(){
 	minP = massProton*speed_of_light/1000;
 	maxP = minP*10000;
 
+	double tempDeltaR = (upstreamR - downstreamR)/rgridNumber;
 	for(int i = 0; i < rgridNumber + 1; ++i){
 		grid[i] = r;
-		middleGrid[i] = r + deltaR/2;
-		r += deltaR;
+		middleGrid[i] = r + tempDeltaR/2;
+		deltaR[i] = tempDeltaR;
+		r += tempDeltaR;
 		switch(simulationType){
 		case 1 :
 			middleDensity[i] = density0;
@@ -109,7 +112,7 @@ void Simulation::initializeProfile(){
 			middleDensity[i] = density0;
 			middleVelocity[i] = 0;
 			if(i <= 10){
-				middlePressure[i] = initialEnergy/cube(10*deltaR);
+				middlePressure[i] = initialEnergy/cube(10*tempDeltaR);
 			} else {
 				middlePressure[i] = pressure0;
 			}
@@ -198,7 +201,11 @@ void Simulation::simulate(){
 			fclose(outFile);
 			FILE* outShockWave;
 			fopen_s(&outShockWave, "./output/shock_wave.dat","a");
-			fprintf(outShockWave, "%d %lf %d %lf\n", i, time, shockWavePoint, shockWavePoint*deltaR);
+			double shockWaveR = 0;
+			if(shockWavePoint >= 0 && shockWavePoint <= rgridNumber){
+				shockWaveR = grid[i];
+			}
+			fprintf(outShockWave, "%d %lf %d %lf\n", i, time, shockWavePoint, shockWaveR);
 			fclose(outShockWave);
 			fopen_s(&outDistribution, "./output/distribution.dat","w");
 			fopen_s(&outFullDistribution, "./output/fullDistribution.dat","a");
@@ -246,7 +253,7 @@ void Simulation::evaluateHydrodynamic(){
 	}
 	TracPen(tempMomentum, mFlux, maxSoundSpeed);
 	for(int i = 0; i < rgridNumber - 1; ++i){
-		tempMomentum[i] -= deltaT*middleGrid[i]*middleGrid[i]*(pointPressure[i+1] - pointPressure[i])/(deltaR);
+		tempMomentum[i] -= deltaT*middleGrid[i]*middleGrid[i]*(pointPressure[i+1] - pointPressure[i])/(deltaR[i]);
 		//tempMomentum[i] -= deltaT*(pointPressure[i+1] - pointPressure[i])/(deltaR);
 		//tempMomentum[i] -= deltaT*2*middleDensity[i]*middleVelocity[i]*middleVelocity[i]/middleGrid[i];
 	}
@@ -513,9 +520,9 @@ void Simulation::CheckNegativeDensity(){
 void Simulation::TracPen(double* u, double* flux, double cs){
 	cs = cs;
 
-	tempU[0] = u[0] - deltaT*(flux[1] - flux[0])/deltaR;
+	tempU[0] = u[0] - deltaT*(flux[1] - flux[0])/deltaR[0];
 	for(int i = 1; i < rgridNumber - 1; ++i){
-		tempU[i] = u[i] - deltaT*((flux[i+1] - flux[i]) - cs*(u[i+1] - 2*u[i] + u[i-1])/2)/deltaR;
+		tempU[i] = u[i] - deltaT*((flux[i+1] - flux[i]) - cs*(u[i+1] - 2*u[i] + u[i-1])/2)/deltaR[i];
 	}
 	tempU[rgridNumber - 1] = u[rgridNumber - 1];
 
@@ -688,9 +695,9 @@ void Simulation::evaluateCR(){
 				deltaP = (pgrid[j+1] - pgrid[j-1])/2;
 			}
 			double volumeFactor = (cube(grid[i+1]) - cube(grid[i]))/3;
-			upper[i] = grid[i+1]*grid[i+1]*diffussionCoef(i+1,j)*deltaT/deltaR;
-			middle[i] = -((grid[i+1]*grid[i+1]*diffussionCoef(i+1,j) + grid[i]*grid[i]*diffussionCoef(i,j))*deltaT/deltaR + volumeFactor);
-			lower[i] = grid[i]*grid[i]*diffussionCoef(i,j)*deltaT/deltaR;
+			upper[i] = grid[i+1]*grid[i+1]*diffussionCoef(i+1,j)*deltaT/deltaR[i];
+			middle[i] = -((grid[i+1]*grid[i+1]*diffussionCoef(i+1,j) + grid[i]*grid[i]*diffussionCoef(i,j))*deltaT/deltaR[i] + volumeFactor);
+			lower[i] = grid[i]*grid[i]*diffussionCoef(i,j)*deltaT/deltaR[i];
 
 			double leftDerivative;
 			if(j == 0){
@@ -716,13 +723,13 @@ void Simulation::evaluateCR(){
 
 			if(middleVelocity[i] > 0){
 				if(i > 0){
-					f[i] += volumeFactor*middleVelocity[i]*(distributionFunction[i][j] - distributionFunction[i-1][j])*deltaT/deltaR;
+					f[i] += volumeFactor*middleVelocity[i]*(distributionFunction[i][j] - distributionFunction[i-1][j])*deltaT/deltaR[i];
 					//f[i] += (grid[i+1]*grid[i+1]*pointVelocity[i+1]*distributionFunction[i][j] - grid[i]*grid[i]*pointVelocity[i]*distributionFunction[i-1][j])*deltaT;
 					//f[i] += (grid[i+1]*grid[i+1]*middleVelocity[i]*distributionFunction[i][j] - grid[i]*grid[i]*middleVelocity[i-1]*distributionFunction[i-1][j])*deltaT;
 				}
 			} else {
 				if(i < rgridNumber - 1){
-					f[i] += volumeFactor*middleVelocity[i]*(distributionFunction[i+1][j] - distributionFunction[i][j])*deltaT/deltaR;
+					f[i] += volumeFactor*middleVelocity[i]*(distributionFunction[i+1][j] - distributionFunction[i][j])*deltaT/deltaR[i];
 					//f[i] += (grid[i+1]*grid[i+1]*pointVelocity[i+1]*distributionFunction[i+1][j] - grid[i]*grid[i]*pointVelocity[i]*distributionFunction[i][j])*deltaT;
 					//f[i] += (grid[i+1]*grid[i+1]*middleVelocity[i+1]*distributionFunction[i+1][j] - grid[i]*grid[i]*middleVelocity[i]*distributionFunction[i][j])*deltaT;
 				}
@@ -780,14 +787,35 @@ void Simulation::solveThreeDiagonal(double* middle, double* upper, double* lower
 }
 
 void Simulation::updateMaxSoundSpeed(){
-	maxSoundSpeed = 0;
-	for(int i = 0; i < rgridNumber; ++i){
-		double cs = (sqrt(gamma*middlePressure[i]/middleDensity[i]) + abs(middleVelocity[i]));
+	maxSoundSpeed = (sqrt(gamma*middlePressure[0]/middleDensity[0]) + abs(middleVelocity[0]));
+	double tempdt = min(deltaR[0]/maxSoundSpeed, deltaR[1]/maxSoundSpeed);
+	double cs = maxSoundSpeed;
+	for(int i = 1; i < rgridNumber - 1; ++i){
+		cs = (sqrt(gamma*middlePressure[i]/middleDensity[i]) + abs(middleVelocity[i]));
 		if(cs > maxSoundSpeed){
 			maxSoundSpeed = cs;
-		} 
+		}
+		if(deltaR[i]/cs < tempdt){
+			tempdt = deltaR[i]/cs;
+		}
+		if(deltaR[i-1]/cs < tempdt){
+			tempdt = deltaR[i-1]/cs;
+		}
+		if(deltaR[i+1]/cs < tempdt){
+			tempdt = deltaR[i+1]/cs;
+		}
 	}
-	deltaT = 0.1*deltaR/maxSoundSpeed;
+	cs = (sqrt(gamma*middlePressure[rgridNumber - 1]/middleDensity[rgridNumber - 1]) + abs(middleVelocity[rgridNumber - 1]));
+	if(cs > maxSoundSpeed){
+		maxSoundSpeed = cs;
+	}
+	if(deltaR[rgridNumber - 1]/cs < tempdt){
+		tempdt = deltaR[rgridNumber - 1]/cs;
+	}
+	if(deltaR[rgridNumber - 2]/cs < tempdt){
+		tempdt = deltaR[rgridNumber - 2]/cs;
+	}
+	deltaT = 0.1*tempdt;
 }
 
 void Simulation::updateShockWavePoint(){

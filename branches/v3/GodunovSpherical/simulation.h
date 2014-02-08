@@ -12,7 +12,6 @@ public:
 	double B0;
 	double upstreamR;
 	double downstreamR;
-	double deltaR;
 	double temperature;
 	double epsilonR;
 	double deltaT;
@@ -43,6 +42,7 @@ public:
 
 	double* grid;
 	double* middleGrid;
+	double* deltaR;
 	double* pointDensity;
 	double* middleDensity;
 	double* pointVelocity;
