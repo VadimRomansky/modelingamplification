@@ -43,6 +43,8 @@ public:
 	double* grid;
 	double* middleGrid;
 	double* deltaR;
+	double* middleDeltaR;
+	double* tempGrid;
 	double* pointDensity;
 	double* middleDensity;
 	double* pointVelocity;
@@ -91,8 +93,10 @@ public:
 	double minmod(double a, double b);
 	void updateMaxSoundSpeed();
 	void updateShockWavePoint();
-
 	void updateParameters();
+
+	void updateGrid();
+	
 };
 
 #endif
