@@ -4,6 +4,7 @@
 #include "util.h"
 #include "constants.h"
 #include "output.h"
+#include "GridZone.h"
 
 Simulation::Simulation(){
 	initialEnergy = 10E51;
@@ -882,14 +883,17 @@ void Simulation::updateGrid(){
 			type[i] = 0;
 		}
 	}
-	std::list<double> borders;
-	borders.push_back(0);
+	std::list<GridZone> zones;
+	double prevBound = 0;
 	for(int i = 1; i < rgridNumber; ++i){
 		if(type[i] != type[i-1]){
-			borders.push_back(middleGrid[i-1]);
+			GridZone zone = GridZone(0, prevBound, middleGrid[i-1], type[i-1]);
+			zones.push_back(zone);
+			prevBound = middleGrid[i-1];
 		}
 	}
+	zones.push_back(GridZone(0, prevBound, grid[rgridNumber], type[rgridNumber - 1]));
 
 	delete[] gradientU;
-	borders.clear();
+	zones.clear();
 }
