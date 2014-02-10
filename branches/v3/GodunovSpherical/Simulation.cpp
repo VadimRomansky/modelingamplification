@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include <list>
 #include "simulation.h"
 #include "util.h"
 #include "constants.h"
@@ -15,6 +16,8 @@ Simulation::~Simulation(){
 	delete[] grid;
 	delete[] middleGrid;
 	delete[] deltaR;
+	delete[] middleDeltaR;
+	delete[] tempGrid;
 	delete[] pointDensity;
 	delete[] pointVelocity;
 	delete[] pointPressure;
@@ -38,6 +41,8 @@ void Simulation::initializeProfile(){
 	grid = new double[rgridNumber + 1];
 	middleGrid = new double[rgridNumber];
 	deltaR = new double[rgridNumber];
+	middleDeltaR = new double[rgridNumber];
+	tempGrid = new double[rgridNumber];
 	pointDensity = new double[rgridNumber + 1];
 	pointVelocity = new double[rgridNumber + 1];
 	pointPressure = new double[rgridNumber + 1];
@@ -136,6 +141,11 @@ void Simulation::initializeProfile(){
 	pgrid[pgridNumber] = maxP;
 
 	for(int i = 0; i < rgridNumber; ++i){
+		if(i == 0){
+			middleDeltaR[i] = middleGrid[i];
+		} else {
+			middleDeltaR[i] = middleGrid[i] - middleGrid[i-1];
+		}
 		for(int j = 0; j < pgridNumber; ++j){
 			double p = (pgrid[j] + pgrid[j + 1])/2;
 			//distributionFunction[i][j] = (middleDensity[i]/massProton)*exp(-p*p/(2*massProton*kBoltzman*temperatureIn(i)))/cube(sqrt(2*pi*massProton*kBoltzman*temperatureIn(i)));
@@ -191,6 +201,7 @@ void Simulation::simulate(){
 		evaluateHydrodynamic();
 		evaluateCR();
 		time = time + deltaT;
+		updateGrid();
 		updateMaxSoundSpeed();
 		updateShockWavePoint();
 		updateParameters();
@@ -842,4 +853,43 @@ void Simulation::updateParameters(){
 		totalKineticEnergy += kineticEnergy(i)*volume(i);
 		totalTermalEnergy += termalEnergy(i)*volume(i);
 	}
+}
+
+void Simulation::updateGrid(){
+	double* gradientU = new double[rgridNumber];
+
+	gradientU[0] = 0;
+	double maxGradient = 0;
+	double minGradient = 0;
+	for(int i = 1; i < rgridNumber; ++i){
+		gradientU[i] = (middleVelocity[i] - middleVelocity[i-1])/middleDeltaR[i];
+		if(gradientU[i] > maxGradient){
+			maxGradient = gradientU[i];
+		}
+		if(gradientU[i] < minGradient){
+			minGradient = gradientU[i];
+		}
+	}
+	int* type = new int[rgridNumber];
+	type[0] = 0;
+	//todo epsilon
+	for(int i = 1; i < rgridNumber; ++i){
+		if(gradientU[i] > gradientLevel*(maxGradient + epsilon)){
+			type[i] = 1;
+		} else if(gradientU[i] < gradientLevel*(minGradient - epsilon)){
+			type[i] = -1;
+		} else {
+			type[i] = 0;
+		}
+	}
+	std::list<double> borders;
+	borders.push_back(0);
+	for(int i = 1; i < rgridNumber; ++i){
+		if(type[i] != type[i-1]){
+			borders.push_back(middleGrid[i-1]);
+		}
+	}
+
+	delete[] gradientU;
+	borders.clear();
 }
