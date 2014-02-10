@@ -14,5 +14,6 @@ const double momentumParameter = 5;
 const int writeParameter = 100;
 const int injectionMomentum = 5;
 const double gradientLevel = 0.2;
+const double gridExpLevel = 0.5;
 
 #endif
