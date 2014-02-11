@@ -2,6 +2,10 @@
 #define SIMULATION_H
 
 #include "stdafx.h"
+#include <list>
+//#include "GridZone.h"
+
+//class GridZone;
 
 class Simulation{
 public:
@@ -96,6 +100,7 @@ public:
 	void updateParameters();
 
 	void updateGrid();
+	//void convertZonesToGrid(std::list<GridZone> zones);
 	
 };
 

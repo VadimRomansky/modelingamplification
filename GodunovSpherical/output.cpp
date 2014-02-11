@@ -34,3 +34,9 @@ void outputDistribution(FILE* distributionFile, FILE* fullDistributionFile, FILE
 	}
 	delete[] fullDistribution;
 }
+
+void outputNewGrid(FILE* outFile, Simulation* simulation){
+	for(int i = 0; i < simulation->rgridNumber; ++i){
+		fprintf(outFile, "%d %17.12lf\n", i, simulation->tempGrid[i]);
+	}
+}

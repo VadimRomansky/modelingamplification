@@ -179,6 +179,9 @@ void Simulation::simulate(){
 	FILE* outExtraIteration;
 	fopen_s(&outExtraIteration, "./output/extra_iterations.dat","w");
 	fclose(outExtraIteration);
+	FILE* outTempGrid;
+	fopen_s(&outTempGrid, "./output/temp_grid.dat","w");
+	fclose(outTempGrid);
 	FILE* outShockWave;
 	fopen_s(&outShockWave, "./output/shock_wave.dat","w");
 	fclose(outShockWave);
@@ -211,14 +214,16 @@ void Simulation::simulate(){
 			fopen_s(&outFile, "./output/tamc_radial_profile.dat","a");
 			output(outFile, this);
 			fclose(outFile);
-			FILE* outShockWave;
+
 			fopen_s(&outShockWave, "./output/shock_wave.dat","a");
 			double shockWaveR = 0;
 			if(shockWavePoint >= 0 && shockWavePoint <= rgridNumber){
 				shockWaveR = grid[i];
 			}
+
 			fprintf(outShockWave, "%d %lf %d %lf\n", i, time, shockWavePoint, shockWaveR);
 			fclose(outShockWave);
+
 			fopen_s(&outDistribution, "./output/distribution.dat","w");
 			fopen_s(&outFullDistribution, "./output/fullDistribution.dat","a");
 			fopen_s(&outCoordinateDistribution, "./output/coordinateDistribution.dat","w");
@@ -226,12 +231,18 @@ void Simulation::simulate(){
 			fclose(outCoordinateDistribution);
 			fclose(outFullDistribution);
 			fclose(outDistribution);
+
 			fopen_s(&outIteration, "./output/iterations.dat","a");
 			fprintf(outIteration, "%d %28.20lf %28.20lf %28.20lf %28.20lf\n", i, time, mass, totalMomentum, totalEnergy);
 			fclose(outIteration);
+
 			fopen_s(&outExtraIteration, "./output/extra_iterations.dat","a");
 			fprintf(outExtraIteration, "%d %28.20lf %28.20lf %28.20lf %28.20lf %28.20lf %28.20lf\n", i, time, mass, totalMomentum, totalEnergy, totalKineticEnergy, totalTermalEnergy);
 			fclose(outExtraIteration);
+
+			fopen_s(&outTempGrid, "./output/temp_grid.dat","a");
+			outputNewGrid(outTempGrid, this);
+			fclose(outTempGrid);
 		}
 	}
 }
@@ -883,17 +894,164 @@ void Simulation::updateGrid(){
 			type[i] = 0;
 		}
 	}
-	std::list<GridZone> zones;
+	//todo memory!
+	std::list<GridZone*> zones;
+	int smallGradientZoneCount = 0;
+	int bigGradientZoneCount = 0;
 	double prevBound = 0;
+	int prevBoundIndex = -1;
+	double central;
+	double localMax;
 	for(int i = 1; i < rgridNumber; ++i){
 		if(type[i] != type[i-1]){
-			GridZone zone = GridZone(0, prevBound, middleGrid[i-1], type[i-1]);
+			GridZone* zone = new GridZone(prevBound, middleGrid[i-1], type[i-1]);
 			zones.push_back(zone);
+			central = (prevBound + middleGrid[i-1])/2;
+			if(zone->type != 0){
+				localMax = 0;
+				for(int j = prevBoundIndex + 1; j < i; ++j){
+					if(abs(gradientU[j]) > localMax){
+						localMax = abs(gradientU[j]);
+						central = grid[j];
+					}
+				}
+			}
+			zone->centralPoint = central;
+
+			if(zone->type == 0){
+				smallGradientZoneCount++;
+			} else {
+				bigGradientZoneCount++;
+			}
 			prevBound = middleGrid[i-1];
+			prevBoundIndex = i - 1;
 		}
 	}
-	zones.push_back(GridZone(0, prevBound, grid[rgridNumber], type[rgridNumber - 1]));
+	GridZone* lastZone = new GridZone(prevBound, grid[rgridNumber], type[rgridNumber - 1]);
+	zones.push_back(lastZone);
+	central = (prevBound + grid[rgridNumber])/2;
+	if(lastZone->type != 0){
+		localMax = 0;
+		for(int j = prevBoundIndex + 1; j < rgridNumber; ++j){
+			if(abs(gradientU[j]) > localMax){
+				localMax = abs(gradientU[j]);
+				central = grid[j];
+			}
+		}
+	}
+	lastZone->centralPoint = central;
+
+	if(lastZone->type == 0){
+		smallGradientZoneCount++;
+	} else {
+		bigGradientZoneCount++;
+	}
+
+	int count = (rgridNumber + 1) - 2*smallGradientZoneCount - 2*bigGradientZoneCount - 1;
+
+	if(count <= 0) return;
+
+	int bigGradientParticles = 0.8*count;
+	int smallGradientParticles = count - bigGradientParticles;
+
+	if(bigGradientZoneCount > 0){
+		int bigGradientPerOne = bigGradientParticles/bigGradientZoneCount;
+	
+		for(std::list<GridZone*>::iterator it = zones.begin(); it  != zones.end(); ++it){
+			GridZone* tempZone = *it;
+			if(tempZone->type != 0){
+				tempZone->addPoint(bigGradientPerOne);
+			}
+		}
+		if(smallGradientZoneCount > 0){
+			smallGradientParticles += (bigGradientParticles - bigGradientPerOne*bigGradientZoneCount);
+		} else {
+			bigGradientParticles -= bigGradientPerOne*bigGradientZoneCount;
+			for(std::list<GridZone*>::iterator it = zones.begin(); (it != zones.end()) && (bigGradientParticles != 0); ++it){
+				GridZone* tempZone = *it;
+				if(tempZone->type != 0){
+					tempZone->addPoint();
+					bigGradientParticles--;
+				}
+			}
+		}
+	}
+
+	if(smallGradientZoneCount > 0){
+
+		int smallGradientPerOne = smallGradientParticles/smallGradientZoneCount;
+		for(std::list<GridZone*>::iterator it = zones.begin(); it  != zones.end(); ++it){
+			GridZone* tempZone =*it;
+			if(tempZone->type == 0){
+				tempZone->addPoint(smallGradientPerOne);
+			}
+		}
+		smallGradientParticles -= smallGradientPerOne*smallGradientZoneCount;
+			for(std::list<GridZone*>::iterator it = zones.begin(); (it != zones.end()) && (smallGradientParticles != 0); ++it){
+				GridZone* tempZone = *it;
+				if(tempZone->type == 0){
+					tempZone->addPoint();
+					smallGradientParticles--;
+				}
+			}
+	}
+
+	//todo into header!!!
+	//convertZonesToGrid(this, zones);
+	int i = 0;
+	for(std::list<GridZone*>::iterator it = zones.begin(); it != zones.end(); ++it){
+		GridZone* zone = *it;
+		//addPoints(tempGrid, zone, i);
+		tempGrid[i] = zone->leftBound;
+		++i;
+		while(zone->leftPoints.size() > 0){
+			double r = zone->leftPoints.back();
+			zone->leftPoints.pop_back();
+			tempGrid[i] = r;
+			++i;
+		}
+		tempGrid[i] = zone->centralPoint;
+		++i;
+		while(zone->rightPoints.size() > 0){
+			double r = zone->rightPoints.front();
+			zone->rightPoints.pop_front();
+			tempGrid[i] = r;
+			++i;
+		}
+	}
+	tempGrid[rgridNumber] = zones.back()->rightBound;
+
 
 	delete[] gradientU;
 	zones.clear();
 }
+
+/*void convertZonesToGrid(Simulation* simulation, std::list<GridZone>& zones){
+	int i = 0;
+	double* tempGrid = simulation->tempGrid;
+	for(std::list<GridZone>::iterator it = zones.begin(); it != zones.end(); ++it){
+		GridZone zone = *it;
+		addPoints(tempGrid, zone, i);
+	}
+	tempGrid[simulation->rgridNumber] = zones.back().rightBound;
+}*/
+
+/*void addPoints(double* tempGrid, GridZone& zone, int& i){
+	tempGrid[i] = zone.leftBound;
+	++i;
+	while(zone.leftPoints.size() > 0){
+		double r = zone.leftPoints.back();
+		zone.leftPoints.pop_back();
+		tempGrid[i] = r;
+		++i;
+	}
+	tempGrid[i] = zone.centralPoint;
+	++i;
+	while(zone.rightPoints.size() > 0){
+		double r = zone.rightPoints.front();
+		zone.rightPoints.pop_front();
+		tempGrid[i] = r;
+		++i;
+	}
+
+}*/
