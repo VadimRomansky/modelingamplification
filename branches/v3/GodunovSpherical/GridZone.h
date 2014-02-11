@@ -17,9 +17,10 @@ public:
 	std::list<double> rightPoints;
 
 
-	GridZone(double central, double left, double right, int t);
+	GridZone(double left, double right, int t);
 	~GridZone();
 	void addPoint();
+	void addPoint(int count);
 
 };
 
