@@ -100,6 +100,8 @@ public:
 	void updateParameters();
 
 	void updateGrid();
+	std::list<GridZone*> createZones(int* type, double* gradientU, int& smallGradientZoneCount, int& bigGradientZoneCount);
+    void putPointsIntoZones(std::list<GridZone*>& zones, int pointsCount, int smallGradientZoneCount, int bigGradientZoneCount);
 	void convertZonesToGrid(std::list<GridZone*>& zones);
 	void addPoints(GridZone* zone, int& i);
 	

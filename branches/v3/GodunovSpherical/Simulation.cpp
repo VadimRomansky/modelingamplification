@@ -894,10 +894,27 @@ void Simulation::updateGrid(){
 			type[i] = 0;
 		}
 	}
-	//todo memory!
-	std::list<GridZone*> zones;
+
 	int smallGradientZoneCount = 0;
 	int bigGradientZoneCount = 0;
+	std::list<GridZone*> zones = createZones(type, gradientU, smallGradientZoneCount, bigGradientZoneCount);
+
+	int count = (rgridNumber + 1) - 2*smallGradientZoneCount - 2*bigGradientZoneCount - 1;
+	if(count <= 0) return;
+
+	putPointsIntoZones(zones, count, smallGradientZoneCount, bigGradientZoneCount);
+	convertZonesToGrid(zones);
+
+	delete[] gradientU;
+	for(std::list<GridZone*>::iterator it = zones.begin(); it != zones.end(); ++it){
+		GridZone* zone = *it;
+		delete zone;
+	}
+	zones.clear();
+}
+
+std::list<GridZone*> Simulation::createZones(int* type, double* gradientU, int& smallGradientZoneCount, int& bigGradientZoneCount){
+	std::list<GridZone*> zones;
 	double prevBound = 0;
 	int prevBoundIndex = -1;
 	double central;
@@ -947,12 +964,12 @@ void Simulation::updateGrid(){
 		bigGradientZoneCount++;
 	}
 
-	int count = (rgridNumber + 1) - 2*smallGradientZoneCount - 2*bigGradientZoneCount - 1;
+	return zones;
+}
 
-	if(count <= 0) return;
-
-	int bigGradientParticles = 0.8*count;
-	int smallGradientParticles = count - bigGradientParticles;
+void Simulation::putPointsIntoZones(std::list<GridZone*>& zones, int pointsCount, int smallGradientZoneCount, int bigGradientZoneCount){
+	int bigGradientParticles = 0.8*pointsCount;
+	int smallGradientParticles = pointsCount - bigGradientParticles;
 
 	if(bigGradientZoneCount > 0){
 		int bigGradientPerOne = bigGradientParticles/bigGradientZoneCount;
@@ -995,15 +1012,6 @@ void Simulation::updateGrid(){
 				}
 			}
 	}
-
-	convertZonesToGrid(zones);
-
-	delete[] gradientU;
-	for(std::list<GridZone*>::iterator it = zones.begin(); it != zones.end(); ++it){
-		GridZone* zone = *it;
-		delete zone;
-	}
-	zones.clear();
 }
 
 void Simulation::convertZonesToGrid(std::list<GridZone*>& zones){
