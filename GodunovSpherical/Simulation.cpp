@@ -185,7 +185,7 @@ void Simulation::simulate(){
 	FILE* outShockWave;
 	fopen_s(&outShockWave, "./output/shock_wave.dat","w");
 	fclose(outShockWave);
-	fopen_s(&outFile, "./output/tamc_radial_profile.dat","a");
+	fopen_s(&outFile, "./output/tamc_radial_profile.dat","w");
 	output(outFile,this);
 	fclose(outFile);
 	FILE* outDistribution;
