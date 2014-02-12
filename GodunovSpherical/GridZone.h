@@ -20,6 +20,7 @@ public:
 	GridZone(double left, double right, int t);
 	~GridZone();
 	void addPoint();
+	void addPoint(double x);
 	void addPoint(int count);
 
 };
