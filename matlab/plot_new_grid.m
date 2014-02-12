@@ -15,3 +15,10 @@ title ('r');
 xlabel ('i');
 ylabel ('r cm');
 grid ;
+
+figure(2);
+plot (temp_grid(a*N2 + (1:N2),2), temp_grid(1:N2,1),'cyan',temp_grid(b*N2 + (1:N2),2),temp_grid(1:N2,1),'green',temp_grid(c*N2 + (1:N2),2),temp_grid(1:N2,1),'blue',temp_grid(d*N2 + (1:N2),2),temp_grid(1:N2,1),'black',temp_grid(e*N2 + (1:N2),2),temp_grid(1:N2,1),'red');
+title ('r');
+xlabel ('r cm');
+ylabel ('i');
+grid ;

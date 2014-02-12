@@ -58,7 +58,7 @@ void GridZone::addPoint(double x){
 	}
 }
 
-void GridZone::addPoint(int count){
+void GridZone::addPoints(int count){
 	if(count <= 0) return;
 	if(type != 0){
 		double R = min(centralPoint - leftBound, rightBound - centralPoint);

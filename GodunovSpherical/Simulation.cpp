@@ -885,10 +885,11 @@ void Simulation::updateGrid(){
 	int* type = new int[rgridNumber];
 	type[0] = 0;
 	//todo epsilon
+	double epsilonGradient = U0/upstreamR;
 	for(int i = 1; i < rgridNumber; ++i){
-		if(gradientU[i] > gradientLevel*(maxGradient + epsilon)){
+		if(gradientU[i] > gradientLevel*(maxGradient + epsilonGradient)){
 			type[i] = 1;
-		} else if(gradientU[i] < gradientLevel*(minGradient - epsilon)){
+		} else if(gradientU[i] < gradientLevel*(minGradient - epsilonGradient)){
 			type[i] = -1;
 		} else {
 			type[i] = 0;
@@ -969,50 +970,87 @@ std::list<GridZone*> Simulation::createZones(int* type, double* gradientU, int& 
 }
 
 void Simulation::putPointsIntoZones(std::list<GridZone*>& zones, int pointsCount, int smallGradientZoneCount, int bigGradientZoneCount){
-	int bigGradientParticles = 0.8*pointsCount;
-	int smallGradientParticles = pointsCount - bigGradientParticles;
+	int bigGradientPointsCount;
+	if(smallGradientZoneCount > 0){
+		bigGradientPointsCount = 0.8*pointsCount;
+	} else {
+		bigGradientPointsCount = pointsCount;
+	}
+	int smallGradientPointsCount = pointsCount - bigGradientPointsCount;
+	int* bigGradientPoints = new int[bigGradientZoneCount];
+	int* smallGradienPoints = new int[smallGradientZoneCount];
 
-	if(bigGradientZoneCount > 0){
-		int bigGradientPerOne = bigGradientParticles/bigGradientZoneCount;
-	
+	double smallSumLength = 0;
+	double bigSumLength = 0;
+	for(std::list<GridZone*>::iterator it = zones.begin(); it  != zones.end(); ++it){
+		GridZone* tempZone = *it;
+		if(tempZone->type == 0){
+			smallSumLength += (tempZone->rightBound - tempZone->leftBound);
+		} else {
+			bigSumLength += (tempZone->rightBound - tempZone->leftBound);
+		}
+	}
+	int bigIndex = 0;
+	int smallIndex = 0;
+	int intBigPoints = 0;
+	int intSmallPoints = 0;
+	for(std::list<GridZone*>::iterator it = zones.begin(); it  != zones.end(); ++it){
+		GridZone* tempZone = *it;
+		if(tempZone->type != 0){
+			bigGradientPoints[bigIndex] = (tempZone->rightBound - tempZone->leftBound)*bigGradientPointsCount/bigSumLength;
+			intBigPoints += bigGradientPoints[bigIndex];
+			bigIndex++;
+		}
+	}
+	if(smallGradientZoneCount > 0){
+		smallGradientPointsCount = pointsCount - intBigPoints;
 		for(std::list<GridZone*>::iterator it = zones.begin(); it  != zones.end(); ++it){
 			GridZone* tempZone = *it;
-			if(tempZone->type != 0){
-				tempZone->addPoint(bigGradientPerOne);
-			}
-		}
-		if(smallGradientZoneCount > 0){
-			smallGradientParticles += (bigGradientParticles - bigGradientPerOne*bigGradientZoneCount);
-		} else {
-			bigGradientParticles -= bigGradientPerOne*bigGradientZoneCount;
-			for(std::list<GridZone*>::iterator it = zones.begin(); (it != zones.end()) && (bigGradientParticles != 0); ++it){
-				GridZone* tempZone = *it;
-				if(tempZone->type != 0){
-					tempZone->addPoint();
-					bigGradientParticles--;
-				}
-			}
-		}
-	}
-
-	if(smallGradientZoneCount > 0){
-
-		int smallGradientPerOne = smallGradientParticles/smallGradientZoneCount;
-		for(std::list<GridZone*>::iterator it = zones.begin(); it  != zones.end(); ++it){
-			GridZone* tempZone =*it;
 			if(tempZone->type == 0){
-				tempZone->addPoint(smallGradientPerOne);
+				smallGradienPoints[smallIndex] = (tempZone->rightBound - tempZone->leftBound)*smallGradientPointsCount/smallSumLength;
+				intSmallPoints += smallGradienPoints[smallIndex];
+				smallIndex++;
 			}
 		}
-		smallGradientParticles -= smallGradientPerOne*smallGradientZoneCount;
-			for(std::list<GridZone*>::iterator it = zones.begin(); (it != zones.end()) && (smallGradientParticles != 0); ++it){
-				GridZone* tempZone = *it;
-				if(tempZone->type == 0){
-					tempZone->addPoint();
-					smallGradientParticles--;
-				}
+		smallGradientPointsCount -= intSmallPoints;
+		smallIndex = 0;
+		for(std::list<GridZone*>::iterator it = zones.begin(); (it  != zones.end()) && (smallGradientPointsCount > 0); ++it){
+			GridZone* tempZone = *it;
+			if(tempZone->type != 0){
+				smallGradienPoints[smallIndex] += 1;
+				smallIndex++;
+				smallGradientPointsCount--;
 			}
+		}
+	} else {
+		bigIndex = 0;
+		bigGradientPointsCount -= intBigPoints;
+		for(std::list<GridZone*>::iterator it = zones.begin(); (it  != zones.end()) && (bigGradientPointsCount > 0); ++it){
+			GridZone* tempZone = *it;
+			if(tempZone->type != 0){
+				bigGradientPoints[bigIndex] += 1;
+				bigIndex++;
+				bigGradientPointsCount--;
+			}
+		}
 	}
+
+	bigIndex = 0;
+	smallIndex = 0;
+
+	for(std::list<GridZone*>::iterator it = zones.begin(); it  != zones.end(); ++it){
+		GridZone* tempZone = *it;
+		if(tempZone->type != 0){
+			tempZone->addPoints(bigGradientPoints[bigIndex]);
+			bigIndex++;
+		} else {
+			tempZone->addPoints(smallGradienPoints[smallIndex]);
+			smallIndex++;
+		}
+	}
+
+	delete[] bigGradientPoints;
+	delete[] smallGradienPoints;
 }
 
 void Simulation::convertZonesToGrid(std::list<GridZone*>& zones){
