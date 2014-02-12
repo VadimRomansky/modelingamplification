@@ -21,7 +21,7 @@ public:
 	~GridZone();
 	void addPoint();
 	void addPoint(double x);
-	void addPoint(int count);
+	void addPoints(int count);
 
 };
 
