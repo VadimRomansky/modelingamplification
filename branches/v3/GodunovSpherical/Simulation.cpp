@@ -906,6 +906,7 @@ void Simulation::updateGrid(){
 	convertZonesToGrid(zones);
 
 	delete[] gradientU;
+	delete[] type;
 	for(std::list<GridZone*>::iterator it = zones.begin(); it != zones.end(); ++it){
 		GridZone* zone = *it;
 		delete zone;

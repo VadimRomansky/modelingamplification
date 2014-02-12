@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include <list>
 #include "constants.h"
+#include "util.h"
 #include "GridZone.h"
 
 GridZone::GridZone(double left, double right, int t){
@@ -36,11 +37,34 @@ void GridZone::addPoint(){
 	}
 }
 
+void GridZone::addPoint(double x){
+	double r;
+	if(leftPoints.size() == 0){
+		r = x*centralPoint + (1 - x)*leftBound;
+		leftPoints.push_front(r);
+		return;
+	}
+	if(rightPoints.size() == 0){
+		r = x*centralPoint + (1 - x)*rightBound;
+		rightPoints.push_front(r);
+		return;
+	}
+	if(leftPoints.size() <= rightPoints.size()){
+		r = x*centralPoint + (1 - x)*leftPoints.front();
+		leftPoints.push_front(r);
+	} else {
+		r = x*centralPoint + (1 - x)*rightPoints.front();
+		rightPoints.push_front(r);
+	}
+}
+
 void GridZone::addPoint(int count){
 	if(count <= 0) return;
 	if(type != 0){
+		double R = min(centralPoint - leftBound, rightBound - centralPoint);
+		double x = min(1 - exp(log(minDeltaR/R)*2/count), gridExpLevel);
 		for(int i = 0; i < count; ++i){
-			addPoint();
+			addPoint(x);
 		}
 	} else {
 		int leftCount = count/2;
