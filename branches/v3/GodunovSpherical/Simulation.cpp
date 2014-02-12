@@ -996,62 +996,41 @@ void Simulation::updateGrid(){
 			}
 	}
 
-	//todo into header!!!
-	//convertZonesToGrid(this, zones);
-	int i = 0;
-	for(std::list<GridZone*>::iterator it = zones.begin(); it != zones.end(); ++it){
-		GridZone* zone = *it;
-		//addPoints(tempGrid, zone, i);
-		tempGrid[i] = zone->leftBound;
-		++i;
-		while(zone->leftPoints.size() > 0){
-			double r = zone->leftPoints.back();
-			zone->leftPoints.pop_back();
-			tempGrid[i] = r;
-			++i;
-		}
-		tempGrid[i] = zone->centralPoint;
-		++i;
-		while(zone->rightPoints.size() > 0){
-			double r = zone->rightPoints.front();
-			zone->rightPoints.pop_front();
-			tempGrid[i] = r;
-			++i;
-		}
-	}
-	tempGrid[rgridNumber] = zones.back()->rightBound;
-
+	convertZonesToGrid(zones);
 
 	delete[] gradientU;
+	for(std::list<GridZone*>::iterator it = zones.begin(); it != zones.end(); ++it){
+		GridZone* zone = *it;
+		delete zone;
+	}
 	zones.clear();
 }
 
-/*void convertZonesToGrid(Simulation* simulation, std::list<GridZone>& zones){
+void Simulation::convertZonesToGrid(std::list<GridZone*>& zones){
 	int i = 0;
-	double* tempGrid = simulation->tempGrid;
-	for(std::list<GridZone>::iterator it = zones.begin(); it != zones.end(); ++it){
-		GridZone zone = *it;
-		addPoints(tempGrid, zone, i);
+	for(std::list<GridZone*>::iterator it = zones.begin(); it != zones.end(); ++it){
+		GridZone* zone = *it;
+		addPoints(zone, i);
 	}
-	tempGrid[simulation->rgridNumber] = zones.back().rightBound;
-}*/
+	tempGrid[rgridNumber] = zones.back()->rightBound;
+}
 
-/*void addPoints(double* tempGrid, GridZone& zone, int& i){
-	tempGrid[i] = zone.leftBound;
+void Simulation::addPoints(GridZone* zone, int& i){
+	tempGrid[i] = zone->leftBound;
 	++i;
-	while(zone.leftPoints.size() > 0){
-		double r = zone.leftPoints.back();
-		zone.leftPoints.pop_back();
+	while(zone->leftPoints.size() > 0){
+		double r = zone->leftPoints.back();
+		zone->leftPoints.pop_back();
 		tempGrid[i] = r;
 		++i;
 	}
-	tempGrid[i] = zone.centralPoint;
+	tempGrid[i] = zone->centralPoint;
 	++i;
-	while(zone.rightPoints.size() > 0){
-		double r = zone.rightPoints.front();
-		zone.rightPoints.pop_front();
+	while(zone->rightPoints.size() > 0){
+		double r = zone->rightPoints.front();
+		zone->rightPoints.pop_front();
 		tempGrid[i] = r;
 		++i;
 	}
 
-}*/
+}

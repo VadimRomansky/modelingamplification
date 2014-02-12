@@ -1,4 +1,4 @@
-#include "StdAfx.h"
+#include "stdafx.h"
 #include <list>
 #include "constants.h"
 #include "GridZone.h"
