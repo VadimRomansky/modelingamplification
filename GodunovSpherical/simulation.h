@@ -3,7 +3,7 @@
 
 #include "stdafx.h"
 #include <list>
-//#include "GridZone.h"
+#include "GridZone.h"
 
 //class GridZone;
 
@@ -100,7 +100,8 @@ public:
 	void updateParameters();
 
 	void updateGrid();
-	//void convertZonesToGrid(std::list<GridZone> zones);
+	void convertZonesToGrid(std::list<GridZone*>& zones);
+	void addPoints(GridZone* zone, int& i);
 	
 };
 
