@@ -437,14 +437,18 @@ double Simulation::firstApproximationPressure(double rho1, double rho2, double u
 }
 
 void Simulation::successiveApproximationPressure(double& p, double& u, double& R1, double& R2, double& alpha1, double& alpha2, double p1, double p2, double u1, double u2, double rho1, double rho2){
+	alertNaNOrInfinity(p1,"pressure = NaN");
+	alertNaNOrInfinity(p2,"pressure = NaN");
 	if(p1 <= p2){
 		double c1 = sqrt(gamma*p1/rho1);
 		double c2 = sqrt(gamma*p2/rho2);
 
 		p = firstApproximationPressure(rho1, rho2, u1, u2, p1, p2);
+		alertNaNOrInfinity(p,"pressure = NaN");
 
 		for(int i = 1; i < 1000; ++i){
 			double tempP = p - (pressureFunction(p, p1, rho1) + pressureFunction(p, p2, rho2) - (u1 - u2))/(pressureFunctionDerivative(p, p1, rho1) + pressureFunctionDerivative(p, p2, rho2));
+			alertNaNOrInfinity(tempP,"tempPressure = NaN");
 			if(tempP < 0){
 				p = p/2;
 			} else {
@@ -455,6 +459,7 @@ void Simulation::successiveApproximationPressure(double& p, double& u, double& R
 			}
 		}
 
+		alertNaNOrInfinity(p,"pressure = NaN");
 		if(p >= p1){
 			alpha1 = sqrt(rho1*((gamma + 1)*p/2 + (gamma - 1)*p1/2));
 		} else {
@@ -1135,6 +1140,11 @@ void Simulation::redistributeValues(){
 			++newCount;
 		}
 	}
+	if(tempGrid[rgridNumber-1] >= grid[rgridNumber-1]){
+		tempDensity += middleDensity[rgridNumber - 1]*4*pi*(cube(tempGrid[rgridNumber]) - cube(tempGrid[rgridNumber - 1]))/3;
+		tempMomentum += momentum(rgridNumber - 1)*4*pi*(cube(tempGrid[rgridNumber]) - cube(tempGrid[rgridNumber - 1]))/3;
+		tempEnergy += energy(rgridNumber - 1)*4*pi*(cube(tempGrid[rgridNumber]) - cube(tempGrid[rgridNumber - 1]))/3;
+	}
 	newDensity[rgridNumber - 1] = tempDensity;
 	alertNaNOrInfinity(newDensity[rgridNumber - 1], "newDensity = NaN");
 	alertNegative(newDensity[rgridNumber - 1], "newDensity < 0");
@@ -1158,9 +1168,14 @@ void Simulation::redistributeValues(){
 		newEnergy[i] /= volume(i);
 
 		middleDensity[i] = newDensity[i];
-		middleVelocity[i] = newMomentum[i]/newDensity[i];
+		if(newDensity[i] <= epsilon*density0){
+			middleVelocity[i] = 0;
+		} else {
+			middleVelocity[i] = newMomentum[i]/newDensity[i];
+		}
 		middlePressure[i] = (newEnergy[i] - middleDensity[i]*middleVelocity[i]*middleVelocity[i]/2)*(gamma - 1);
 		alertNegative(middlePressure[i], "middlePressure < 0");
+		alertNaNOrInfinity(middlePressure[i], "middlePressure = NaN");
 	}
 
 	delete[] newDensity;
