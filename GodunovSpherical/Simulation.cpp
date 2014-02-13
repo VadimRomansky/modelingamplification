@@ -906,6 +906,8 @@ void Simulation::updateGrid(){
 	putPointsIntoZones(zones, count, smallGradientZoneCount, bigGradientZoneCount);
 	convertZonesToGrid(zones);
 
+	redistributeValues();
+
 	delete[] gradientU;
 	delete[] type;
 	for(std::list<GridZone*>::iterator it = zones.begin(); it != zones.end(); ++it){
@@ -1080,4 +1082,74 @@ void Simulation::addPoints(GridZone* zone, int& i){
 		++i;
 	}
 
+}
+
+void Simulation::redistributeValues(){
+	int oldCount = 1;
+	int newCount = 1;
+	double tempDensity = 0;
+	double tempMomentum = 0;
+	double tempEnergy = 0;
+	double* newDensity = new double[rgridNumber];
+	double* newMomentum = new double[rgridNumber];
+	double* newEnergy = new double[rgridNumber];
+	while((oldCount < rgridNumber) || (newCount < rgridNumber)){
+		if(tempGrid[newCount] > grid[oldCount]){
+			if(tempGrid[newCount - 1] < grid[oldCount - 1]){
+				tempDensity += middleDensity[oldCount - 1]*volume(oldCount);
+				tempMomentum += momentum(oldCount - 1)*volume(oldCount);
+				tempEnergy += energy(oldCount - 1)*volume(oldCount);
+			} else {
+				tempDensity += middleDensity[oldCount - 1]*4*pi*(cube(tempGrid[oldCount] ) - cube(grid[newCount - 1]))/3;
+				tempMomentum += momentum(oldCount - 1)*4*pi*(cube(tempGrid[oldCount] ) - cube(grid[newCount - 1]))/3;
+				tempEnergy += energy(oldCount - 1)*4*pi*(cube(tempGrid[oldCount] ) - cube(grid[newCount - 1]))/3;
+			}
+			++oldCount;
+		} else {
+			if(tempGrid[newCount - 1] < grid[oldCount]){
+				tempDensity += middleDensity[oldCount - 1]*4*pi*(cube(tempGrid[newCount] ) - cube(grid[oldCount]))/3;
+				tempMomentum += momentum(oldCount - 1)*4*pi*(cube(tempGrid[newCount] ) - cube(grid[oldCount]))/3;
+				tempEnergy += energy(oldCount - 1)*4*pi*(cube(tempGrid[newCount] ) - cube(grid[oldCount]))/3;
+			} else {
+				tempDensity += middleDensity[oldCount - 1]*4*pi*(cube(tempGrid[newCount] ) - cube(tempGrid[newCount - 1] ))/3;
+				tempMomentum += momentum(oldCount - 1)*4*pi*(cube(tempGrid[newCount] ) - cube(tempGrid[newCount - 1] ))/3;
+				tempEnergy += energy(oldCount - 1)*4*pi*(cube(tempGrid[newCount] ) - cube(tempGrid[newCount - 1]))/3;
+			}
+			newDensity[newCount - 1] = tempDensity;
+			alertNaNOrInfinity(newDensity[newCount - 1], "newDensity = NaN");
+			alertNegative(newDensity[newCount - 1], "newDensity < 0");
+			newMomentum[newCount - 1] = tempMomentum;
+			alertNaNOrInfinity(newMomentum[newCount - 1], "newMomentum = NaN");
+			newEnergy[newCount - 1] = tempEnergy;
+			alertNaNOrInfinity(newEnergy[newCount - 1], "newEnergy = NaN");
+			alertNegative(newEnergy[newCount - 1], "newEnergy < 0");
+			tempDensity = 0;
+			tempMomentum = 0;
+			tempEnergy = 0;
+			++newCount;
+		}
+	}
+
+	for(int i = 0; i < rgridNumber; ++i){
+		grid[i + 1] = tempGrid[i + 1];
+		middleGrid[i] = (grid[i] + grid[i+1])/2;
+		deltaR[i] = grid[i+1] - grid[i];
+		if(i == 0){
+			middleDeltaR[i] = middleGrid[i];
+		} else {
+			middleDeltaR[i] = middleGrid[i] - middleGrid[i-1];
+		}
+		newDensity[i] /= volume(i);
+		newMomentum[i] /= volume(i);
+		newEnergy[i] /= volume(i);
+
+		middleDensity[i] = newDensity[i];
+		middleVelocity[i] = newMomentum[i]/newDensity[i];
+		middlePressure[i] = (newEnergy[i] - middleDensity[i]*middleVelocity[i]*middleVelocity[i]/2)*(gamma - 1);
+		alertNegative(middlePressure[i], "middlePressure < 0");
+	}
+
+	delete[] newDensity;
+	delete[] newMomentum;
+	delete[] newEnergy;
 }

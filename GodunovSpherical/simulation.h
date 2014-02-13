@@ -104,6 +104,7 @@ public:
     void putPointsIntoZones(std::list<GridZone*>& zones, int pointsCount, int smallGradientZoneCount, int bigGradientZoneCount);
 	void convertZonesToGrid(std::list<GridZone*>& zones);
 	void addPoints(GridZone* zone, int& i);
+	void redistributeValues();
 	
 };
 
