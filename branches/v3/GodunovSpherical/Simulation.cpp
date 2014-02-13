@@ -999,7 +999,11 @@ void Simulation::putPointsIntoZones(std::list<GridZone*>& zones, int pointsCount
 	for(std::list<GridZone*>::iterator it = zones.begin(); it  != zones.end(); ++it){
 		GridZone* tempZone = *it;
 		if(tempZone->type != 0){
-			bigGradientPoints[bigIndex] = (tempZone->rightBound - tempZone->leftBound)*bigGradientPointsCount/bigSumLength;
+			//if(tempZone->rightBound - tempZone->leftBound > minDeltaR){
+				bigGradientPoints[bigIndex] = min((tempZone->rightBound - tempZone->leftBound)*bigGradientPointsCount/bigSumLength, (tempZone->rightBound - tempZone->leftBound)/minDeltaR);
+			//} else {
+				//bigGradientPoints[bigIndex] = 0;
+			//}
 			intBigPoints += bigGradientPoints[bigIndex];
 			bigIndex++;
 		}
@@ -1095,24 +1099,26 @@ void Simulation::redistributeValues(){
 	double* newEnergy = new double[rgridNumber];
 	while((oldCount < rgridNumber) || (newCount < rgridNumber)){
 		if(tempGrid[newCount] > grid[oldCount]){
-			if(tempGrid[newCount - 1] < grid[oldCount - 1]){
-				tempDensity += middleDensity[oldCount - 1]*volume(oldCount);
-				tempMomentum += momentum(oldCount - 1)*volume(oldCount);
-				tempEnergy += energy(oldCount - 1)*volume(oldCount);
+			if(tempGrid[newCount - 1] > grid[oldCount]){
+				printf("aaa\n");
+			} else if(tempGrid[newCount - 1] < grid[oldCount - 1]){
+				tempDensity += middleDensity[oldCount - 1]*volume(oldCount-1);
+				tempMomentum += momentum(oldCount - 1)*volume(oldCount-1);
+				tempEnergy += energy(oldCount - 1)*volume(oldCount-1);
 			} else {
-				tempDensity += middleDensity[oldCount - 1]*4*pi*(cube(tempGrid[oldCount] ) - cube(grid[newCount - 1]))/3;
-				tempMomentum += momentum(oldCount - 1)*4*pi*(cube(tempGrid[oldCount] ) - cube(grid[newCount - 1]))/3;
-				tempEnergy += energy(oldCount - 1)*4*pi*(cube(tempGrid[oldCount] ) - cube(grid[newCount - 1]))/3;
+				tempDensity += middleDensity[oldCount - 1]*4*pi*(cube(grid[oldCount] ) - cube(tempGrid[newCount - 1]))/3;
+				tempMomentum += momentum(oldCount - 1)*4*pi*(cube(grid[oldCount] ) - cube(tempGrid[newCount - 1]))/3;
+				tempEnergy += energy(oldCount - 1)*4*pi*(cube(grid[oldCount] ) - cube(tempGrid[newCount - 1]))/3;
 			}
 			++oldCount;
 		} else {
-			if(tempGrid[newCount - 1] < grid[oldCount]){
-				tempDensity += middleDensity[oldCount - 1]*4*pi*(cube(tempGrid[newCount] ) - cube(grid[oldCount]))/3;
-				tempMomentum += momentum(oldCount - 1)*4*pi*(cube(tempGrid[newCount] ) - cube(grid[oldCount]))/3;
-				tempEnergy += energy(oldCount - 1)*4*pi*(cube(tempGrid[newCount] ) - cube(grid[oldCount]))/3;
+			if(tempGrid[newCount - 1] < grid[oldCount - 1]){
+				tempDensity += middleDensity[oldCount - 1]*4*pi*(cube(tempGrid[newCount] ) - cube(grid[oldCount - 1]))/3;
+				tempMomentum += momentum(oldCount - 1)*4*pi*(cube(tempGrid[newCount] ) - cube(grid[oldCount - 1]))/3;
+				tempEnergy += energy(oldCount - 1)*4*pi*(cube(tempGrid[newCount] ) - cube(grid[oldCount - 1]))/3;
 			} else {
-				tempDensity += middleDensity[oldCount - 1]*4*pi*(cube(tempGrid[newCount] ) - cube(tempGrid[newCount - 1] ))/3;
-				tempMomentum += momentum(oldCount - 1)*4*pi*(cube(tempGrid[newCount] ) - cube(tempGrid[newCount - 1] ))/3;
+				tempDensity += middleDensity[oldCount - 1]*4*pi*(cube(tempGrid[newCount] ) - cube(tempGrid[newCount - 1]))/3;
+				tempMomentum += momentum(oldCount - 1)*4*pi*(cube(tempGrid[newCount] ) - cube(tempGrid[newCount - 1]))/3;
 				tempEnergy += energy(oldCount - 1)*4*pi*(cube(tempGrid[newCount] ) - cube(tempGrid[newCount - 1]))/3;
 			}
 			newDensity[newCount - 1] = tempDensity;
@@ -1129,6 +1135,14 @@ void Simulation::redistributeValues(){
 			++newCount;
 		}
 	}
+	newDensity[rgridNumber - 1] = tempDensity;
+	alertNaNOrInfinity(newDensity[rgridNumber - 1], "newDensity = NaN");
+	alertNegative(newDensity[rgridNumber - 1], "newDensity < 0");
+	newMomentum[rgridNumber - 1] = tempMomentum;
+	alertNaNOrInfinity(newMomentum[rgridNumber - 1], "newMomentum = NaN");
+	newEnergy[rgridNumber - 1] = tempEnergy;
+	alertNaNOrInfinity(newEnergy[rgridNumber - 1], "newEnergy = NaN");
+	alertNegative(newEnergy[rgridNumber - 1], "newEnergy < 0");
 
 	for(int i = 0; i < rgridNumber; ++i){
 		grid[i + 1] = tempGrid[i + 1];
