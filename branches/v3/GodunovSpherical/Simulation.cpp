@@ -205,6 +205,7 @@ void Simulation::simulate(){
 		evaluateHydrodynamic();
 		evaluateCR();
 		time = time + deltaT;
+		updateShockWavePoint();
 		updateGrid();
 		updateMaxSoundSpeed();
 		updateShockWavePoint();
@@ -218,7 +219,7 @@ void Simulation::simulate(){
 			fopen_s(&outShockWave, "./output/shock_wave.dat","a");
 			double shockWaveR = 0;
 			if(shockWavePoint >= 0 && shockWavePoint <= rgridNumber){
-				shockWaveR = grid[i];
+				shockWaveR = grid[shockWavePoint];
 			}
 
 			fprintf(outShockWave, "%d %lf %d %lf\n", i, time, shockWavePoint, shockWaveR);
@@ -848,7 +849,7 @@ void Simulation::updateMaxSoundSpeed(){
 
 void Simulation::updateShockWavePoint(){
 	double maxGrad = 0;
-	for(int i = 0; i < rgridNumber - 1; ++i){
+	for(int i = 20; i < rgridNumber - 1; ++i){
 		double grad = abs(middleDensity[i] - middleDensity[i + 1]);
 		if(grad > maxGrad){
 			maxGrad = grad;

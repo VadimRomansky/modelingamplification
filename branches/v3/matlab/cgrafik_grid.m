@@ -1,7 +1,7 @@
 clear;
 load tamc_radial_profile.dat;
 N1=1;
-N2=100;
+N2=1000;
 N3=6;
 e = size(tamc_radial_profile,1)/N2 - 1;
 d = fix(3*e/4);
