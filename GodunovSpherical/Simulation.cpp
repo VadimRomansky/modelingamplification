@@ -198,12 +198,24 @@ void Simulation::simulate(){
 	fclose(outCoordinateDistribution);
 	fclose(outFullDistribution);
 	fclose(outDistribution);
+	updateShockWavePoint();
+	fopen_s(&outShockWave, "./output/shock_wave.dat","a");
+	double shockWaveR = 0;
+	if(shockWavePoint >= 0 && shockWavePoint <= rgridNumber){
+		shockWaveR = grid[shockWavePoint];
+	}
+
+	fprintf(outShockWave, "%d %lf %d %lf\n", 0, time, shockWavePoint, shockWaveR);
+	fclose(outShockWave);
 	for(int i = 0; i < iterationNumber; ++i){
 		printf("iteration ¹ %d\n", i);
 		printf("time = %lf\n", time);
 		printf("solving\n");
-		evaluateHydrodynamic();
-		evaluateCR();
+		//evaluateHydrodynamic();
+		if(i < 5){
+			evaluateHydrodynamic();
+		}
+		//evaluateCR();
 		time = time + deltaT;
 		updateShockWavePoint();
 		updateGrid();
@@ -470,6 +482,7 @@ void Simulation::successiveApproximationPressure(double& p, double& u, double& R
 				alpha1 = ((gamma - 1)/(2*gamma))*rho1*c1*((1 - p/p1)/(1 - power(p/p1, (gamma - 1)/(2*gamma))));
 			}
 		}
+		alertNaNOrInfinity(alpha1,"alpha1 = NaN");
 
 		if(p >= p2){
 			alpha2 = sqrt(rho2*((gamma + 1)*p/2 + (gamma - 1)*p2/2));
@@ -480,8 +493,10 @@ void Simulation::successiveApproximationPressure(double& p, double& u, double& R
 				alpha2 = ((gamma - 1)/(2*gamma))*rho2*c2*((1 - p/p2)/(1 - power(p/p2, (gamma - 1)/(2*gamma))));
 			}
 		}
+		alertNaNOrInfinity(alpha2,"alpha2 = NaN");
 
 		u = (alpha1*u1 + alpha2*u2 + p1 - p2)/(alpha1 + alpha2);
+		alertNaNOrInfinity(u,"u = NaN");
 
 		if(p >= p1){
 			R1 = rho1*(((gamma + 1)*p + (gamma - 1)*p1)/((gamma - 1)*p + (gamma + 1)*p1));
@@ -875,6 +890,7 @@ void Simulation::updateParameters(){
 
 void Simulation::updateGrid(){
 	if ((shockWavePoint < 1) || (shockWavePoint > rgridNumber - 1)) return;
+	printf("updating grid\n");
 	double shockWaveR = grid[shockWavePoint];
 	int rightPoints = log((grid[rgridNumber] - shockWaveR)/minDeltaR)/log(1/gridExpLevel);
 	rightPoints = min(rightPoints, rgridNumber/2);
@@ -895,6 +911,8 @@ void Simulation::updateGrid(){
 	for(int i = rgridNumber - 1; i > leftPoints; --i){
 		tempGrid[i] = (1 - gridExpLevel)*shockWaveR + gridExpLevel*tempGrid[i + 1];
 	}
+
+	redistributeValues();
 }
 
 
