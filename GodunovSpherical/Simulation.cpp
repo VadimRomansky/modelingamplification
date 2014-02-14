@@ -4,7 +4,6 @@
 #include "util.h"
 #include "constants.h"
 #include "output.h"
-#include "GridZone.h"
 
 Simulation::Simulation(){
 	initialEnergy = 10E51;
@@ -86,6 +85,7 @@ void Simulation::initializeProfile(){
 	for(int i = 0; i < rgridNumber + 1; ++i){
 		grid[i] = r;
 		middleGrid[i] = r + tempDeltaR/2;
+		tempGrid[i] = grid[i];
 		deltaR[i] = tempDeltaR;
 		r += tempDeltaR;
 		switch(simulationType){
@@ -873,225 +873,29 @@ void Simulation::updateParameters(){
 }
 
 void Simulation::updateGrid(){
-	double* gradientU = new double[rgridNumber];
-
-	gradientU[0] = 0;
-	double maxGradient = 0;
-	double minGradient = 0;
-	for(int i = 1; i < rgridNumber; ++i){
-		gradientU[i] = (middleVelocity[i] - middleVelocity[i-1])/middleDeltaR[i];
-		if(gradientU[i] > maxGradient){
-			maxGradient = gradientU[i];
-		}
-		if(gradientU[i] < minGradient){
-			minGradient = gradientU[i];
-		}
+	if ((shockWavePoint < 1) || (shockWavePoint > rgridNumber - 1)) return;
+	double shockWaveR = grid[shockWavePoint];
+	int rightPoints = log((grid[rgridNumber] - shockWaveR)/minDeltaR)/log(1/gridExpLevel);
+	rightPoints = min(rightPoints, rgridNumber/2);
+	if(rightPoints < 0){
+		rightPoints = 1;
 	}
-	int* type = new int[rgridNumber];
-	type[0] = 0;
-	//todo epsilon
-	double epsilonGradient = U0/upstreamR;
-	for(int i = 1; i < rgridNumber; ++i){
-		if(gradientU[i] > gradientLevel*(maxGradient + epsilonGradient)){
-			type[i] = 1;
-		} else if(gradientU[i] < gradientLevel*(minGradient - epsilonGradient)){
-			type[i] = -1;
-		} else {
-			type[i] = 0;
-		}
+	int leftPoints = rgridNumber - 1 - rightPoints;
+
+	tempGrid[0] = 0;
+	tempGrid[rgridNumber] = grid[rgridNumber];
+	tempGrid[leftPoints] = shockWaveR;
+	double leftDeltaR = (shockWaveR - grid[0])/leftPoints;
+
+	for(int i = 1; i < leftPoints; ++i){
+		tempGrid[i] = tempGrid[i-1] + leftDeltaR;
 	}
 
-	int smallGradientZoneCount = 0;
-	int bigGradientZoneCount = 0;
-	std::list<GridZone*> zones = createZones(type, gradientU, smallGradientZoneCount, bigGradientZoneCount);
-
-	int count = (rgridNumber + 1) - 2*smallGradientZoneCount - 2*bigGradientZoneCount - 1;
-	if(count <= 0) return;
-
-	putPointsIntoZones(zones, count, smallGradientZoneCount, bigGradientZoneCount);
-	convertZonesToGrid(zones);
-
-	redistributeValues();
-
-	delete[] gradientU;
-	delete[] type;
-	for(std::list<GridZone*>::iterator it = zones.begin(); it != zones.end(); ++it){
-		GridZone* zone = *it;
-		delete zone;
+	for(int i = rgridNumber - 1; i > leftPoints; --i){
+		tempGrid[i] = (1 - gridExpLevel)*shockWaveR + gridExpLevel*tempGrid[i + 1];
 	}
-	zones.clear();
 }
 
-std::list<GridZone*> Simulation::createZones(int* type, double* gradientU, int& smallGradientZoneCount, int& bigGradientZoneCount){
-	std::list<GridZone*> zones;
-	double prevBound = 0;
-	int prevBoundIndex = -1;
-	double central;
-	double localMax;
-	for(int i = 1; i < rgridNumber; ++i){
-		if(type[i] != type[i-1]){
-			GridZone* zone = new GridZone(prevBound, middleGrid[i-1], type[i-1]);
-			zones.push_back(zone);
-			central = (prevBound + middleGrid[i-1])/2;
-			if(zone->type != 0){
-				localMax = 0;
-				for(int j = prevBoundIndex + 1; j < i; ++j){
-					if(abs(gradientU[j]) > localMax){
-						localMax = abs(gradientU[j]);
-						central = grid[j];
-					}
-				}
-			}
-			zone->centralPoint = central;
-
-			if(zone->type == 0){
-				smallGradientZoneCount++;
-			} else {
-				bigGradientZoneCount++;
-			}
-			prevBound = middleGrid[i-1];
-			prevBoundIndex = i - 1;
-		}
-	}
-	GridZone* lastZone = new GridZone(prevBound, grid[rgridNumber], type[rgridNumber - 1]);
-	zones.push_back(lastZone);
-	central = (prevBound + grid[rgridNumber])/2;
-	if(lastZone->type != 0){
-		localMax = 0;
-		for(int j = prevBoundIndex + 1; j < rgridNumber; ++j){
-			if(abs(gradientU[j]) > localMax){
-				localMax = abs(gradientU[j]);
-				central = grid[j];
-			}
-		}
-	}
-	lastZone->centralPoint = central;
-
-	if(lastZone->type == 0){
-		smallGradientZoneCount++;
-	} else {
-		bigGradientZoneCount++;
-	}
-
-	return zones;
-}
-
-void Simulation::putPointsIntoZones(std::list<GridZone*>& zones, int pointsCount, int smallGradientZoneCount, int bigGradientZoneCount){
-	int bigGradientPointsCount;
-	if(smallGradientZoneCount > 0){
-		bigGradientPointsCount = 0.8*pointsCount;
-	} else {
-		bigGradientPointsCount = pointsCount;
-	}
-	int smallGradientPointsCount = pointsCount - bigGradientPointsCount;
-	int* bigGradientPoints = new int[bigGradientZoneCount];
-	int* smallGradienPoints = new int[smallGradientZoneCount];
-
-	double smallSumLength = 0;
-	double bigSumLength = 0;
-	for(std::list<GridZone*>::iterator it = zones.begin(); it  != zones.end(); ++it){
-		GridZone* tempZone = *it;
-		if(tempZone->type == 0){
-			smallSumLength += (tempZone->rightBound - tempZone->leftBound);
-		} else {
-			bigSumLength += (tempZone->rightBound - tempZone->leftBound);
-		}
-	}
-	int bigIndex = 0;
-	int smallIndex = 0;
-	int intBigPoints = 0;
-	int intSmallPoints = 0;
-	for(std::list<GridZone*>::iterator it = zones.begin(); it  != zones.end(); ++it){
-		GridZone* tempZone = *it;
-		if(tempZone->type != 0){
-			//if(tempZone->rightBound - tempZone->leftBound > minDeltaR){
-				bigGradientPoints[bigIndex] = min((tempZone->rightBound - tempZone->leftBound)*bigGradientPointsCount/bigSumLength, (tempZone->rightBound - tempZone->leftBound)/minDeltaR);
-			//} else {
-				//bigGradientPoints[bigIndex] = 0;
-			//}
-			intBigPoints += bigGradientPoints[bigIndex];
-			bigIndex++;
-		}
-	}
-	if(smallGradientZoneCount > 0){
-		smallGradientPointsCount = pointsCount - intBigPoints;
-		for(std::list<GridZone*>::iterator it = zones.begin(); it  != zones.end(); ++it){
-			GridZone* tempZone = *it;
-			if(tempZone->type == 0){
-				smallGradienPoints[smallIndex] = (tempZone->rightBound - tempZone->leftBound)*smallGradientPointsCount/smallSumLength;
-				intSmallPoints += smallGradienPoints[smallIndex];
-				smallIndex++;
-			}
-		}
-		smallGradientPointsCount -= intSmallPoints;
-		smallIndex = 0;
-		for(std::list<GridZone*>::iterator it = zones.begin(); (it  != zones.end()) && (smallGradientPointsCount > 0); ++it){
-			GridZone* tempZone = *it;
-			if(tempZone->type != 0){
-				smallGradienPoints[smallIndex] += 1;
-				smallIndex++;
-				smallGradientPointsCount--;
-			}
-		}
-	} else {
-		bigIndex = 0;
-		bigGradientPointsCount -= intBigPoints;
-		for(std::list<GridZone*>::iterator it = zones.begin(); (it  != zones.end()) && (bigGradientPointsCount > 0); ++it){
-			GridZone* tempZone = *it;
-			if(tempZone->type != 0){
-				bigGradientPoints[bigIndex] += 1;
-				bigIndex++;
-				bigGradientPointsCount--;
-			}
-		}
-	}
-
-	bigIndex = 0;
-	smallIndex = 0;
-
-	for(std::list<GridZone*>::iterator it = zones.begin(); it  != zones.end(); ++it){
-		GridZone* tempZone = *it;
-		if(tempZone->type != 0){
-			tempZone->addPoints(bigGradientPoints[bigIndex]);
-			bigIndex++;
-		} else {
-			tempZone->addPoints(smallGradienPoints[smallIndex]);
-			smallIndex++;
-		}
-	}
-
-	delete[] bigGradientPoints;
-	delete[] smallGradienPoints;
-}
-
-void Simulation::convertZonesToGrid(std::list<GridZone*>& zones){
-	int i = 0;
-	for(std::list<GridZone*>::iterator it = zones.begin(); it != zones.end(); ++it){
-		GridZone* zone = *it;
-		addPoints(zone, i);
-	}
-	tempGrid[rgridNumber] = zones.back()->rightBound;
-}
-
-void Simulation::addPoints(GridZone* zone, int& i){
-	tempGrid[i] = zone->leftBound;
-	++i;
-	while(zone->leftPoints.size() > 0){
-		double r = zone->leftPoints.back();
-		zone->leftPoints.pop_back();
-		tempGrid[i] = r;
-		++i;
-	}
-	tempGrid[i] = zone->centralPoint;
-	++i;
-	while(zone->rightPoints.size() > 0){
-		double r = zone->rightPoints.front();
-		zone->rightPoints.pop_front();
-		tempGrid[i] = r;
-		++i;
-	}
-
-}
 
 void Simulation::redistributeValues(){
 	int oldCount = 1;
