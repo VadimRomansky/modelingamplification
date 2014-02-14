@@ -76,7 +76,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="constants.h" />
-    <ClInclude Include="GridZone.h" />
     <ClInclude Include="input.h" />
     <ClInclude Include="output.h" />
     <ClInclude Include="simulation.h" />
@@ -85,7 +84,6 @@
     <ClInclude Include="util.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="GridZone.cpp" />
     <ClCompile Include="input.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="output.cpp" />

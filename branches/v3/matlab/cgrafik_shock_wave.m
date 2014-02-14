@@ -1,16 +1,16 @@
 clear;
-load tamc_shock_wave.dat;
+load shock_wave.dat;
 N1=1;
-N2=200;
+N2=size(shock_wave,1);
+t(1:N2,1:2) = 0;
+for i = 1:N2
+    t(i,1) = shock_wave(i,2);
+    t(i,2) = shock_wave(N2,4)*(shock_wave(i,2)/shock_wave(N2,2))^(2/5);
+end
 figure(1);
-plot (tamc_shock_wave(1:N2,1),tamc_shock_wave(1:N2,2),'blue');
+plot (t(1:N2,1),shock_wave(1:N2,4),'blue', t(1:N2,1), t(1:N2,2), 'red');
 title ('shock wawe r');
 xlabel ('iteration');
 ylabel ('r');
-grid ;
-figure(2);
-plot (tamc_shock_wave(1:N2,1),tamc_shock_wave(1:N2,3),'blue');
-title ('shock wawe velocity');
-xlabel ('iteration');
-ylabel ('U');
+legend('experiment','sedov',4);
 grid ;
