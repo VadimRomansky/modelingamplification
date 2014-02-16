@@ -50,3 +50,13 @@ void alertNegative(double value, const char* s){
 		printf("\n");
 	}
 }
+
+double findExpLevel(double y, int N, double min, double max){
+	double middle = (max + min)/2;
+	if(max - min < epsilon) return middle;
+	if((exp(N*log(middle)))/(middle - 1) > y){
+		return findExpLevel(y, N, min, middle);
+	} else {
+		return findExpLevel(y, N, middle, max);
+	}
+}
