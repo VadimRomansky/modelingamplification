@@ -212,7 +212,7 @@ void Simulation::simulate(){
 		printf("time = %lf\n", time);
 		printf("solving\n");
 		//evaluateHydrodynamic();
-		if(i < 5){
+		if(i < 12){
 			evaluateHydrodynamic();
 		}
 		//evaluateCR();
@@ -863,9 +863,9 @@ void Simulation::updateMaxSoundSpeed(){
 }
 
 void Simulation::updateShockWavePoint(){
-	double maxGrad = 0;
+	double maxGrad = epsilon*abs(density0/(grid[rgridNumber] - grid[0]));
 	for(int i = 20; i < rgridNumber - 1; ++i){
-		double grad = abs(middleDensity[i] - middleDensity[i + 1]);
+		double grad = abs((middleDensity[i] - middleDensity[i + 1])/middleDeltaR[i+1]);
 		if(grad > maxGrad){
 			maxGrad = grad;
 			shockWavePoint = i+1;
@@ -892,15 +892,23 @@ void Simulation::updateGrid(){
 	if ((shockWavePoint < 1) || (shockWavePoint > rgridNumber - 1)) return;
 	printf("updating grid\n");
 	double shockWaveR = grid[shockWavePoint];
-	int rightPoints = log((grid[rgridNumber] - shockWaveR)/minDeltaR)/log(1/gridExpLevel);
-	rightPoints = min(rightPoints, rgridNumber/2);
-	if(rightPoints < 0){
-		rightPoints = 1;
+	//int rightPoints = -log((1-gridExpLevel)*(grid[rgridNumber] - shockWaveR)/minDeltaR + 1)/log(gridExpLevel)+1;
+	//int rightPoints = min(rightPoints, rgridNumber/2);
+	double tempGridLevel = 1 + minDeltaR*(grid[rgridNumber]/(rgridNumber*minDeltaR) - 1)/(grid[rgridNumber] - shockWaveR);
+	int rightPoints = log(grid[rgridNumber]/(rgridNumber*minDeltaR))/log(tempGridLevel);
+	if(rightPoints > rgridNumber/2){
+		rightPoints = rgridNumber/2;
+		tempGridLevel = findExpLevel((grid[rgridNumber] - shockWaveR)/minDeltaR, rightPoints, 1.0001, 10);
+	}
+	if(rightPoints <= 1){
+		//rightPoints = 2;
+		printf("rightPoints <= 1!!!\n");
 	}
 	int leftPoints = rgridNumber - 1 - rightPoints;
 
 	tempGrid[0] = 0;
 	tempGrid[rgridNumber] = grid[rgridNumber];
+	//tempGrid[rgridNumber - 1] = grid[rgridNumber] - a0;
 	tempGrid[leftPoints] = shockWaveR;
 	double leftDeltaR = (shockWaveR - grid[0])/leftPoints;
 
@@ -908,9 +916,11 @@ void Simulation::updateGrid(){
 		tempGrid[i] = tempGrid[i-1] + leftDeltaR;
 	}
 
-	for(int i = rgridNumber - 1; i > leftPoints; --i){
-		tempGrid[i] = (1 - gridExpLevel)*shockWaveR + gridExpLevel*tempGrid[i + 1];
+	double logLevel = log(tempGridLevel);
+	for(int i = leftPoints + 1; i < rgridNumber - 1; ++i){
+		tempGrid[i] = tempGrid[i - 1] + minDeltaR*exp((i - leftPoints - 1)*logLevel);
 	}
+	tempGrid[rgridNumber - 1]= (tempGrid[rgridNumber - 2] + tempGrid[rgridNumber])/2;
 
 	redistributeValues();
 }
