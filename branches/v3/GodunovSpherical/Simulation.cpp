@@ -937,9 +937,7 @@ void Simulation::redistributeValues(){
 	double* newEnergy = new double[rgridNumber];
 	while((oldCount < rgridNumber) || (newCount < rgridNumber)){
 		if(tempGrid[newCount] > grid[oldCount]){
-			if(tempGrid[newCount - 1] > grid[oldCount]){
-				printf("aaa\n");
-			} else if(tempGrid[newCount - 1] < grid[oldCount - 1]){
+			if(tempGrid[newCount - 1] < grid[oldCount - 1]){
 				tempDensity += middleDensity[oldCount - 1]*volume(oldCount-1);
 				tempMomentum += momentum(oldCount - 1)*volume(oldCount-1);
 				tempEnergy += energy(oldCount - 1)*volume(oldCount-1);
