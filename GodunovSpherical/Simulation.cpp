@@ -297,7 +297,9 @@ void Simulation::evaluateHydrodynamic(){
 	/*for(int i = 0; i < rgridNumber - 1; ++i){
 		tempEnergy[i] -= deltaT*2*(middlePressure[i]*middleVelocity[i]*gamma/(gamma - 1) + pointDensity[i]*middleVelocity[i]*middleVelocity[i]*middleVelocity[i]/2)/middleGrid[i];
 	}*/
-
+	if(tempDensity[rgridNumber - 1] < middleDensity[rgridNumber - 1]){
+		printf("aaa\n");
+	}
 	for(int i = 0; i < rgridNumber; ++i){
 		//middleDensity[i] = tempDensity[i]/(middleGrid[i]*middleGrid[i]);
 		if(i != 0 || tempDensity[i] < middleDensity[i]){
@@ -935,7 +937,46 @@ void Simulation::redistributeValues(){
 	double* newDensity = new double[rgridNumber];
 	double* newMomentum = new double[rgridNumber];
 	double* newEnergy = new double[rgridNumber];
-	while((oldCount < rgridNumber) || (newCount < rgridNumber)){
+	for(int i = 0; i < rgridNumber; ++i){
+		double newVolume = 4*pi*(cube(tempGrid[i+1]) - cube(tempGrid[i]))/3;
+		bool oldChanged = false;
+		if(tempGrid[i+1] > grid[oldCount]){
+			tempDensity = middleDensity[oldCount - 1]*4*pi*(cube(grid[oldCount]) - cube(tempGrid[i]))/(3*newVolume);
+			tempMomentum = momentum(oldCount - 1)*4*pi*(cube(grid[oldCount]) - cube(tempGrid[i]))/(3*newVolume);
+			tempEnergy = energy(oldCount - 1)*4*pi*(cube(grid[oldCount]) - cube(tempGrid[i]))/(3*newVolume);
+			++oldCount;
+			oldChanged = true;
+		} else {
+			tempDensity = middleDensity[oldCount - 1];
+			tempMomentum = momentum(oldCount - 1);
+			tempEnergy = energy(oldCount - 1);
+		}
+		while(grid[oldCount] < tempGrid[i+1]){
+			tempDensity += middleDensity[oldCount - 1]*volume(oldCount - 1)/newVolume;
+			tempMomentum += momentum(oldCount - 1)*volume(oldCount - 1)/newVolume;
+			tempEnergy += energy(oldCount - 1)*volume(oldCount - 1)/newVolume;
+			++oldCount;
+			oldChanged = true;
+			/*if(oldCount > rgridNumber){
+				printf("oldCount > rgridNUmber\n");
+			}*/
+		}
+		if(oldChanged){
+			//if( i == 0 || tempGrid[i] < grid[oldCount - 1]){
+				tempDensity += middleDensity[oldCount - 1]*4*pi*(cube(tempGrid[i+1]) - cube(grid[oldCount - 1]))/(3*newVolume);
+				tempMomentum += momentum(oldCount - 1)*4*pi*(cube(tempGrid[i+1]) - cube(grid[oldCount - 1]))/(3*newVolume);
+				tempEnergy += energy(oldCount - 1)*4*pi*(cube(tempGrid[i+1]) - cube(grid[oldCount - 1]))/(3*newVolume);
+			/*} else {
+				tempDensity += middleDensity[oldCount - 1]*4*pi*(cube(tempGrid[i]) - cube(tempGrid[i - 1]))/3;
+				tempMomentum += momentum(oldCount - 1)*4*pi*(cube(tempGrid[i]) - cube(tempGrid[i - 1]))/3;
+				tempEnergy += energy(oldCount - 1)*4*pi*(cube(tempGrid[i]) - cube(tempGrid[i - 1]))/3;
+			}*/
+		}
+		newDensity[i] = tempDensity;
+		newMomentum[i] = tempMomentum;
+		newEnergy[i] = tempEnergy;
+	}
+	/*while((oldCount < rgridNumber) || (newCount < rgridNumber)){
 		if(tempGrid[newCount] > grid[oldCount]){
 			if(tempGrid[newCount - 1] < grid[oldCount - 1]){
 				tempDensity += middleDensity[oldCount - 1]*volume(oldCount-1);
@@ -976,6 +1017,9 @@ void Simulation::redistributeValues(){
 		tempMomentum += momentum(rgridNumber - 1)*4*pi*(cube(tempGrid[rgridNumber]) - cube(tempGrid[rgridNumber - 1]))/3;
 		tempEnergy += energy(rgridNumber - 1)*4*pi*(cube(tempGrid[rgridNumber]) - cube(tempGrid[rgridNumber - 1]))/3;
 	}
+	if(tempDensity < middleDensity[rgridNumber - 1]){
+		printf("aaa\n");
+	}
 	newDensity[rgridNumber - 1] = tempDensity;
 	alertNaNOrInfinity(newDensity[rgridNumber - 1], "newDensity = NaN");
 	alertNegative(newDensity[rgridNumber - 1], "newDensity < 0");
@@ -983,7 +1027,7 @@ void Simulation::redistributeValues(){
 	alertNaNOrInfinity(newMomentum[rgridNumber - 1], "newMomentum = NaN");
 	newEnergy[rgridNumber - 1] = tempEnergy;
 	alertNaNOrInfinity(newEnergy[rgridNumber - 1], "newEnergy = NaN");
-	alertNegative(newEnergy[rgridNumber - 1], "newEnergy < 0");
+	alertNegative(newEnergy[rgridNumber - 1], "newEnergy < 0");*/
 
 	for(int i = 0; i < rgridNumber; ++i){
 		grid[i + 1] = tempGrid[i + 1];
@@ -994,9 +1038,9 @@ void Simulation::redistributeValues(){
 		} else {
 			middleDeltaR[i] = middleGrid[i] - middleGrid[i-1];
 		}
-		newDensity[i] /= volume(i);
+		/*newDensity[i] /= volume(i);
 		newMomentum[i] /= volume(i);
-		newEnergy[i] /= volume(i);
+		newEnergy[i] /= volume(i);*/
 
 		middleDensity[i] = newDensity[i];
 		if(newDensity[i] <= epsilon*density0){
@@ -1007,6 +1051,9 @@ void Simulation::redistributeValues(){
 		middlePressure[i] = (newEnergy[i] - middleDensity[i]*middleVelocity[i]*middleVelocity[i]/2)*(gamma - 1);
 		alertNegative(middlePressure[i], "middlePressure < 0");
 		alertNaNOrInfinity(middlePressure[i], "middlePressure = NaN");
+	}
+	if(newDensity[rgridNumber - 1] < middleDensity[rgridNumber - 1]){
+		printf("aaa\n");
 	}
 
 	delete[] newDensity;
