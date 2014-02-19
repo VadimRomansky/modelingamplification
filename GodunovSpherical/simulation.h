@@ -25,6 +25,7 @@ public:
 
 	int rgridNumber;
 	int shockWavePoint;
+	bool shockWaveMoved;
 
 	double R0;
 	double time;

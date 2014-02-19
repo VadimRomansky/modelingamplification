@@ -10,7 +10,7 @@ end
 figure(1);
 plot (t(1:N2,1),shock_wave(1:N2,4),'blue', t(1:N2,1), t(1:N2,2), 'red');
 title ('shock wawe r');
-xlabel ('iteration');
+xlabel ('time s');
 ylabel ('r');
 legend('experiment','sedov',4);
 grid ;
