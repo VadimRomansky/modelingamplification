@@ -9,6 +9,7 @@ Simulation::Simulation(){
 	initialEnergy = 10E51;
 	time = 0;
 	tracPen = true;
+	shockWavePoint = -1;
 	shockWaveMoved = false;
 }
 
@@ -213,12 +214,8 @@ void Simulation::simulate(){
 		printf("time = %lf\n", time);
 		printf("solving\n");
 		evaluateHydrodynamic();
-		/*if(i < 12){
-			evaluateHydrodynamic();
-		}*/
 		//evaluateCR();
 		time = time + deltaT;
-		updateShockWavePoint();
 		updateGrid();
 		updateMaxSoundSpeed();
 		updateShockWavePoint();
@@ -868,10 +865,14 @@ void Simulation::updateMaxSoundSpeed(){
 void Simulation::updateShockWavePoint(){
 	//double maxGrad = epsilon*abs(density0/(grid[rgridNumber] - grid[0]));
 	int tempShockWavePoint = -1;
-	double maxGrad = epsilon*abs(U0/(grid[rgridNumber] - grid[0]));
-	for(int i = 20; i < rgridNumber - 1; ++i){
+	//double maxGrad = epsilon*abs(U0/(grid[rgridNumber] - grid[0]));
+	double maxGrad = epsilon*abs(U0/rgridNumber);
+	//for(int i = 2; i < rgridNumber - 1; ++i){
+	for(int i = max(11, shockWavePoint-1); i < rgridNumber - 1; ++i){
 		//double grad = abs((middleDensity[i] - middleDensity[i + 1])/middleDeltaR[i+1]);
-		double grad = abs((middleVelocity[i] - middleVelocity[i + 1])/middleDeltaR[i+1]);
+		//double grad = abs((middleVelocity[i] - middleVelocity[i + 1])/middleDeltaR[i+1]);
+		//double grad = (middleVelocity[i] - middleVelocity[i + 1])/middleDeltaR[i+1];
+		double grad = (middleVelocity[i] - middleVelocity[i + 1]);
 		if(grad > maxGrad){
 			maxGrad = grad;
 			tempShockWavePoint = i+1;
@@ -912,11 +913,12 @@ void Simulation::updateGrid(){
 	if(rightPoints <= 1){
 		printf("rightPoints <= 1!!!\n");
 	}
-	int leftPoints = rgridNumber - 1 - rightPoints;
+	int leftPoints = rgridNumber - rightPoints;
 
 	tempGrid[0] = 0;
 	tempGrid[rgridNumber] = grid[rgridNumber];
 	tempGrid[leftPoints] = shockWaveR;
+	shockWavePoint = leftPoints;
 	double leftDeltaR = (shockWaveR - grid[0])/leftPoints;
 
 	for(int i = 1; i < leftPoints; ++i){
