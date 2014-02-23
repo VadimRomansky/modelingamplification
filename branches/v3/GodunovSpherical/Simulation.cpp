@@ -209,7 +209,6 @@ void Simulation::simulate(){
 
 	fprintf(outShockWave, "%d %lf %d %lf\n", 0, time, shockWavePoint, shockWaveR);
 	fclose(outShockWave);
-	//for(int i = 0; i < iterationNumber; ++i){
 	int i = 0;
 	while(time < maxTime && i < iterationNumber){
 		++i;
@@ -219,7 +218,7 @@ void Simulation::simulate(){
 		evaluateHydrodynamic();
 		//evaluateCR();
 		time = time + deltaT;
-		/*if(i > 100){
+		/*if(i == 100){
 			updateGrid();
 		}*/
 		updateMaxSoundSpeed();
@@ -884,6 +883,7 @@ void Simulation::updateShockWavePoint(){
 		}
 	}
 	shockWaveMoved = (tempShockWavePoint != shockWavePoint);
+	//shockWaveMoved = (tempShockWavePoint != shockWavePoint) || shockWaveMoved;
 	shockWavePoint = tempShockWavePoint;
 }
 
@@ -907,6 +907,7 @@ void Simulation::updateGrid(){
 	if( !shockWaveMoved) {
 		return;
 	}
+	//shockWaveMoved = false;
 	printf("updating grid\n");
 	double shockWaveR = grid[shockWavePoint];
 	double tempGridLevel = 1 + minDeltaR*(grid[rgridNumber]/(rgridNumber*minDeltaR) - 1)/(grid[rgridNumber] - shockWaveR);
