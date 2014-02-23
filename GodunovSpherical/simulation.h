@@ -14,6 +14,7 @@ public:
 	double upstreamR;
 	double downstreamR;
 	double temperature;
+	double maxTime;
 	double epsilonR;
 	double deltaT;
 	double initialEnergy;

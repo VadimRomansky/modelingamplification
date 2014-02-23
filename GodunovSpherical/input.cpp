@@ -17,6 +17,7 @@ Simulation* readInput(){
 		fscanf(infile,"%lf",&simulation->upstreamR);
 		fscanf(infile,"%d",&simulation->rgridNumber);
 		fscanf(infile,"%d",&simulation->simulationType);
+		fscanf(infile,"%lf",&simulation->maxTime);
 		fclose(infile);
 		return simulation;
 	} else {
