@@ -209,14 +209,19 @@ void Simulation::simulate(){
 
 	fprintf(outShockWave, "%d %lf %d %lf\n", 0, time, shockWavePoint, shockWaveR);
 	fclose(outShockWave);
-	for(int i = 0; i < iterationNumber; ++i){
+	//for(int i = 0; i < iterationNumber; ++i){
+	int i = 0;
+	while(time < maxTime && i < iterationNumber){
+		++i;
 		printf("iteration ¹ %d\n", i);
 		printf("time = %lf\n", time);
 		printf("solving\n");
 		evaluateHydrodynamic();
 		//evaluateCR();
 		time = time + deltaT;
-		updateGrid();
+		/*if(i > 100){
+			updateGrid();
+		}*/
 		updateMaxSoundSpeed();
 		updateShockWavePoint();
 		updateParameters();
