@@ -54,6 +54,7 @@ public:
 	double* middleVelocity;
 	double* pointPressure;
 	double* middlePressure;
+	double* cosmicRayPressure;
 
 	double* tempU;
 
@@ -97,6 +98,7 @@ public:
 	void updateMaxSoundSpeed();
 	void updateShockWavePoint();
 	void updateParameters();
+	void evaluateCosmicRayPressure();
 
 	void updateGrid();
 	//std::list<GridZone*> createZones(int* type, double* gradientU, int& smallGradientZoneCount, int& bigGradientZoneCount);

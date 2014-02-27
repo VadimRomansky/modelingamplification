@@ -26,6 +26,7 @@ Simulation::~Simulation(){
 	delete[] middleDensity;
 	delete[] middleVelocity;
 	delete[] middlePressure;
+	delete[] cosmicRayPressure;
 
 	delete[] tempU;
 
@@ -51,10 +52,12 @@ void Simulation::initializeProfile(){
 	middleDensity = new double[rgridNumber];
 	middleVelocity = new double[rgridNumber];
 	middlePressure = new double[rgridNumber];
+	cosmicRayPressure = new double[rgridNumber];
 	tempU = new double[rgridNumber];
 	distributionFunction = new double*[rgridNumber];
 	tempDistributionFunction = new double*[rgridNumber];
 	for(int i = 0; i < rgridNumber; i ++){
+		cosmicRayPressure[i] = 0;
 		distributionFunction[i] = new double[pgridNumber];
 		tempDistributionFunction[i] = new double[pgridNumber];
 		for(int j = 0; j < pgridNumber; ++j){
@@ -216,7 +219,7 @@ void Simulation::simulate(){
 		printf("time = %lf\n", time);
 		printf("solving\n");
 		evaluateHydrodynamic();
-		//evaluateCR();
+		evaluateCR();
 		time = time + deltaT;
 		/*if(i == 100){
 			updateGrid();
@@ -292,6 +295,7 @@ void Simulation::evaluateHydrodynamic(){
 	TracPen(tempMomentum, mFlux, maxSoundSpeed);
 	for(int i = 0; i < rgridNumber - 1; ++i){
 		tempMomentum[i] -= deltaT*middleGrid[i]*middleGrid[i]*(pointPressure[i+1] - pointPressure[i])/(deltaR[i]);
+		tempMomentum[i] -= deltaT*middleGrid[i]*middleGrid[i]*(cosmicRayPressure[i+1] - cosmicRayPressure[i])/(deltaR[i]);
 		//tempMomentum[i] -= deltaT*(pointPressure[i+1] - pointPressure[i])/(deltaR);
 		//tempMomentum[i] -= deltaT*2*middleDensity[i]*middleVelocity[i]*middleVelocity[i]/middleGrid[i];
 	}
@@ -722,6 +726,7 @@ double Simulation::injection(){
 }
 
 void Simulation::evaluateCR(){
+	printf("solve CR\n");
 	double* upper = new double[rgridNumber];
 	double* middle = new double[rgridNumber];
 	double* lower = new double[rgridNumber];
@@ -801,6 +806,8 @@ void Simulation::evaluateCR(){
 			distributionFunction[i][j] = tempDistributionFunction[i][j];
 		}
 	}
+
+	evaluateCosmicRayPressure();
 
 	delete[] upper;
 	delete[] middle;
@@ -940,6 +947,18 @@ void Simulation::updateGrid(){
 	redistributeValues();
 }
 
+void Simulation::evaluateCosmicRayPressure(){
+	for(int i = 0; i < rgridNumber; ++i){
+		double pressure = 0;
+		for(int j = 0; j < pgridNumber; ++j){
+			double momentum = (pgrid[j] + pgrid[j+1])/2;
+			pressure += distributionFunction[i][j]*momentum*momentum*momentum*(momentum/sqrt(massProton*massProton + momentum*momentum/(speed_of_light*speed_of_light)))*(pgrid[j+1] - pgrid[j]);
+		}
+		pressure *= 4*pi/3;
+		//pressure *= middleDensity[i]/massProton;
+		cosmicRayPressure[i] = pressure;
+	}
+}
 
 void Simulation::redistributeValues(){
 	int oldCount = 1;
