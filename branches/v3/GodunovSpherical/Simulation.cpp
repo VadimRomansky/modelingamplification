@@ -219,8 +219,9 @@ void Simulation::simulate(){
 		printf("time = %lf\n", time);
 		printf("solving\n");
 		evaluateHydrodynamic();
-		evaluateCR();
+		//evaluateCR();
 		time = time + deltaT;
+		updateGrid();
 		/*if(i == 100){
 			updateGrid();
 		}*/
@@ -721,7 +722,7 @@ double Simulation::diffussionCoef(int i, int j){
 double Simulation::injection(){
 	double pf = pgrid[injectionMomentum];
 	//return 0;
-	return 0.1*middleDensity[shockWavePoint]*abs(middleVelocity[shockWavePoint])/(pf*pf*massProton);
+	return middleDensity[shockWavePoint]*abs(middleVelocity[shockWavePoint])/(pf*pf*massProton);
 	//return 0.1*middleDensity[shockWavePoint]*abs(middleVelocity[shockWavePoint])*pf/massProton;
 }
 
@@ -843,7 +844,7 @@ void Simulation::solveThreeDiagonal(double* middle, double* upper, double* lower
 
 void Simulation::updateMaxSoundSpeed(){
 	maxSoundSpeed = (sqrt(gamma*middlePressure[0]/middleDensity[0]) + abs(middleVelocity[0]));
-	double tempdt = min(deltaR[0]/maxSoundSpeed, deltaR[1]/maxSoundSpeed);
+	double tempdt = min2(deltaR[0]/maxSoundSpeed, deltaR[1]/maxSoundSpeed);
 	double cs = maxSoundSpeed;
 	for(int i = 1; i < rgridNumber - 1; ++i){
 		cs = (sqrt(gamma*middlePressure[i]/middleDensity[i]) + abs(middleVelocity[i]));
@@ -879,7 +880,7 @@ void Simulation::updateShockWavePoint(){
 	//double maxGrad = epsilon*abs(U0/(grid[rgridNumber] - grid[0]));
 	double maxGrad = epsilon*abs(U0/rgridNumber);
 	//for(int i = 2; i < rgridNumber - 1; ++i){
-	for(int i = max(11, shockWavePoint-1); i < rgridNumber - 1; ++i){
+	for(int i = max2(11, shockWavePoint-1); i < rgridNumber - 1; ++i){
 		//double grad = abs((middleDensity[i] - middleDensity[i + 1])/middleDeltaR[i+1]);
 		//double grad = abs((middleVelocity[i] - middleVelocity[i + 1])/middleDeltaR[i+1]);
 		//double grad = (middleVelocity[i] - middleVelocity[i + 1])/middleDeltaR[i+1];
@@ -1023,7 +1024,12 @@ void Simulation::redistributeValues(){
 		} else {
 			middleVelocity[i] = newMomentum[i]/newDensity[i];
 		}
-		middlePressure[i] = (newEnergy[i] - middleDensity[i]*middleVelocity[i]*middleVelocity[i]/2)*(gamma - 1);
+		double tempPressure = (newEnergy[i] - middleDensity[i]*middleVelocity[i]*middleVelocity[i]/2)*(gamma - 1);
+		
+		if(tempPressure < 0){
+			middlePressure[i] = 0.01*min2(middlePressure[i+1],middlePressure[i]);
+			printf("pressure < 0\n");
+		}
 		alertNegative(middlePressure[i], "middlePressure < 0");
 		alertNaNOrInfinity(middlePressure[i], "middlePressure = NaN");
 	}
