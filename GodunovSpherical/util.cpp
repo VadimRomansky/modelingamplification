@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include <windows.h>
 #include "util.h"
 #include "constants.h"
 
@@ -14,7 +15,7 @@ double cube(double v){
 	return v*v*v;
 }
 
-double max(double a, double b){
+double max2(double a, double b){
 	if(a >= b){
 		return a;
 	} else {
@@ -22,7 +23,7 @@ double max(double a, double b){
 	}
 }
 
-double min(double a, double b){
+double min2(double a, double b){
 	if(a >= b){
 		return b;
 	} else {
@@ -34,6 +35,7 @@ void alertNaNOrInfinity(double value, const char* s){
 	if(value != value || 0*value != 0*value){
 		printf(s);
 		printf("\n");
+		Sleep(1000);
 	}
 }
 
