@@ -6,7 +6,7 @@
 #include "output.h"
 
 Simulation::Simulation(){
-	initialEnergy = 10E51;
+	initialEnergy = 10E48;
 	time = 0;
 	tracPen = true;
 	shockWavePoint = -1;
@@ -66,23 +66,7 @@ void Simulation::initializeProfile(){
 	}
 	double r = downstreamR;
 	double pressure0 = density0*kBoltzman*temperature/massProton;
-	/*switch(simulationType){
-	case 1:
-		minP = massProton*U0;
-		break;
-	case 2:
-		minP = 2*sqrt(kBoltzman*massProton*temperature);
-		break;
-	case 3:
-		minP = massProton*U0;
-		break;
-	case 4:
-		minP = sqrt(2*massProton*massProton*(initialEnergy/cube(10*deltaR))/density0);
-		break;
-	default:
-		minP = massProton*U0;
-		break;
-	}*/
+
 	minP = massProton*speed_of_light/1000;
 	maxP = minP*10000;
 
@@ -173,7 +157,7 @@ void Simulation::simulate(){
 	printf("initialization\n");
 	initializeProfile();
 	updateShockWavePoint();
-	shockWavePoint = 10;
+	shockWavePoint = rgridNumber/10;
 	updateGrid();
 	updateMaxSoundSpeed();
 	updateParameters();
@@ -223,12 +207,9 @@ void Simulation::simulate(){
 		printf("solving\n");
 		deltaT = min2(1000, deltaT);
 		evaluateHydrodynamic();
-		//evaluateCR();
+		evaluateCR();
 		time = time + deltaT;
-		//updateGrid();
-		/*if(i == 100){
-			updateGrid();
-		}*/
+		updateGrid();
 		updateMaxSoundSpeed();
 		updateShockWavePoint();
 		updateParameters();
@@ -284,10 +265,10 @@ void Simulation::evaluateHydrodynamic(){
 	for(int i = 0; i < rgridNumber; ++i){
 		//tempDensity[i] = middleDensity[i]*middleGrid[i]*middleGrid[i];
 		tempDensity[i] = middleDensity[i];
-		tempMomentum[i] = momentum(i)*middleGrid[i]*middleGrid[i];
-		//tempMomentum[i] = momentum(i);
-		tempEnergy[i] = energy(i)*middleGrid[i]*middleGrid[i];
-		//tempEnergy[i] = energy(i);
+		//tempMomentum[i] = momentum(i)*middleGrid[i]*middleGrid[i];
+		tempMomentum[i] = momentum(i);
+		//tempEnergy[i] = energy(i)*middleGrid[i]*middleGrid[i];
+		tempEnergy[i] = energy(i);
 		dFlux[i] = densityFlux(i);
 		mFlux[i] = momentumConvectiveFlux(i);
 		eFlux[i] = energyFlux(i);
@@ -297,14 +278,13 @@ void Simulation::evaluateHydrodynamic(){
 	for(int i = 0; i < rgridNumber - 1; ++i){
 		tempDensity[i] -= deltaT*2*middleDensity[i]*middleVelocity[i]/middleGrid[i];
 	}
-	TracPen(tempMomentum, mFlux, maxSoundSpeed);
+	TracPenRadial(tempMomentum, mFlux, maxSoundSpeed);
 	for(int i = 0; i < rgridNumber - 1; ++i){
-		tempMomentum[i] -= deltaT*middleGrid[i]*middleGrid[i]*(pointPressure[i+1] - pointPressure[i])/(deltaR[i]);
-		tempMomentum[i] -= deltaT*middleGrid[i]*middleGrid[i]*(cosmicRayPressure[i+1] - cosmicRayPressure[i])/(deltaR[i]);
-		//tempMomentum[i] -= deltaT*(pointPressure[i+1] - pointPressure[i])/(deltaR);
-		//tempMomentum[i] -= deltaT*2*middleDensity[i]*middleVelocity[i]*middleVelocity[i]/middleGrid[i];
+		//tempMomentum[i] -= deltaT*middleGrid[i]*middleGrid[i]*(pointPressure[i+1] - pointPressure[i])/(deltaR[i]);
+		tempMomentum[i] -= deltaT*(pointPressure[i+1] - pointPressure[i])/(deltaR[i]);
+		//tempMomentum[i] -= deltaT*middleGrid[i]*middleGrid[i]*(cosmicRayPressure[i+1] - cosmicRayPressure[i])/(deltaR[i]);
 	}
-	TracPen(tempEnergy, eFlux, maxSoundSpeed);
+	TracPenRadial(tempEnergy, eFlux, maxSoundSpeed);
 	/*for(int i = 0; i < rgridNumber - 1; ++i){
 		tempEnergy[i] -= deltaT*2*(middlePressure[i]*middleVelocity[i]*gamma/(gamma - 1) + pointDensity[i]*middleVelocity[i]*middleVelocity[i]*middleVelocity[i]/2)/middleGrid[i];
 	}*/
@@ -317,13 +297,14 @@ void Simulation::evaluateHydrodynamic(){
 			middleDensity[i] = tempDensity[i];
 		}
 		alertNaNOrInfinity(middleDensity[i], "density = NaN");
-		double middleMomentum = tempMomentum[i]/(middleGrid[i]*middleGrid[i]);
-		//double middleMomentum = tempMomentum[i];
+		//double middleMomentum = tempMomentum[i]/(middleGrid[i]*middleGrid[i]);
+		double middleMomentum = tempMomentum[i];
 		alertNaNOrInfinity(middleMomentum, "momentum = NaN");
 		double middleEnergy = tempEnergy[i];
+		//double middleEnergy = tempEnergy[i]/(middleGrid[i]*middleGrid[i]);
 		alertNaNOrInfinity(middleEnergy, "energy = NaN");
 		middleVelocity[i] = middleMomentum/middleDensity[i];
-		middlePressure[i] = (middleEnergy/(middleGrid[i]*middleGrid[i]) - middleDensity[i]*middleVelocity[i]*middleVelocity[i]/2)*(gamma - 1);
+		middlePressure[i] = (middleEnergy - middleDensity[i]*middleVelocity[i]*middleVelocity[i]/2)*(gamma - 1);
 		//middlePressure[i] = (middleEnergy - middleDensity[i]*middleVelocity[i]*middleVelocity[i]/2)*(gamma - 1);
 		if(middleDensity[i] <= epsilon*density0){
 			middleDensity[i] = epsilon*density0;
@@ -580,6 +561,20 @@ void Simulation::TracPen(double* u, double* flux, double cs){
 	tempU[0] = u[0] - deltaT*(flux[1] - flux[0])/deltaR[0];
 	for(int i = 1; i < rgridNumber - 1; ++i){
 		tempU[i] = u[i] - deltaT*((flux[i+1] - flux[i]) - cs*(u[i+1] - 2*u[i] + u[i-1])/2)/deltaR[i];
+	}
+	tempU[rgridNumber - 1] = u[rgridNumber - 1];
+
+	for(int i = 0; i < rgridNumber; ++i){
+		u[i] = tempU[i];
+	}
+}
+
+void Simulation::TracPenRadial(double* u, double* flux, double cs){
+	cs = cs;
+
+	tempU[0] = u[0] - deltaT*(flux[1] - flux[0])/(middleGrid[0]*middleGrid[0]*deltaR[0]);
+	for(int i = 1; i < rgridNumber - 1; ++i){
+		tempU[i] = u[i] - deltaT*((flux[i+1] - flux[i])/(middleGrid[i]*middleGrid[i]) - cs*(u[i+1] - 2*u[i] + u[i-1])/2)/deltaR[i];
 	}
 	tempU[rgridNumber - 1] = u[rgridNumber - 1];
 
@@ -920,7 +915,7 @@ void Simulation::updateParameters(){
 void Simulation::updateGrid(){
 	if ((shockWavePoint < 1) || (shockWavePoint > rgridNumber - 1)) return;
 	if( !shockWaveMoved) {
-		//return;
+		return;
 	}
 	//shockWaveMoved = false;
 	printf("updating grid\n");
