@@ -86,13 +86,13 @@ void Simulation::initializeProfile(){
 	minP = massProton*speed_of_light/1000;
 	maxP = minP*10000;
 
-	double tempDeltaR = (upstreamR - downstreamR)/rgridNumber;
+	deltaR0 = (upstreamR - downstreamR)/rgridNumber;
 	for(int i = 0; i < rgridNumber + 1; ++i){
 		grid[i] = r;
-		middleGrid[i] = r + tempDeltaR/2;
+		middleGrid[i] = r + deltaR0/2;
 		tempGrid[i] = grid[i];
-		deltaR[i] = tempDeltaR;
-		r += tempDeltaR;
+		deltaR[i] = deltaR0;
+		r += deltaR0;
 		switch(simulationType){
 		case 1 :
 			middleDensity[i] = density0;
@@ -123,7 +123,7 @@ void Simulation::initializeProfile(){
 			middleDensity[i] = density0;
 			middleVelocity[i] = 0;
 			if(i <= 10){
-				middlePressure[i] = initialEnergy/cube(10*tempDeltaR);
+				middlePressure[i] = initialEnergy/cube(10*deltaR0);
 			} else {
 				middlePressure[i] = pressure0;
 			}
@@ -172,8 +172,10 @@ void Simulation::initializeProfile(){
 void Simulation::simulate(){
 	printf("initialization\n");
 	initializeProfile();
-	updateMaxSoundSpeed();
 	updateShockWavePoint();
+	shockWavePoint = 10;
+	updateGrid();
+	updateMaxSoundSpeed();
 	updateParameters();
 
 	printf("creating files\n");
@@ -213,15 +215,17 @@ void Simulation::simulate(){
 	fprintf(outShockWave, "%d %lf %d %lf\n", 0, time, shockWavePoint, shockWaveR);
 	fclose(outShockWave);
 	int i = 0;
+	deltaT = min2(1000, deltaT);
 	while(time < maxTime && i < iterationNumber){
 		++i;
 		printf("iteration ¹ %d\n", i);
 		printf("time = %lf\n", time);
 		printf("solving\n");
+		deltaT = min2(1000, deltaT);
 		evaluateHydrodynamic();
 		//evaluateCR();
 		time = time + deltaT;
-		updateGrid();
+		//updateGrid();
 		/*if(i == 100){
 			updateGrid();
 		}*/
@@ -878,13 +882,16 @@ void Simulation::updateShockWavePoint(){
 	//double maxGrad = epsilon*abs(density0/(grid[rgridNumber] - grid[0]));
 	int tempShockWavePoint = -1;
 	//double maxGrad = epsilon*abs(U0/(grid[rgridNumber] - grid[0]));
-	double maxGrad = epsilon*abs(U0/rgridNumber);
+	//double maxGrad = epsilon*abs(U0/rgridNumber);
+	double maxGrad = density0;
 	//for(int i = 2; i < rgridNumber - 1; ++i){
-	for(int i = max2(11, shockWavePoint-1); i < rgridNumber - 1; ++i){
+	//for(int i = max2(11, shockWavePoint-1); i < rgridNumber - 1; ++i){
+	for(int i = max2(11, shockWavePoint-1); i < 9*rgridNumber/10 - 1; ++i){
 		//double grad = abs((middleDensity[i] - middleDensity[i + 1])/middleDeltaR[i+1]);
 		//double grad = abs((middleVelocity[i] - middleVelocity[i + 1])/middleDeltaR[i+1]);
 		//double grad = (middleVelocity[i] - middleVelocity[i + 1])/middleDeltaR[i+1];
-		double grad = (middleVelocity[i] - middleVelocity[i + 1]);
+		//double grad = (middleVelocity[i] - middleVelocity[i + 1]);
+		double grad = (middleDensity[i]);
 		if(grad > maxGrad){
 			maxGrad = grad;
 			tempShockWavePoint = i+1;
@@ -913,21 +920,30 @@ void Simulation::updateParameters(){
 void Simulation::updateGrid(){
 	if ((shockWavePoint < 1) || (shockWavePoint > rgridNumber - 1)) return;
 	if( !shockWaveMoved) {
-		return;
+		//return;
 	}
 	//shockWaveMoved = false;
 	printf("updating grid\n");
 	double shockWaveR = grid[shockWavePoint];
-	double tempGridLevel = 1 + minDeltaR*(grid[rgridNumber]/(rgridNumber*minDeltaR) - 1)/(grid[rgridNumber] - shockWaveR);
-	int rightPoints = log(grid[rgridNumber]/(rgridNumber*minDeltaR))/log(tempGridLevel);
-	if(rightPoints > rgridNumber/2){
-		rightPoints = rgridNumber/2;
-		tempGridLevel = findExpLevel((grid[rgridNumber] - shockWaveR)/minDeltaR, rightPoints, 1.0001, 10);
+	//double tempGridLevel = 1 + minDeltaR*(grid[rgridNumber]/(rgridNumber*minDeltaR) - 1)/(grid[rgridNumber] - shockWaveR);
+	double rightR = grid[rgridNumber] - shockWaveR;
+	double tempGridLevel = (0.5*rightR - minDeltaR)/(0.5*rightR - deltaR0);
+	if(tempGridLevel < 1){
+		return;
 	}
-	if(rightPoints <= 1){
+	int rightPointsExp = log(deltaR0/minDeltaR)/log(tempGridLevel);
+	if(rightPointsExp > 6*rgridNumber/10){
+		rightPointsExp = 6*rgridNumber/10;
+		//tempGridLevel = findExpLevel((grid[rgridNumber] - shockWaveR)/minDeltaR, rightPoints, 1.0001, 10);
+	}
+	if(rightPointsExp <= 1){
 		printf("rightPoints <= 1!!!\n");
 	}
-	int leftPoints = rgridNumber - rightPoints;
+	if(rightPointsExp < rgridNumber/10){
+		return;
+	}
+	int rightPointsLinear = rightPointsExp/5;
+	int leftPoints = rgridNumber - rightPointsExp - rightPointsLinear;
 
 	tempGrid[0] = 0;
 	tempGrid[rgridNumber] = grid[rgridNumber];
@@ -938,12 +954,19 @@ void Simulation::updateGrid(){
 	for(int i = 1; i < leftPoints; ++i){
 		tempGrid[i] = tempGrid[i-1] + leftDeltaR;
 	}
-
+	double dR = deltaR0*exp(-rightPointsExp*log(tempGridLevel));
 	double logLevel = log(tempGridLevel);
-	for(int i = leftPoints + 1; i < rgridNumber - 1; ++i){
-		tempGrid[i] = tempGrid[i - 1] + minDeltaR*exp((i - leftPoints - 1)*logLevel);
+	for(int i = leftPoints + 1; i < leftPoints + rightPointsExp; ++i){
+		tempGrid[i] = tempGrid[i - 1] + dR*exp((i - leftPoints - 1)*logLevel);
 	}
-	tempGrid[rgridNumber - 1]= (tempGrid[rgridNumber - 2] + tempGrid[rgridNumber])/2;
+	dR = (grid[rgridNumber] - tempGrid[leftPoints + rightPointsExp - 1])/(rightPointsLinear + 1);
+	for(int i = leftPoints + rightPointsExp; i < rgridNumber; ++i){
+		tempGrid[i] = tempGrid[i - 1] + dR;
+		if(tempGrid[i] > grid[rgridNumber]){
+			printf("grid > upstreamR\n");
+		}
+	}
+	tempGrid[rgridNumber - 1] = (tempGrid[rgridNumber - 2] + tempGrid[rgridNumber])/2;
 
 	redistributeValues();
 }
@@ -1029,6 +1052,8 @@ void Simulation::redistributeValues(){
 		if(tempPressure < 0){
 			middlePressure[i] = 0.01*min2(middlePressure[i+1],middlePressure[i]);
 			printf("pressure < 0\n");
+		} else {
+			middlePressure[i] = tempPressure;
 		}
 		alertNegative(middlePressure[i], "middlePressure < 0");
 		alertNaNOrInfinity(middlePressure[i], "middlePressure = NaN");
