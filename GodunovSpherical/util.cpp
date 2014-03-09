@@ -1,5 +1,6 @@
-#include "stdafx.h"
 #include <windows.h>
+#include <stdio.h>
+#include <math.h>
 #include "util.h"
 #include "constants.h"
 

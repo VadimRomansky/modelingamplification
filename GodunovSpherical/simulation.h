@@ -1,7 +1,6 @@
 #ifndef SIMULATION_H
 #define SIMULATION_H
 
-#include "stdafx.h"
 #include <list>
 
 class Simulation{
