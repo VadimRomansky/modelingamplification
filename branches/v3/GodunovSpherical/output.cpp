@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "output.h"
 #include "constants.h"
 #include "util.h"

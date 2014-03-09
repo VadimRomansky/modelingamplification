@@ -257,7 +257,7 @@ void Simulation::simulate(){
 }
 
 //расчет гидродинамики
-void Simulation::evaluateHydrodynamic(){
+void Simulation::evaluateHydrodynamic() {
 	solveDiscontinious();
 	CheckNegativeDensity();
 
@@ -282,7 +282,6 @@ void Simulation::evaluateHydrodynamic(){
 		tempDensity[i] -= deltaT*2*middleDensity[i]*middleVelocity[i]/middleGrid[i];
 	}
 	TracPenRadial(tempMomentum, mFlux, maxSoundSpeed);
-	for(int i = 0; i < rgridNumber - 1; ++i){
 	for(int i = 0; i < rgridNumber - 1; ++i){
 		/*if(tempMomentum[i] < 0){
 			printf("temp momentum < 0\n");
@@ -319,9 +318,9 @@ void Simulation::evaluateHydrodynamic(){
 			middlePressure[i] = epsilon*middleDensity[i]*kBoltzman*temperature/massProton;
 		}
 	}
-	if(middleVelocity[0] < 0){
+	//if(middleVelocity[0] < 0){
 		middleVelocity[0] = 0;
-	}
+	//}
 
 	delete[] tempDensity;
 	delete[] tempMomentum;
@@ -961,7 +960,7 @@ void Simulation::updateGrid(){
 		return;
 	}
 
-	int rightPointsExp = log(deltaR0/minDeltaR)/log(tempGridLevel);
+	int rightPointsExp = log(deltaR0/minDeltaR)/log(tempRightGridLevel);
 	if(rightPointsExp > 6*rgridNumber/10){
 		rightPointsExp = 6*rgridNumber/10;
 
@@ -1003,7 +1002,7 @@ void Simulation::updateGrid(){
 
 	//double leftDeltaR = (tempGrid[leftPointsLinear + 1] - grid[0])/(leftPointsLinear + 1);
 
-	double leftDeltaR = (shockWaveR - grid[0])/(leftPointsLinear);
+	double leftDeltaR = (shockWaveR - grid[0])/(leftPointsLinear + 1);
 
 	for(int i = 1; i < leftPointsLinear; ++i){
 		tempGrid[i] = tempGrid[i-1] + leftDeltaR;
@@ -1012,8 +1011,8 @@ void Simulation::updateGrid(){
 	double logLevel = log(tempRightGridLevel);
 	/*for(int i = leftPointsLinear + leftPointsExp + 1; i < leftPointsLinear + leftPointsExp + rightPointsExp; ++i){
 		tempGrid[i] = tempGrid[i - 1] + dR*exp((i - leftPointsLinear - leftPointsExp - 1)*logLevel);
-	}
-	dR = (grid[rgridNumber] - tempGrid[leftPointsLinear + leftPointsExp + rightPointsExp - 1])/(rightPointsLinear + 1);*/
+	}*/
+	//dR = (grid[rgridNumber] - tempGrid[leftPointsLinear + rightPointsExp - 1])/(rightPointsLinear + 1);
 	for(int i = leftPointsLinear + 1; i < leftPointsLinear + rightPointsExp; ++i){
 		tempGrid[i] = tempGrid[i - 1] + dR*exp((i - leftPointsLinear - 1)*logLevel);
 	}
@@ -1026,19 +1025,6 @@ void Simulation::updateGrid(){
 	}
 	tempGrid[rgridNumber - 1] = (tempGrid[rgridNumber - 2] + tempGrid[rgridNumber])/2;
 	redistributeValues();
-}
-
-//вычисление давления космических лучей
-void Simulation::evaluateCosmicRayPressure(){
-	for(int i = 0; i < rgridNumber; ++i){
-		double pressure = 0;
-		for(int j = 0; j < pgridNumber; ++j){
-			double momentum = (pgrid[j] + pgrid[j+1])/2;
-			pressure += distributionFunction[i][j]*momentum*momentum*momentum*(momentum/sqrt(massProton*massProton + momentum*momentum/(speed_of_light*speed_of_light)))*(pgrid[j+1] - pgrid[j]);
-		}
-		pressure *= 4*pi/3;
-		cosmicRayPressure[i] = pressure;
-	}
 }
 
 
