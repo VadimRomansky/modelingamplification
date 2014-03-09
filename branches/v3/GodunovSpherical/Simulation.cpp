@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include <list>
 #include "simulation.h"
 #include "util.h"
@@ -41,6 +40,7 @@ Simulation::~Simulation(){
 }
 
 //инициализация профиля после считывания данных
+
 void Simulation::initializeProfile(){
 	downstreamR = 0;
 	pgrid = new double[pgridNumber + 1];
@@ -144,8 +144,6 @@ void Simulation::initializeProfile(){
 		}
 		for(int j = 0; j < pgridNumber; ++j){
 			double p = (pgrid[j] + pgrid[j + 1])/2;
-			//distributionFunction[i][j] = (middleDensity[i]/massProton)*exp(-p*p/(2*massProton*kBoltzman*temperatureIn(i)))/cube(sqrt(2*pi*massProton*kBoltzman*temperatureIn(i)));
-			//distributionFunction[i][j] = (middleDensity[i]/massProton)*exp(-p*speed_of_light/(kBoltzman*temperatureIn(i)))/cube(sqrt(2*pi*massProton*kBoltzman*temperatureIn(i)));
 			distributionFunction[i][j] = 0;
 		}
 		pointDensity[i] = middleDensity[i];
@@ -206,13 +204,13 @@ void Simulation::simulate(){
 	fprintf(outShockWave, "%d %lf %d %lf\n", 0, time, shockWavePoint, shockWaveR);
 	fclose(outShockWave);
 	int i = 0;
-	deltaT = min2(1000, deltaT);
+	deltaT = min2(5000, deltaT);
 	while(time < maxTime && i < iterationNumber){
 		++i;
 		printf("iteration № %d\n", i);
 		printf("time = %lf\n", time);
 		printf("solving\n");
-		deltaT = min2(1000, deltaT);
+		deltaT = min2(5000, deltaT);
 		evaluateHydrodynamic();
 		//evaluateCR();
 		time = time + deltaT;
@@ -285,6 +283,7 @@ void Simulation::evaluateHydrodynamic(){
 	}
 	TracPenRadial(tempMomentum, mFlux, maxSoundSpeed);
 	for(int i = 0; i < rgridNumber - 1; ++i){
+	for(int i = 0; i < rgridNumber - 1; ++i){
 		/*if(tempMomentum[i] < 0){
 			printf("temp momentum < 0\n");
 		}*/
@@ -296,6 +295,7 @@ void Simulation::evaluateHydrodynamic(){
 		}*/
 	}
 	TracPenRadial(tempEnergy, eFlux, maxSoundSpeed);
+
 	if(tempDensity[rgridNumber - 1] < middleDensity[rgridNumber - 1]){
 		printf("aaa\n");
 	}
@@ -331,7 +331,9 @@ void Simulation::evaluateHydrodynamic(){
 	delete[] eFlux;
 }
 
+
 //расчет разрывов, задача Римана
+
 void Simulation::solveDiscontinious(){
 	for(int i = 1; i < rgridNumber; ++i){
 		double p = pointPressure[i];
@@ -435,7 +437,9 @@ void Simulation::solveDiscontinious(){
 	}
 }
 
+
 //начальное приближение для давления
+
 double Simulation::firstApproximationPressure(double rho1, double rho2, double u1, double u2, double p1, double p2){
 	double c1 = sqrt(gamma*p1/rho1);
 	double c2 = sqrt(gamma*p2/rho2);
@@ -447,7 +451,9 @@ double Simulation::firstApproximationPressure(double rho1, double rho2, double u
 	return (p1 + p2)/2;
 }
 
-//метод последовательных приближений для нахождения давления
+
+//метод поледовательных приближений для нахождения давдения
+
 void Simulation::successiveApproximationPressure(double& p, double& u, double& R1, double& R2, double& alpha1, double& alpha2, double p1, double p2, double u1, double u2, double rho1, double rho2){
 	alertNaNOrInfinity(p1,"pressure = NaN");
 	alertNaNOrInfinity(p2,"pressure = NaN");
@@ -489,7 +495,7 @@ void Simulation::successiveApproximationPressure(double& p, double& u, double& R
 			if(abs(p/p2 - 1) < epsilon){
 				alpha2 = rho2*c2;
 			} else {
-				alpha2 = ((gamma - 1)/(2*gamma))*rho2*c2*((1 - p/p2)/(1 - power(p/p2, (gamma - 1)/(2*gamma))));
+				alpha2= ((gamma - 1)/(2*gamma))*rho2*c2*((1 - p/p2)/(1 - power(p/p2, (gamma - 1)/(2*gamma))));
 			}
 		}
 		alertNaNOrInfinity(alpha2,"alpha2 = NaN");
@@ -521,7 +527,8 @@ void Simulation::successiveApproximationPressure(double& p, double& u, double& R
 }
 
 
-//функция для уравнение на давление
+//вспомогательная функция для вычислний
+
 double Simulation::pressureFunction(double p, double p1, double rho1){
 	double c1 = sqrt(gamma*p1/rho1);
 	if(p >= p1){
@@ -531,7 +538,9 @@ double Simulation::pressureFunction(double p, double p1, double rho1){
 	}
 }
 
-//её производные
+
+// и её производные
+
 double Simulation::pressureFunctionDerivative(double p, double p1, double rho1){
 	double c1 = sqrt(gamma*p1/rho1);
 	if(p >= p1){
@@ -550,7 +559,9 @@ double Simulation::pressureFunctionDerivative2(double p, double p1, double rho1)
 	}
 }
 
+
 //проверка шага по времени, чтобы плотность не уменьшалась слишком сильно и не становилась отрицательной
+
 void Simulation::CheckNegativeDensity(){
 	double dt = deltaT;
 	for(int i = 0; i < rgridNumber; ++i){
@@ -562,7 +573,9 @@ void Simulation::CheckNegativeDensity(){
 	deltaT = 0.5*dt;
 }
 
+
 //Трак и Пен, немного модифицированные
+
 void Simulation::TracPen(double* u, double* flux, double cs){
 	cs = cs;
 
@@ -733,7 +746,9 @@ double Simulation::injection(){
 	return middleDensity[shockWavePoint]*abs(middleVelocity[shockWavePoint])/(pf*pf*massProton);
 }
 
+
 //расчет космических лучей
+
 void Simulation::evaluateCR(){
 	printf("solve CR\n");
 	double* upper = new double[rgridNumber];
@@ -844,7 +859,9 @@ void Simulation::solveThreeDiagonal(double* middle, double* upper, double* lower
 	delete[] beta;
 }
 
+
 //вычисление давления космических лучей
+
 void Simulation::evaluateCosmicRayPressure(){
 	for(int i = 0; i < rgridNumber; ++i){
 		double pressure = 0;
@@ -858,6 +875,7 @@ void Simulation::evaluateCosmicRayPressure(){
 }
 
 //пересчет шага по времени и максимальной скорости звука
+
 void Simulation::updateMaxSoundSpeed(){
 	maxSoundSpeed = (sqrt(gamma*middlePressure[0]/middleDensity[0]) + abs(middleVelocity[0]));
 	double tempdt = min2(deltaR[0]/maxSoundSpeed, deltaR[1]/maxSoundSpeed);
@@ -890,13 +908,15 @@ void Simulation::updateMaxSoundSpeed(){
 	deltaT = 0.1*tempdt;
 }
 
-//пересчет точки ударной волны
+//определение точки ударной волны
+
 void Simulation::updateShockWavePoint(){
 	int tempShockWavePoint = -1;
 	double maxGrad = density0;
 	for(int i = max2(11, shockWavePoint-1); i < 9*rgridNumber/10 - 1; ++i){
 		//double grad = abs((middleDensity[i] - middleDensity[i + 1])/middleDeltaR[i+1]);
 		//double grad = (middleVelocity[i] - middleVelocity[i + 1])/middleDeltaR[i+1];
+
 		double grad = (middleDensity[i]);
 		if(grad > maxGrad){
 			maxGrad = grad;
@@ -904,11 +924,12 @@ void Simulation::updateShockWavePoint(){
 		}
 	}
 	shockWaveMoved = (tempShockWavePoint != shockWavePoint);
-	//shockWaveMoved = (tempShockWavePoint != shockWavePoint) || shockWaveMoved;
 	shockWavePoint = tempShockWavePoint;
 }
 
-//вычисление полной массы, энергии и импульса
+
+//подсчет полной массы энергии и импульса
+
 void Simulation::updateParameters(){
 	mass = 0;
 	totalMomentum = 0;
@@ -924,13 +945,14 @@ void Simulation::updateParameters(){
 	}
 }
 
+
 //изменение сетки
+
 void Simulation::updateGrid(){
 	if ((shockWavePoint < 1) || (shockWavePoint > rgridNumber - 1)) return;
 	if( !shockWaveMoved) {
 		return;
 	}
-	//shockWaveMoved = false;
 	printf("updating grid\n");
 	double shockWaveR = grid[shockWavePoint];
 	double rightR = grid[rgridNumber] - shockWaveR;
@@ -938,9 +960,15 @@ void Simulation::updateGrid(){
 	if(tempRightGridLevel < 1){
 		return;
 	}
-	int rightPointsExp = log(deltaR0/minDeltaR)/log(tempRightGridLevel);
+
+	int rightPointsExp = log(deltaR0/minDeltaR)/log(tempGridLevel);
+	if(rightPointsExp > 6*rgridNumber/10){
+		rightPointsExp = 6*rgridNumber/10;
+
+	/*int rightPointsExp = log(deltaR0/minDeltaR)/log(tempRightGridLevel);
 	if(rightPointsExp > 7*rgridNumber/10){
-		rightPointsExp = 7*rgridNumber/10;
+		rightPointsExp = 7*rgridNumber/10;*/
+
 	}
 	if(rightPointsExp <= 1){
 		printf("rightPoints <= 1!!!\n");
@@ -1000,7 +1028,22 @@ void Simulation::updateGrid(){
 	redistributeValues();
 }
 
-//перераспределение величин в новой сетке
+//вычисление давления космических лучей
+void Simulation::evaluateCosmicRayPressure(){
+	for(int i = 0; i < rgridNumber; ++i){
+		double pressure = 0;
+		for(int j = 0; j < pgridNumber; ++j){
+			double momentum = (pgrid[j] + pgrid[j+1])/2;
+			pressure += distributionFunction[i][j]*momentum*momentum*momentum*(momentum/sqrt(massProton*massProton + momentum*momentum/(speed_of_light*speed_of_light)))*(pgrid[j+1] - pgrid[j]);
+		}
+		pressure *= 4*pi/3;
+		cosmicRayPressure[i] = pressure;
+	}
+}
+
+
+//перераспределение величин между ячейками новой сетки
+
 void Simulation::redistributeValues(){
 	int oldCount = 1;
 	double tempDensity = 0;
