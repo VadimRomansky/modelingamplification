@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include "stdafx.h"
 #include "input.h"
 #include "simulation.h"
 
