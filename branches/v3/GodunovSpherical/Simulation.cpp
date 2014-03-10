@@ -1,4 +1,5 @@
 #include <list>
+#include <time.h>
 #include "simulation.h"
 #include "util.h"
 #include "constants.h"
@@ -7,7 +8,7 @@
 //конструктор
 Simulation::Simulation(){
 	initialEnergy = 10E49;
-	time = 0;
+	myTime = 0;
 	tracPen = true;
 	shockWavePoint = -1;
 	shockWaveMoved = false;
@@ -16,7 +17,9 @@ Simulation::Simulation(){
 //деструктор
 Simulation::~Simulation(){
 	delete[] pgrid;
+	delete[] logPgrid;
 	delete[] grid;
+	delete[] gridsquare;
 	delete[] middleGrid;
 	delete[] deltaR;
 	delete[] middleDeltaR;
@@ -43,8 +46,10 @@ Simulation::~Simulation(){
 
 void Simulation::initializeProfile(){
 	downstreamR = 0;
-	pgrid = new double[pgridNumber + 1];
+	pgrid = new double[pgridNumber];
+	logPgrid = new double[pgridNumber];
 	grid = new double[rgridNumber + 1];
+	gridsquare = new double[rgridNumber + 1];
 	middleGrid = new double[rgridNumber];
 	deltaR = new double[rgridNumber];
 	middleDeltaR = new double[rgridNumber];
@@ -71,11 +76,12 @@ void Simulation::initializeProfile(){
 	double pressure0 = density0*kBoltzman*temperature/massProton;
 
 	minP = massProton*speed_of_light/10;
-	maxP = minP*1000000;
+	maxP = minP*10000000;
 
 	deltaR0 = (upstreamR - downstreamR)/rgridNumber;
 	for(int i = 0; i < rgridNumber + 1; ++i){
 		grid[i] = r;
+		gridsquare[i] = grid[i]*grid[i];
 		middleGrid[i] = r + deltaR0/2;
 		tempGrid[i] = grid[i];
 		deltaR[i] = deltaR0;
@@ -130,11 +136,15 @@ void Simulation::initializeProfile(){
 		}
 	}
 	double pstep = exp(log(maxP/minP)/pgridNumber);
+	logPgrid[0] = log(minP);
+	logPgrid[pgridNumber - 1] = log(maxP);
+	double plogstep = (logPgrid[pgridNumber - 1] - logPgrid[0])/(pgridNumber - 1);
 	pgrid[0] = minP;
-	for(int i = 1; i <= pgridNumber; ++i){
-		pgrid[i] = pgrid[i - 1]*pstep;
+	for(int i = 1; i < pgridNumber; ++i){
+		logPgrid[i] = logPgrid[i-1] + plogstep;
+		pgrid[i] = exp(logPgrid[i]);
 	}
-	pgrid[pgridNumber] = maxP;
+	pgrid[pgridNumber-1] = maxP;
 
 	for(int i = 0; i < rgridNumber; ++i){
 		if(i == 0){
@@ -143,7 +153,7 @@ void Simulation::initializeProfile(){
 			middleDeltaR[i] = middleGrid[i] - middleGrid[i-1];
 		}
 		for(int j = 0; j < pgridNumber; ++j){
-			double p = (pgrid[j] + pgrid[j + 1])/2;
+			double p = exp(logPgrid[j]);
 			distributionFunction[i][j] = 0;
 		}
 		pointDensity[i] = middleDensity[i];
@@ -205,21 +215,37 @@ void Simulation::simulate(){
 	fclose(outShockWave);
 	int i = 0;
 	deltaT = min2(5000, deltaT);
-	while(time < maxTime && i < iterationNumber){
+
+	//clock_t currentTime = clock();
+	//clock_t prevTime = currentTime;
+
+	while(myTime < maxTime && i < iterationNumber){
 		++i;
 		printf("iteration № %d\n", i);
-		printf("time = %lf\n", time);
+		printf("time = %lf\n", myTime);
 		printf("solving\n");
 		deltaT = min2(5000, deltaT);
+		//prevTime = clock();
 		evaluateHydrodynamic();
+		//currentTime = clock();
+		//printf("dT evaluating hydro = %d\n", currentTime - prevTime);
+
+		//prevTime = clock();
 		evaluateCR();
+		//currentTime = clock();
+		//printf("dT evaluating cosmic ray = %d\n", currentTime - prevTime);
+
 		/*if(i < 1000){
 			evaluateHydrodynamic();
 		} else {
 			evaluateCR();
 		}*/
-		time = time + deltaT;
+		myTime = myTime + deltaT;
+
+		//prevTime = clock();
 		updateGrid();
+		//currentTime = clock();
+		//printf("dT updating grid = %d\n", currentTime - prevTime);
 		updateMaxSoundSpeed();
 		updateShockWavePoint();
 		updateParameters();
@@ -235,7 +261,7 @@ void Simulation::simulate(){
 				shockWaveR = grid[shockWavePoint];
 			}
 
-			fprintf(outShockWave, "%d %lf %d %lf\n", i, time, shockWavePoint, shockWaveR);
+			fprintf(outShockWave, "%d %lf %d %lf\n", i, myTime, shockWavePoint, shockWaveR);
 			fclose(outShockWave);
 
 			fopen_s(&outDistribution, "./output/distribution.dat","w");
@@ -247,11 +273,11 @@ void Simulation::simulate(){
 			fclose(outDistribution);
 
 			fopen_s(&outIteration, "./output/iterations.dat","a");
-			fprintf(outIteration, "%d %28.20lf %28.20lf %28.20lf %28.20lf\n", i, time, mass, totalMomentum, totalEnergy);
+			fprintf(outIteration, "%d %28.20lf %28.20lf %28.20lf %28.20lf\n", i, myTime, mass, totalMomentum, totalEnergy);
 			fclose(outIteration);
 
 			fopen_s(&outExtraIteration, "./output/extra_iterations.dat","a");
-			fprintf(outExtraIteration, "%d %28.20lf %28.20lf %28.20lf %28.20lf %28.20lf %28.20lf\n", i, time, mass, totalMomentum, totalEnergy, totalKineticEnergy, totalTermalEnergy);
+			fprintf(outExtraIteration, "%d %28.20lf %28.20lf %28.20lf %28.20lf %28.20lf %28.20lf\n", i, myTime, mass, totalMomentum, totalEnergy, totalKineticEnergy, totalTermalEnergy);
 			fclose(outExtraIteration);
 
 			fopen_s(&outTempGrid, "./output/temp_grid.dat","a");
@@ -575,8 +601,8 @@ double Simulation::pressureFunctionDerivative2(double p, double p1, double rho1)
 void Simulation::CheckNegativeDensity(){
 	double dt = deltaT;
 	for(int i = 0; i < rgridNumber; ++i){
-		if(middleDensity[i]*volume(i) - dt*4*pi*(grid[i+1]*grid[i+1]*densityFlux(i+1) - grid[i]*grid[i]*densityFlux(i))< 0){
-			dt = 0.5*(middleDensity[i]*volume(i)/(4*pi*(grid[i+1]*grid[i+1]*densityFlux(i+1) - grid[i]*grid[i]*densityFlux(i))));
+		if(middleDensity[i]*volume(i) - dt*4*pi*(gridsquare[i+1]*densityFlux(i+1) - gridsquare[i]*densityFlux(i))< 0){
+			dt = 0.5*(middleDensity[i]*volume(i)/(4*pi*(gridsquare[i+1]*densityFlux(i+1) - gridsquare[i]*densityFlux(i))));
 			alertNaNOrInfinity(dt, "dt = NaN");
 		}
 	}
@@ -701,7 +727,7 @@ double Simulation::momentumConvectiveFlux(int i){
 		printf("i < 0");
 	} else if(i >= 0 && i <= rgridNumber) {
 		if(i == 0) return 0;
-		return grid[i]*grid[i]*(pointDensity[i]*pointVelocity[i]*pointVelocity[i]);
+		return gridsquare[i]*(pointDensity[i]*pointVelocity[i]*pointVelocity[i]);
 	} else {
 		printf("i > rgridNumber");
 	}
@@ -713,7 +739,7 @@ double Simulation::energyFlux(int i){
 		printf("i < 0");
 	} else if(i >= 0 && i <= rgridNumber) {
 		if(i == 0) return 0;
-		return grid[i]*grid[i]*(pointPressure[i]*pointVelocity[i]*gamma/(gamma - 1) + pointDensity[i]*pointVelocity[i]*pointVelocity[i]*pointVelocity[i]/2);
+		return gridsquare[i]*(pointPressure[i]*pointVelocity[i]*gamma/(gamma - 1) + pointDensity[i]*pointVelocity[i]*pointVelocity[i]*pointVelocity[i]/2);
 	} else {
 		printf("i > rgridNumber");
 	}
@@ -768,52 +794,62 @@ void Simulation::evaluateCR(){
 	double* f = new double[rgridNumber];
  	double* x = new double[rgridNumber];
 
+	double* volumeFactor = new double[rgridNumber];
+	double* volumeDerivative = new double[rgridNumber];
+	double* dtDivdr = new double[rgridNumber];
+	for(int i = 0; i < rgridNumber; ++i){
+		volumeFactor[i] = (cube(grid[i+1]) - cube(grid[i]))/3;
+		volumeDerivative[i] = (gridsquare[i+1]*pointVelocity[i+1] - gridsquare[i]*pointVelocity[i]);
+		dtDivdr[i] = deltaT/deltaR[i];
+	}
+
+	double deltaLogP = logPgrid[1] - logPgrid[0];
+	
 	for(int j = 0; j < pgridNumber; ++j){
 		// -1 ?
 		for(int i = 0; i < rgridNumber; ++i){
-			double p = (pgrid[j] + pgrid[j+1])/2;
-			double deltaP;
+			//double p = (pgrid[j] + pgrid[j+1])/2;
+			double p = pgrid[j];
+			/*double deltaP;
 			if(j == 0){
 				deltaP = pgrid[1] - pgrid[0];
 			} else if(j == pgridNumber -1){
 				deltaP = pgrid[rgridNumber] - pgrid[pgridNumber - 1];
 			} else {
 				deltaP = (pgrid[j+1] - pgrid[j-1])/2;
-			}
-			double volumeFactor = (cube(grid[i+1]) - cube(grid[i]))/3;
-			upper[i] = grid[i+1]*grid[i+1]*diffussionCoef(i+1,j)*deltaT/deltaR[i];
-			middle[i] = -((grid[i+1]*grid[i+1]*diffussionCoef(i+1,j) + grid[i]*grid[i]*diffussionCoef(i,j))*deltaT/deltaR[i] + volumeFactor);
-			lower[i] = grid[i]*grid[i]*diffussionCoef(i,j)*deltaT/deltaR[i];
+			}*/
+			upper[i] = gridsquare[i+1]*diffussionCoef(i+1,j)*dtDivdr[i];
+			middle[i] = -((gridsquare[i+1]*diffussionCoef(i+1,j) + gridsquare[i]*diffussionCoef(i,j))*dtDivdr[i] + volumeFactor[i]);
+			lower[i] = gridsquare[i]*diffussionCoef(i,j)*dtDivdr[i];
 
 			double leftDerivative;
 			if(j == 0){
 				leftDerivative = 0;
 			} else {
-				leftDerivative = (distributionFunction[i][j] - distributionFunction[i][j-1])*p/(3*(pgrid[j] - pgrid[i]);
+				leftDerivative = (distributionFunction[i][j] - distributionFunction[i][j-1])/(3*deltaLogP);
 			}
 			double rightDerivative;
 			if(j == pgridNumber - 1){
 				rightDerivative = 0;
 			} else {
-				rightDerivative = (distributionFunction[i][j+1] - distributionFunction[i][j])*p/(3*deltaP);
+				rightDerivative = (distributionFunction[i][j+1] - distributionFunction[i][j])/(3*deltaLogP);
 			}
-			double volumeDerivative = (grid[i+1]*grid[i+1]*pointVelocity[i+1] - grid[i]*grid[i]*pointVelocity[i]);
 
-			f[i] = - volumeFactor*distributionFunction[i][j];
+			f[i] = - volumeFactor[i]*distributionFunction[i][j];
 
-			if(volumeDerivative > 0){
-				f[i] += - volumeDerivative*rightDerivative*deltaT;
+			if(volumeDerivative[i] > 0){
+				f[i] += - volumeDerivative[i]*rightDerivative*deltaT;
 			} else {
-				f[i] += - volumeDerivative*leftDerivative*deltaT;
+				f[i] += - volumeDerivative[i]*leftDerivative*deltaT;
 			}
 
 			if(middleVelocity[i] > 0){
 				if(i > 0){
-					f[i] += volumeFactor*middleVelocity[i]*(distributionFunction[i][j] - distributionFunction[i-1][j])*deltaT/deltaR[i];
+					f[i] += volumeFactor[i]*middleVelocity[i]*(distributionFunction[i][j] - distributionFunction[i-1][j])*dtDivdr[i];
 				}
 			} else {
 				if(i < rgridNumber - 1){
-					f[i] += volumeFactor*middleVelocity[i]*(distributionFunction[i+1][j] - distributionFunction[i][j])*deltaT/deltaR[i];
+					f[i] += volumeFactor[i]*middleVelocity[i]*(distributionFunction[i+1][j] - distributionFunction[i][j])*dtDivdr[i];
 				}
 			}
 			alertNaNOrInfinity(f[i],"f = NaN");
@@ -823,15 +859,16 @@ void Simulation::evaluateCR(){
 		for(int i = 0; i < rgridNumber; ++i){
 			tempDistributionFunction[i][j] = x[i];
 		}
-		if((j == injectionMomentum)  && (shockWavePoint >= 0) && (shockWavePoint < rgridNumber)) {
-			tempDistributionFunction[shockWavePoint][j] += injection()*deltaT;
-		}
 	}
 
 	for(int i = 0; i < rgridNumber; ++i){
 		for(int j = 0; j < pgridNumber; ++j){
 			distributionFunction[i][j] = tempDistributionFunction[i][j];
 		}
+	}
+
+	if(shockWavePoint > 0 && shockWavePoint < rgridNumber){
+		distributionFunction[shockWavePoint][injectionMomentum] += injection()*deltaT;
 	}
 
 	evaluateCosmicRayPressure();
@@ -841,6 +878,9 @@ void Simulation::evaluateCR(){
 	delete[] lower;
 	delete[] f;
 	delete[] x;
+	delete[] volumeFactor;
+	delete[] volumeDerivative;
+	delete[] dtDivdr;
 }
 
 //решение трёх диагональной матрицы
@@ -873,15 +913,23 @@ void Simulation::solveThreeDiagonal(double* middle, double* upper, double* lower
 //вычисление давления космических лучей
 
 void Simulation::evaluateCosmicRayPressure(){
+	double* partPressure = new double[pgridNumber];
+	double deltaLogP = logPgrid[1] - logPgrid[0];
+	for(int j = 0; j < pgridNumber; ++j){
+		double momentum = pgrid[j];
+		partPressure[j] = momentum*momentum*momentum*momentum*(momentum/sqrt(massProton*massProton + momentum*momentum/(speed_of_light*speed_of_light)))*deltaLogP;
+	}
 	for(int i = 0; i < rgridNumber; ++i){
 		double pressure = 0;
 		for(int j = 0; j < pgridNumber; ++j){
-			double momentum = (pgrid[j] + pgrid[j+1])/2;
-			pressure += distributionFunction[i][j]*momentum*momentum*momentum*(momentum/sqrt(massProton*massProton + momentum*momentum/(speed_of_light*speed_of_light)))*(pgrid[j+1] - pgrid[j]);
+			//pressure += distributionFunction[i][j]*momentum*momentum*momentum*(momentum/sqrt(massProton*massProton + momentum*momentum/(speed_of_light*speed_of_light)))*(pgrid[j+1] - pgrid[j]);
+			pressure += distributionFunction[i][j]*partPressure[j];
 		}
 		pressure *= 4*pi/3;
 		cosmicRayPressure[i] = pressure;
 	}
+
+	delete[] partPressure;
 }
 
 //пересчет шага по времени и максимальной скорости звука
@@ -1110,6 +1158,7 @@ void Simulation::redistributeValues(){
 
 	for(int i = 0; i < rgridNumber; ++i){
 		grid[i + 1] = tempGrid[i + 1];
+		gridsquare[i+1] = grid[i+1]*grid[i+1];
 		middleGrid[i] = (grid[i] + grid[i+1])/2;
 		deltaR[i] = grid[i+1] - grid[i];
 		if(i == 0){
