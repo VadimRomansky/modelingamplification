@@ -6,7 +6,7 @@
 
 //конструктор
 Simulation::Simulation(){
-	initialEnergy = 10E50;
+	initialEnergy = 10E49;
 	time = 0;
 	tracPen = true;
 	shockWavePoint = -1;
@@ -70,8 +70,8 @@ void Simulation::initializeProfile(){
 	double r = downstreamR;
 	double pressure0 = density0*kBoltzman*temperature/massProton;
 
-	minP = massProton*speed_of_light/1000;
-	maxP = minP*10000;
+	minP = massProton*speed_of_light/10;
+	maxP = minP*1000000;
 
 	deltaR0 = (upstreamR - downstreamR)/rgridNumber;
 	for(int i = 0; i < rgridNumber + 1; ++i){
@@ -212,7 +212,12 @@ void Simulation::simulate(){
 		printf("solving\n");
 		deltaT = min2(5000, deltaT);
 		evaluateHydrodynamic();
-		//evaluateCR();
+		evaluateCR();
+		/*if(i < 1000){
+			evaluateHydrodynamic();
+		} else {
+			evaluateCR();
+		}*/
 		time = time + deltaT;
 		updateGrid();
 		updateMaxSoundSpeed();
@@ -308,6 +313,12 @@ void Simulation::evaluateHydrodynamic() {
 		double middleEnergy = tempEnergy[i];
 		alertNaNOrInfinity(middleEnergy, "energy = NaN");
 		middleVelocity[i] = middleMomentum/middleDensity[i];
+
+		//WARNING!!!!!!!!!!!
+		if(middleVelocity[i] < 0){
+			middleVelocity[i] = 0;
+		}
+
 		middlePressure[i] = (middleEnergy - middleDensity[i]*middleVelocity[i]*middleVelocity[i]/2)*(gamma - 1);
 		if(middleDensity[i] <= epsilon*density0){
 			middleDensity[i] = epsilon*density0;
@@ -778,7 +789,7 @@ void Simulation::evaluateCR(){
 			if(j == 0){
 				leftDerivative = 0;
 			} else {
-				leftDerivative = (distributionFunction[i][j] - distributionFunction[i][j-1])*p/(3*deltaP);
+				leftDerivative = (distributionFunction[i][j] - distributionFunction[i][j-1])*p/(3*(pgrid[j] - pgrid[i]);
 			}
 			double rightDerivative;
 			if(j == pgridNumber - 1){
@@ -1132,6 +1143,10 @@ void Simulation::redistributeValues(){
 		printf("aaa\n");
 	}
 
+	for(int i = 0; i < rgridNumber; ++i){
+		delete[] newDistributionFunction[i];
+	}
+	delete[] newDistributionFunction;
 	delete[] newDensity;
 	delete[] newMomentum;
 	delete[] newEnergy;
