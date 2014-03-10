@@ -19,7 +19,8 @@ void outputDistribution(FILE* distributionFile, FILE* fullDistributionFile, FILE
 	}
 	for(int i = 0; i < simulation->rgridNumber; ++i){
 		for(int j = 0; j < pgridNumber - 1; ++j){
-			double p = (simulation->pgrid[j+1] + simulation->pgrid[j])/2;
+			//double p = (simulation->pgrid[j+1] + simulation->pgrid[j])/2;
+			double p = simulation->pgrid[j];
 			//fprintf(distributionFile, "%30.20lf %g\n", p, simulation->distributionFunction[i][j]);
 			fullDistribution[j] += simulation->volume(i)*simulation->distributionFunction[i][j];
 		}
@@ -28,7 +29,7 @@ void outputDistribution(FILE* distributionFile, FILE* fullDistributionFile, FILE
 
 	for(int j = 0; j < pgridNumber; ++j){
 		fullDistribution[j] /= volume;
-		double p = (simulation->pgrid[j+1] + simulation->pgrid[j])/2;
+		double p = simulation->pgrid[j];
 		fprintf(fullDistributionFile, "%30.20lf %g\n", p, fullDistribution[j]);
 	}
 	delete[] fullDistribution;

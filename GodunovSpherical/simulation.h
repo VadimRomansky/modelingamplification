@@ -29,7 +29,7 @@ public:
 	bool shockWaveMoved;
 
 	double R0;
-	double time;
+	double myTime;
 
 	double maxSoundSpeed;
 
@@ -42,8 +42,10 @@ public:
 	double minP;
 	double maxP;
 	double* pgrid;
+	double* logPgrid;
 
 	double* grid;
+	double* gridsquare;
 	double* middleGrid;
 	double* deltaR;
 	double* middleDeltaR;
