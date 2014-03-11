@@ -27,10 +27,16 @@ void outputDistribution(FILE* distributionFile, FILE* fullDistributionFile, FILE
 		fprintf(coordinateDistributionFile, "%20.10lf %g\n", simulation->grid[i], simulation->distributionFunction[i][injectionMomentum]);
 	}
 
+	if(simulation->shockWavePoint > 0 && simulation->shockWavePoint < simulation->rgridNumber){
+		for(int j = 0; j < pgridNumber; ++j){
+			fprintf(distributionFile, "%g %g\n", simulation->pgrid[j], simulation->distributionFunction[simulation->shockWavePoint][j]);
+		}
+	}
+
 	for(int j = 0; j < pgridNumber; ++j){
 		fullDistribution[j] /= volume;
 		double p = simulation->pgrid[j];
-		fprintf(fullDistributionFile, "%30.20lf %g\n", p, fullDistribution[j]);
+		fprintf(fullDistributionFile, "%g %g\n", p, fullDistribution[j]);
 	}
 	delete[] fullDistribution;
 }

@@ -46,6 +46,7 @@ public:
 
 	double* grid;
 	double* gridsquare;
+	double* volumeFactor;
 	double* middleGrid;
 	double* deltaR;
 	double* middleDeltaR;
@@ -94,7 +95,7 @@ public:
 	void TracPenRadial(double* u, double* flux, double cs);
 
 	void evaluateCR();
-	void solveThreeDiagonal(double* middle, double* upper, double* lower, double* f, double* x);
+	void solveThreeDiagonal(double* middle, double* upper, double* lower, double* f, double* x, double* alpha, double* beta);
 	double injection();
 
 	double minmod(double a, double b);
