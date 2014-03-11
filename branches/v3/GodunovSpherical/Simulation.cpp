@@ -20,6 +20,7 @@ Simulation::~Simulation(){
 	delete[] logPgrid;
 	delete[] grid;
 	delete[] gridsquare;
+	delete[] volumeFactor;
 	delete[] middleGrid;
 	delete[] deltaR;
 	delete[] middleDeltaR;
@@ -50,6 +51,7 @@ void Simulation::initializeProfile(){
 	logPgrid = new double[pgridNumber];
 	grid = new double[rgridNumber + 1];
 	gridsquare = new double[rgridNumber + 1];
+	volumeFactor = new double[rgridNumber];
 	middleGrid = new double[rgridNumber];
 	deltaR = new double[rgridNumber];
 	middleDeltaR = new double[rgridNumber];
@@ -147,6 +149,7 @@ void Simulation::initializeProfile(){
 	pgrid[pgridNumber-1] = maxP;
 
 	for(int i = 0; i < rgridNumber; ++i){
+		volumeFactor[i] = (cube(grid[i+1]) - cube(grid[i]))/3;
 		if(i == 0){
 			middleDeltaR[i] = middleGrid[i];
 		} else {
@@ -216,8 +219,8 @@ void Simulation::simulate(){
 	int i = 0;
 	deltaT = min2(5000, deltaT);
 
-	//clock_t currentTime = clock();
-	//clock_t prevTime = currentTime;
+	clock_t currentTime = clock();
+	clock_t prevTime = currentTime;
 
 	while(myTime < maxTime && i < iterationNumber){
 		++i;
@@ -235,17 +238,19 @@ void Simulation::simulate(){
 		//currentTime = clock();
 		//printf("dT evaluating cosmic ray = %d\n", currentTime - prevTime);
 
-		/*if(i < 1000){
+		/*if(i < 20000){
 			evaluateHydrodynamic();
 		} else {
 			evaluateCR();
 		}*/
+
 		myTime = myTime + deltaT;
 
 		//prevTime = clock();
 		updateGrid();
 		//currentTime = clock();
 		//printf("dT updating grid = %d\n", currentTime - prevTime);
+
 		updateMaxSoundSpeed();
 		updateShockWavePoint();
 		updateParameters();
@@ -264,7 +269,7 @@ void Simulation::simulate(){
 			fprintf(outShockWave, "%d %lf %d %lf\n", i, myTime, shockWavePoint, shockWaveR);
 			fclose(outShockWave);
 
-			fopen_s(&outDistribution, "./output/distribution.dat","w");
+			fopen_s(&outDistribution, "./output/distribution.dat","a");
 			fopen_s(&outFullDistribution, "./output/fullDistribution.dat","a");
 			fopen_s(&outCoordinateDistribution, "./output/coordinateDistribution.dat","w");
 			outputDistribution(outDistribution, outFullDistribution, outCoordinateDistribution, this);
@@ -339,11 +344,6 @@ void Simulation::evaluateHydrodynamic() {
 		double middleEnergy = tempEnergy[i];
 		alertNaNOrInfinity(middleEnergy, "energy = NaN");
 		middleVelocity[i] = middleMomentum/middleDensity[i];
-
-		//WARNING!!!!!!!!!!!
-		if(middleVelocity[i] < 0){
-			middleVelocity[i] = 0;
-		}
 
 		middlePressure[i] = (middleEnergy - middleDensity[i]*middleVelocity[i]*middleVelocity[i]/2)*(gamma - 1);
 		if(middleDensity[i] <= epsilon*density0){
@@ -471,6 +471,9 @@ void Simulation::solveDiscontinious(){
 			}
 		}
 	}
+	pointPressure[0] = middlePressure[0];
+	pointDensity[0] = middleDensity[0];
+	pointVelocity[0] = 0;
 }
 
 
@@ -794,11 +797,12 @@ void Simulation::evaluateCR(){
 	double* f = new double[rgridNumber];
  	double* x = new double[rgridNumber];
 
-	double* volumeFactor = new double[rgridNumber];
+	double* alpha = new double[rgridNumber];
+	double* beta = new double[rgridNumber];
+
 	double* volumeDerivative = new double[rgridNumber];
 	double* dtDivdr = new double[rgridNumber];
 	for(int i = 0; i < rgridNumber; ++i){
-		volumeFactor[i] = (cube(grid[i+1]) - cube(grid[i]))/3;
 		volumeDerivative[i] = (gridsquare[i+1]*pointVelocity[i+1] - gridsquare[i]*pointVelocity[i]);
 		dtDivdr[i] = deltaT/deltaR[i];
 	}
@@ -810,38 +814,32 @@ void Simulation::evaluateCR(){
 		for(int i = 0; i < rgridNumber; ++i){
 			//double p = (pgrid[j] + pgrid[j+1])/2;
 			double p = pgrid[j];
-			/*double deltaP;
-			if(j == 0){
-				deltaP = pgrid[1] - pgrid[0];
-			} else if(j == pgridNumber -1){
-				deltaP = pgrid[rgridNumber] - pgrid[pgridNumber - 1];
-			} else {
-				deltaP = (pgrid[j+1] - pgrid[j-1])/2;
-			}*/
-			upper[i] = gridsquare[i+1]*diffussionCoef(i+1,j)*dtDivdr[i];
-			middle[i] = -((gridsquare[i+1]*diffussionCoef(i+1,j) + gridsquare[i]*diffussionCoef(i,j))*dtDivdr[i] + volumeFactor[i]);
-			lower[i] = gridsquare[i]*diffussionCoef(i,j)*dtDivdr[i];
 
-			double leftDerivative;
-			if(j == 0){
-				leftDerivative = 0;
-			} else {
-				leftDerivative = (distributionFunction[i][j] - distributionFunction[i][j-1])/(3*deltaLogP);
-			}
-			double rightDerivative;
-			if(j == pgridNumber - 1){
-				rightDerivative = 0;
-			} else {
-				rightDerivative = (distributionFunction[i][j+1] - distributionFunction[i][j])/(3*deltaLogP);
-			}
+			double diffCoefLeft = diffussionCoef(i,j);
+			double diffCoefRight = diffussionCoef(i+1,j);
+
+			upper[i] = gridsquare[i+1]*diffCoefRight*dtDivdr[i];
+			//middle[i] = -((gridsquare[i+1]*diffCoefRight + gridsquare[i]*diffCoefLeft)*dtDivdr[i] + volumeFactor[i]);
+			lower[i] = gridsquare[i]*diffCoefLeft*dtDivdr[i];
+			middle[i] = -volumeFactor[i] - upper[i] - lower[i];
 
 			f[i] = - volumeFactor[i]*distributionFunction[i][j];
 
-			if(volumeDerivative[i] > 0){
-				f[i] += - volumeDerivative[i]*rightDerivative*deltaT;
+			double derivative = 0;
+			if(volumeDerivative[i] >= 0){
+				if(j == pgridNumber - 1){
+					derivative = 0;
+				} else {
+					derivative = (distributionFunction[i][j+1] - distributionFunction[i][j])/(3*deltaLogP);
+				}
 			} else {
-				f[i] += - volumeDerivative[i]*leftDerivative*deltaT;
+				if(j == 0){
+					derivative = 0;
+				} else {
+					derivative = (distributionFunction[i][j] - distributionFunction[i][j-1])/(3*deltaLogP);
+				}
 			}
+			f[i] += - volumeDerivative[i]*derivative*deltaT;
 
 			if(middleVelocity[i] > 0){
 				if(i > 0){
@@ -854,7 +852,10 @@ void Simulation::evaluateCR(){
 			}
 			alertNaNOrInfinity(f[i],"f = NaN");
 		}
-		solveThreeDiagonal(middle, upper, lower, f, x);
+		//clock_t prevTime = clock();
+		solveThreeDiagonal(middle, upper, lower, f, x, alpha, beta);
+		//clock_t currentTime = clock();
+		//printf("time solving matrix = %d\n", currentTime - prevTime);
 		
 		for(int i = 0; i < rgridNumber; ++i){
 			tempDistributionFunction[i][j] = x[i];
@@ -878,21 +879,21 @@ void Simulation::evaluateCR(){
 	delete[] lower;
 	delete[] f;
 	delete[] x;
-	delete[] volumeFactor;
+	delete[] alpha;
+	delete[] beta;
 	delete[] volumeDerivative;
 	delete[] dtDivdr;
 }
 
 //решение трёх диагональной матрицы
-void Simulation::solveThreeDiagonal(double* middle, double* upper, double* lower, double* f, double* x){
-	double* alpha = new double[rgridNumber];
-	double* beta = new double[rgridNumber];
+void Simulation::solveThreeDiagonal(double* middle, double* upper, double* lower, double* f, double* x, double* alpha, double* beta){
 
 	alpha[1] = -upper[0]/middle[0];
 	beta[1] = f[0]/middle[0];
 	for(int i = 2; i < rgridNumber; ++i){
-		alpha[i] = -upper[i-1]/(lower[i]*alpha[i-1] + middle[i-1]);
-		beta[i] = (f[i-1] - lower[i]*beta[i-1])/(lower[i]*alpha[i-1] + middle[i-1]);
+		double temp = lower[i]*alpha[i-1] + middle[i-1];
+		alpha[i] = -upper[i-1]/temp;
+		beta[i] = (f[i-1] - lower[i]*beta[i-1])/temp;
 	}
 
 	x[rgridNumber - 1] = (f[rgridNumber-1] - lower[rgridNumber-2]*beta[rgridNumber-1])/(lower[rgridNumber-2]*alpha[rgridNumber-1] + middle[rgridNumber-1]);
@@ -904,9 +905,6 @@ void Simulation::solveThreeDiagonal(double* middle, double* upper, double* lower
 		alertNaNOrInfinity(x[i],"x = NaN");
 		alertNegative(x[i],"x < 0");
 	}
-
-	delete[] alpha;
-	delete[] beta;
 }
 
 
@@ -1160,6 +1158,7 @@ void Simulation::redistributeValues(){
 		grid[i + 1] = tempGrid[i + 1];
 		gridsquare[i+1] = grid[i+1]*grid[i+1];
 		middleGrid[i] = (grid[i] + grid[i+1])/2;
+		volumeFactor[i] = (cube(grid[i+1]) - cube(grid[i]))/3;
 		deltaR[i] = grid[i+1] - grid[i];
 		if(i == 0){
 			middleDeltaR[i] = middleGrid[i];
