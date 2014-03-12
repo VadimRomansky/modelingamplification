@@ -15,29 +15,26 @@ void alertNaNOrInfinity(double value, const char* s){
 void solveThreeDiagonal(double* middle, double* upper, double* lower, double* f, double* x){
 	double* alpha = new double[rgridNumber];
 	double* beta = new double[rgridNumber];
-
 	alpha[1] = -upper[0]/middle[0];
 	beta[1] = f[0]/middle[0];
 	for(int i = 2; i < rgridNumber; ++i){
-		alpha[i] = -upper[i-1]/(lower[i]*alpha[i-1] + middle[i-1]);
-		beta[i] = (f[i-1] - lower[i]*beta[i-1])/(lower[i]*alpha[i-1] + middle[i-1]);
+		double temp = lower[i-1]*alpha[i-1] + middle[i-1];
+		alpha[i] = -upper[i-1]/temp;
+		beta[i] = (f[i-1] - lower[i-1]*beta[i-1])/temp;
 	}
 
-	x[rgridNumber - 1] = (f[rgridNumber-1] - lower[rgridNumber-2]*beta[rgridNumber-1])/(lower[rgridNumber-2]*alpha[rgridNumber-1] + middle[rgridNumber-1]);
+	x[rgridNumber - 1] = (f[rgridNumber-1] - lower[rgridNumber-1]*beta[rgridNumber-1])/(lower[rgridNumber-1]*alpha[rgridNumber-1] + middle[rgridNumber-1]);
 	alertNaNOrInfinity(x[rgridNumber-1],"x = NaN");
 
 	for(int i = rgridNumber - 2; i >= 0; --i){
 		x[i] = alpha[i+1]*x[i+1] + beta[i+1];
 		alertNaNOrInfinity(x[i],"x = NaN");
 	}
-
-	delete[] alpha;
-	delete[] beta;
 }
 
 int _tmain(int argc, _TCHAR* argv[])
 {
-	double* upper = new double[rgridNumber - 1];
+	double* upper = new double[rgridNumber];
 	double* middle = new double[rgridNumber];
 	double* lower = new double[rgridNumber];
 	double* f = new double[rgridNumber];
@@ -67,9 +64,9 @@ int _tmain(int argc, _TCHAR* argv[])
 	middle[1] = 1;
 	middle[2] = 1;
 	middle[3] = 1;
-	lower[0] = 1;
-	lower[1] = 2;
-	lower[2] = 1;
+	lower[1] = 1;
+	lower[2] = 2;
+	lower[3] = 1;
 
 	f[0] = 1;
 	f[1] = 0;
