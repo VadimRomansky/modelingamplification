@@ -78,7 +78,7 @@ void Simulation::initializeProfile(){
 	double pressure0 = density0*kBoltzman*temperature/massProton;
 
 	minP = massProton*speed_of_light/10;
-	maxP = minP*10000000;
+	maxP = minP*10000;
 
 	deltaR0 = (upstreamR - downstreamR)/rgridNumber;
 	for(int i = 0; i < rgridNumber + 1; ++i){
@@ -229,27 +229,27 @@ void Simulation::simulate(){
 		printf("solving\n");
 		deltaT = min2(5000, deltaT);
 		//prevTime = clock();
-		evaluateHydrodynamic();
+		//evaluateHydrodynamic();
 		//currentTime = clock();
-		//printf("dT evaluating hydro = %d\n", currentTime - prevTime);
+		//printf("dT evaluating hydro = %lf\n", (currentTime - prevTime)*1.0/CLOCKS_PER_SEC);
 
 		//prevTime = clock();
-		evaluateCR();
+		//evaluateCR();
 		//currentTime = clock();
-		//printf("dT evaluating cosmic ray = %d\n", currentTime - prevTime);
+		//printf("dT evaluating cosmic ray = %lf\n", (currentTime - prevTime)*1.0/CLOCKS_PER_SEC);
 
-		/*if(i < 20000){
+		if(i < 20000){
 			evaluateHydrodynamic();
 		} else {
 			evaluateCR();
-		}*/
+		}
 
 		myTime = myTime + deltaT;
 
 		//prevTime = clock();
 		updateGrid();
 		//currentTime = clock();
-		//printf("dT updating grid = %d\n", currentTime - prevTime);
+		//printf("dT updating grid = %lf\n", (currentTime - prevTime)*1.0/CLOCKS_PER_SEC);
 
 		updateMaxSoundSpeed();
 		updateShockWavePoint();
@@ -819,11 +819,25 @@ void Simulation::evaluateCR(){
 			double diffCoefRight = diffussionCoef(i+1,j);
 
 			upper[i] = gridsquare[i+1]*diffCoefRight*dtDivdr[i];
-			//middle[i] = -((gridsquare[i+1]*diffCoefRight + gridsquare[i]*diffCoefLeft)*dtDivdr[i] + volumeFactor[i]);
 			lower[i] = gridsquare[i]*diffCoefLeft*dtDivdr[i];
-			middle[i] = -volumeFactor[i] - upper[i] - lower[i];
+			if(i == 0){
+				middle[i] = -(upper[i] + volumeFactor[i]);
+			} else {
+				middle[i] = -(upper[i] + lower[i] + volumeFactor[i]);
+			}
+
+			/*upper[i] = 0;
+			middle[i] = -volumeFactor[i];
+			lower[i] = 0;*/
 
 			f[i] = - volumeFactor[i]*distributionFunction[i][j];
+			/*if(i == 0){
+				f[i] = - volumeFactor[i]*distributionFunction[i][j] + gridsquare[i+1]*diffCoefRight*dtDivdr[i]*distributionFunction[i+1][j];
+			} else if(i == rgridNumber - 1){
+				f[i] = - volumeFactor[i]*distributionFunction[i][j] + gridsquare[i]*diffCoefLeft*dtDivdr[i]*distributionFunction[i-1][j];
+			} else {
+				f[i] = - volumeFactor[i]*distributionFunction[i][j] + gridsquare[i+1]*diffCoefRight*dtDivdr[i]*distributionFunction[i+1][j] + gridsquare[i]*diffCoefLeft*dtDivdr[i]*distributionFunction[i-1][j];
+			}*/
 
 			double derivative = 0;
 			if(volumeDerivative[i] >= 0){
@@ -852,10 +866,9 @@ void Simulation::evaluateCR(){
 			}
 			alertNaNOrInfinity(f[i],"f = NaN");
 		}
-		//clock_t prevTime = clock();
+		f[rgridNumber-1] -= upper[rgridNumber-1]*distributionFunction[rgridNumber-1][j];
+
 		solveThreeDiagonal(middle, upper, lower, f, x, alpha, beta);
-		//clock_t currentTime = clock();
-		//printf("time solving matrix = %d\n", currentTime - prevTime);
 		
 		for(int i = 0; i < rgridNumber; ++i){
 			tempDistributionFunction[i][j] = x[i];
@@ -891,12 +904,12 @@ void Simulation::solveThreeDiagonal(double* middle, double* upper, double* lower
 	alpha[1] = -upper[0]/middle[0];
 	beta[1] = f[0]/middle[0];
 	for(int i = 2; i < rgridNumber; ++i){
-		double temp = lower[i]*alpha[i-1] + middle[i-1];
+		double temp = lower[i-1]*alpha[i-1] + middle[i-1];
 		alpha[i] = -upper[i-1]/temp;
-		beta[i] = (f[i-1] - lower[i]*beta[i-1])/temp;
+		beta[i] = (f[i-1] - lower[i-1]*beta[i-1])/temp;
 	}
 
-	x[rgridNumber - 1] = (f[rgridNumber-1] - lower[rgridNumber-2]*beta[rgridNumber-1])/(lower[rgridNumber-2]*alpha[rgridNumber-1] + middle[rgridNumber-1]);
+	x[rgridNumber - 1] = (f[rgridNumber-1] - lower[rgridNumber-1]*beta[rgridNumber-1])/(lower[rgridNumber-1]*alpha[rgridNumber-1] + middle[rgridNumber-1]);
 	alertNaNOrInfinity(x[rgridNumber-1],"x = NaN");
 	alertNegative(x[rgridNumber-1],"x < 0");
 
