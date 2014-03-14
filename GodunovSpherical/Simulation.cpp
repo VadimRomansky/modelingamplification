@@ -78,7 +78,7 @@ void Simulation::initializeProfile(){
 	double pressure0 = density0*kBoltzman*temperature/massProton;
 
 	minP = massProton*speed_of_light/10;
-	maxP = minP*10000;
+	maxP = minP*10000000;
 
 	deltaR0 = (upstreamR - downstreamR)/rgridNumber;
 	for(int i = 0; i < rgridNumber + 1; ++i){
@@ -265,7 +265,7 @@ void Simulation::simulate(){
 		myTime = myTime + deltaT;
 
 		//prevTime = clock();
-		updateGrid();
+		//updateGrid();
 		//currentTime = clock();
 		//printf("dT updating grid = %lf\n", (currentTime - prevTime)*1.0/CLOCKS_PER_SEC);
 
@@ -821,7 +821,8 @@ void Simulation::evaluateCR(){
 	double* volumeDerivative = new double[rgridNumber];
 	double* dtDivdr = new double[rgridNumber];
 	for(int i = 0; i < rgridNumber; ++i){
-		volumeDerivative[i] = (gridsquare[i+1]*pointVelocity[i+1] - gridsquare[i]*pointVelocity[i]);
+		//volumeDerivative[i] = (gridsquare[i+1]*pointVelocity[i+1] - gridsquare[i]*pointVelocity[i]);
+		volumeDerivative[i] = (gridsquare[i+1]*middleVelocity[i+1] - gridsquare[i]*middleVelocity[i]);
 		dtDivdr[i] = deltaT/deltaR[i];
 	}
 
@@ -882,7 +883,7 @@ void Simulation::evaluateCR(){
 					f[i] += volumeFactor[i]*middleVelocity[i]*(distributionFunction[i+1][j] - distributionFunction[i][j])*dtDivdr[i];
 				}
 			}
-			alertNaNOrInfinity(f[i],"f = NaN");
+			//alertNaNOrInfinity(f[i],"f = NaN");
 		}
 		f[rgridNumber-1] -= upper[rgridNumber-1]*distributionFunction[rgridNumber-1][j];
 
@@ -928,13 +929,13 @@ void Simulation::solveThreeDiagonal(double* middle, double* upper, double* lower
 	}
 
 	x[rgridNumber - 1] = (f[rgridNumber-1] - lower[rgridNumber-1]*beta[rgridNumber-1])/(lower[rgridNumber-1]*alpha[rgridNumber-1] + middle[rgridNumber-1]);
-	alertNaNOrInfinity(x[rgridNumber-1],"x = NaN");
-	alertNegative(x[rgridNumber-1],"x < 0");
+	//alertNaNOrInfinity(x[rgridNumber-1],"x = NaN");
+	//alertNegative(x[rgridNumber-1],"x < 0");
 
 	for(int i = rgridNumber - 2; i >= 0; --i){
 		x[i] = alpha[i+1]*x[i+1] + beta[i+1];
-		alertNaNOrInfinity(x[i],"x = NaN");
-		alertNegative(x[i],"x < 0");
+		//alertNaNOrInfinity(x[i],"x = NaN");
+		//alertNegative(x[i],"x < 0");
 	}
 }
 
