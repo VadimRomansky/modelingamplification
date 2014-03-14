@@ -1,9 +1,7 @@
 #ifndef SIMULATION_H
 #define SIMULATION_H
 
-#include "stdafx.h"
-#include "SpaceBin.h"
-#include "particle.h"
+#include <list>
 
 class Simulation{
 public:
@@ -14,21 +12,24 @@ public:
 	double B0;
 	double upstreamR;
 	double downstreamR;
-	double deltaR;
 	double temperature;
+	double maxTime;
 	double epsilonR;
 	double deltaT;
+	double deltaR0;
+	double initialEnergy;
 	int A;
 	int Z;
 
-	bool cycleBound;
 	int simulationType;
 	bool tracPen;
 
 	int rgridNumber;
+	int shockWavePoint;
+	bool shockWaveMoved;
 
 	double R0;
-	double time;
+	double myTime;
 
 	double maxSoundSpeed;
 
@@ -40,16 +41,26 @@ public:
 
 	double minP;
 	double maxP;
+	double* pgrid;
+	double* logPgrid;
 
 	double* grid;
+	double* middleGrid;
+	double* deltaR;
+	double* middleDeltaR;
+	double* tempGrid;
 	double* pointDensity;
 	double* middleDensity;
 	double* pointVelocity;
 	double* middleVelocity;
 	double* pointPressure;
 	double* middlePressure;
+	double* cosmicRayPressure;
+
+	double* tempU;
 
 	double** distributionFunction;
+	double** tempDistributionFunction;
 
 	double momentum(int i);
 	double energy(int i);
@@ -57,10 +68,13 @@ public:
 	double termalEnergy(int i);
 	double temperatureIn(int i);
 	double soundSpeed(int i);
+	double volume(int i);
 
 	double densityFlux(int i);
-	double momentumFlux(int i);
+	double momentumConvectiveFlux(int i);
 	double energyFlux(int i);
+
+	double diffussionCoef(int i, int j);
 
 	Simulation();
 	~Simulation();
@@ -76,11 +90,24 @@ public:
 	double firstApproximationPressure(double rho1, double rho2, double u1, double u2, double p1, double p2);
 	void CheckNegativeDensity();
 	void TracPen(double* u, double* flux, double cs);
-	void updateValues();
+
+	void evaluateCR();
+	void solveThreeDiagonal(double* middle, double* upper, double* lower, double* f, double* x, double* alpha, double* beta);
+	double injection();
+
 	double minmod(double a, double b);
 	void updateMaxSoundSpeed();
-
+	void updateShockWavePoint();
 	void updateParameters();
+	void evaluateCosmicRayPressure();
+
+	void updateGrid();
+	//std::list<GridZone*> createZones(int* type, double* gradientU, int& smallGradientZoneCount, int& bigGradientZoneCount);
+    //void putPointsIntoZones(std::list<GridZone*>& zones, int pointsCount, int smallGradientZoneCount, int bigGradientZoneCount);
+	//void convertZonesToGrid(std::list<GridZone*>& zones);
+	//void addPoints(GridZone* zone, int& i);
+	void redistributeValues();
+	
 };
 
 #endif
