@@ -13,7 +13,7 @@ void output(FILE* outFile, Simulation* simulation){
 
 void outputDistribution(FILE* distributionFile, FILE* fullDistributionFile, FILE* coordinateDistributionFile, Simulation* simulation){
 	double* fullDistribution = new double[pgridNumber];
-	double volume = 4*pi*cube(simulation->upstreamR);
+	double volume = simulation->upstreamR;
 	for(int j = 0; j < pgridNumber; ++j){
 		fullDistribution[j] = 0;
 	}
