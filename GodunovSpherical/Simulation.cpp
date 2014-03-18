@@ -247,7 +247,7 @@ void Simulation::simulate(){
 		printf("solving\n");
 		deltaT = min2(500, deltaT);
 		//prevTime = clock();
-		//evaluateHydrodynamic();
+		evaluateHydrodynamic();
 		//currentTime = clock();
 		//printf("dT evaluating hydro = %lf\n", (currentTime - prevTime)*1.0/CLOCKS_PER_SEC);
 
@@ -829,9 +829,9 @@ void Simulation::evaluateCR(){
 
 	double deltaLogP = logPgrid[1] - logPgrid[0];
 
-	if(shockWavePoint > 0 && shockWavePoint < rgridNumber){
+	/*if(shockWavePoint > 0 && shockWavePoint < rgridNumber){
 		distributionFunction[shockWavePoint][injectionMomentum] += injection()*deltaT;
-	}
+	}*/
 	
 	for(int j = 0; j < pgridNumber; ++j){
 		// -1 ?
@@ -896,6 +896,10 @@ void Simulation::evaluateCR(){
 				}
 			}
 			alertNaNOrInfinity(f[i],"f = NaN");
+
+			if(i == shockWavePoint - 1 && j == injectionMomentum){
+				f[i] -= injection()*deltaT;
+			}
 		}
 		f[rgridNumber-1] -= upper[rgridNumber-1]*distributionFunction[rgridNumber-1][j];
 
@@ -905,13 +909,13 @@ void Simulation::evaluateCR(){
 			tempDistributionFunction[i][j] = x[i];
 		}
 
-		if(j == injectionMomentum){
+		/*if(j == injectionMomentum){
 			FILE* file = fopen("output/matrix.dat", "w");
 			for(int i = 0; i < rgridNumber; ++i){
 				fprintf(file,"%d %lf %g %lf %g %g %g %g\n", i, middleGrid[i], lower[i], middle[i], upper[i], f[i], distributionFunction[i][j], tempDistributionFunction[i][j]);
 			}
 			fclose(file);
-		}
+		}*/
 	}
 
 	for(int i = 0; i < rgridNumber; ++i){

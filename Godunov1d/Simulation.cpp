@@ -193,7 +193,7 @@ void Simulation::simulate(){
 	initializeProfile();
 	//updateShockWavePoint();
 	//shockWavePoint = rgridNumber/100;
-	//updateGrid();
+	updateGrid();
 	updateMaxSoundSpeed();
 	updateParameters();
 
@@ -260,7 +260,7 @@ void Simulation::simulate(){
 		myTime = myTime + deltaT;
 
 		//prevTime = clock();
-		//updateGrid();
+		updateGrid();
 		//currentTime = clock();
 		//printf("dT updating grid = %lf\n", (currentTime - prevTime)*1.0/CLOCKS_PER_SEC);
 
@@ -875,7 +875,7 @@ void Simulation::evaluateCR(){
 			//alertNaNOrInfinity(f[i],"f = NaN");
 			alertNegative(-f[i], "f > 0");
 
-			if(i == shockWavePoint && j == injectionMomentum){
+			if(i == shockWavePoint - 1 && j == injectionMomentum){
 				f[i] -= injection()*deltaT;
 			}
 		}
@@ -890,7 +890,7 @@ void Simulation::evaluateCR(){
 			}*/
 		}
 
-		if(j == injectionMomentum){
+		if(j == injectionMomentum + 1){
 			FILE* file = fopen("output/matrix.dat", "w");
 			for(int i = 0; i < rgridNumber; ++i){
 				fprintf(file,"%d %lf %g %lf %g %g %g %g\n", i, middleGrid[i], lower[i], middle[i], upper[i], f[i], distributionFunction[i][j], tempDistributionFunction[i][j]);
