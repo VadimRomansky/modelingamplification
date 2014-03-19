@@ -801,8 +801,9 @@ double Simulation::diffussionCoef(int i, int j){
 //инжекционный член
 double Simulation::injection(){
 	double pf = pgrid[injectionMomentum];
-	//return middleDensity[shockWavePoint]*abs(middleVelocity[shockWavePoint])/(pf*pf*massProton);
-	return 1;
+	double dp = (pgrid[injectionMomentum + 1] + pgrid[injectionMomentum - 1])/2;
+	return middleDensity[shockWavePoint]*abs(middleVelocity[shockWavePoint])/(pf*pf*massProton*dp);
+	//return 1;
 }
 
 
@@ -898,9 +899,9 @@ void Simulation::evaluateCR(){
 			}
 			alertNaNOrInfinity(f[i],"f = NaN");
 			if(i == shockWavePoint && j == injectionMomentum){
-				f[i] -= injection()*deltaT;
+				f[i] -= injection()*dtDivdr[i];
 				double dp = (pgrid[injectionMomentum + 1] - pgrid[injectionMomentum - 1])/2;
-				injectedParticles += injection()*volume(shockWavePoint - 1)*deltaT*pgrid[j]*pgrid[j]*dp;
+				injectedParticles += injection()*volume(shockWavePoint - 1)*dtDivdr[i]*pgrid[j]*pgrid[j]*dp;
 			}
 		}
 		f[rgridNumber-1] -= upper[rgridNumber-1]*distributionFunction[rgridNumber-1][j];
