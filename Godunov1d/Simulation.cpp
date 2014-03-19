@@ -12,6 +12,7 @@ Simulation::Simulation(){
 	tracPen = true;
 	shockWavePoint = -1;
 	shockWaveMoved = false;
+	injectedParticles = 0;
 }
 
 //деструктор
@@ -292,11 +293,11 @@ void Simulation::simulate(){
 			fclose(outDistribution);
 
 			fopen_s(&outIteration, "./output/iterations.dat","a");
-			fprintf(outIteration, "%d %28.20lf %28.20lf %28.20lf %28.20lf\n", i, myTime, mass, totalMomentum, totalEnergy);
+			fprintf(outIteration, "%d %g %g %g %g %g %g\n", i, myTime, mass, totalMomentum, totalEnergy, injectedParticles, totalParticles);
 			fclose(outIteration);
 
 			fopen_s(&outExtraIteration, "./output/extra_iterations.dat","a");
-			fprintf(outExtraIteration, "%d %28.20lf %28.20lf %28.20lf %28.20lf %28.20lf %28.20lf\n", i, myTime, mass, totalMomentum, totalEnergy, totalKineticEnergy, totalTermalEnergy);
+			fprintf(outExtraIteration, "%d %g %g %g %g %g %g %g %g\n", i, myTime, mass, totalMomentum, totalEnergy, totalKineticEnergy, totalTermalEnergy, injectedParticles, totalParticles);
 			fclose(outExtraIteration);
 
 			fopen_s(&outTempGrid, "./output/temp_grid.dat","a");
@@ -767,8 +768,9 @@ double Simulation::diffussionCoef(int i, int j){
 //инжекционный член
 double Simulation::injection(){
 	double pf = pgrid[injectionMomentum];
-	//return middleDensity[shockWavePoint]*abs(middleVelocity[shockWavePoint])/(pf*pf*massProton);
-	return 1E-30;
+	double dp = (pgrid[injectionMomentum + 1] - pgrid[injectionMomentum - 1])/2;
+	return middleDensity[shockWavePoint]*abs(middleVelocity[shockWavePoint])/(pf*pf*massProton*dp);
+	//return 1E-30;
 }
 
 
@@ -877,6 +879,8 @@ void Simulation::evaluateCR(){
 
 			if(i == shockWavePoint - 1 && j == injectionMomentum){
 				f[i] -= injection()*deltaT;
+				double dp = (pgrid[injectionMomentum + 1] - pgrid[injectionMomentum - 1])/2;
+				injectedParticles += injection()*volume(shockWavePoint - 1)*deltaT*pgrid[j]*pgrid[j]*dp;
 			}
 		}
 		f[rgridNumber-1] -= upper[rgridNumber-1]*distributionFunction[rgridNumber-1][j];
@@ -1028,12 +1032,24 @@ void Simulation::updateParameters(){
 	totalEnergy = 0;
 	totalKineticEnergy = 0;
 	totalTermalEnergy = 0;
+	totalParticles = 0;
 	for(int i = 0; i < rgridNumber; ++i){
 		mass += middleDensity[i]*volume(i);
 		totalMomentum += momentum(i)*volume(i);
 		totalEnergy += energy(i)*volume(i);
 		totalKineticEnergy += kineticEnergy(i)*volume(i);
 		totalTermalEnergy += termalEnergy(i)*volume(i);
+		for(int j = 0; j < pgridNumber; ++j){
+			double dp;
+			if(j == 0){
+				dp = (pgrid[j + 1] - pgrid[j]);
+			} else if(j == pgridNumber -1){
+				dp = (pgrid[j] - pgrid[j - 1]);
+			} else {
+				dp = (pgrid[j + 1] - pgrid[j - 1])/2;
+			}
+			totalParticles += distributionFunction[i][j]*volume(i)*pgrid[j]*pgrid[j]*dp;
+		}
 	}
 }
 

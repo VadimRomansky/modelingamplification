@@ -38,6 +38,8 @@ public:
 	double totalEnergy;
 	double totalKineticEnergy;
 	double totalTermalEnergy;
+	double totalParticles;
+	double injectedParticles;
 
 	double minP;
 	double maxP;
