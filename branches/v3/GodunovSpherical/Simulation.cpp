@@ -901,7 +901,7 @@ void Simulation::evaluateCR(){
 			if(i == shockWavePoint && j == injectionMomentum){
 				f[i] -= injection()*dtDivdr[i];
 				double dp = (pgrid[injectionMomentum + 1] - pgrid[injectionMomentum - 1])/2;
-				injectedParticles += injection()*volume(shockWavePoint - 1)*dtDivdr[i]*pgrid[j]*pgrid[j]*dp;
+				injectedParticles += injection()*volume(shockWavePoint - 1)*deltaT*middleGrid[i]*middleGrid[i]*pgrid[j]*pgrid[j]*dp/volumeFactor[i];
 			}
 		}
 		f[rgridNumber-1] -= upper[rgridNumber-1]*distributionFunction[rgridNumber-1][j];
