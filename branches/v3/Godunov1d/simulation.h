@@ -20,6 +20,7 @@ public:
 	double initialEnergy;
 	int A;
 	int Z;
+	int currentIteration;
 
 	int simulationType;
 	bool tracPen;
