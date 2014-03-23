@@ -78,6 +78,38 @@ int _tmain(int argc, _TCHAR* argv[])
 	for(int i = 0; i < rgridNumber; ++i){
 		printf("%lf\n", x[i]);
 	}
+	printf("\n");
+
+
+	//solving matrix for approximations three points like parabol
+	/*
+	4 2 1   1
+	9 3 1   2
+	16 4 1  3
+
+	x = 
+	0
+	1
+	-1
+	*/
+
+	double p1 = 2;
+	double p2 = 3;
+	double p3 = 4;
+	double y1 = 1;
+	double y2 = 2;
+	double y3 = 3;
+
+	double det = p1*p1*p2 + p2*p2*p3 + p3*p3*p1 - p3*p3*p2 - p1*p1*p3 - p2*p2*p1;
+	double detA = y1*p2 + y2*p3 + y3*p1 - y3*p2 - y1*p3 - y2*p1;
+	double detB = p1*p1*y2 + p2*p2*y3 + p3*p3*y1 - p3*p3*y2 - p1*p1*y3 - p2*p2*y1;
+	double detC = p1*p1*p2*y3 + p2*p2*p3*y1 + p3*p3*p1*y2 - p3*p3*p2*y1 - p1*p1*p3*y2 - p2*p2*p1*y3;
+	
+	double a = detA/det;
+	double b = detB/det;
+	double c = detC/det;
+
+	printf("a = %lf\nb = %lfc = %lf\n",a,b,c);
 
 	delete[] upper;
 	delete[] middle;
