@@ -19,9 +19,7 @@ void outputDistribution(FILE* distributionFile, FILE* fullDistributionFile, FILE
 	}
 	for(int i = 0; i < simulation->rgridNumber; ++i){
 		for(int j = 0; j < pgridNumber - 1; ++j){
-			//double p = (simulation->pgrid[j+1] + simulation->pgrid[j])/2;
 			double p = simulation->pgrid[j];
-			//fprintf(distributionFile, "%30.20lf %g\n", p, simulation->distributionFunction[i][j]);
 			fullDistribution[j] += simulation->volume(i)*simulation->distributionFunction[i][j];
 		}
 		//fprintf(coordinateDistributionFile, "%20.10lf %g\n", simulation->grid[i], simulation->distributionFunction[i][injectionMomentum]/(cube(simulation->pgrid[injectionMomentum])));
@@ -42,6 +40,40 @@ void outputDistribution(FILE* distributionFile, FILE* fullDistributionFile, FILE
 		fprintf(fullDistributionFile, "%g %g\n", p, fullDistribution[j]);
 	}
 	delete[] fullDistribution;
+}
+
+void outputDistributionP3(FILE* distributionFile, FILE* fullDistributionFile, FILE* coordinateDistributionFile, Simulation* simulation){
+	double* fullDistribution = new double[pgridNumber];
+	double volume = simulation->upstreamR;
+	for(int j = 0; j < pgridNumber; ++j){
+		fullDistribution[j] = 0;
+	}
+	for(int i = 0; i < simulation->rgridNumber; ++i){
+		for(int j = 0; j < pgridNumber - 1; ++j){
+			double p = simulation->pgrid[j];
+			fullDistribution[j] += simulation->volume(i)*simulation->distributionFunction[i][j];
+		}
+		fprintf(coordinateDistributionFile, "%20.10lf %g\n", simulation->grid[i], simulation->distributionFunction[i][injectionMomentum]/(cube(simulation->pgrid[injectionMomentum])));
+	}
+
+	if(simulation->shockWavePoint > 0 && simulation->shockWavePoint < simulation->rgridNumber){
+		for(int j = 0; j < pgridNumber; ++j){
+			fprintf(distributionFile, "%g %g\n", simulation->pgrid[j], simulation->distributionFunction[simulation->shockWavePoint][j]/cube(simulation->pgrid[j]));
+		}
+	}
+
+	for(int j = 0; j < pgridNumber; ++j){
+		fullDistribution[j] /= volume;
+		double p = simulation->pgrid[j];
+		fprintf(fullDistributionFile, "%g %g\n", p, fullDistribution[j]/(cube(p)));
+	}
+	delete[] fullDistribution;
+}
+
+void outputDerivativeForDebug(FILE* outFile, Simulation* simulation){
+	for(int i = 0; i < pgridNumber; ++i){
+		fprintf(outFile, "%g %g %g\n", simulation->pgrid[i], simulation->distrFunDerivative[i], simulation->distrFunDerivative2[i]);
+	}
 }
 
 void outputNewGrid(FILE* outFile, Simulation* simulation){

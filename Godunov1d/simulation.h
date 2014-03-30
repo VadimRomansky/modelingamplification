@@ -60,6 +60,9 @@ public:
 	double* middlePressure;
 	double* cosmicRayPressure;
 
+	double* distrFunDerivative;
+	double* distrFunDerivative2;
+
 	double* tempU;
 
 	double** distributionFunction;
@@ -97,12 +100,13 @@ public:
 	void evaluateCR();
 	void solveThreeDiagonal(double* middle, double* upper, double* lower, double* f, double* x, double* alpha, double* beta);
 	double injection();
+	void evaluateCosmicRayPressure();
+	void changeDistrFunction();
 
 	double minmod(double a, double b);
 	void updateMaxSoundSpeed();
 	void updateShockWavePoint();
 	void updateParameters();
-	void evaluateCosmicRayPressure();
 
 	void updateGrid();
 	//std::list<GridZone*> createZones(int* type, double* gradientU, int& smallGradientZoneCount, int& bigGradientZoneCount);

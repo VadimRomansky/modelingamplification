@@ -80,6 +80,11 @@ int _tmain(int argc, _TCHAR* argv[])
 	}
 	printf("\n");
 
+	delete[] upper;
+	delete[] middle;
+	delete[] lower;
+	delete[] f;
+	delete[] x;
 
 	//solving matrix for approximations three points like parabol
 	/*
@@ -109,13 +114,40 @@ int _tmain(int argc, _TCHAR* argv[])
 	double b = detB/det;
 	double c = detC/det;
 
-	printf("a = %lf\nb = %lfc = %lf\n",a,b,c);
+	printf("a = %lf\nb = %lf\nc = %lf\n",a,b,c);
 
-	delete[] upper;
-	delete[] middle;
-	delete[] lower;
-	delete[] f;
-	delete[] x;
+	printf("\n");
+	//solving matrix for approximations four points like parabol
+	/*
+	8 4 2 1   1
+	27 9 3 1   2
+	64 16 4 1  3
+	125 25 5 1 4
+
+	x = 
+	0
+	0
+	1
+	-1
+	*/
+
+	double d, p4, y4;
+	p1 = 2;
+	p2 = 3;
+	p3 = 4;
+	p4 = 5;
+	y1 = 1;
+	y2 = 2;
+	y3 = 3;
+	y4 = 4;
+	
+	a = y1/((p1-p4)*(p1-p2)*(p1-p3)) + y2/((p2-p1)*(p2-p3)*(p2-p4)) + y3/((p3-p1)*(p3-p2)*(p3-p4)) + y4/((p4-p1)*(p4-p2)*(p4-p3));
+	b = y1*(-p2-p3-p4)/((p1-p4)*(p1-p2)*(p1-p3)) + y2*(-p1-p3-p4)/((p2-p1)*(p2-p3)*(p2-p4)) + y3*(-p1-p2-p4)/((p3-p1)*(p3-p2)*(p3-p4)) + y4*(-p1-p2-p3)/((p4-p1)*(p4-p2)*(p4-p3));
+	c = y1*(p2*p3+p2*p4+p3*p4)/((p1-p4)*(p1-p2)*(p1-p3)) + y2*(p1*p3 + p1*p4 + p3*p4)/((p2-p1)*(p2-p3)*(p2-p4)) + y3*(p1*p2 + p1*p4 + p2*p4)/((p3-p1)*(p3-p2)*(p3-p4)) + y4*(p1*p2 + p1*p3 + p2*p3)/((p4-p1)*(p4-p2)*(p4-p3));
+	d = y1*(-p2*p3*p4)/((p1-p4)*(p1-p2)*(p1-p3)) + y2*(-p1*p3*p4)/((p2-p1)*(p2-p3)*(p2-p4)) + y3*(-p1*p2*p4)/((p3-p1)*(p3-p2)*(p3-p4)) + y4*(-p1*p2*p3)/((p4-p1)*(p4-p2)*(p4-p3));
+
+	printf("a = %lf \nb = %lf\nc = %lf\nd = %lf\n",a,b,c,d);
+
 	return 0;
 }
 
