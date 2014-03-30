@@ -36,17 +36,12 @@ void Simulation::evaluateCR(){
 	double* alpha = new double[rgridNumber];
 	double* beta = new double[rgridNumber];
 
-	double** particleMomentumFlux = new double*[rgridNumber];
-	for(int i = 0; i < rgridNumber; ++i){
-		particleMomentumFlux[i] = new double[pgridNumber + 1];
-	}
-
 	double* volumeDerivative = new double[rgridNumber];
 	double* dtDivdr = new double[rgridNumber];
 
-	if(currentIteration == changeDistributionParameter) {
+	/*if(currentIteration == changeDistributionParameter) {
 		changeDistrFunction();
-	}
+	}*/
 
 	for(int i = 0; i < rgridNumber; ++i){
 		//volumeDerivative[i] = (gridsquare[i+1]*pointVelocity[i+1] - gridsquare[i]*pointVelocity[i]);
@@ -59,32 +54,6 @@ void Simulation::evaluateCR(){
 	}
 
 	double deltaLogP = logPgrid[1] - logPgrid[0];
-
-	for(int i = 0; i < rgridNumber; ++i){
-		for(int j = 0; j <= pgridNumber; ++j){
-			if(j == 0){
-				particleMomentumFlux[i][j] = 0;
-				continue;
-			}
-			if(j == pgridNumber){
-				particleMomentumFlux[i][j] = 0;
-				continue;
-			}
-			if(j == injectionMomentum){
-				if(volumeDerivative[i] > 0){
-					particleMomentumFlux[i][j] = volumeDerivative[i]*distributionFunction[i][j-1]/3;
-				} else {
-					particleMomentumFlux[i][j] = volumeDerivative[i]*distributionFunction[i][j-1]/3;
-				}
-			} else {
-				if(volumeDerivative[i] > 0){
-					particleMomentumFlux[i][j] = volumeDerivative[i]*distributionFunction[i][j-1]/3;
-				} else {
-					particleMomentumFlux[i][j] = volumeDerivative[i]*distributionFunction[i][j-1]/3;
-				}
-			}
-		}
-	}
 	
 	for(int j = 0; j < pgridNumber; ++j){
 		double p = pgrid[j];
@@ -216,37 +185,35 @@ void Simulation::evaluateCR(){
 			f[i] += - volumeDerivative[i]*derivative*dtDivdr[i]/3;
 			//f[i] += - volumeDerivative[i]*derivative*dtDivdr[i]*p/3;
 
-			//f[i] -= (particleMomentumFlux[i][j+1] - particleMomentumFlux[i][j])*dtDivdr[i]/deltaLogP;
-
 			if((i > 1) && (i < rgridNumber - 1)){
+				//f[i] += 0.5*(middleVelocity[i]+middleVelocity[i-1])*(distributionFunction[i][j] - distributionFunction[i-1][j])*dtDivdr[i];
 				//middle[i] -= middleVelocity[i]*dtDivdr[i];
 				//lower[i] += middleVelocity[i]*dtDivdr[i];
 				//f[i] += middleVelocity[i]*(distributionFunction[i][j] - distributionFunction[i-1][j])*dtDivdr[i];
 				//f[i] += middleVelocity[i]*(3*distributionFunction[i][j] - 4*distributionFunction[i-1][j] + 4*distributionFunction[i-2][j])*0.5*dtDivdr[i];
-				//f[i] += (distributionFunction[i][j]*middleVelocity[i] - distributionFunction[i-1][j]*middleVelocity[i-1])*dtDivdr[i];
+				f[i] += (distributionFunction[i][j]*middleVelocity[i] - distributionFunction[i-1][j]*middleVelocity[i-1])*dtDivdr[i];
 
-				if(currentIteration < changeDistributionParameter){
+				/*if(currentIteration < changeDistributionParameter){
 					f[i] += 0.5*(middleVelocity[i]+middleVelocity[i-1])*(distributionFunction[i][j] - distributionFunction[i-1][j])*dtDivdr[i];
 				} else {
 					f[i] += (distributionFunction[i][j]*middleVelocity[i] - distributionFunction[i-1][j]*middleVelocity[i-1])*dtDivdr[i];
-				}
+				}*/
  			}
 			alertNaNOrInfinity(f[i],"f = NaN");
 			//alertNegative(-f[i], "f > 0");
 
-			if(i == shockWavePoint - 1 && (j == injectionMomentum) && (currentIteration < 5000000000)){
-				//f[i] -= injection()*dtDivdr[shockWavePoint-1]*pgrid[j]*pgrid[j]*pgrid[j];
+			if(i == shockWavePoint - 1 && (j == injectionMomentum)){
+				f[i] -= injection()*dtDivdr[shockWavePoint-1]*pgrid[j]*pgrid[j]*pgrid[j];
 				//f[i] -= injection()*dtDivdr[shockWavePoint-1];
-				if(currentIteration < changeDistributionParameter){
+				/*if(currentIteration < changeDistributionParameter){
 					f[i] -= injection()*dtDivdr[shockWavePoint-1];
 				} else {
 					f[i] -= injection()*dtDivdr[shockWavePoint-1]*pgrid[j]*pgrid[j]*pgrid[j];
-				}
+				}*/
 				double dp = (pgrid[j + 1] - pgrid[j - 1])/2;
 				injectedParticles += injection()*volume(shockWavePoint - 1)*dtDivdr[shockWavePoint-1]*pgrid[j]*pgrid[j]*dp;
 			}
 		}
-		//f[rgridNumber-1] -= upper[rgridNumber-1]*distributionFunction[rgridNumber-1][j];
 
 		//не явная
 		solveThreeDiagonal(middle, upper, lower, f, x, alpha, beta);
@@ -299,11 +266,6 @@ void Simulation::evaluateCR(){
 	}*/
 
 	evaluateCosmicRayPressure();
-
-	for(int i = 0; i < rgridNumber; ++i){
-		delete[] particleMomentumFlux[i];
-	}
-	delete[] particleMomentumFlux;
 
 	delete[] upper;
 	delete[] middle;

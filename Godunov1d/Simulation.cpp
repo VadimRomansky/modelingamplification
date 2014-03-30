@@ -296,11 +296,12 @@ void Simulation::simulate(){
 			fopen_s(&outDistribution, "./output/distribution.dat","a");
 			fopen_s(&outFullDistribution, "./output/fullDistribution.dat","a");
 			fopen_s(&outCoordinateDistribution, "./output/coordinateDistribution.dat","a");
-			if(currentIteration < changeDistributionParameter){
+			outputDistribution(outDistribution, outFullDistribution, outCoordinateDistribution, this);
+			/*if(currentIteration < changeDistributionParameter){
 				outputDistribution(outDistribution, outFullDistribution, outCoordinateDistribution, this);
 			} else {
 				outputDistributionP3(outDistribution, outFullDistribution, outCoordinateDistribution, this);
-			}
+			}*/
 			fclose(outCoordinateDistribution);
 			fclose(outFullDistribution);
 			fclose(outDistribution);
@@ -855,13 +856,13 @@ void Simulation::updateParameters(){
 			} else {
 				dp = (pgrid[j + 1] - pgrid[j - 1])/2;
 			}
-			//totalParticles += distributionFunction[i][j]*volume(i)*dp/pgrid[j];
+			totalParticles += distributionFunction[i][j]*volume(i)*dp/pgrid[j];
 			//totalParticles += distributionFunction[i][j]*volume(i)*dp*pgrid[j]*pgrid[j];
-			if(currentIteration < changeDistributionParameter){
+			/*if(currentIteration < changeDistributionParameter){
 				totalParticles += distributionFunction[i][j]*volume(i)*dp*pgrid[j]*pgrid[j];
 			} else {
 				totalParticles += distributionFunction[i][j]*volume(i)*dp/pgrid[j];
-			}
+			}*/
 		}
 	}
 }
