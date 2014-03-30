@@ -234,7 +234,7 @@ void Simulation::evaluateCR(){
 			alertNaNOrInfinity(f[i],"f = NaN");
 			//alertNegative(-f[i], "f > 0");
 
-			if(i == shockWavePoint - 1 && (j == injectionMomentum) && (currentIteration < 5000)){
+			if(i == shockWavePoint - 1 && (j == injectionMomentum) && (currentIteration < 5000000000)){
 				//f[i] -= injection()*dtDivdr[shockWavePoint-1]*pgrid[j]*pgrid[j]*pgrid[j];
 				//f[i] -= injection()*dtDivdr[shockWavePoint-1];
 				if(currentIteration < changeDistributionParameter){
