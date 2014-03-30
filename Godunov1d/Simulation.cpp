@@ -134,14 +134,15 @@ void Simulation::initializeProfile(){
 			break;
 		case 5 :
 			{
+				double sigma = 4;
 				int count = rgridNumber/10;
 				if(i < count){
-					middleDensity[i] = density0/4;
+					middleDensity[i] = density0/sigma;
 					middleVelocity[i] = U0;
 					middlePressure[i] = pressure0;
 				} else {
 					middleDensity[i] = density0;
-					middleVelocity[i] = U0/4;
+					middleVelocity[i] = U0/sigma;
 					middlePressure[i] = pressure0/1000000;
 				}
 				shockWavePoint = count;

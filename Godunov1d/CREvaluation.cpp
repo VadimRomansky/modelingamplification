@@ -67,15 +67,17 @@ void Simulation::evaluateCR(){
 			}
 			if(i == 0){
 				//lower[i] =  0.5*diffCoefLeft*dtDivdr[i]/middleDeltaR[i];
-				lower[i] =  diffCoefLeft*dtDivdr[i]/middleDeltaR[i];
+				lower[i] =  diffCoefRight/(middleDeltaR[i]*deltaR[i]);
 			} else {
 				//lower[i] =  0.5*diffCoefLeft*dtDivdr[i]/middleDeltaR[i];
-				lower[i] =  diffCoefLeft*dtDivdr[i]/middleDeltaR[i];
+				lower[i] =  diffCoefRight/(middleDeltaR[i]*deltaR[i]);
 			}
 			if(i == 0){
-				middle[i] = -(upper[i] + lower[i] + 1);
+				//middle[i] = -(upper[i] + lower[i] + 1);
+				middle[i] = -(upper[i] + lower[i]);
 			} else {
-				middle[i] = -(upper[i] + lower[i] + 1);
+				//middle[i] = -(upper[i] + lower[i] + 1);
+				middle[i] = -(upper[i] + lower[i]);
 			}
 
 			f[i] = - distributionFunction[i][j];
@@ -95,9 +97,11 @@ void Simulation::evaluateCR(){
 				derivative = (distributionFunction[i][j] - distributionFunction[i][j-1])/deltaLogP;
 			}
 			f[i] += - volumeDerivative[i]*derivative*dtDivdr[i]/3;
+			//f[i] += -volumeDerivative[i]*derivative/(3*deltaR[i]);
 
 			if((i > 1) && (i < rgridNumber - 1)){
 				f[i] += (distributionFunction[i][j]*middleVelocity[i] - distributionFunction[i-1][j]*middleVelocity[i-1])*dtDivdr[i];
+				//f[i] += (distributionFunction[i][j]*middleVelocity[i] - distributionFunction[i-1][j]*middleVelocity[i-1])/deltaR[i];
  			}
 			alertNaNOrInfinity(f[i],"f = NaN");
 
