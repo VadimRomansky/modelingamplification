@@ -32,6 +32,9 @@ Simulation::~Simulation(){
 	delete[] middlePressure;
 	delete[] cosmicRayPressure;
 
+	delete[] distrFunDerivative;
+	delete[] distrFunDerivative2;
+
 	delete[] tempU;
 
 	for(int i = 0; i < rgridNumber; ++i){
@@ -46,6 +49,10 @@ Simulation::~Simulation(){
 
 void Simulation::initializeProfile(){
 	downstreamR = 0;
+
+	distrFunDerivative = new double[pgridNumber];
+	distrFunDerivative2 = new double[pgridNumber];
+
 	pgrid = new double[pgridNumber];
 	logPgrid = new double[pgridNumber];
 	grid = new double[rgridNumber + 1];
@@ -194,7 +201,7 @@ void Simulation::simulate(){
 	initializeProfile();
 	//updateShockWavePoint();
 	//shockWavePoint = rgridNumber/100;
-	updateGrid();
+	//updateGrid();
 	updateMaxSoundSpeed();
 	updateParameters();
 
@@ -225,6 +232,9 @@ void Simulation::simulate(){
 	fclose(outCoordinateDistribution);
 	fclose(outFullDistribution);
 	fclose(outDistribution);
+	FILE* outDistributionDerivative;
+	fopen_s(&outDistributionDerivative, "./output/distributionDerivative.dat","w");
+	fclose(outDistributionDerivative);
 	updateShockWavePoint();
 	fopen_s(&outShockWave, "./output/shock_wave.dat","a");
 	double shockWaveR = 0;
@@ -234,16 +244,15 @@ void Simulation::simulate(){
 
 	fprintf(outShockWave, "%d %lf %d %lf\n", 0, time, shockWavePoint, shockWaveR);
 	fclose(outShockWave);
-	int i = 0;
 	deltaT = min2(500, deltaT);
 
 	clock_t currentTime = clock();
 	clock_t prevTime = currentTime;
-
+	currentIteration = 0;
 	//основной цикл
-	while(myTime < maxTime && i < iterationNumber){
-		++i;
-		printf("iteration № %d\n", i);
+	while(myTime < maxTime && currentIteration < iterationNumber){
+		++currentIteration;
+		printf("iteration № %d\n", currentIteration);
 		printf("time = %lf\n", myTime);
 		printf("solving\n");
 		deltaT = min2(500, deltaT);
@@ -261,14 +270,14 @@ void Simulation::simulate(){
 		myTime = myTime + deltaT;
 
 		//prevTime = clock();
-		updateGrid();
+		//updateGrid();
 		//currentTime = clock();
 		//printf("dT updating grid = %lf\n", (currentTime - prevTime)*1.0/CLOCKS_PER_SEC);
 
 		updateMaxSoundSpeed();
 		updateShockWavePoint();
 		updateParameters();
-		if(i % writeParameter == 0){
+		if(currentIteration % writeParameter == 0){
 			//вывод на некоторых итерациях
 			printf("outputing\n");
 			fopen_s(&outFile, "./output/tamc_radial_profile.dat","a");
@@ -281,23 +290,31 @@ void Simulation::simulate(){
 				shockWaveR = grid[shockWavePoint];
 			}
 
-			fprintf(outShockWave, "%d %lf %d %lf\n", i, myTime, shockWavePoint, shockWaveR);
+			fprintf(outShockWave, "%d %lf %d %lf\n", currentIteration, myTime, shockWavePoint, shockWaveR);
 			fclose(outShockWave);
 
 			fopen_s(&outDistribution, "./output/distribution.dat","a");
 			fopen_s(&outFullDistribution, "./output/fullDistribution.dat","a");
 			fopen_s(&outCoordinateDistribution, "./output/coordinateDistribution.dat","a");
-			outputDistribution(outDistribution, outFullDistribution, outCoordinateDistribution, this);
+			if(currentIteration < changeDistributionParameter){
+				outputDistribution(outDistribution, outFullDistribution, outCoordinateDistribution, this);
+			} else {
+				outputDistributionP3(outDistribution, outFullDistribution, outCoordinateDistribution, this);
+			}
 			fclose(outCoordinateDistribution);
 			fclose(outFullDistribution);
 			fclose(outDistribution);
 
+			/*fopen_s(&outDistributionDerivative, "./output/distributionDerivative.dat","a");
+			outputDerivativeForDebug(outDistributionDerivative, this);
+			fclose(outDistributionDerivative);*/
+
 			fopen_s(&outIteration, "./output/iterations.dat","a");
-			fprintf(outIteration, "%d %g %g %g %g %g %g\n", i, myTime, mass, totalMomentum, totalEnergy, injectedParticles, totalParticles);
+			fprintf(outIteration, "%d %g %g %g %g %g %g\n", currentIteration, myTime, mass, totalMomentum, totalEnergy, injectedParticles, totalParticles);
 			fclose(outIteration);
 
 			fopen_s(&outExtraIteration, "./output/extra_iterations.dat","a");
-			fprintf(outExtraIteration, "%d %g %g %g %g %g %g %g %g\n", i, myTime, mass, totalMomentum, totalEnergy, totalKineticEnergy, totalTermalEnergy, injectedParticles, totalParticles);
+			fprintf(outExtraIteration, "%d %g %g %g %g %g %g %g %g\n", currentIteration, myTime, mass, totalMomentum, totalEnergy, totalKineticEnergy, totalTermalEnergy, injectedParticles, totalParticles);
 			fclose(outExtraIteration);
 
 			fopen_s(&outTempGrid, "./output/temp_grid.dat","a");
@@ -611,7 +628,7 @@ void Simulation::CheckNegativeDensity(){
 			alertNaNOrInfinity(dt, "dt = NaN");
 		}
 	}
-	deltaT = 0.5*dt;
+	deltaT = dt;
 }
 
 
@@ -839,7 +856,12 @@ void Simulation::updateParameters(){
 				dp = (pgrid[j + 1] - pgrid[j - 1])/2;
 			}
 			//totalParticles += distributionFunction[i][j]*volume(i)*dp/pgrid[j];
-			totalParticles += distributionFunction[i][j]*volume(i)*dp*pgrid[j]*pgrid[j];
+			//totalParticles += distributionFunction[i][j]*volume(i)*dp*pgrid[j]*pgrid[j];
+			if(currentIteration < changeDistributionParameter){
+				totalParticles += distributionFunction[i][j]*volume(i)*dp*pgrid[j]*pgrid[j];
+			} else {
+				totalParticles += distributionFunction[i][j]*volume(i)*dp/pgrid[j];
+			}
 		}
 	}
 }

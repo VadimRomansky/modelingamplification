@@ -11,10 +11,11 @@ const double gamma = 1.66666666;
 const double relativistic_gamma = 1.3333333333;
 const int pgridNumber = 200;
 const double momentumParameter = 5;
-const int writeParameter = 500;
+const int writeParameter = 1000;
 const int injectionMomentum = 5;
 const double gradientLevel = 0.2;
 const double gridExpLevel = 0.9;
 const double minDeltaR = 5.0E14;
+const int changeDistributionParameter = 1000000000000;
 
 #endif
