@@ -104,7 +104,7 @@ void Simulation::evaluateCR(){
 				//f[i] += 0.5*((distributionFunction[i][j] + distributionFunction[i+1][j])*middleVelocity[i] - (distributionFunction[i-1][j] + distributionFunction[i][j])*middleVelocity[i-1])*dtDivdr[i];
 				//f[i] += (distributionFunction[i][j]*middleVelocity[i] - distributionFunction[i-1][j]*middleVelocity[i-1])*dtDivdr[i];
 				//f[i] += 0.5*(distributionFunction[i-1][j]*middleVelocity[i-1] - distributionFunction[i-1][j]*middleVelocity[i-1])*dtDivdr[i]; // very interesting!!!
-				f[i] +=0.18*(distributionFunction[i][j]*middleVelocity[i] - distributionFunction[i-1][j]*middleVelocity[i-1])*dtDivdr[i];
+				f[i] += (distributionFunction[i][j]*middleVelocity[i] - distributionFunction[i-1][j]*middleVelocity[i-1])*dtDivdr[i];
 
  			}
 			alertNaNOrInfinity(f[i],"f = NaN");
