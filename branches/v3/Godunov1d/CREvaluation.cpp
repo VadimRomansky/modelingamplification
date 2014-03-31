@@ -14,7 +14,7 @@ double Simulation::diffussionCoef(int i, int j){
 double Simulation::injection(){
 	double pf = pgrid[injectionMomentum];
 	double dp = (pgrid[injectionMomentum + 1] - pgrid[injectionMomentum - 1])/2;
-	return middleDensity[shockWavePoint]*abs(middleVelocity[shockWavePoint])/(pf*pf*massProton*dp);
+	return 0.1*middleDensity[shockWavePoint]*abs(middleVelocity[shockWavePoint])/(pf*pf*massProton*dp);
 	//return 1E-30;
 }
 
@@ -74,10 +74,10 @@ void Simulation::evaluateCR(){
 			}
 			if(i == 0){
 				//middle[i] = -(upper[i] + lower[i] + 1);
-				middle[i] = -(upper[i] + lower[i]);
+				middle[i] = -(upper[i] + lower[i] + 1);
 			} else {
 				//middle[i] = -(upper[i] + lower[i] + 1);
-				middle[i] = -(upper[i] + lower[i]);
+				middle[i] = -(upper[i] + lower[i] + 1);
 			}
 
 			f[i] = - distributionFunction[i][j];
@@ -100,8 +100,12 @@ void Simulation::evaluateCR(){
 			//f[i] += -volumeDerivative[i]*derivative/(3*deltaR[i]);
 
 			if((i > 1) && (i < rgridNumber - 1)){
-				f[i] += (distributionFunction[i][j]*middleVelocity[i] - distributionFunction[i-1][j]*middleVelocity[i-1])*dtDivdr[i];
-				//f[i] += (distributionFunction[i][j]*middleVelocity[i] - distributionFunction[i-1][j]*middleVelocity[i-1])/deltaR[i];
+				//f[i] += 0.5*((distributionFunction[i][j] + distributionFunction[i+1][j])*pointVelocity[i+1] - (distributionFunction[i-1][j] + distributionFunction[i][j])*pointVelocity[i])*dtDivdr[i];
+				//f[i] += 0.5*((distributionFunction[i][j] + distributionFunction[i+1][j])*middleVelocity[i] - (distributionFunction[i-1][j] + distributionFunction[i][j])*middleVelocity[i-1])*dtDivdr[i];
+				//f[i] += (distributionFunction[i][j]*middleVelocity[i] - distributionFunction[i-1][j]*middleVelocity[i-1])*dtDivdr[i];
+				//f[i] += 0.5*(distributionFunction[i-1][j]*middleVelocity[i-1] - distributionFunction[i-1][j]*middleVelocity[i-1])*dtDivdr[i]; // very interesting!!!
+				f[i] +=0.18*(distributionFunction[i][j]*middleVelocity[i] - distributionFunction[i-1][j]*middleVelocity[i-1])*dtDivdr[i];
+
  			}
 			alertNaNOrInfinity(f[i],"f = NaN");
 
