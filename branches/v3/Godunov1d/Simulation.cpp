@@ -82,7 +82,7 @@ void Simulation::initializeProfile(){
 	double pressure0 = density0*kBoltzman*temperature/massProton;
 
 	minP = massProton*speed_of_light/10;
-	maxP = minP*10000000;
+	maxP = minP*100000000;
 
 	deltaR0 = (upstreamR - downstreamR)/rgridNumber;
 	for(int i = 0; i < rgridNumber + 1; ++i){
