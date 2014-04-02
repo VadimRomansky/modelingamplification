@@ -4,7 +4,7 @@
 
 int main(){
 
-	int Nx=200, Np=100, Nt = 10000;
+	int Nx=200, Np=100, Nt = 300000;
 	double   a=10000, b=10000, Pmin=0.01, Pmax=100000;
 	double** gn = new double*[Nx];
 	double** g = new double*[Nx];
@@ -30,7 +30,7 @@ int main(){
 	}
 
 	dt=0.001;
-	printf("%lf %lf %lf\n",dt, x[Nx/2-1]-x[Nx/2-2], x[Nx/2]-x[Nx/2-1]);
+	printf("%lf %g %g\n",dt, x[Nx/2-1]-x[Nx/2-2], x[Nx/2]-x[Nx/2-1]);
 
 	for(int i = 0; i < Nx; ++i){
 		for(int j = 0; j < Np-1; ++j){
@@ -55,7 +55,7 @@ int main(){
 	FILE* fp4 = fopen("data/fp4.dat","w");
 	for(int k = 0; k < Np-1; ++k){
 		y=ymin+k*dy;
-		fprintf(fp4,"%lf %lf %lf\n",k, exp(y), g[Nx/2-1][k]*exp(y));
+		fprintf(fp4,"%d %g %g\n",k, exp(y), g[Nx/2-1][k]*exp(y));
 	}
 	fclose(fp4);
 
