@@ -11,9 +11,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{B5DDA50A-1F67-46AE-B93C-977571E4A499}</ProjectGuid>
+    <ProjectGuid>{D8E09FB2-B4AF-43C4-9C7D-17637A077E23}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>SimpleCR</RootNamespace>
+    <RootNamespace>dsa</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -75,19 +75,15 @@
     <None Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="CREvaluation.cpp" />
-    <ClCompile Include="input.cpp" />
-    <ClCompile Include="output.cpp" />
-    <ClCompile Include="SimpleCR.cpp" />
-    <ClCompile Include="Simulation.cpp" />
-    <ClCompile Include="util.cpp" />
+    <ClCompile Include="coeff.cpp" />
+    <ClCompile Include="dsa.cpp" />
+    <ClCompile Include="progon.cpp" />
+    <ClCompile Include="solver.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="constants.h" />
-    <ClInclude Include="input.h" />
-    <ClInclude Include="output.h" />
-    <ClInclude Include="simulation.h" />
-    <ClInclude Include="util.h" />
+    <ClInclude Include="coeff.h" />
+    <ClInclude Include="progon.h" />
+    <ClInclude Include="solver.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
