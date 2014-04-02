@@ -74,7 +74,7 @@ void solver(double a, double ymin, double* x, double dy, double dt, int Nx, int 
 							  + dt*Qinj(x[Nx-1],dx,y,dy);
 		progon(a1,c1,b1,(Nx-1),f,Xg);
 		for(int i = 0; i < Nx; ++i){
-			g[i][k]= Xg[k];
+			g[i][k]= Xg[i];
 		}
 	}
 	delete[] a1;
