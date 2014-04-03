@@ -23,10 +23,10 @@ int main(){
 	h1=0.5*Nx/log(1.0+a);
 	h2=0.5*Nx/log(1.0+b);
 	for(int i=0; i < Nx/2; ++ i){ 
-		x[i] = 1 - exp(-(1.0*i-0.5*Nx)/h1);
+		x[i] = 1 - exp(-(1.0*(i+1)-0.5*Nx)/h1);
 	}
 	for(int i=Nx/2; i < Nx; ++i){
-		x[i] = exp((1.0*i-0.5*Nx)/h1)-1.0;
+		x[i] = exp((1.0*(i+1)-0.5*Nx)/h1)-1.0;
 	}
 
 	dt=0.001;
