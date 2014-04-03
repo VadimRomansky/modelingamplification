@@ -4,7 +4,7 @@
 
 int main(){
 
-	int Nx=200, Np=100, Nt = 300000;
+	int Nx=200, Np=100, Nt = 100000;
 	double   a=10000, b=10000, Pmin=0.01, Pmax=100000;
 	double** gn = new double*[Nx];
 	double** g = new double*[Nx];
@@ -20,22 +20,22 @@ int main(){
 	dy=log(Pmax/Pmin)/Np;
 
 	//создание сетки по х
-	/*h1=0.5*Nx/log(1.0+a);
+	h1=0.5*Nx/log(1.0+a);
 	h2=0.5*Nx/log(1.0+b);
 	for(int i=0; i < Nx/2; ++ i){ 
 		x[i] = 1 - exp(-(1.0*(i+1)-0.5*Nx)/h1);
 	}
 	for(int i=Nx/2; i < Nx; ++i){
 		x[i] = exp((1.0*(i+1)-0.5*Nx)/h1)-1.0;
-	}*/
-	h1 = 0.5*a/Nx;
-	h2 = 0.5*b/Nx;
-	for(int i = 0; i < Nx/2; ++i){
-		x[i] = a + (i+1)*h1;
+	}
+	/*h1 = a/(Nx/2 + 1);
+	h2 = b/(Nx/2);
+	for(int i = 0; i <= Nx/2; ++i){
+		x[i] = -a + (i+1)*h1;
 	}
 	for(int i = Nx/2 + 1; i < Nx; ++i){
-		x[i] = (i+1)*h2;
-	}
+		x[i] = (i - Nx/2)*h2;
+	}*/
 
 	dt=0.001;
 	printf("%lf %g %g\n",dt, x[Nx/2-1]-x[Nx/2-2], x[Nx/2]-x[Nx/2-1]);

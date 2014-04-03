@@ -85,12 +85,27 @@ void Simulation::initializeProfile(){
 	maxP = minP*100000000;
 
 	deltaR0 = (upstreamR - downstreamR)/rgridNumber;
-	for(int i = 0; i < rgridNumber + 1; ++i){
-		grid[i] = r;
-		middleGrid[i] = r + deltaR0/2;
+	double R0 = 10E15;
+	double h1 = (0.5*rgridNumber - 1)/log(1.0+(upstreamR/(2*R0)));
+	double h2 = (0.5*rgridNumber + 1)/log(1.0+(upstreamR/(2*R0)));
+
+	for(int i=0; i < rgridNumber/2; ++ i){ 
+		grid[i] = R0*(1 - exp(-(1.0*(i+1)-0.5*rgridNumber)/h1)) + upstreamR/2;
+	}
+	for(int i = rgridNumber/2; i < rgridNumber; ++i){
+		double a = (exp((1.0*(i+1)-0.5*rgridNumber)/h2)-1.0);
+		grid[i] = R0*a + upstreamR/2;;
+	}
+	grid[0] = 0;
+	grid[rgridNumber] = upstreamR;
+	for(int i = 0; i < rgridNumber; ++i){
+		middleGrid[i] = (grid[i] + grid[i+1])/2;
 		tempGrid[i] = grid[i];
-		deltaR[i] = deltaR0;
-		r += deltaR0;
+		deltaR[i] = grid[i+1] - grid[i];
+	}
+	tempGrid[rgridNumber] = grid[rgridNumber];
+
+	for(int i = 0; i < rgridNumber; ++i){
 		switch(simulationType){
 		//различные варианты профиля
 		case 1 :
@@ -135,14 +150,14 @@ void Simulation::initializeProfile(){
 		case 5 :
 			{
 				double sigma = 4;
-				int count = rgridNumber/10;
+				int count = rgridNumber/2 - 1;
 				if(i < count){
 					middleDensity[i] = density0/sigma;
-					middleVelocity[i] = 0.000001*U0;
+					middleVelocity[i] = 0.00000000000001*U0;
 					middlePressure[i] = pressure0;
 				} else {
 					middleDensity[i] = density0;
-					middleVelocity[i] = 0.000001*U0/sigma;
+					middleVelocity[i] = 0.00000000000001*U0/sigma;
 					middlePressure[i] = pressure0/1000000;
 				}
 				shockWavePoint = count;
@@ -203,7 +218,7 @@ void Simulation::simulate(){
 	//updateShockWavePoint();
 	//shockWavePoint = rgridNumber/100;
 	//updateGrid();
-	updateMaxSoundSpeed();
+	//updateMaxSoundSpeed();
 	updateParameters();
 
 	printf("creating files\n");
@@ -245,7 +260,8 @@ void Simulation::simulate(){
 
 	fprintf(outShockWave, "%d %lf %d %lf\n", 0, time, shockWavePoint, shockWaveR);
 	fclose(outShockWave);
-	deltaT = min2(5000, deltaT);
+	//deltaT = min2(5000, deltaT);
+	deltaT = 5000;
 
 	clock_t currentTime = clock();
 	clock_t prevTime = currentTime;
