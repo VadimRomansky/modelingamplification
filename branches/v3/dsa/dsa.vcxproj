@@ -79,11 +79,14 @@
     <ClCompile Include="dsa.cpp" />
     <ClCompile Include="progon.cpp" />
     <ClCompile Include="solver.cpp" />
+    <ClCompile Include="util.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="coeff.h" />
+    <ClInclude Include="constants.h" />
     <ClInclude Include="progon.h" />
     <ClInclude Include="solver.h" />
+    <ClInclude Include="util.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

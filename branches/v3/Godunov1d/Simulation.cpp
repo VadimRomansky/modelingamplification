@@ -85,7 +85,7 @@ void Simulation::initializeProfile(){
 	maxP = minP*100000000;
 
 	deltaR0 = (upstreamR - downstreamR)/rgridNumber;
-	double R0 = 10E15;
+	double R0 = 10E16;
 	double h1 = (0.5*rgridNumber - 1)/log(1.0+(upstreamR/(2*R0)));
 	double h2 = (0.5*rgridNumber + 1)/log(1.0+(upstreamR/(2*R0)));
 
