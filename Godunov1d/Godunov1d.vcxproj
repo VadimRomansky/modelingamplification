@@ -78,6 +78,7 @@
     <ClInclude Include="constants.h" />
     <ClInclude Include="input.h" />
     <ClInclude Include="output.h" />
+    <ClInclude Include="progon.h" />
     <ClInclude Include="simulation.h" />
     <ClInclude Include="util.h" />
   </ItemGroup>
@@ -87,6 +88,7 @@
     <ClCompile Include="input.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="output.cpp" />
+    <ClCompile Include="progon.cpp" />
     <ClCompile Include="Simulation.cpp" />
     <ClCompile Include="util.cpp" />
   </ItemGroup>
