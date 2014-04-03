@@ -81,7 +81,7 @@ public:
 	double momentumConvectiveFlux(int i);
 	double energyFlux(int i);
 
-	double diffusionCoef(int i, int j);
+	double Simulation::diffusionCoef(int i, double p);
 
 	Simulation();
 	~Simulation();
