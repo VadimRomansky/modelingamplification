@@ -1,5 +1,6 @@
 #include "coeff.h"
 #include "progon.h"
+#include "util.h"
 
 void solver(double a, double ymin, double* x, double dy, double dt, int Nx, int Np, double** gn, double** g){
 	double* a1 = new double[Nx-1];
@@ -75,6 +76,8 @@ void solver(double a, double ymin, double* x, double dy, double dt, int Nx, int 
 		progon(a1,c1,b1,(Nx-1),f,Xg);
 		for(int i = 0; i < Nx; ++i){
 			g[i][k]= Xg[i];
+			alertNaNOrInfinity(Xg[i], "tempDistribution = NaN");
+			alertNegative(Xg[i], "tempDistribution < 0");
 		}
 	}
 	delete[] a1;

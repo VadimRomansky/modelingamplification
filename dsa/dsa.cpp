@@ -4,8 +4,9 @@
 
 int main(){
 
-	int Nx=200, Np=100, Nt = 100000;
-	double   a=10000, b=10000, Pmin=0.01, Pmax=100000;
+	int Nx=200, Np=100, Nt = 10000;
+	//double   a=10000, b=10000, Pmin=0.01, Pmax=100000;
+	double   a=1.0E18, b=1.0E18, Pmin=0.01, Pmax=100000;
 	double** gn = new double*[Nx];
 	double** g = new double*[Nx];
 	for(int i = 0; i < Nx; ++i){
@@ -20,13 +21,14 @@ int main(){
 	dy=log(Pmax/Pmin)/Np;
 
 	//создание сетки по х
-	h1=0.5*Nx/log(1.0+a);
-	h2=0.5*Nx/log(1.0+b);
+	double R0 = 1E15;
+	h1=0.5*Nx/log(1.0+a/R0);
+	h2=0.5*Nx/log(1.0+b/R0);
 	for(int i=0; i < Nx/2; ++ i){ 
-		x[i] = 1 - exp(-(1.0*(i+1)-0.5*Nx)/h1);
+		x[i] = R0*(1 - exp(-(1.0*(i+1)-0.5*Nx)/h1));
 	}
 	for(int i=Nx/2; i < Nx; ++i){
-		x[i] = exp((1.0*(i+1)-0.5*Nx)/h1)-1.0;
+		x[i] = R0*(exp((1.0*(i+1)-0.5*Nx)/h1)-1.0);
 	}
 	/*h1 = a/(Nx/2 + 1);
 	h2 = b/(Nx/2);
