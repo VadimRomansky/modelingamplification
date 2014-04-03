@@ -16,7 +16,7 @@ void solver(double a, double ymin, double* x, double dy, double dt, int Nx, int 
 		if (k == 0) {
 			gkm=0.0;
 		} else {
-			gkm = gn[1][k-1];
+			gkm = gn[0][k-1];
 		}
 		dx = (x[1] + a)/2;
 		dxp = x[1] - x[0];

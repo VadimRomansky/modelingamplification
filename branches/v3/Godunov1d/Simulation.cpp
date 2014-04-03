@@ -66,11 +66,11 @@ void Simulation::initializeProfile(){
 	middleDensity = new double[rgridNumber];
 	middleVelocity = new double[rgridNumber];
 	middlePressure = new double[rgridNumber];
-	cosmicRayPressure = new double[rgridNumber];
+	cosmicRayPressure = new double[rgridNumber+1];
 	tempU = new double[rgridNumber];
-	distributionFunction = new double*[rgridNumber];
-	tempDistributionFunction = new double*[rgridNumber];
-	for(int i = 0; i < rgridNumber; i ++){
+	distributionFunction = new double*[rgridNumber+1];
+	tempDistributionFunction = new double*[rgridNumber+1];
+	for(int i = 0; i <= rgridNumber; i ++){
 		cosmicRayPressure[i] = 0;
 		distributionFunction[i] = new double[pgridNumber];
 		tempDistributionFunction[i] = new double[pgridNumber];
@@ -138,11 +138,11 @@ void Simulation::initializeProfile(){
 				int count = rgridNumber/10;
 				if(i < count){
 					middleDensity[i] = density0/sigma;
-					middleVelocity[i] = U0;
+					middleVelocity[i] = 0.000001*U0;
 					middlePressure[i] = pressure0;
 				} else {
 					middleDensity[i] = density0;
-					middleVelocity[i] = U0/sigma;
+					middleVelocity[i] = 0.000001*U0/sigma;
 					middlePressure[i] = pressure0/1000000;
 				}
 				shockWavePoint = count;
@@ -163,10 +163,10 @@ void Simulation::initializeProfile(){
 	double pstep = exp(log(maxP/minP)/pgridNumber);
 	logPgrid[0] = log(minP);
 	logPgrid[pgridNumber - 1] = log(maxP);
-	double plogstep = (logPgrid[pgridNumber - 1] - logPgrid[0])/(pgridNumber - 1);
+	deltaLogP = (logPgrid[pgridNumber - 1] - logPgrid[0])/(pgridNumber - 1);
 	pgrid[0] = minP;
 	for(int i = 1; i < pgridNumber; ++i){
-		logPgrid[i] = logPgrid[i-1] + plogstep;
+		logPgrid[i] = logPgrid[i-1] + deltaLogP;
 		pgrid[i] = exp(logPgrid[i]);
 	}
 	pgrid[pgridNumber-1] = maxP;
@@ -349,6 +349,7 @@ void Simulation::evaluateHydrodynamic() {
 	TracPen(tempMomentum, mFlux, maxSoundSpeed);
 	for(int i = 0; i < rgridNumber - 1; ++i){
 		tempMomentum[i] -= deltaT*(pointPressure[i+1] - pointPressure[i])/(deltaR[i]);
+		//tempMomentum[i] -= deltaT*(cosmicRayPressure[i+1] - cosmicRayPressure[i])/(deltaR[i]);
 	}
 	TracPen(tempEnergy, eFlux, maxSoundSpeed);
 

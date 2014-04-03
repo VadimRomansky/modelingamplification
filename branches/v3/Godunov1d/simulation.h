@@ -46,6 +46,7 @@ public:
 	double maxP;
 	double* pgrid;
 	double* logPgrid;
+	double deltaLogP;
 
 	double* grid;
 	double* middleGrid;
@@ -80,7 +81,7 @@ public:
 	double momentumConvectiveFlux(int i);
 	double energyFlux(int i);
 
-	double diffussionCoef(int i, int j);
+	double diffusionCoef(int i, int j);
 
 	Simulation();
 	~Simulation();
