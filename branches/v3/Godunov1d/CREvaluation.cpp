@@ -85,7 +85,7 @@ void Simulation::evaluateCR(){
 							+ (deltaT/3)*((middleVelocity[i] - middleVelocity[i-1])/dx)*((gkp - gkm)/deltaLogP);
 			if(i == shockWavePoint && k == injectionMomentum){
 				f[i] += deltaT*injection();
-				injectedParticles += injection()*deltaT*4*pi*volume(i)*deltaLogP;
+				injectedParticles += injection()*deltaT*4*pi*(middleGrid[i] - middleGrid[i-1])*deltaLogP;
 			}
 		}
 		gkp = distributionFunction[rgridNumber-1][k];
