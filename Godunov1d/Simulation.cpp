@@ -49,6 +49,7 @@ Simulation::~Simulation(){
 
 void Simulation::initializeProfile(){
 	downstreamR = 0;
+	upstreamR = 20000;
 
 	distrFunDerivative = new double[pgridNumber];
 	distrFunDerivative2 = new double[pgridNumber];
@@ -81,12 +82,14 @@ void Simulation::initializeProfile(){
 	double r = downstreamR;
 	double pressure0 = density0*kBoltzman*temperature/massProton;
 
-	minP = massProton*speed_of_light/10;
-	maxP = minP*100000000;
+	//minP = massProton*speed_of_light/10;
+	minP = 0.01;
+	maxP = minP*10000000;
 
 	deltaR0 = (upstreamR - downstreamR)/rgridNumber;
-	double R0 = 10E16;
-	double h1 = (0.5*rgridNumber - 1)/log(1.0+(upstreamR/(2*R0)));
+	//double R0 = 10E15;
+	R0 = 1;
+	/*double h1 = (0.5*rgridNumber - 1)/log(1.0+(upstreamR/(2*R0)));
 	double h2 = (0.5*rgridNumber + 1)/log(1.0+(upstreamR/(2*R0)));
 
 	for(int i=0; i < rgridNumber/2; ++ i){ 
@@ -95,9 +98,21 @@ void Simulation::initializeProfile(){
 	for(int i = rgridNumber/2; i < rgridNumber; ++i){
 		double a = (exp((1.0*(i+1)-0.5*rgridNumber)/h2)-1.0);
 		grid[i] = R0*a + upstreamR/2;;
+	}*/
+	double R0 = 1;
+	double a= upstreamR/2;
+	double b = upstreamR/2;
+	double h1=0.5*rgridNumber/log(1.0+a/R0);
+	double h2=0.5*rgridNumber/log(1.0+b/R0);
+	for(int i=0; i < rgridNumber/2; ++ i){ 
+		grid[i] = R0*(1 - exp(-(1.0*(i+1)-0.5*rgridNumber)/h1));
 	}
-	grid[0] = 0;
-	grid[rgridNumber] = upstreamR;
+	for(int i=rgridNumber/2; i < rgridNumber; ++i){
+		grid[i] = R0*(exp((1.0*(i+1)-0.5*rgridNumber)/h1)-1.0);
+	}
+
+	//grid[0] = 0;
+	grid[rgridNumber] = upstreamR/2;
 	for(int i = 0; i < rgridNumber; ++i){
 		middleGrid[i] = (grid[i] + grid[i+1])/2;
 		tempGrid[i] = grid[i];
@@ -153,11 +168,13 @@ void Simulation::initializeProfile(){
 				int count = rgridNumber/2 - 1;
 				if(i < count){
 					middleDensity[i] = density0/sigma;
-					middleVelocity[i] = 0.00000000000001*U0;
+					//middleVelocity[i] = 0.00000000000001*U0;
+					middleVelocity[i] = 1;
 					middlePressure[i] = pressure0;
 				} else {
 					middleDensity[i] = density0;
-					middleVelocity[i] = 0.00000000000001*U0/sigma;
+					//middleVelocity[i] = 0.00000000000001*U0/sigma;
+					middleVelocity[i] = 0.25;
 					middlePressure[i] = pressure0/1000000;
 				}
 				shockWavePoint = count;
@@ -177,8 +194,8 @@ void Simulation::initializeProfile(){
 	}
 	double pstep = exp(log(maxP/minP)/pgridNumber);
 	logPgrid[0] = log(minP);
-	logPgrid[pgridNumber - 1] = log(maxP);
-	deltaLogP = (logPgrid[pgridNumber - 1] - logPgrid[0])/(pgridNumber - 1);
+	//logPgrid[pgridNumber - 1] = log(maxP);
+	deltaLogP = (log(maxP) - logPgrid[0])/(pgridNumber);
 	pgrid[0] = minP;
 	for(int i = 1; i < pgridNumber; ++i){
 		logPgrid[i] = logPgrid[i-1] + deltaLogP;
@@ -208,7 +225,7 @@ void Simulation::initializeProfile(){
 	pointDensity[rgridNumber] = pointDensity[rgridNumber - 1];
 	pointVelocity[rgridNumber] = pointVelocity[rgridNumber - 1];
 	pointPressure[rgridNumber] = pointPressure[rgridNumber - 1];
-	grid[rgridNumber] = upstreamR;
+	//grid[rgridNumber] = upstreamR;
 }
 
 //главная функция
@@ -261,7 +278,8 @@ void Simulation::simulate(){
 	fprintf(outShockWave, "%d %lf %d %lf\n", 0, time, shockWavePoint, shockWaveR);
 	fclose(outShockWave);
 	//deltaT = min2(5000, deltaT);
-	deltaT = 5000;
+	//deltaT = 5000;
+	deltaT = 0.001;
 
 	clock_t currentTime = clock();
 	clock_t prevTime = currentTime;
@@ -272,7 +290,8 @@ void Simulation::simulate(){
 		printf("iteration № %d\n", currentIteration);
 		printf("time = %lf\n", myTime);
 		printf("solving\n");
-		deltaT = min2(5000, deltaT);
+		//deltaT = min2(5000, deltaT);
+		deltaT = 0.001;
 		//prevTime = clock();
 		//evaluateHydrodynamic();
 		//currentTime = clock();
@@ -871,7 +890,7 @@ void Simulation::updateParameters(){
 			} else {
 				dp = (pgrid[j + 1] - pgrid[j - 1])/2;
 			}
-			totalParticles += distributionFunction[i][j]*volume(i)*dp/pgrid[j];
+			totalParticles += 4*pi*distributionFunction[i][j]*volume(i)*dp/pgrid[j];
 		}
 	}
 }
