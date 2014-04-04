@@ -108,6 +108,7 @@ public:
 	void updateMaxSoundSpeed();
 	void updateShockWavePoint();
 	void updateParameters();
+	void updateTimeStep();
 
 	void updateGrid();
 	//std::list<GridZone*> createZones(int* type, double* gradientU, int& smallGradientZoneCount, int& bigGradientZoneCount);
