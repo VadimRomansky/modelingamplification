@@ -7,16 +7,16 @@
 
 double Simulation::diffusionCoef(int i, double p){
 	double B = B0;
-	//return p*speed_of_light*speed_of_light/(electron_charge*B);
-	return 0.1*p;
+	return p*speed_of_light*speed_of_light/(electron_charge*B);
+	//return 0.1*p;
 }
 
 //инжекционный член
 double Simulation::injection(){
 	double pf = pgrid[injectionMomentum];
 	double dp = (pgrid[injectionMomentum + 1] - pgrid[injectionMomentum - 1])/2;
-	//return 0.1*middleDensity[shockWavePoint]*abs(middleVelocity[shockWavePoint])/(pf*pf*massProton*dp);
-	return 1;
+	return 0.1*middleDensity[shockWavePoint]*abs(middleVelocity[shockWavePoint])/(pf*pf*massProton*dp);
+	//return 1;
 }
 
 //расчет космических лучей
@@ -35,8 +35,8 @@ void Simulation::evaluateCR(){
 	double* f = new double[rgridNumber+1];
  	double* x = new double[rgridNumber+1];
 
-	double* alpha = new double[rgridNumber+1];
-	double* beta = new double[rgridNumber+1];
+	double* alpha = new double[rgridNumber];
+	double* beta = new double[rgridNumber];
 
 	for(int k = 0; k < pgridNumber; ++k){
 		double y = logPgrid[k];
@@ -85,7 +85,7 @@ void Simulation::evaluateCR(){
 							+ (deltaT/3)*((middleVelocity[i] - middleVelocity[i-1])/dx)*((gkp - gkm)/deltaLogP);
 			if(i == shockWavePoint && k == injectionMomentum){
 				f[i] += deltaT*injection();
-				injectedParticles += 4*pi*injection()*deltaT*pgrid[injectionMomentum]*pgrid[injectionMomentum]*pgrid[injectionMomentum];
+				injectedParticles += injection()*deltaT*4*pi*volume(i)*deltaLogP;
 			}
 		}
 		gkp = distributionFunction[rgridNumber-1][k];
@@ -105,10 +105,10 @@ void Simulation::evaluateCR(){
 		f[rgridNumber-1] = distributionFunction[rgridNumber-1][k] - (deltaT/(2*dx))*(diffusionCoef(rgridNumber-2,p)*(distributionFunction[rgridNumber-1][k] - distributionFunction[rgridNumber - 2][k])/dxm)
 							  - (deltaT/dx)*(middleVelocity[rgridNumber-1]*gip - middleVelocity[rgridNumber-2]*gim)
 							  + (deltaT/3)*((middleVelocity[rgridNumber-1] - middleVelocity[rgridNumber-2])/dx)*((gkp - gkm)/deltaLogP);
-		progon(lower,middle, upper,rgridNumber-1,f,x);
+		progon(lower,middle, upper,rgridNumber-1,f,x, alpha, beta);
 		if(k == injectionMomentum){
-			outMatrix(lower,middle, upper,rgridNumber-1,f,x);
-			printf("out\n");
+			//outMatrix(lower,middle, upper,rgridNumber-1,f,x);
+			//printf("out\n");
 		}
 		for(int i = 0; i < rgridNumber; ++i){
 			//alertNegative(x[i],"tempDistribution < 0");

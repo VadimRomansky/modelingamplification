@@ -1,6 +1,4 @@
-void progon(double* a, double* c, double* b, int N, double* f, double* x){
-	double* alpha = new double[N];
-	double* beta= new double[N];
+void progon(double* a, double* c, double* b, int N, double* f, double* x, double* alpha, double* beta){
 	for(int i = 0; i <N; ++i){
 		alpha[i] = 0;
 		beta[i] = 0;
@@ -17,7 +15,4 @@ void progon(double* a, double* c, double* b, int N, double* f, double* x){
 	for(int j = 0; j < N; ++j){
 		x[N-1-j] = alpha[N-j-1]*x[N-j]+beta[N-j-1];
 	}
-
-	delete[] alpha;
-	delete[] beta;
 }

@@ -49,7 +49,7 @@ Simulation::~Simulation(){
 
 void Simulation::initializeProfile(){
 	downstreamR = 0;
-	upstreamR = 20000;
+	//upstreamR = 20000;
 
 	distrFunDerivative = new double[pgridNumber];
 	distrFunDerivative2 = new double[pgridNumber];
@@ -83,12 +83,12 @@ void Simulation::initializeProfile(){
 	double pressure0 = density0*kBoltzman*temperature/massProton;
 
 	//minP = massProton*speed_of_light/10;
-	minP = 0.01;
+	minP = 0.01*massProton*speed_of_light;
 	maxP = minP*10000000;
 
 	deltaR0 = (upstreamR - downstreamR)/rgridNumber;
-	//double R0 = 10E15;
-	R0 = 1;
+	double R0 = upstreamR*2/100000;
+	//R0 = 1;
 	/*double h1 = (0.5*rgridNumber - 1)/log(1.0+(upstreamR/(2*R0)));
 	double h2 = (0.5*rgridNumber + 1)/log(1.0+(upstreamR/(2*R0)));
 
@@ -99,7 +99,6 @@ void Simulation::initializeProfile(){
 		double a = (exp((1.0*(i+1)-0.5*rgridNumber)/h2)-1.0);
 		grid[i] = R0*a + upstreamR/2;;
 	}*/
-	double R0 = 1;
 	double a= upstreamR/2;
 	double b = upstreamR/2;
 	double h1=0.5*rgridNumber/log(1.0+a/R0);
@@ -112,7 +111,7 @@ void Simulation::initializeProfile(){
 	}
 
 	//grid[0] = 0;
-	grid[rgridNumber] = upstreamR/2;
+	grid[rgridNumber] = upstreamR/2*(1 + 1.0/(rgridNumber));
 	for(int i = 0; i < rgridNumber; ++i){
 		middleGrid[i] = (grid[i] + grid[i+1])/2;
 		tempGrid[i] = grid[i];
@@ -168,13 +167,13 @@ void Simulation::initializeProfile(){
 				int count = rgridNumber/2 - 1;
 				if(i < count){
 					middleDensity[i] = density0/sigma;
-					//middleVelocity[i] = 0.00000000000001*U0;
-					middleVelocity[i] = 1;
+					middleVelocity[i] = 0.001*U0;
+					//middleVelocity[i] = 1;
 					middlePressure[i] = pressure0;
 				} else {
 					middleDensity[i] = density0;
-					//middleVelocity[i] = 0.00000000000001*U0/sigma;
-					middleVelocity[i] = 0.25;
+					middleVelocity[i] = 0.001*U0/sigma;
+					//middleVelocity[i] = 0.25;
 					middlePressure[i] = pressure0/1000000;
 				}
 				shockWavePoint = count;
@@ -235,7 +234,7 @@ void Simulation::simulate(){
 	//updateShockWavePoint();
 	//shockWavePoint = rgridNumber/100;
 	//updateGrid();
-	//updateMaxSoundSpeed();
+	updateMaxSoundSpeed();
 	updateParameters();
 
 	printf("creating files\n");
@@ -277,9 +276,9 @@ void Simulation::simulate(){
 
 	fprintf(outShockWave, "%d %lf %d %lf\n", 0, time, shockWavePoint, shockWaveR);
 	fclose(outShockWave);
-	//deltaT = min2(5000, deltaT);
+	deltaT = min2(5000, deltaT);
 	//deltaT = 5000;
-	deltaT = 0.001;
+	//deltaT = 0.001;
 
 	clock_t currentTime = clock();
 	clock_t prevTime = currentTime;
@@ -290,8 +289,9 @@ void Simulation::simulate(){
 		printf("iteration ¹ %d\n", currentIteration);
 		printf("time = %lf\n", myTime);
 		printf("solving\n");
-		//deltaT = min2(5000, deltaT);
-		deltaT = 0.001;
+		deltaT = min2(5000, deltaT);
+		//deltaT = 5000;
+		//deltaT = 0.001;
 		//prevTime = clock();
 		//evaluateHydrodynamic();
 		//currentTime = clock();
