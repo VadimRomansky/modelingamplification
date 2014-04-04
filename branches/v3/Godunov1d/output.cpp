@@ -78,3 +78,12 @@ void outputNewGrid(FILE* outFile, Simulation* simulation){
 		fprintf(outFile, "%d %17.12lf\n", i, simulation->tempGrid[i]);
 	}
 }
+
+void outMatrix(double* a, double* c, double* b, int N, double* f, double* x){
+	FILE* file = fopen("output/matrix.dat","w");
+	fprintf(file, "%g %g %g %g %g\n" , 0.0, c[0], 0.0, f[0], x[0]);
+	for(int i = 1; i <= N; ++i){
+		fprintf(file, "%g %g %g %g %g\n" , a[i-1], c[i], b[i-1], f[i], x[i]);
+	}
+	fclose(file);
+}

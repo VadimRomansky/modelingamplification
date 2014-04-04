@@ -7,15 +7,16 @@
 
 double Simulation::diffusionCoef(int i, double p){
 	double B = B0;
-	return p*speed_of_light*speed_of_light/(electron_charge*B);
+	//return p*speed_of_light*speed_of_light/(electron_charge*B);
+	return 0.1*p;
 }
 
 //инжекционный член
 double Simulation::injection(){
 	double pf = pgrid[injectionMomentum];
 	double dp = (pgrid[injectionMomentum + 1] - pgrid[injectionMomentum - 1])/2;
-	return 0.1*middleDensity[shockWavePoint]*abs(middleVelocity[shockWavePoint])/(pf*pf*massProton*dp);
-	//return 1E-30;
+	//return 0.1*middleDensity[shockWavePoint]*abs(middleVelocity[shockWavePoint])/(pf*pf*massProton*dp);
+	return 1;
 }
 
 //расчет космических лучей
@@ -37,7 +38,6 @@ void Simulation::evaluateCR(){
 	double* alpha = new double[rgridNumber+1];
 	double* beta = new double[rgridNumber+1];
 
-	double* volumeDerivative = new double[rgridNumber];
 	for(int k = 0; k < pgridNumber; ++k){
 		double y = logPgrid[k];
 		double p = pgrid[k];
@@ -49,12 +49,11 @@ void Simulation::evaluateCR(){
 			gkm = distributionFunction[0][k-1];
 		}
 		//double dx = (rgrid[1] + a)/2;
-		double dx = grid[1] - grid[0];
+		double dx = (grid[1] + upstreamR/2)/2;
 		double dxp = grid[1] - grid[0];
-		//double dxm = x[0] + a;
-		double dxm = dxp;
+		double dxm = grid[0] + upstreamR/2;
 		double xp = (grid[1] + grid[0])/2;
-		double xm = x[0] - dxm/2;
+		double xm = (grid[0] - upstreamR/2)/2;
 		double gip = (distributionFunction[1][k] + distributionFunction[0][k])/2;
 		double gim = distributionFunction[0][k]/2;
 		middle[0] = 1 + (deltaT/(2*dx))*(diffusionCoef(0,p)/dxp + diffusionCoef(0,p)/dxm);
@@ -63,7 +62,7 @@ void Simulation::evaluateCR(){
 					  - (deltaT/(2*dx))*(diffusionCoef(0,p)/dxp+diffusionCoef(0,p)/dxm)*distributionFunction[0][k] 
 					  - (deltaT/dx)*(middleVelocity[1]*gip - middleVelocity[0]*gim)
 					  + (deltaT/3)*((middleVelocity[1] - middleVelocity[0])/dx)*((gkp-gkm)/deltaLogP);
-		for(int i = 1; i < rgridNumber; ++i){
+		for(int i = 1; i < rgridNumber-1; ++i){
 			gkp = distributionFunction[i][k];
 			if (k == 0) {
 				gkm=0;
@@ -77,40 +76,49 @@ void Simulation::evaluateCR(){
 			xm=(grid[i]+grid[i-1])/2;
 			gip=(distributionFunction[i+1][k] + distributionFunction[i][k])/2;
 			gim=(distributionFunction[i][k] + distributionFunction[i-1][k])/2;
-			lower[i-1] = -(deltaT/(2*dx))*(diffusionCoef(rgridNumber-1,p)/dxm);
-			middle[i] = 1 + (deltaT/(2*dx))*(diffusionCoef(rgridNumber-1,p)/dxp + diffusionCoef(rgridNumber-1,p)/dxm);
-			upper[i] = -(deltaT/(2*dx))*(diffusionCoef(rgridNumber-1,p)/dxp);
+			lower[i-1] = -(deltaT/(2*dx))*(diffusionCoef(i-1,p)/dxm);
+			middle[i] = 1 + (deltaT/(2*dx))*(diffusionCoef(i-1,p)/dxp + diffusionCoef(i,p)/dxm);
+			upper[i] = -(deltaT/(2*dx))*(diffusionCoef(i,p)/dxp);
 			f[i] = distributionFunction[i][k] + (deltaT/(2*dx))*(diffusionCoef(rgridNumber-1,p)*(distributionFunction[i+1][k] - distributionFunction[i][k])/dxp
 							- diffusionCoef(i-1,p)*(distributionFunction[i][k] - distributionFunction[i-1][k])/dxm)
 							- (deltaT/dx)*(middleVelocity[i]*gip - middleVelocity[i-1]*gim)
 							+ (deltaT/3)*((middleVelocity[i] - middleVelocity[i-1])/dx)*((gkp - gkm)/deltaLogP);
 			if(i == shockWavePoint && k == injectionMomentum){
 				f[i] += deltaT*injection();
+				injectedParticles += 4*pi*injection()*deltaT*pgrid[injectionMomentum]*pgrid[injectionMomentum]*pgrid[injectionMomentum];
 			}
 		}
-		gkp = distributionFunction[rgridNumber][k];
+		gkp = distributionFunction[rgridNumber-1][k];
 		if (k==0) {
 			gkm=0;
 		} else {
-			gkm = distributionFunction[rgridNumber][k-1];
+			gkm = distributionFunction[rgridNumber-1][k-1];
 		}
-		dx = (grid[rgridNumber] - grid[rgridNumber - 1])/2;
-		dxm = (grid[rgridNumber] - grid[rgridNumber - 1]);
-		xp = grid[rgridNumber];
-		xm = (grid[rgridNumber] + grid[rgridNumber-1])/2;
-		gip = distributionFunction[rgridNumber][k];
-		gim = (distributionFunction[rgridNumber][k] + distributionFunction[rgridNumber - 1][k])/2;
-		lower[rgridNumber-1] = -(deltaT/(2*dx))*(diffusionCoef(rgridNumber-1,p)/dxp);
-		middle[rgridNumber] = 1 + (deltaT/(2*dx))*(diffusionCoef(rgridNumber-1,p)/dxm);
-		f[rgridNumber] = distributionFunction[rgridNumber][k] - (deltaT/(2*dx))*(diffusionCoef(rgridNumber-2,p)*(distributionFunction[rgridNumber][k] - distributionFunction[rgridNumber - 1][k])/dxm)
-							  - (deltaT/dx)*(middleVelocity[rgridNumber-1]*gip - middleVelocity[rgridNumber-1]*gim)
+		dx = (grid[rgridNumber-1] - grid[rgridNumber - 2])/2;
+		dxm = (grid[rgridNumber-1] - grid[rgridNumber - 2]);
+		xp = grid[rgridNumber-1];
+		xm = (grid[rgridNumber-1] + grid[rgridNumber-2])/2;
+		gip = distributionFunction[rgridNumber-1][k];
+		gim = (distributionFunction[rgridNumber-1][k] + distributionFunction[rgridNumber - 2][k])/2;
+		lower[rgridNumber-2] = -(deltaT/(2*dx))*(diffusionCoef(rgridNumber-1,p)/dxp);
+		middle[rgridNumber-1] = 1 + (deltaT/(2*dx))*(diffusionCoef(rgridNumber-1,p)/dxm);
+		f[rgridNumber-1] = distributionFunction[rgridNumber-1][k] - (deltaT/(2*dx))*(diffusionCoef(rgridNumber-2,p)*(distributionFunction[rgridNumber-1][k] - distributionFunction[rgridNumber - 2][k])/dxm)
+							  - (deltaT/dx)*(middleVelocity[rgridNumber-1]*gip - middleVelocity[rgridNumber-2]*gim)
 							  + (deltaT/3)*((middleVelocity[rgridNumber-1] - middleVelocity[rgridNumber-2])/dx)*((gkp - gkm)/deltaLogP);
-		progon(lower,middle, upper,rgridNumber,f,x);
-		for(int i = 0; i <= rgridNumber; ++i){
-			alertNegative(x[i],"tempDistribution < 0");
+		progon(lower,middle, upper,rgridNumber-1,f,x);
+		if(k == injectionMomentum){
+			outMatrix(lower,middle, upper,rgridNumber-1,f,x);
+			printf("out\n");
+		}
+		for(int i = 0; i < rgridNumber; ++i){
+			//alertNegative(x[i],"tempDistribution < 0");
 			alertNaNOrInfinity(x[i],"tempDistribution <= NaN");
+			//if(x[i] < 0){
+				//tempDistributionFunction[i][k] = 0;
+			//}
 			tempDistributionFunction[i][k]= x[i];
 		}
+		tempDistributionFunction[rgridNumber][k] =x[rgridNumber-1];
 	}
 
 	for(int i = 0; i <= rgridNumber; ++i){
@@ -127,7 +135,6 @@ void Simulation::evaluateCR(){
 	delete[] x;
 	delete[] alpha;
 	delete[] beta;
-	delete[] volumeDerivative;
 }
 
 //решение трёх диагональной матрицы
