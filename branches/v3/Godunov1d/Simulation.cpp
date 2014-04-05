@@ -875,7 +875,7 @@ void Simulation::updateTimeStep(){
 		}
 	}
 
-	deltaT = 0.01*tempdt;
+	deltaT = 0.1*tempdt;
 }
 
 //определение точки ударной волны
