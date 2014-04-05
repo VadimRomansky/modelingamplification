@@ -167,12 +167,12 @@ void Simulation::initializeProfile(){
 				int count = rgridNumber/2 - 1;
 				if(i < count){
 					middleDensity[i] = density0/sigma;
-					middleVelocity[i] = 0.01*U0;
+					middleVelocity[i] = U0;
 					//middleVelocity[i] = 1;
 					middlePressure[i] = pressure0;
 				} else {
 					middleDensity[i] = density0;
-					middleVelocity[i] = 0.01*U0/sigma;
+					middleVelocity[i] = U0/sigma;
 					//middleVelocity[i] = 0.25;
 					middlePressure[i] = pressure0/1000000;
 				}
