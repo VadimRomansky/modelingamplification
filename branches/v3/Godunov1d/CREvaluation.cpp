@@ -76,12 +76,13 @@ void Simulation::evaluateCR(){
 			xm=(grid[i]+grid[i-1])/2;
 			gip=(distributionFunction[i+1][k] + distributionFunction[i][k])/2;
 			gim=(distributionFunction[i][k] + distributionFunction[i-1][k])/2;
-			lower[i-1] = -(deltaT/(2*dx))*(diffusionCoef(i-1,p)/dxm);
-			middle[i] = 1 + (deltaT/(2*dx))*(diffusionCoef(i-1,p)/dxp + diffusionCoef(i,p)/dxm);
-			upper[i] = -(deltaT/(2*dx))*(diffusionCoef(i,p)/dxp);
+			lower[i-1] = -(deltaT/(2*dx))*(diffusionCoef(i-1,p)/dxm);// - 0.5*deltaT*middleVelocity[i-1]/dx;
+			middle[i] = 1 + (deltaT/(2*dx))*(diffusionCoef(i-1,p)/dxp + diffusionCoef(i,p)/dxm);// + 0.5*(middleVelocity[i] - middleVelocity[i-1])/dx;
+			upper[i] = -(deltaT/(2*dx))*(diffusionCoef(i,p)/dxp);//  + 0.5*deltaT*middleVelocity[i]/dx;
 			f[i] = distributionFunction[i][k] + (deltaT/(2*dx))*(diffusionCoef(rgridNumber-1,p)*(distributionFunction[i+1][k] - distributionFunction[i][k])/dxp
 							- diffusionCoef(i-1,p)*(distributionFunction[i][k] - distributionFunction[i-1][k])/dxm)
-							- (deltaT/dx)*(middleVelocity[i]*gip - middleVelocity[i-1]*gim)
+							//- (deltaT/dx)*(middleVelocity[i]*gip - middleVelocity[i-1]*gim)
+							- (deltaT/dx)*(middleVelocity[i]*distributionFunction[i][k] - middleVelocity[i-1]*distributionFunction[i-1][k])
 							+ (deltaT/3)*((middleVelocity[i] - middleVelocity[i-1])/dx)*((gkp - gkm)/deltaLogP);
 			if(i == shockWavePoint && k == injectionMomentum){
 				f[i] += deltaT*injection();
