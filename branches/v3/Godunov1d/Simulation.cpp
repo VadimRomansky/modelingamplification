@@ -306,7 +306,7 @@ void Simulation::simulate(){
 
 		//prevTime = clock();
 		//CheckNegativeDistribution();
-		evaluateCR();
+		//evaluateCR();
 		//currentTime = clock();
 		//printf("dT evaluating cosmic ray = %lf\n", (currentTime - prevTime)*1.0/CLOCKS_PER_SEC);
 
@@ -904,12 +904,12 @@ void Simulation::updateTimeStep(){
 
 	//by dp
 	for(int i = 1; i < rgridNumber; ++i){
-		if(tempdt > 0.1*abs(3*deltaLogP*middleDeltaR[i]/(middleVelocity[i] - middleVelocity[i-1]))){
-			tempdt = 0.1*abs(3*deltaLogP*middleDeltaR[i]/(middleVelocity[i] - middleVelocity[i-1]));
+		if(tempdt > 0.5*abs(3*deltaLogP*middleDeltaR[i]/(middleVelocity[i] - middleVelocity[i-1]))){
+			tempdt = 0.5*abs(3*deltaLogP*middleDeltaR[i]/(middleVelocity[i] - middleVelocity[i-1]));
 		}
 	}
 
-	deltaT = 0.1*tempdt;
+	deltaT = 0.5*tempdt;
 }
 
 //определение точки ударной волны
