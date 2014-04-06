@@ -97,6 +97,7 @@ public:
 	double firstApproximationPressure(double rho1, double rho2, double u1, double u2, double p1, double p2);
 	void CheckNegativeDensity();
 	void TracPen(double* u, double* flux, double cs);
+	bool CheckShockWave(double& u, double p1, double p2,double u1, double u2, double rho1, double rho2);
 
 	void evaluateCR();
 	void solveThreeDiagonal(double* middle, double* upper, double* lower, double* f, double* x, double* alpha, double* beta);

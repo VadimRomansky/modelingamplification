@@ -164,17 +164,23 @@ void Simulation::initializeProfile(){
 		case 5 :
 			{
 				double sigma = 4;
+				double pressure = density0*U0*U0/sigma;
 				int count = rgridNumber/2 - 1;
-				if(i < count){
+				int intCount = count/10;
+				if(i < intCount){
+					middleDensity[i] = density0/sigma;
+					middleVelocity[i] = (U0*(grid[i] -grid[0])/(grid[intCount] -grid[0]));
+					middlePressure[i] = pressure*0.0000000000001;
+				} else if(i < count){
 					middleDensity[i] = density0/sigma;
 					middleVelocity[i] = U0;
 					//middleVelocity[i] = 1;
-					middlePressure[i] = pressure0;
+					middlePressure[i] = pressure*0.0000000000001;
 				} else {
 					middleDensity[i] = density0;
 					middleVelocity[i] = U0/sigma;
 					//middleVelocity[i] = 0.25;
-					middlePressure[i] = pressure0/1000000;
+					middlePressure[i] = pressure*0.75;
 				}
 				shockWavePoint = count;
 				shockWaveMoved = true;
@@ -294,7 +300,7 @@ void Simulation::simulate(){
 		//deltaT = 5000;
 		//deltaT = 0.001;
 		//prevTime = clock();
-		//evaluateHydrodynamic();
+		evaluateHydrodynamic();
 		//currentTime = clock();
 		//printf("dT evaluating hydro = %lf\n", (currentTime - prevTime)*1.0/CLOCKS_PER_SEC);
 
@@ -452,6 +458,18 @@ void Simulation::solveDiscontinious(){
 			continue;
 		}
 
+		/*if(CheckShockWave(u, p1, p2, u1, u2, rho1, rho2)){
+			if(u > 0){
+				pointDensity[i] = rho1;
+				pointVelocity[i] = u1;
+				pointPressure[i] = p1;
+			} else {
+				pointDensity[i] = rho2;
+				pointVelocity[i] = u2;
+				pointPressure[i] = p2;
+			}
+			continue;
+		}*/
 		
 		successiveApproximationPressure(p, u, R1, R2, alpha1, alpha2, p1, p2, u1, u2, rho1, rho2);
 
@@ -683,6 +701,22 @@ void Simulation::TracPen(double* u, double* flux, double cs){
 	for(int i = 0; i < rgridNumber; ++i){
 		u[i] = tempU[i];
 	}
+}
+
+bool Simulation::CheckShockWave(double& u, double p1, double p2,double u1, double u2, double rho1, double rho2){
+	double deltarho = rho1 - rho2;
+	if (deltarho == 0) return false;
+	u = (rho1*u1 - rho2*u2)/deltarho;
+	if ( u != u || 0*u != 0*u){
+		printf("NaN\n");
+		return false;
+	}
+	double leftMomentumFlux = rho1*(u1 - u);
+	double rightMomentumFlux = rho2*(u2 - u);
+	double leftEnergyFlux =(u1-u)*(gamma*p1/(gamma-1) + rho1*(u1-u)*(u1-u)/2);
+	double rightEnergyFlux = (u2-u)*(gamma*p2/(gamma-1) + rho2*(u2-u)*(u2-u)/2);
+	return (abs(leftMomentumFlux-rightMomentumFlux) < 0.0001*(abs(leftMomentumFlux) + abs(rightMomentumFlux))
+			&& abs(leftEnergyFlux-rightEnergyFlux) < 0.0001*(abs(leftEnergyFlux) + abs(rightEnergyFlux)));
 }
 
 
