@@ -36,7 +36,7 @@ Simulation::~Simulation(){
 
 	delete[] tempU;
 
-	for(int i = 0; i < rgridNumber; ++i){
+	for(int i = 0; i <= rgridNumber; ++i){
 		delete[] distributionFunction[i];
 		delete[] tempDistributionFunction[i];
 	}
@@ -63,11 +63,11 @@ void Simulation::initializeProfile(){
 	middleDensity = new double[rgridNumber];
 	middleVelocity = new double[rgridNumber];
 	middlePressure = new double[rgridNumber];
-	cosmicRayPressure = new double[rgridNumber];
+	cosmicRayPressure = new double[rgridNumber+1];
 	tempU = new double[rgridNumber];
-	distributionFunction = new double*[rgridNumber];
-	tempDistributionFunction = new double*[rgridNumber];
-	for(int i = 0; i < rgridNumber; i ++){
+	distributionFunction = new double*[rgridNumber+1];
+	tempDistributionFunction = new double*[rgridNumber+1];
+	for(int i = 0; i <= rgridNumber; i ++){
 		cosmicRayPressure[i] = 0;
 		distributionFunction[i] = new double[pgridNumber];
 		tempDistributionFunction[i] = new double[pgridNumber];
@@ -82,13 +82,18 @@ void Simulation::initializeProfile(){
 	maxP = minP*10000000;
 
 	deltaR0 = (upstreamR - downstreamR)/rgridNumber;
-	for(int i = 0; i < rgridNumber + 1; ++i){
-		grid[i] = r;
-		gridsquare[i] = grid[i]*grid[i];
-		middleGrid[i] = r + deltaR0/2;
+	grid[0] = 0;
+	for(int i = 1; i <= rgridNumber; ++i){
+		grid[i] = grid[i-1] + deltaR0;
+	}
+	for(int i = 0; i < rgridNumber; ++i){
+		middleGrid[i] = (grid[i] + grid[i+1])/2;
 		tempGrid[i] = grid[i];
-		deltaR[i] = deltaR0;
-		r += deltaR0;
+		deltaR[i] = grid[i+1] - grid[i];
+	}
+	tempGrid[rgridNumber] = grid[rgridNumber];
+
+	for(int i = 0; i < rgridNumber + 1; ++i){
 		switch(simulationType){
 		case 1 :
 			middleDensity[i] = density0;
@@ -131,21 +136,24 @@ void Simulation::initializeProfile(){
 			break;
 		case 5 :
 			{
-				int count = rgridNumber/5;
-				int intCount = count/2;
-				double intR = deltaR0*(intCount + 1);
-				if(i <= intCount){
-					middleDensity[i] = density0/4;
-					middleVelocity[i] = U0*grid[i]/intR;
-					middlePressure[i] = pressure0;
+				double sigma = 4;
+				double pressure = density0*U0*U0/sigma;
+				int count = rgridNumber/2 - 1;
+				int intCount = count/10;
+				if(i < intCount){
+					middleDensity[i] = density0/sigma;
+					middleVelocity[i] = (U0*(grid[i] -grid[0])/(grid[intCount] -grid[0]));
+					middlePressure[i] = pressure*0.0000000000001;
 				} else if(i < count){
-					middleDensity[i] = density0/4;
+					middleDensity[i] = density0/sigma;
 					middleVelocity[i] = U0;
-					middlePressure[i] = pressure0;
+					//middleVelocity[i] = 1;
+					middlePressure[i] = pressure*0.0000000000001;
 				} else {
 					middleDensity[i] = density0;
-					middleVelocity[i] = U0/4;
-					middlePressure[i] = pressure0/1000000;
+					middleVelocity[i] = U0/sigma;
+					//middleVelocity[i] = 0.25;
+					middlePressure[i] = pressure*0.75;
 				}
 				shockWavePoint = count;
 				shockWaveMoved = true;
@@ -162,13 +170,12 @@ void Simulation::initializeProfile(){
 			break;
 		}
 	}
-	double pstep = exp(log(maxP/minP)/pgridNumber);
 	logPgrid[0] = log(minP);
 	logPgrid[pgridNumber - 1] = log(maxP);
-	double plogstep = (logPgrid[pgridNumber - 1] - logPgrid[0])/(pgridNumber - 1);
+	deltaLogP = (logPgrid[pgridNumber - 1] - logPgrid[0])/(pgridNumber - 1);
 	pgrid[0] = minP;
 	for(int i = 1; i < pgridNumber; ++i){
-		logPgrid[i] = logPgrid[i-1] + plogstep;
+		logPgrid[i] = logPgrid[i-1] + deltaLogP;
 		pgrid[i] = exp(logPgrid[i]);
 	}
 	pgrid[pgridNumber-1] = maxP;
@@ -247,12 +254,16 @@ void Simulation::simulate(){
 	clock_t currentTime = clock();
 	clock_t prevTime = currentTime;
 
+	updateTimeStep();
 	while(myTime < maxTime && i < iterationNumber){
 		++i;
 		printf("iteration № %d\n", i);
 		printf("time = %lf\n", myTime);
 		printf("solving\n");
 		deltaT = min2(5000, deltaT);
+		if(deltaT <= 0){
+			printf("deltaT <=0\n");
+		}
 		//prevTime = clock();
 		evaluateHydrodynamic();
 		//currentTime = clock();
@@ -279,6 +290,7 @@ void Simulation::simulate(){
 		updateMaxSoundSpeed();
 		updateShockWavePoint();
 		updateParameters();
+		updateTimeStep();
 		if(i % writeParameter == 0){
 			printf("outputing\n");
 			fopen_s(&outFile, "./output/tamc_radial_profile.dat","a");
@@ -297,7 +309,7 @@ void Simulation::simulate(){
 			fopen_s(&outDistribution, "./output/distribution.dat","a");
 			fopen_s(&outFullDistribution, "./output/fullDistribution.dat","a");
 			fopen_s(&outCoordinateDistribution, "./output/coordinateDistribution.dat","a");
-			outputDistribution(outDistribution, outFullDistribution, outCoordinateDistribution, this);
+			outputDistributionP3(outDistribution, outFullDistribution, outCoordinateDistribution, this);
 			fclose(outCoordinateDistribution);
 			fclose(outFullDistribution);
 			fclose(outDistribution);
@@ -802,14 +814,14 @@ double Simulation::minmod(double a, double b){
 
 void Simulation::updateMaxSoundSpeed(){
 	maxSoundSpeed = (sqrt(gamma*middlePressure[0]/middleDensity[0]) + abs(middleVelocity[0]));
-	double tempdt = min2(deltaR[0]/maxSoundSpeed, deltaR[1]/maxSoundSpeed);
+	//double tempdt = min2(deltaR[0]/maxSoundSpeed, deltaR[1]/maxSoundSpeed);
 	double cs = maxSoundSpeed;
 	for(int i = 1; i < rgridNumber - 1; ++i){
 		cs = (sqrt(gamma*middlePressure[i]/middleDensity[i]) + abs(middleVelocity[i]));
 		if(cs > maxSoundSpeed){
 			maxSoundSpeed = cs;
 		}
-		if(deltaR[i]/cs < tempdt){
+		/*if(deltaR[i]/cs < tempdt){
 			tempdt = deltaR[i]/cs;
 		}
 		if(deltaR[i-1]/cs < tempdt){
@@ -817,19 +829,50 @@ void Simulation::updateMaxSoundSpeed(){
 		}
 		if(deltaR[i+1]/cs < tempdt){
 			tempdt = deltaR[i+1]/cs;
-		}
+		}*/
 	}
 	cs = (sqrt(gamma*middlePressure[rgridNumber - 1]/middleDensity[rgridNumber - 1]) + abs(middleVelocity[rgridNumber - 1]));
 	if(cs > maxSoundSpeed){
 		maxSoundSpeed = cs;
 	}
-	if(deltaR[rgridNumber - 1]/cs < tempdt){
+	/*if(deltaR[rgridNumber - 1]/cs < tempdt){
 		tempdt = deltaR[rgridNumber - 1]/cs;
 	}
 	if(deltaR[rgridNumber - 2]/cs < tempdt){
 		tempdt = deltaR[rgridNumber - 2]/cs;
 	}
-	deltaT = 0.1*tempdt;
+	deltaT = 0.1*tempdt;*/
+}
+
+void Simulation::updateTimeStep(){
+	//by dx
+	double tempdt = min2(deltaR[0]/maxSoundSpeed, deltaR[1]/maxSoundSpeed);
+	for(int i = 1; i < rgridNumber - 1; ++i){
+		if(deltaR[i]/maxSoundSpeed < tempdt){
+			tempdt = deltaR[i]/maxSoundSpeed;
+		}
+		if(deltaR[i-1]/maxSoundSpeed < tempdt){
+			tempdt = deltaR[i-1]/maxSoundSpeed;
+		}
+		if(deltaR[i+1]/maxSoundSpeed < tempdt){
+			tempdt = deltaR[i+1]/maxSoundSpeed;
+		}
+	}
+	if(deltaR[rgridNumber - 1]/maxSoundSpeed < tempdt){
+		tempdt = deltaR[rgridNumber - 1]/maxSoundSpeed;
+	}
+	if(deltaR[rgridNumber - 2]/maxSoundSpeed < tempdt){
+		tempdt = deltaR[rgridNumber - 2]/maxSoundSpeed;
+	}
+
+	//by dp
+	for(int i = 1; i < rgridNumber; ++i){
+		if(tempdt > 0.5*abs(3*deltaLogP*middleDeltaR[i]/(middleVelocity[i] - middleVelocity[i-1]))){
+			tempdt = 0.5*abs(3*deltaLogP*middleDeltaR[i]/(middleVelocity[i] - middleVelocity[i-1]));
+		}
+	}
+
+	deltaT = 0.5*tempdt;
 }
 
 //определение точки ударной волны
@@ -877,7 +920,7 @@ void Simulation::updateParameters(){
 			} else {
 				dp = (pgrid[j + 1] - pgrid[j - 1])/2;
 			}
-			totalParticles += 4*pi*distributionFunction[i][j]*volume(i)*pgrid[j]*pgrid[j]*dp;
+			totalParticles += 4*pi*distributionFunction[i][j]*volume(i)*deltaLogP;
 		}
 	}
 }
