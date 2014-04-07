@@ -3,10 +3,9 @@
 #include "util.h"
 #include "constants.h"
 #include "output.h"
+#include "progon.h"
 
-
-double Simulation::diffussionCoef(int i, int j){
-	double p = pgrid[j];
+double Simulation::diffusionCoef(int i, double p){
 	double B = B0;
 	return p*speed_of_light*speed_of_light/(electron_charge*B);
 }
@@ -24,133 +23,108 @@ double Simulation::injection(){
 
 void Simulation::evaluateCR(){
 	printf("solve CR\n");
-	double* upper = new double[rgridNumber];
-	double* middle = new double[rgridNumber];
-	double* lower = new double[rgridNumber];
-
-	double* f = new double[rgridNumber];
- 	double* x = new double[rgridNumber];
-
-	double* alpha = new double[rgridNumber];
-	double* beta = new double[rgridNumber];
-
-	double* volumeDerivative = new double[rgridNumber];
-	double* dtDivdr = new double[rgridNumber];
-	for(int i = 0; i < rgridNumber; ++i){
-		//volumeDerivative[i] = (gridsquare[i+1]*pointVelocity[i+1] - gridsquare[i]*pointVelocity[i]);
-		volumeDerivative[i] = (gridsquare[i+1]*middleVelocity[i+1] - gridsquare[i]*middleVelocity[i]);
-		dtDivdr[i] = deltaT/deltaR[i];
-	}
-
-	double deltaLogP = logPgrid[1] - logPgrid[0];
-
 	/*if(shockWavePoint > 0 && shockWavePoint < rgridNumber){
 		distributionFunction[shockWavePoint][injectionMomentum] += injection()*deltaT;
 	}*/
 	
-	for(int j = 0; j < pgridNumber; ++j){
-		// -1 ?
+	double* upper = new double[rgridNumber+1];
+	double* middle = new double[rgridNumber+1];
+	double* lower = new double[rgridNumber+1];
+
+	double* f = new double[rgridNumber+1];
+ 	double* x = new double[rgridNumber+1];
+
+	double* alpha = new double[rgridNumber];
+	double* beta = new double[rgridNumber];
+
+	for(int k = 0; k < pgridNumber; ++k){
+		double y = logPgrid[k];
+		double p = pgrid[k];
+		double gkp = distributionFunction[0][k];
+		double gkm=0.0;
+		if (k == 0) {
+			gkm=0.0;
+		} else {
+			gkm = distributionFunction[0][k-1];
+		}
+		double dx = (grid[1] + upstreamR/2)/2;
+		double dxp = grid[1] - grid[0];
+		double dxm = grid[0] + upstreamR/2;
+		double xp = (grid[1] + grid[0])/2;
+		double xm = (grid[0] - upstreamR/2)/2;
+		double gip = (distributionFunction[1][k] + distributionFunction[0][k])/2;
+		double gim = distributionFunction[0][k]/2;
+		double dV;
+		middle[0] = 1;// + (deltaT/(2*dx))*(diffusionCoef(0,p)/dxp + diffusionCoef(0,p)/dxm);
+		upper[0] = 0;// -(deltaT/(2*dx))*(diffusionCoef(0,p)/dxp);
+		f[0]=distributionFunction[0][k];// + (deltaT/(2*dx))*(diffusionCoef(0,p)*distributionFunction[1][k]/dxp)
+					 // - (deltaT/(2*dx))*(diffusionCoef(0,p)/dxp+diffusionCoef(0,p)/dxm)*distributionFunction[0][k] 
+					 // - (deltaT/dx)*(middleVelocity[1]*gip - middleVelocity[0]*gim)
+					 // + (deltaT/3)*((middleVelocity[1] - middleVelocity[0])/dx)*((gkp-gkm)/deltaLogP);
+		for(int i = 1; i < rgridNumber-1; ++i){
+			gkp = distributionFunction[i][k];
+			if (k == 0) {
+				gkm=0;
+			} else {
+				gkm=distributionFunction[i][k-1];
+			}
+			dx = (grid[i+1] - grid[i-1])/2;
+			dxp=grid[i+1]-grid[i];
+			dxm=grid[i]-grid[i-1];
+			xp=(grid[i+1]+grid[i])/2;
+			xm=(grid[i]+grid[i-1])/2;
+			dV = (xp*xp*xp - xm*xm*xm)/3;
+			gip=(distributionFunction[i+1][k] + distributionFunction[i][k])/2;
+			gim=(distributionFunction[i][k] + distributionFunction[i-1][k])/2;
+			lower[i-1] = -(deltaT/(2*dV))*(xm*xm*diffusionCoef(i-1,p)/dxm);
+			middle[i] = 1 + (deltaT/(2*dV))*(xp*xp*diffusionCoef(i-1,p)/dxp + xm*xm*diffusionCoef(i,p)/dxm);
+			upper[i] = -(deltaT/(2*dV))*(xp*xp*diffusionCoef(i,p)/dxp);
+			f[i] = distributionFunction[i][k] + (deltaT/(2*dV))*(xp*xp*diffusionCoef(rgridNumber-1,p)*(distributionFunction[i+1][k] - distributionFunction[i][k])/dxp
+							- xm*xm*diffusionCoef(i-1,p)*(distributionFunction[i][k] - distributionFunction[i-1][k])/dxm)
+							- (deltaT/dV)*grid[i]*grid[i]*(middleVelocity[i]*distributionFunction[i][k] - middleVelocity[i-1]*distributionFunction[i-1][k])
+							+ (deltaT/3)*((xp*xp*middleVelocity[i] - xm*xm*middleVelocity[i-1])/dV)*((gkp - gkm)/deltaLogP);
+			if(i == shockWavePoint && k == injectionMomentum){
+				f[i] += deltaT*injection()*grid[i]*grid[i]/dV;
+				injectedParticles += injection()*deltaT*4*pi*volume(i)*deltaLogP;
+			}
+		}
+		gkp = distributionFunction[rgridNumber-1][k];
+		if (k==0) {
+			gkm=0;
+		} else {
+			gkm = distributionFunction[rgridNumber-1][k-1];
+		}
+		dx = (grid[rgridNumber-1] - grid[rgridNumber - 2])/2;
+		dxm = (grid[rgridNumber-1] - grid[rgridNumber - 2]);
+		xp = grid[rgridNumber-1];
+		xm = (grid[rgridNumber-1] + grid[rgridNumber-2])/2;
+		dV = (xp*xp*xp - xm*xm*xm)/3;
+		gip = distributionFunction[rgridNumber-1][k];
+		gim = (distributionFunction[rgridNumber-1][k] + distributionFunction[rgridNumber - 2][k])/2;
+		lower[rgridNumber-2] = -(deltaT/(2*dV))*(xp*xp*diffusionCoef(rgridNumber-1,p)/dxp);
+		middle[rgridNumber-1] = 1 + (deltaT/(2*dV))*(xm*xm*diffusionCoef(rgridNumber-1,p)/dxm);
+		f[rgridNumber-1] = distributionFunction[rgridNumber-1][k] - (deltaT/(2*dV))*(xm*xm*diffusionCoef(rgridNumber-2,p)*(distributionFunction[rgridNumber-1][k] - distributionFunction[rgridNumber - 2][k])/dxm)
+							  - (deltaT/dV)*grid[rgridNumber-1]*grid[rgridNumber-1]*(middleVelocity[rgridNumber-1]*gip - middleVelocity[rgridNumber-2]*gim)
+							  + (deltaT/3)*((xp*xp*middleVelocity[rgridNumber-1] - xm*xm*middleVelocity[rgridNumber-2])/dV)*((gkp - gkm)/deltaLogP);
+		progon(lower,middle, upper,rgridNumber-1,f,x, alpha, beta);
+
 		for(int i = 0; i < rgridNumber; ++i){
-			//double p = (pgrid[j] + pgrid[j+1])/2;
-			double p = pgrid[j];
-
-			double diffCoefLeft = diffussionCoef(i,j);
-			double diffCoefRight = diffussionCoef(i+1,j);
-
-			if(i == rgridNumber -1){
-				upper[i] = 0.5*gridsquare[i+1]*diffCoefRight*deltaT/(volumeFactor[i]*middleDeltaR[i]);
-			} else {
-				upper[i] = 0.5*gridsquare[i+1]*diffCoefRight*deltaT/(volumeFactor[i]*middleDeltaR[i+1]);
-			}
-			if(i == 0){
-				lower[i] = 0.5*gridsquare[i]*diffCoefLeft*deltaT/(volumeFactor[i]*middleDeltaR[i]);
-			} else {
-				lower[i] = 0.5*gridsquare[i]*diffCoefLeft*deltaT/(volumeFactor[i]*middleDeltaR[i]);
-			}
-			if(i == 0){
-				middle[i] = -(upper[i] + lower[i] + 1);
-			} else {
-				middle[i] = -(upper[i] + lower[i] + 1);
-			}
-			/*upper[i] = 0;
-			middle[i] = -volumeFactor[i];
-			lower[i] = 0;*/
-			
-			f[i] = - distributionFunction[i][j];
-			if(i == 0){
-				f[i] = f[i] - upper[i]*distributionFunction[i+1][j] + (upper[i] + lower[i])*distributionFunction[i][j];
-			} else if (i == rgridNumber - 1){
-				f[i] = f[i] - lower[i]*distributionFunction[i-1][j] + (upper[i] + lower[i])*distributionFunction[i][j];
-			} else {
-				f[i] = f[i] - lower[i]*distributionFunction[i-1][j] - upper[i]*distributionFunction[i+1][j] + (upper[i] + lower[i])*distributionFunction[i][j];
-			}
-
-			double derivative = 0;
-			if(volumeDerivative[i] >= 0){
-				if(j == pgridNumber - 1){
-					derivative = 0;
-				} else {
-					derivative = (distributionFunction[i][j+1] - distributionFunction[i][j])/(3*deltaLogP);
-				}
-			} else {
-				if(j == 0){
-					derivative = 0;
-				} else {
-					derivative = (distributionFunction[i][j] - distributionFunction[i][j-1])/(3*deltaLogP);
-				}
-			}
-			f[i] += - volumeDerivative[i]*derivative*deltaT/volumeFactor[i];
-
-			/*if(middleVelocity[i] > 0){
-				if(i > 0){
-					f[i] += middleVelocity[i]*(distributionFunction[i][j] - distributionFunction[i-1][j])*deltaT/(volumeFactor[i]*middleDeltaR[i]);
-				}
-			} else {
-				if(i < rgridNumber - 1){
-					f[i] += middleVelocity[i]*(distributionFunction[i+1][j] - distributionFunction[i][j])*deltaT/(volumeFactor[i]*middleDeltaR[i+1]);
-				}
-			}*/
-			if(i > 0){
-				//f[i] += middleVelocity[i]*middleGrid[i]*middleGrid[i]*(distributionFunction[i][j] - distributionFunction[i-1][j])*deltaT/(volumeFactor[i]);
-				//f[i] += (distributionFunction[i][j]*middleVelocity[i] - distributionFunction[i-1][j]*middleVelocity[i-1])*dtDivdr[i];
-			}
-			alertNaNOrInfinity(f[i],"f = NaN");
-			/*if(i == shockWavePoint && j == injectionMomentum){
-				f[i] -= injection()*dtDivdr[i];
-				double dp = (pgrid[injectionMomentum + 1] - pgrid[injectionMomentum - 1])/2;
-				injectedParticles += injection()*volume(shockWavePoint - 1)*deltaT*middleGrid[i]*middleGrid[i]*pgrid[j]*pgrid[j]*dp/volumeFactor[i];
-			}*/
+			//alertNegative(x[i],"tempDistribution < 0");
+			alertNaNOrInfinity(x[i],"tempDistribution <= NaN");
+			//if(x[i] < 0){
+				//tempDistributionFunction[i][k] = 0;
+			//}
+			tempDistributionFunction[i][k]= x[i];
 		}
-		f[rgridNumber-1] -= upper[rgridNumber-1]*distributionFunction[rgridNumber-1][j];
-
-		solveThreeDiagonal(middle, upper, lower, f, x, alpha, beta);
-		
-		for(int i = 0; i < rgridNumber; ++i){
-			tempDistributionFunction[i][j] = x[i];
-		}
-
-		/*if(j == injectionMomentum){
-			FILE* file = fopen("output/matrix.dat", "w");
-			for(int i = 0; i < rgridNumber; ++i){
-				fprintf(file,"%d %lf %g %lf %g %g %g %g\n", i, middleGrid[i], lower[i], middle[i], upper[i], f[i], distributionFunction[i][j], tempDistributionFunction[i][j]);
-			}
-			fclose(file);
-		}*/
-		if(shockWavePoint > -1){
-			//distributionFunction[shockWavePoint-1][injectionMomentum] += injection()*dtDivdr[shockWavePoint-1]*cube(pgrid[injectionMomentum]);
-			distributionFunction[shockWavePoint-1][injectionMomentum] += injection()*dtDivdr[shockWavePoint-1];
-			double dp = (pgrid[injectionMomentum + 1] - pgrid[injectionMomentum - 1])/2;
-			injectedParticles += injection()*volume(shockWavePoint - 1)*dtDivdr[shockWavePoint-1]*pgrid[injectionMomentum]*pgrid[injectionMomentum]*dp;
-		}
+		//tempDistributionFunction[rgridNumber][k] =x[rgridNumber-1];
+		tempDistributionFunction[rgridNumber][k] = 0;
 	}
 
-	for(int i = 0; i < rgridNumber; ++i){
+	for(int i = 0; i <= rgridNumber; ++i){
 		for(int j = 0; j < pgridNumber; ++j){
 			distributionFunction[i][j] = tempDistributionFunction[i][j];
 		}
 	}
-
-
 	evaluateCosmicRayPressure();
 
 	delete[] upper;
@@ -160,8 +134,6 @@ void Simulation::evaluateCR(){
 	delete[] x;
 	delete[] alpha;
 	delete[] beta;
-	delete[] volumeDerivative;
-	delete[] dtDivdr;
 }
 
 //решение трёх диагональной матрицы

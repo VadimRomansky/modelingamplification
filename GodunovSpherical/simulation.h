@@ -45,6 +45,7 @@ public:
 	double maxP;
 	double* pgrid;
 	double* logPgrid;
+	double deltaLogP;
 
 	double* grid;
 	double* gridsquare;
@@ -78,7 +79,7 @@ public:
 	double momentumConvectiveFlux(int i);
 	double energyFlux(int i);
 
-	double diffussionCoef(int i, int j);
+	double diffusionCoef(int i, double p);
 
 	Simulation();
 	~Simulation();
@@ -104,6 +105,7 @@ public:
 	void updateMaxSoundSpeed();
 	void updateShockWavePoint();
 	void updateParameters();
+	void updateTimeStep();
 	void evaluateCosmicRayPressure();
 
 	void updateGrid();
