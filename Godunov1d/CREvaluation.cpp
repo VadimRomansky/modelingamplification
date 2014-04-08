@@ -15,7 +15,7 @@ double Simulation::diffusionCoef(int i, double p){
 double Simulation::injection(){
 	double pf = pgrid[injectionMomentum];
 	double dp = (pgrid[injectionMomentum + 1] - pgrid[injectionMomentum - 1])/2;
-	return 0.1*middleDensity[shockWavePoint]*abs(middleVelocity[shockWavePoint])/(pf*pf*massProton*dp);
+	return (1E-20)*middleDensity[shockWavePoint]*abs(middleVelocity[shockWavePoint])*pf/(massProton*dp);
 	//return 1;
 }
 

@@ -81,11 +81,11 @@ void Simulation::evaluateCR(){
 			upper[i] = -(deltaT/(2*dV))*(xp*xp*diffusionCoef(i,p)/dxp);
 			f[i] = distributionFunction[i][k] + (deltaT/(2*dV))*(xp*xp*diffusionCoef(rgridNumber-1,p)*(distributionFunction[i+1][k] - distributionFunction[i][k])/dxp
 							- xm*xm*diffusionCoef(i-1,p)*(distributionFunction[i][k] - distributionFunction[i-1][k])/dxm)
-							- (deltaT/dV)*grid[i]*grid[i]*(middleVelocity[i]*distributionFunction[i][k] - middleVelocity[i-1]*distributionFunction[i-1][k])
+							- (deltaT/dV)*(xp*xp*middleVelocity[i]*distributionFunction[i][k] - xm*xm*middleVelocity[i-1]*distributionFunction[i-1][k])
 							+ (deltaT/3)*((xp*xp*middleVelocity[i] - xm*xm*middleVelocity[i-1])/dV)*((gkp - gkm)/deltaLogP);
 			if(i == shockWavePoint && k == injectionMomentum){
 				f[i] += deltaT*injection()*grid[i]*grid[i]/dV;
-				injectedParticles += injection()*deltaT*4*pi*volume(i)*deltaLogP;
+				injectedParticles += injection()*deltaT*4*pi*volume(i)*deltaLogP*grid[i]*grid[i]/dV;
 			}
 		}
 		gkp = distributionFunction[rgridNumber-1][k];

@@ -92,8 +92,9 @@ void Simulation::initializeProfile(){
 	for(int i = 1; i <= rgridNumber; ++i){
 		grid[i] = grid[i-1] + deltaR0;
 	}
-	double R0 = upstreamR*2/100000;
-	/*double a= upstreamR/2;
+
+	/*double R0 = upstreamR*2/100000;
+	double a= upstreamR/2;
 	double b = upstreamR/2;
 	double h1=0.5*rgridNumber/log(1.0+a/R0);
 	double h2=0.5*rgridNumber/log(1.0+b/R0);
@@ -102,10 +103,9 @@ void Simulation::initializeProfile(){
 	}
 	for(int i=rgridNumber/2; i < rgridNumber; ++i){
 		grid[i] = R0*(exp((1.0*(i+1)-0.5*rgridNumber)/h1)-1.0);
-	}*/
+	}
+	grid[rgridNumber] = upstreamR/2*(1 + 1.0/(rgridNumber));*/
 
-	//grid[0] = 0;
-	grid[rgridNumber] = upstreamR/2*(1 + 1.0/(rgridNumber));
 	for(int i = 0; i < rgridNumber; ++i){
 		middleGrid[i] = (grid[i] + grid[i+1])/2;
 		tempGrid[i] = grid[i];
@@ -273,7 +273,7 @@ void Simulation::simulate(){
 
 	fprintf(outShockWave, "%d %lf %d %lf\n", 0, time, shockWavePoint, shockWaveR);
 	fclose(outShockWave);
-	deltaT = min2(5000, deltaT);
+	deltaT = min2(500, deltaT);
 	//deltaT = 5000;
 	//deltaT = 0.001;
 
@@ -286,7 +286,7 @@ void Simulation::simulate(){
 		printf("iteration ¹ %d\n", currentIteration);
 		printf("time = %lf\n", myTime);
 		printf("solving\n");
-		deltaT = min2(5000, deltaT);
+		deltaT = min2(500, deltaT);
 		//deltaT = 5000;
 		//deltaT = 0.001;
 		//prevTime = clock();
@@ -297,7 +297,7 @@ void Simulation::simulate(){
 
 		//prevTime = clock();
 		//CheckNegativeDistribution();
-		//evaluateCR();
+		evaluateCR();
 		//currentTime = clock();
 		//printf("dT evaluating cosmic ray = %lf\n", (currentTime - prevTime)*1.0/CLOCKS_PER_SEC);
 
@@ -378,14 +378,14 @@ void Simulation::evaluateHydrodynamic() {
 		eFlux[i] = energyFlux(i);
 	}
 
-	TracPen(tempDensity, dFlux, maxSoundSpeed);
+	TracPen(tempDensity, dFlux, 0.5*maxSoundSpeed);
 
-	TracPen(tempMomentum, mFlux, maxSoundSpeed);
+	TracPen(tempMomentum, mFlux, 0);
 	for(int i = 0; i < rgridNumber - 1; ++i){
 		tempMomentum[i] -= deltaT*(pointPressure[i+1] - pointPressure[i])/(deltaR[i]);
 		//tempMomentum[i] -= deltaT*(cosmicRayPressure[i+1] - cosmicRayPressure[i])/(deltaR[i]);
 	}
-	TracPen(tempEnergy, eFlux, maxSoundSpeed);
+	TracPen(tempEnergy, eFlux, 0);
 
 	if(tempDensity[rgridNumber - 1] < middleDensity[rgridNumber - 1]){
 		printf("aaa\n");
