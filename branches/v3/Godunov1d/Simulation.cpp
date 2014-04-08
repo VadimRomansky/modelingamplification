@@ -161,11 +161,7 @@ void Simulation::initializeProfile(){
 				double pressure = density0*U0*U0/sigma;
 				int count = rgridNumber/2 - 1;
 				int intCount = count/10;
-				if(i < intCount){
-					middleDensity[i] = density0/sigma;
-					middleVelocity[i] = (U0*(grid[i] -grid[0])/(grid[intCount] -grid[0]));
-					middlePressure[i] = pressure*0.0000000000001;
-				} else if(i < count){
+				if(i < count){
 					middleDensity[i] = density0/sigma;
 					middleVelocity[i] = U0;
 					//middleVelocity[i] = 1;
@@ -294,13 +290,14 @@ void Simulation::simulate(){
 		//deltaT = 5000;
 		//deltaT = 0.001;
 		//prevTime = clock();
-		//evaluateHydrodynamic();
+		evaluateHydrodynamic();
+		
 		//currentTime = clock();
 		//printf("dT evaluating hydro = %lf\n", (currentTime - prevTime)*1.0/CLOCKS_PER_SEC);
 
 		//prevTime = clock();
 		//CheckNegativeDistribution();
-		evaluateCR();
+		//evaluateCR();
 		//currentTime = clock();
 		//printf("dT evaluating cosmic ray = %lf\n", (currentTime - prevTime)*1.0/CLOCKS_PER_SEC);
 
@@ -394,9 +391,9 @@ void Simulation::evaluateHydrodynamic() {
 		printf("aaa\n");
 	}
 	for(int i = 0; i < rgridNumber; ++i){
-		if(i != 0 || tempDensity[i] < middleDensity[i]){
+		//if(i != 0 || tempDensity[i] < middleDensity[i]){
 			middleDensity[i] = tempDensity[i];
-		}
+		//}
 		alertNaNOrInfinity(middleDensity[i], "density = NaN");
 		double middleMomentum = tempMomentum[i];
 		alertNaNOrInfinity(middleMomentum, "momentum = NaN");
@@ -541,7 +538,8 @@ void Simulation::solveDiscontinious(){
 	}
 	pointPressure[0] = middlePressure[0];
 	pointDensity[0] = middleDensity[0];
-	pointVelocity[0] = 0;
+	//pointVelocity[0] = 0;
+	pointVelocity[0] = middleVelocity[0];
 }
 
 
@@ -785,7 +783,7 @@ double Simulation::densityFlux(int i){
 	if(i < 0){
 		printf("i < 0");
 	} else if(i >= 0 && i <= rgridNumber) {
-		if(i == 0) return 0;
+		//if(i == 0) return 0;
 		return pointDensity[i]*pointVelocity[i];
 	} else {
 		printf("i > rgridNumber");
@@ -797,7 +795,7 @@ double Simulation::momentumConvectiveFlux(int i){
 	if(i < 0){
 		printf("i < 0");
 	} else if(i >= 0 && i <= rgridNumber) {
-		if(i == 0) return 0;
+		//if(i == 0) return 0;
 		return pointDensity[i]*pointVelocity[i]*pointVelocity[i];
 	} else {
 		printf("i > rgridNumber");
@@ -809,7 +807,7 @@ double Simulation::energyFlux(int i){
 	if(i < 0){
 		printf("i < 0");
 	} else if(i >= 0 && i <= rgridNumber) {
-		if(i == 0) return 0;
+		//if(i == 0) return 0;
 		return (pointPressure[i]*pointVelocity[i]*gamma/(gamma - 1) + pointDensity[i]*pointVelocity[i]*pointVelocity[i]*pointVelocity[i]/2);
 	} else {
 		printf("i > rgridNumber");
