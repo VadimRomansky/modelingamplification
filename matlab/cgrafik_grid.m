@@ -1,20 +1,23 @@
 clear;
 load tamc_radial_profile.dat;
 N1=1;
-N2=100;
+N2=200;
 N3=6;
 e = size(tamc_radial_profile,1)/N2 - 1;
 d = fix(3*e/4);
 c = fix(e/2);
 b = fix(e/4);
-a = 5;
+a = fix(e/8);
 r(1:N2,1:N3) = 0;
 vel(1:N2,1:N3 + 1) = 0;
 rho(1:N2,1:N3 + 1)= 0;
 temp(1:N2,1:N3 + 1) = 0;
 pressure(1:N2,1:N3 + 1) = 0;
 crpressure(1:N2,1:N3 + 1) = 0;
+momentum(1:N2,1:N3 + 1) = 0;
+energy(1:N2,1:N3 + 1) = 0;
 flux(1:N2,1:N3 + 1) = 0;
+gamma = 5/3;
 for j=1:N2,
     r(j,1) = tamc_radial_profile(j,1);
     r(j,2) = tamc_radial_profile(a*N2 + j,1);
@@ -22,6 +25,7 @@ for j=1:N2,
     r(j,4) = tamc_radial_profile(c*N2 + j,1);
     r(j,5) = tamc_radial_profile(d*N2 + j,1);
     r(j,6) = tamc_radial_profile(e*N2 + j,1);
+    
     vel(j,1)=tamc_radial_profile(j,1);
     vel(j,2)=tamc_radial_profile(j,2);
     vel(j,3)=tamc_radial_profile(a*N2 + j,2);
@@ -29,6 +33,7 @@ for j=1:N2,
     vel(j,5)=tamc_radial_profile(c*N2 + j,2);
     vel(j,6)=tamc_radial_profile(d*N2 + j,2);
     vel(j,7)=tamc_radial_profile(e*N2 + j,2);
+    
     rho(j,1)=tamc_radial_profile(j,1);
     rho(j,2)=tamc_radial_profile(j,3);
     rho(j,3)=tamc_radial_profile(a*N2 + j,3);
@@ -36,20 +41,23 @@ for j=1:N2,
     rho(j,5)=tamc_radial_profile(c*N2 + j,3);
     rho(j,6)=tamc_radial_profile(d*N2 + j,3);
     rho(j,7)=tamc_radial_profile(e*N2 + j,3);
+    
     pressure(j,1)=tamc_radial_profile(j,1);
     pressure(j,2)=tamc_radial_profile(j,4);
     pressure(j,3)=tamc_radial_profile(a*N2 + j,4);
     pressure(j,4)=tamc_radial_profile(b*N2 + j,4);
     pressure(j,5)=tamc_radial_profile(c*N2 + j,4);
     pressure(j,6)=tamc_radial_profile(d*N2 + j,4);
-    pressure(j,7)=tamc_radial_profile(e*N2 + j,4);       
+    pressure(j,7)=tamc_radial_profile(e*N2 + j,4);   
+    
     crpressure(j,1)=tamc_radial_profile(j,1);
     crpressure(j,2)=tamc_radial_profile(j,5);
     crpressure(j,3)=tamc_radial_profile(a*N2 + j,5);
     crpressure(j,4)=tamc_radial_profile(b*N2 + j,5);
     crpressure(j,5)=tamc_radial_profile(c*N2 + j,5);
     crpressure(j,6)=tamc_radial_profile(d*N2 + j,5);
-    crpressure(j,7)=tamc_radial_profile(e*N2 + j,5);      
+    crpressure(j,7)=tamc_radial_profile(e*N2 + j,5);   
+    
     temp(j,1)=tamc_radial_profile(j,1);
     temp(j,2)=tamc_radial_profile(j,6);
     temp(j,3)=tamc_radial_profile(a*N2 + j,6);
@@ -57,6 +65,23 @@ for j=1:N2,
     temp(j,5)=tamc_radial_profile(c*N2 + j,6);
     temp(j,6)=tamc_radial_profile(d*N2 + j,6);
     temp(j,7)=tamc_radial_profile(e*N2 + j,6);
+    
+    momentum(j,1) = tamc_radial_profile(j,1);
+    momentum(j,2) = tamc_radial_profile(j,2)*tamc_radial_profile(j,3);
+    momentum(j,3) = tamc_radial_profile(a*N2 + j,2)*tamc_radial_profile(a*N2 + j,3);
+    momentum(j,4) = tamc_radial_profile(b*N2 + j,2)*tamc_radial_profile(b*N2 + j,3);
+    momentum(j,5) = tamc_radial_profile(c*N2 + j,2)*tamc_radial_profile(c*N2 + j,3);
+    momentum(j,6) = tamc_radial_profile(d*N2 + j,2)*tamc_radial_profile(d*N2 + j,3);
+    momentum(j,7) = tamc_radial_profile(e*N2 + j,2)*tamc_radial_profile(e*N2 + j,3);
+    
+    energy(j,1) = tamc_radial_profile(j,1);
+    energy(j,2) = momentum(j,2)*vel(j,2)/2 + pressure(j,2)/(gamma - 1);
+    energy(j,3) = momentum(j,3)*vel(j,3)/2 + pressure(j,3)/(gamma - 1);
+    energy(j,4) = momentum(j,4)*vel(j,4)/2 + pressure(j,4)/(gamma - 1);
+    energy(j,5) = momentum(j,5)*vel(j,5)/2 + pressure(j,5)/(gamma - 1);
+    energy(j,6) = momentum(j,6)*vel(j,6)/2 + pressure(j,6)/(gamma - 1);
+    energy(j,7) = momentum(j,7)*vel(j,7)/2 + pressure(j,7)/(gamma - 1);
+    
     flux(j,1)=tamc_radial_profile(j,1);
     flux(j,2)=tamc_radial_profile(j,2)*tamc_radial_profile(j,3)*flux(j,1)*flux(j,1);
     flux(j,3)=tamc_radial_profile(a*N2 + j,2)*tamc_radial_profile(a*N2 + j,3)*flux(j,1)*flux(j,1);
@@ -101,3 +126,17 @@ grid;
 %xlabel ('r cm');
 %ylabel ('g*cm/s');
 %grid;
+
+figure(7);
+plot (r(1:N2,1), momentum(1:N2,2),'cyan',r(1:N2,2),momentum(1:N2,3),'green',r(1:N2,3),momentum(1:N2,4),'blue',r(1:N2,4),momentum(1:N2,5),'black',r(1:N2,5),momentum(1:N2,6),'yellow',r(1:N2,6),momentum(1:N2,7),'red');
+title ('momentum');
+xlabel ('p g/s*cm^2');
+ylabel ('T');
+grid;
+
+figure(8);
+plot (r(1:N2,1), energy(1:N2,2),'cyan',r(1:N2,2),energy(1:N2,3),'green',r(1:N2,3),energy(1:N2,4),'blue',r(1:N2,4),energy(1:N2,5),'black',r(1:N2,5),energy(1:N2,6),'yellow',r(1:N2,6),energy(1:N2,7),'red');
+title ('energy');
+xlabel ('E erg*cm^3');
+ylabel ('T');
+grid;
