@@ -174,6 +174,12 @@ void Simulation::initializeProfile(){
 					//middleVelocity[i] = 0.25;
 					middlePressure[i] = pressure*0.75;
 				}
+				/*middleDensity[count - 3] = density0/(0.9*sigma);
+				middleVelocity[count -3] = U0*0.9 + 10000000;
+				middleDensity[count - 2] = density0/(0.7*sigma);
+				middleVelocity[count -2] = U0*0.7 + 10000000;
+				middleDensity[count - 1] = density0/(0.5*sigma);
+				middleVelocity[count -1] = U0*0.5 + 10000000;*/
 				shockWavePoint = count;
 				shockWaveMoved = true;
 			}
@@ -634,13 +640,17 @@ double* Simulation::flux(int i){
 		vectors[2][1] = sqr(pointVelocity[i]);
 		vectors[2][2] = pointEnthalpy[i] + pointVelocity[i]*pointSoundSpeed[i];
 
-		result[0] = (leftDflux + rightDflux)/2;
-		result[1] = (leftMflux + rightMflux)/2;
-		result[2] = (leftEflux + rightEflux)/2;
+		//result[0] = (leftDflux + rightDflux)/2;
+		//result[1] = (leftMflux + rightMflux)/2;
+		//result[2] = (leftEflux + rightEflux)/2;
 
 		//result[0] = pointDensity[i]*pointVelocity[i];
 		//result[1] = pointDensity[i]*pointVelocity[i]*pointVelocity[i] + pointDensity[i]*pointSoundSpeed[i]*pointSoundSpeed[i]/gamma;
 		//result[2] = pointDensity[i]*pointVelocity[i]*pointEnthalpy[i];
+
+		result[0] = middleDensity[i-1]*middleVelocity[i-1];
+		result[1] = middleDensity[i-1]*middleVelocity[i-1]*middleVelocity[i-1] + middlePressure[i-1];
+		result[2] = middleVelocity[i-1]*(energy(i-1)+ middlePressure[i-1]);
 
 		for(int i = 0; i < 3; ++i){
 			for(int j = 0; j < 3; ++j){
