@@ -25,6 +25,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SolveThreeDiagonal", "Solve
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dsa", "dsa\dsa.vcxproj", "{D8E09FB2-B4AF-43C4-9C7D-17637A077E23}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RoeOsher", "RoeOsher\RoeOsher.vcxproj", "{DB198A70-7DF9-44EA-AFEE-0C93966D3B0D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -79,6 +81,10 @@ Global
 		{D8E09FB2-B4AF-43C4-9C7D-17637A077E23}.Debug|Win32.Build.0 = Debug|Win32
 		{D8E09FB2-B4AF-43C4-9C7D-17637A077E23}.Release|Win32.ActiveCfg = Release|Win32
 		{D8E09FB2-B4AF-43C4-9C7D-17637A077E23}.Release|Win32.Build.0 = Release|Win32
+		{DB198A70-7DF9-44EA-AFEE-0C93966D3B0D}.Debug|Win32.ActiveCfg = Debug|Win32
+		{DB198A70-7DF9-44EA-AFEE-0C93966D3B0D}.Debug|Win32.Build.0 = Debug|Win32
+		{DB198A70-7DF9-44EA-AFEE-0C93966D3B0D}.Release|Win32.ActiveCfg = Release|Win32
+		{DB198A70-7DF9-44EA-AFEE-0C93966D3B0D}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

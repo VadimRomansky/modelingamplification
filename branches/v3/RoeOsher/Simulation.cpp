@@ -26,7 +26,8 @@ Simulation::~Simulation(){
 	delete[] tempGrid;
 	delete[] pointDensity;
 	delete[] pointVelocity;
-	delete[] pointPressure;
+	delete[] pointEnthalpy;
+	delete[] pointSoundSpeed;
 	delete[] middleDensity;
 	delete[] middleVelocity;
 	delete[] middlePressure;
@@ -63,7 +64,8 @@ void Simulation::initializeProfile(){
 	tempGrid = new double[rgridNumber];
 	pointDensity = new double[rgridNumber + 1];
 	pointVelocity = new double[rgridNumber + 1];
-	pointPressure = new double[rgridNumber + 1];
+	pointEnthalpy = new double[rgridNumber + 1];
+	pointSoundSpeed = new double[rgridNumber + 1];
 	middleDensity = new double[rgridNumber];
 	middleVelocity = new double[rgridNumber];
 	middlePressure = new double[rgridNumber];
@@ -214,12 +216,12 @@ void Simulation::initializeProfile(){
 		}
 		pointDensity[i] = middleDensity[i];
 		pointVelocity[i] = middleVelocity[i];
-		pointPressure[i] = middlePressure[i];
+		pointEnthalpy[i] = middlePressure[i] + energy(i);
 	}
 
 	pointDensity[rgridNumber] = pointDensity[rgridNumber - 1];
 	pointVelocity[rgridNumber] = pointVelocity[rgridNumber - 1];
-	pointPressure[rgridNumber] = pointPressure[rgridNumber - 1];
+	pointEnthalpy[rgridNumber] = pointEnthalpy[rgridNumber - 1];
 	//grid[rgridNumber] = upstreamR;
 }
 
@@ -273,7 +275,7 @@ void Simulation::simulate(){
 
 	fprintf(outShockWave, "%d %lf %d %lf\n", 0, time, shockWavePoint, shockWaveR);
 	fclose(outShockWave);
-	deltaT = min2(500, deltaT);
+	deltaT = min2(5000, deltaT);
 	//deltaT = 5000;
 	//deltaT = 0.001;
 
@@ -286,7 +288,7 @@ void Simulation::simulate(){
 		printf("iteration № %d\n", currentIteration);
 		printf("time = %lf\n", myTime);
 		printf("solving\n");
-		deltaT = min2(500, deltaT);
+		deltaT = min2(5000, deltaT);
 		//deltaT = 5000;
 		//deltaT = 0.001;
 		//prevTime = clock();
@@ -373,13 +375,12 @@ void Simulation::evaluateHydrodynamic() {
 		tempDensity[i] = middleDensity[i];
 		tempMomentum[i] = momentum(i);
 		tempEnergy[i] = energy(i);
-		dFlux[i] = densityFlux(i);
-		mFlux[i] = momentumConvectiveFlux(i);
-		eFlux[i] = energyFlux(i);
+		double* tflux = flux(i);
+		dFlux[i] = tflux[0];
+		mFlux[i] = tflux[1];
+		eFlux[i] = tflux[2];
+		delete[] tflux;
 	}
-	updateFlux(dFlux);
-	updateFlux(mFlux);
-	updateFlux(eFlux);
 
 	TracPen(tempDensity, dFlux, 0);
 
@@ -427,244 +428,26 @@ void Simulation::evaluateHydrodynamic() {
 //расчет разрывов, задача Римана
 
 void Simulation::solveDiscontinious(){
+	double rho1, rho2, u1, u2, c1, c2;
 	for(int i = 1; i < rgridNumber; ++i){
-		double p = pointPressure[i];
-		double p1 = middlePressure[i-1];
-		double p2 = middlePressure[i];
-		double rho1 = middleDensity[i-1];
-		double rho2 = middleDensity[i];
-		double u1 = middleVelocity[i-1];
-		double u2 = middleVelocity[i];
-		double c1 = sqrt(gamma*p1/rho1);
-		double c2 = sqrt(gamma*p2/rho2);
-		double u;
-		double R1;
-		double R2;
-		double alpha1;
-		double alpha2;
-
-		double Uvacuum = -2*c1/(gamma - 1) - 2*c2/(gamma - 1);
-
-		if( u1 - u2 < Uvacuum){
-			pointDensity[i] = 0;
-			pointVelocity[i] = 0;
-			pointPressure[i] = 0;
-			continue;
-		}
-
-		/*if(CheckShockWave(u, p1, p2, u1, u2, rho1, rho2)){
-			if(u > 0){
-				pointDensity[i] = rho1;
-				pointVelocity[i] = u1;
-				pointPressure[i] = p1;
-			} else {
-				pointDensity[i] = rho2;
-				pointVelocity[i] = u2;
-				pointPressure[i] = p2;
-			}
-			continue;
-		}*/
-		
-		successiveApproximationPressure(p, u, R1, R2, alpha1, alpha2, p1, p2, u1, u2, rho1, rho2);
-
-		bool isLeftShockWave = (p > p1);
-		bool isRightShockWave = (p > p2);
-
-		double D1;
-		double D2;
-
-		if(isLeftShockWave){
-			D1 = u1 - alpha1/rho1;
-		} else {
-			D1 = u1 - c1;
-		}
-
-		if(isRightShockWave){
-			D2 = u2 + alpha2/rho2;
-		} else {
-			D2 = u2 + c2;
-		}
-
-		if(D1 > 0){
-			pointDensity[i] = middleDensity[i - 1];
-			alertNaNOrInfinity(pointDensity[i], "pointDensity = NaN");
-			pointVelocity[i] = middleVelocity[i - 1];
-			pointPressure[i] = middlePressure[i - 1];
-		} else if(D2 < 0){
-			pointDensity[i] = middleDensity[i];
-			alertNaNOrInfinity(pointDensity[i], "pointDensity = NaN");
-			pointVelocity[i] = middleVelocity[i];
-			pointPressure[i] = middlePressure[i];
-		} else {
-			if(u > 0){
-				if(isLeftShockWave){
-					pointDensity[i] = R1;
-					alertNaNOrInfinity(pointDensity[i], "pointDensity = NaN");
-					pointVelocity[i] = u;
-					pointPressure[i] = p;
-				} else {
-					double D3 = u - c1 - (gamma - 1)*(u1 - u)/2;
-					if(D3 < 0){
-						pointDensity[i] = R1;
-						alertNaNOrInfinity(pointDensity[i], "pointDensity = NaN");
-						pointVelocity[i] = u;
-						pointPressure[i] = p;
-					} else {
-						pointVelocity[i] = (gamma - 1)*middleVelocity[i-1]/(gamma + 1) + 2*c1/(gamma + 1);
-						pointPressure[i] = middlePressure[i-1]*power(abs(pointVelocity[i]/c1), 2*gamma/(gamma - 1));
-						pointDensity[i] = gamma*pointPressure[i]/(pointVelocity[i]*pointVelocity[i]);
-						alertNaNOrInfinity(pointDensity[i], "pointDensity = NaN");
-					}
-				}
-			} else {
-				if(isRightShockWave){
-					pointDensity[i] = R2;
-					alertNaNOrInfinity(pointDensity[i], "pointDensity = NaN");
-					pointVelocity[i] = u;
-					pointPressure[i] = p;
-				} else {
-					double D3 = u + c2 - (gamma - 1)*(u2 - u)/2;
-					if(D3 < 0){
-						pointVelocity[i] = (gamma - 1)*middleVelocity[i]/(gamma + 1) - 2*c2/(gamma + 1);
-						pointPressure[i] = middlePressure[i]*power(abs(pointVelocity[i]/c2), 2*gamma/(gamma - 1));
-						pointDensity[i] = gamma*pointPressure[i]/(pointVelocity[i]*pointVelocity[i]);
-						alertNaNOrInfinity(pointDensity[i], "pointDensity = NaN");
-					} else {
-						pointDensity[i] = R2;
-						alertNaNOrInfinity(pointDensity[i], "pointDensity = NaN");
-						pointVelocity[i] = u;
-						pointPressure[i] = p;
-					}
-				}
-			}
-		}
+		rho1 = middleDensity[i-1];
+		rho2 = middleDensity[i];
+		u1 = middleVelocity[i-1];
+		u2 = middleVelocity[i];
+		c1 = sqrt(gamma*middlePressure[i-1]/rho1);
+		c2 = sqrt(gamma*middlePressure[i]/rho2);
+		double h1 = (energy(i-1) + middlePressure[i-1])/rho1;
+		double h2 = (energy(i) + middlePressure[i])/rho2;
+		pointDensity[i] = sqrt(rho1*rho2);
+		pointVelocity[i] = (sqrt(rho1)*middleVelocity[i-1] + sqrt(middleDensity[i])*middleVelocity[i])/(sqrt(rho1) + sqrt(rho2));
+		pointEnthalpy[i] = (sqr(rho1)*h1 + sqrt(rho2)*h2)/(sqrt(rho1) + sqrt(rho2));
+		pointSoundSpeed[i] = sqrt((sqrt(rho1)*c1*c1 + sqrt(rho2)*c2*c2)/(sqrt(rho1) + sqrt(rho2)) + 0.5*(gamma - 1)*(sqrt(rho1*rho2)/sqr(sqrt(rho1)+ sqrt(rho1)))*sqr(u1 - u2));
 	}
-	pointPressure[0] = middlePressure[0];
+	pointEnthalpy[0] = (middlePressure[0] + energy(0))/middleDensity[0];
 	pointDensity[0] = middleDensity[0];
 	//pointVelocity[0] = 0;
 	pointVelocity[0] = middleVelocity[0];
-}
-
-
-//начальное приближение для давления
-
-double Simulation::firstApproximationPressure(double rho1, double rho2, double u1, double u2, double p1, double p2){
-	double c1 = sqrt(gamma*p1/rho1);
-	double c2 = sqrt(gamma*p2/rho2);
-
-	double p = (p1*rho2*c2 + p2*rho1*c1 + (u1 - u2)*rho1*rho2*c1*c2)/(rho1*c1 + rho2*c2);
-	if(p > 0){
-		return p;
-	}
-	return (p1 + p2)/2;
-}
-
-
-//метод поледовательных приближений для нахождения давдения
-
-void Simulation::successiveApproximationPressure(double& p, double& u, double& R1, double& R2, double& alpha1, double& alpha2, double p1, double p2, double u1, double u2, double rho1, double rho2){
-	alertNaNOrInfinity(p1,"pressure = NaN");
-	alertNaNOrInfinity(p2,"pressure = NaN");
-	if(p1 <= p2){
-		double c1 = sqrt(gamma*p1/rho1);
-		double c2 = sqrt(gamma*p2/rho2);
-
-		p = firstApproximationPressure(rho1, rho2, u1, u2, p1, p2);
-		alertNaNOrInfinity(p,"pressure = NaN");
-
-		for(int i = 1; i < 1000; ++i){
-			double tempP = p - (pressureFunction(p, p1, rho1) + pressureFunction(p, p2, rho2) - (u1 - u2))/(pressureFunctionDerivative(p, p1, rho1) + pressureFunctionDerivative(p, p2, rho2));
-			alertNaNOrInfinity(tempP,"tempPressure = NaN");
-			if(tempP < 0){
-				p = p/2;
-			} else {
-				if(abs(tempP/p - 1) < 0.01*epsilon){
-					break;
-				}
-				p = tempP;
-			}
-		}
-
-		alertNaNOrInfinity(p,"pressure = NaN");
-		if(p >= p1){
-			alpha1 = sqrt(rho1*((gamma + 1)*p/2 + (gamma - 1)*p1/2));
-		} else {
-			if(abs(p/p1 - 1) < epsilon){
-				alpha1 = rho1*c1;
-			} else {
-				alpha1 = ((gamma - 1)/(2*gamma))*rho1*c1*((1 - p/p1)/(1 - power(p/p1, (gamma - 1)/(2*gamma))));
-			}
-		}
-		alertNaNOrInfinity(alpha1,"alpha1 = NaN");
-
-		if(p >= p2){
-			alpha2 = sqrt(rho2*((gamma + 1)*p/2 + (gamma - 1)*p2/2));
-		} else {
-			if(abs(p/p2 - 1) < epsilon){
-				alpha2 = rho2*c2;
-			} else {
-				alpha2= ((gamma - 1)/(2*gamma))*rho2*c2*((1 - p/p2)/(1 - power(p/p2, (gamma - 1)/(2*gamma))));
-			}
-		}
-		alertNaNOrInfinity(alpha2,"alpha2 = NaN");
-
-		u = (alpha1*u1 + alpha2*u2 + p1 - p2)/(alpha1 + alpha2);
-		alertNaNOrInfinity(u,"u = NaN");
-
-		if(p >= p1){
-			R1 = rho1*(((gamma + 1)*p + (gamma - 1)*p1)/((gamma - 1)*p + (gamma + 1)*p1));
-		} else {
-			R1 = gamma*p/sqr(c1 + (gamma - 1)*(u1 - u)/2);
-		}
-
-		if(p >= p2){
-			R2 = rho2*(((gamma + 1)*p + (gamma - 1)*p2)/((gamma - 1)*p + (gamma + 1)*p2));
-		} else {
-			R2 = gamma*p/sqr(c1 - (gamma - 1)*(u2 - u)/2);
-		}
-		alertNaNOrInfinity(R1, "R1 = NaN\n");
-		alertNaNOrInfinity(R2, "R2 = NaN\n");
-		alertNaNOrInfinity(p, "point p = NaN\n");
-		alertNaNOrInfinity(u, "point u = NaN\n");
-	} else {
-		successiveApproximationPressure(p, u, R2, R1, alpha2, alpha1, p2, p1, -u2, -u1, rho2, rho1);
-		u = -u;
-		alpha1 = alpha1;
-		alpha2 = alpha2;
-	}
-}
-
-
-//вспомогательная функция для вычислний
-
-double Simulation::pressureFunction(double p, double p1, double rho1){
-	double c1 = sqrt(gamma*p1/rho1);
-	if(p >= p1){
-		return (p - p1)/(rho1*c1*sqrt((gamma + 1)*p/(2*gamma*p1) + (gamma - 1)/(2*gamma)));
-	} else {
-		return 2*c1*(power(p/p1, (gamma - 1)/(2*gamma)) - 1)/(gamma - 1);
-	}
-}
-
-
-// и её производные
-
-double Simulation::pressureFunctionDerivative(double p, double p1, double rho1){
-	double c1 = sqrt(gamma*p1/rho1);
-	if(p >= p1){
-		return ((gamma + 1)*p/p1 + 3*gamma - 1)/(4*gamma*rho1*c1*sqrt(cube((gamma + 1)*p/(2*gamma*p1) + (gamma - 1)/(2*gamma))));
-	} else {
-		return c1*power(p/p1, (gamma - 1)/(2*gamma))/(gamma*p);
-	}
-}
-
-double Simulation::pressureFunctionDerivative2(double p, double p1, double rho1){
-	double c1 = sqrt(gamma*p1/rho1);
-	if(p >= p1){
-		return - (gamma + 1)*((gamma + 1)*p/p1 + 7*gamma - 1)/(16*gamma*sqr(rho1)*cube(c1)*power((gamma + 1)*p/(2*gamma*p1) + (gamma - 1)/(2*gamma), 2.5));
-	} else {
-		return - (gamma + 1)*c1*power(p/p1, (gamma - 1)/(2*gamma))/(2*gamma*gamma*p*p);
-	}
+	pointSoundSpeed[0] = sqrt(gamma*middlePressure[0]/middleDensity[0]);
 }
 
 
@@ -696,6 +479,19 @@ void Simulation::TracPen(double* u, double* flux, double cs){
 	for(int i = 0; i < rgridNumber; ++i){
 		u[i] = tempU[i];
 	}
+}
+
+double Simulation::densityFlux(int i){
+	if(i < 0){
+		printf("i < 0");
+	} else if(i >= 0 && i <= rgridNumber) {
+		if(i == 0) return middleVelocity[0]*middleDensity[0];
+		return pointDensity[i]*pointVelocity[i];
+		//return middleDensity[i-1]*middleVelocity[i-1];
+	} else {
+		printf("i > rgridNumber");
+	}
+	return 0;
 }
 
 void Simulation::updateFlux(double* flux){
@@ -795,43 +591,78 @@ double Simulation::soundSpeed(int i){
 	return 0;
 }
 
-double Simulation::densityFlux(int i){
+double* Simulation::flux(int i){
 	if(i < 0){
 		printf("i < 0");
-	} else if(i >= 0 && i <= rgridNumber) {
-		if(i == 0) return middleVelocity[0]*middleDensity[0];
-		return pointDensity[i]*pointVelocity[i];
-		//return middleDensity[i-1]*middleVelocity[i-1];
-	} else {
-		printf("i > rgridNumber");
-	}
-	return 0;
-}
+		return flux(1);
+	} else if(i == 0){
+		return flux(1);
+	} else if(i < rgridNumber){
 
-double Simulation::momentumConvectiveFlux(int i){
-	if(i < 0){
-		printf("i < 0");
-	} else if(i >= 0 && i <= rgridNumber) {
-		if(i == 0) return middleVelocity[0]*middleVelocity[0]*middleDensity[0] + middlePressure[0];
-		return pointDensity[i]*pointVelocity[i]*pointVelocity[i] + pointPressure[i];
-		//return middleVelocity[i-1]*middleVelocity[i-1]*middleDensity[i-1] + middlePressure[i-1];
-	} else {
-		printf("i > rgridNumber");
-	}
-	return 0;
-}
+		double* result = new double[3];
 
-double Simulation::energyFlux(int i){
-	if(i < 0){
-		printf("i < 0");
-	} else if(i >= 0 && i <= rgridNumber) {
-		if(i == 0) return (middlePressure[0]*middleVelocity[0]*gamma/(gamma - 1) + middleDensity[0]*middleVelocity[0]*middleVelocity[0]*middleVelocity[0]/2);
-		return (pointPressure[i]*pointVelocity[i]*gamma/(gamma - 1) + pointDensity[i]*pointVelocity[i]*pointVelocity[i]*pointVelocity[i]/2);
-		//return (middlePressure[i-1]*middleVelocity[i-1]*gamma/(gamma - 1) + middleDensity[i-1]*middleVelocity[i-1]*middleVelocity[i-1]*middleVelocity[i-1]/2);
+		double leftDflux = middleVelocity[i-1]*middleDensity[i-1];
+		double rightDflux = middleVelocity[i]*middleDensity[i];
+		double leftMflux = leftDflux*middleVelocity[i-1] + middlePressure[i-1];
+		double rightMflux = rightDflux*middleVelocity[i] + middlePressure[i];
+		double leftEflux = leftDflux*middleVelocity[i-1]*middleVelocity[i-1]/2 + middleVelocity[i-1]*middlePressure[i-1]*gamma/(gamma-1);
+		double rightEflux = rightDflux*middleVelocity[i]*middleVelocity[i]/2 + middleVelocity[i]*middlePressure[i]*gamma/(gamma-1);
+
+		double* deltaS = new double[3];
+		double* lambda = new double[3];
+
+		lambda[0] = min2(middleVelocity[i-1] - sqrt(gamma*middlePressure[i-1]/middleDensity[i-1]), pointVelocity[i] - pointSoundSpeed[i]);
+		lambda[1] = pointVelocity[i];
+		lambda[2] = max2(middleVelocity[i] + sqrt(gamma*middlePressure[i]/middleDensity[i]), pointVelocity[i] + pointSoundSpeed[i]);
+
+		deltaS[0] = ((middlePressure[i] - middlePressure[i-1]) - pointDensity[i]*pointSoundSpeed[i]*(middleVelocity[i] - middleVelocity[i-1]))/(2*sqr(pointSoundSpeed[i]));
+		deltaS[1] = (sqr(pointSoundSpeed[i])*(middleDensity[i] - middleDensity[i-1]) - (middlePressure[i] - middlePressure[i-1]))/(2*sqr(pointSoundSpeed[i]));
+		deltaS[2] = ((middlePressure[i] - middlePressure[i-1]) + pointDensity[i]*pointSoundSpeed[i]*(middleVelocity[i] - middleVelocity[i-1]))/(2*sqr(pointSoundSpeed[i]));
+
+		double** vectors = new double*[3];
+		for(int i = 0; i < 3; ++i){
+			vectors[i] = new double[3];
+		}
+
+		vectors[0][0] = 1;
+		vectors[0][1] = 2;
+		vectors[0][2] = 1;
+		vectors[1][0] = pointVelocity[i] - pointSoundSpeed[i];
+		vectors[1][1] = 2*pointVelocity[i];
+		vectors[1][2] = pointVelocity[i] + pointSoundSpeed[i];
+		vectors[2][0] = pointEnthalpy[i] - pointVelocity[i]*pointSoundSpeed[i];
+		vectors[2][1] = sqr(pointVelocity[i]);
+		vectors[2][2] = pointEnthalpy[i] + pointVelocity[i]*pointSoundSpeed[i];
+
+		result[0] = (leftDflux + rightDflux)/2;
+		result[1] = (leftMflux + rightMflux)/2;
+		result[2] = (leftEflux + rightEflux)/2;
+
+		//result[0] = pointDensity[i]*pointVelocity[i];
+		//result[1] = pointDensity[i]*pointVelocity[i]*pointVelocity[i] + pointDensity[i]*pointSoundSpeed[i]*pointSoundSpeed[i]/gamma;
+		//result[2] = pointDensity[i]*pointVelocity[i]*pointEnthalpy[i];
+
+		for(int i = 0; i < 3; ++i){
+			for(int j = 0; j < 3; ++j){
+				result[i] -= 0.5*abs(lambda[j])*deltaS[j]*vectors[i][j];
+			}
+		}
+
+		for(int i = 0; i < 3; ++i){
+			delete[] vectors[i];
+		}
+		delete[] vectors;
+		delete[] deltaS;
+		delete[] lambda;
+
+
+		return result;
+	} else if(i == rgridNumber){
+		return flux(rgridNumber - 1);
 	} else {
-		printf("i > rgridNumber");
+		printf("i > rgridNumber\n");
+		return flux(rgridNumber-1);
 	}
-	return 0;
 }
 
 double Simulation::volume(int i){
