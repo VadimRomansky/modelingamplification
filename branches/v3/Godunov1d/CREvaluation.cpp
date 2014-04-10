@@ -7,7 +7,7 @@
 
 double Simulation::diffusionCoef(int i, double p){
 	double B = B0;
-	double coef = 10*p*speed_of_light*speed_of_light/(electron_charge*B);
+	double coef = 1000*p*speed_of_light*speed_of_light/(electron_charge*B);
 	double dx = deltaR[i];
 	double lambda = coef/speed_of_light;
 	return coef;
@@ -87,7 +87,7 @@ void Simulation::evaluateCR(){
 							//- (deltaT/dx)*(middleVelocity[i]*gip - middleVelocity[i-1]*gim)
 							- (deltaT/dx)*(middleVelocity[i]*distributionFunction[i][k] - middleVelocity[i-1]*distributionFunction[i-1][k])
 							+ (deltaT/3)*((middleVelocity[i] - middleVelocity[i-1])/dx)*((gkp - gkm)/deltaLogP);
-			if(i == shockWavePoint && k == injectionMomentum){
+			if(i == shockWavePoint && k == injectionMomentum && currentIteration > 500){
 				f[i] += deltaT*injection();
 				injectedParticles += injection()*deltaT*4*pi*(middleGrid[i] - middleGrid[i-1])*deltaLogP;
 			}
