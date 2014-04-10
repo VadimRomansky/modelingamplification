@@ -7,7 +7,10 @@
 
 double Simulation::diffusionCoef(int i, double p){
 	double B = B0;
-	return p*speed_of_light*speed_of_light/(electron_charge*B);
+	double coef = 10*p*speed_of_light*speed_of_light/(electron_charge*B);
+	double dx = deltaR[i];
+	double lambda = coef/speed_of_light;
+	return coef;
 	//return 0.1*p;
 }
 
@@ -15,7 +18,7 @@ double Simulation::diffusionCoef(int i, double p){
 double Simulation::injection(){
 	double pf = pgrid[injectionMomentum];
 	double dp = (pgrid[injectionMomentum + 1] - pgrid[injectionMomentum - 1])/2;
-	return (1E-20)*middleDensity[shockWavePoint]*abs(middleVelocity[shockWavePoint])*pf/(massProton*dp);
+	return middleDensity[shockWavePoint]*abs(middleVelocity[shockWavePoint])*pf/(massProton*dp);
 	//return 1;
 }
 
@@ -113,7 +116,7 @@ void Simulation::evaluateCR(){
 		}
 		for(int i = 0; i < rgridNumber; ++i){
 			//alertNegative(x[i],"tempDistribution < 0");
-			alertNaNOrInfinity(x[i],"tempDistribution <= NaN");
+			alertNaNOrInfinity(x[i],"tempDistribution = NaN");
 			//if(x[i] < 0){
 				//tempDistributionFunction[i][k] = 0;
 			//}
