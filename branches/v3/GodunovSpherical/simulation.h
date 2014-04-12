@@ -61,6 +61,8 @@ public:
 	double* pointPressure;
 	double* middlePressure;
 	double* cosmicRayPressure;
+	double* gridVelocity;
+	
 
 	double* tempU;
 

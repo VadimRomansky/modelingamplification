@@ -31,6 +31,7 @@ Simulation::~Simulation(){
 	delete[] middleVelocity;
 	delete[] middlePressure;
 	delete[] cosmicRayPressure;
+	delete[] gridVelocity;
 
 	delete[] distrFunDerivative;
 	delete[] distrFunDerivative2;
@@ -68,6 +69,7 @@ void Simulation::initializeProfile(){
 	middleVelocity = new double[rgridNumber];
 	middlePressure = new double[rgridNumber];
 	cosmicRayPressure = new double[rgridNumber+1];
+	gridVelocity = new double[rgridNumber+1];
 	tempU = new double[rgridNumber];
 	distributionFunction = new double*[rgridNumber+1];
 	tempDistributionFunction = new double*[rgridNumber+1];
@@ -110,6 +112,7 @@ void Simulation::initializeProfile(){
 		middleGrid[i] = (grid[i] + grid[i+1])/2;
 		tempGrid[i] = grid[i];
 		deltaR[i] = grid[i+1] - grid[i];
+		gridVelocity[i] = 0;
 	}
 	tempGrid[rgridNumber] = grid[rgridNumber];
 
@@ -297,7 +300,7 @@ void Simulation::simulate(){
 
 		//prevTime = clock();
 		//CheckNegativeDistribution();
-		evaluateCR();
+		//evaluateCR();
 		//currentTime = clock();
 		//printf("dT evaluating cosmic ray = %lf\n", (currentTime - prevTime)*1.0/CLOCKS_PER_SEC);
 
@@ -312,6 +315,7 @@ void Simulation::simulate(){
 		updateShockWavePoint();
 		updateParameters();
 		updateTimeStep();
+		deltaT = min2(500, deltaT);
 		if(currentIteration % writeParameter == 0){
 			//вывод на некоторых итерациях
 			printf("outputing\n");
@@ -359,8 +363,22 @@ void Simulation::simulate(){
 
 //расчет гидродинамики
 void Simulation::evaluateHydrodynamic() {
+
+	/*if(shockWavePoint > 0 && shockWavePoint < rgridNumber){
+		double shockWaveU = pointVelocity[shockWavePoint];
+		for(int i = 1; i < rgridNumber; ++i){
+			if(i <= shockWavePoint){
+				gridVelocity[i] = shockWaveU*(grid[i] + upstreamR/2)/(grid[shockWavePoint] + upstreamR/2);
+			} else {
+				gridVelocity[i] = shockWaveU*(grid[i] - upstreamR/2)/(grid[shockWavePoint] - upstreamR/2);
+			}
+		}
+	}*/
 	solveDiscontinious();
 	CheckNegativeDensity();
+	//updateMaxSoundSpeed();
+	//updateTimeStep();
+	//deltaT = min2(500, deltaT);
 
 	double* tempDensity = new double[rgridNumber];
 	double* tempMomentum = new double[rgridNumber];
@@ -380,6 +398,17 @@ void Simulation::evaluateHydrodynamic() {
 	//updateFlux(dFlux);
 	//updateFlux(mFlux);
 	//updateFlux(eFlux);
+
+	//for(int i = 0; i <= rgridNumber; ++i){
+		//grid[i] += deltaT*gridVelocity[i];
+	//}
+
+	//for(int i = 0; i < rgridNumber; ++i){
+		//middleGrid[i] = (grid[i] + grid[i+1])/2;
+		//tempGrid[i] = grid[i];
+		//deltaR[i] = grid[i+1] - grid[i];
+		//gridVelocity[i] = 0;
+	//}
 
 	TracPen(tempDensity, dFlux, maxSoundSpeed);
 
@@ -490,7 +519,7 @@ void Simulation::solveDiscontinious(){
 			alertNaNOrInfinity(pointDensity[i], "pointDensity = NaN");
 			pointVelocity[i] = middleVelocity[i - 1];
 			pointPressure[i] = middlePressure[i - 1];
-		} else if(D2 < 0){
+		} else if(D2 < gridVelocity[i]){
 			pointDensity[i] = middleDensity[i];
 			alertNaNOrInfinity(pointDensity[i], "pointDensity = NaN");
 			pointVelocity[i] = middleVelocity[i];
@@ -813,7 +842,7 @@ double Simulation::momentumConvectiveFlux(int i){
 		printf("i < 0");
 	} else if(i >= 0 && i <= rgridNumber) {
 		if(i == 0) return middleVelocity[0]*middleVelocity[0]*middleDensity[0] + middlePressure[0];
-		return pointDensity[i]*pointVelocity[i]*pointVelocity[i] + pointPressure[i];
+		return pointDensity[i]*pointVelocity[i]*(pointVelocity[i] - gridVelocity[i]) + pointPressure[i];
 		//return middleVelocity[i-1]*middleVelocity[i-1]*middleDensity[i-1] + middlePressure[i-1];
 	} else {
 		printf("i > rgridNumber");
@@ -826,7 +855,7 @@ double Simulation::energyFlux(int i){
 		printf("i < 0");
 	} else if(i >= 0 && i <= rgridNumber) {
 		if(i == 0) return (middlePressure[0]*middleVelocity[0]*gamma/(gamma - 1) + middleDensity[0]*middleVelocity[0]*middleVelocity[0]*middleVelocity[0]/2);
-		return (pointPressure[i]*pointVelocity[i]*gamma/(gamma - 1) + pointDensity[i]*pointVelocity[i]*pointVelocity[i]*pointVelocity[i]/2);
+		return (pointPressure[i]*gamma/(gamma - 1) + pointDensity[i]*pointVelocity[i]*pointVelocity[i]/2)*(pointVelocity[i]);
 		//return (middlePressure[i-1]*middleVelocity[i-1]*gamma/(gamma - 1) + middleDensity[i-1]*middleVelocity[i-1]*middleVelocity[i-1]*middleVelocity[i-1]/2);
 	} else {
 		printf("i > rgridNumber");
@@ -922,7 +951,7 @@ void Simulation::updateTimeStep(){
 
 	//by dp
 	for(int i = 1; i < rgridNumber; ++i){
-		if(tempdt > 0.5*abs(3*deltaLogP*middleDeltaR[i]/(middleVelocity[i] - middleVelocity[i-1]))){
+		if(abs(middleVelocity[i] - middleVelocity[i-1])*tempdt > 0.5*abs(3*deltaLogP*middleDeltaR[i])){
 			tempdt = 0.5*abs(3*deltaLogP*middleDeltaR[i]/(middleVelocity[i] - middleVelocity[i-1]));
 		}
 	}

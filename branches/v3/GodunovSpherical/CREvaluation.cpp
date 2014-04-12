@@ -7,7 +7,10 @@
 
 double Simulation::diffusionCoef(int i, double p){
 	double B = B0;
-	return p*speed_of_light*speed_of_light/(electron_charge*B);
+	double coef = 1000*p*speed_of_light*speed_of_light/(electron_charge*B);
+	double dx = deltaR[i];
+	double lambda = coef/speed_of_light;
+	return coef;
 }
 
 //инжекционный член
