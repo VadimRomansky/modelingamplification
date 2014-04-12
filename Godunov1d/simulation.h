@@ -60,6 +60,7 @@ public:
 	double* pointPressure;
 	double* middlePressure;
 	double* cosmicRayPressure;
+	double* gridVelocity;
 
 	double* distrFunDerivative;
 	double* distrFunDerivative2;
