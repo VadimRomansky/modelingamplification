@@ -149,9 +149,9 @@ void Simulation::initializeProfile(){
 			middleDensity[i] = density0;
 			middleVelocity[i] = 0;
 			{
-				int count = rgridNumber/100;
+				int count = rgridNumber/20;
 				if(i < count){
-					middlePressure[i] = initialEnergy/cube(count*deltaR0);
+					middlePressure[i] = (gamma- 1)*initialEnergy/(4*pi*cube(grid[count])/3);
 				} else {
 					middlePressure[i] = pressure0;
 				}
@@ -290,20 +290,22 @@ void Simulation::simulate(){
 			printf("deltaT <=0\n");
 		}
 		//prevTime = clock();
-		evaluateHydrodynamic();
+		//evaluateHydrodynamic();
 		//currentTime = clock();
 		//printf("dT evaluating hydro = %lf\n", (currentTime - prevTime)*1.0/CLOCKS_PER_SEC);
 
 		//prevTime = clock();
-		//evaluateCR();
+		//if(i > 100){
+			//evaluateCR();
+		//}
 		//currentTime = clock();
 		//printf("dT evaluating cosmic ray = %lf\n", (currentTime - prevTime)*1.0/CLOCKS_PER_SEC);
 
-		/*if(i < 5000){
+		if(i < 1000){
 			evaluateHydrodynamic();
 		} else {
 			evaluateCR();
-		}*/
+		}
 
 		myTime = myTime + deltaT;
 
@@ -401,11 +403,11 @@ void Simulation::evaluateHydrodynamic() {
 		//gridVelocity[i] = 0;
 	//}
 
-	TracPen(tempDensity, dFlux, maxSoundSpeed);
+	TracPen(tempDensity, dFlux, 0.5*maxSoundSpeed);
 	for(int i = 0; i < rgridNumber - 1; ++i){
 		tempDensity[i] -= deltaT*2*middleDensity[i]*middleVelocity[i]/middleGrid[i];
 	}
-	TracPenRadial(tempMomentum, mFlux, maxSoundSpeed);
+	TracPenRadial(tempMomentum, mFlux, 0.5*maxSoundSpeed);
 	for(int i = 0; i < rgridNumber - 1; ++i){
 		/*if(tempMomentum[i] < 0){
 			printf("temp momentum < 0\n");
@@ -417,7 +419,7 @@ void Simulation::evaluateHydrodynamic() {
 			printf("temp momentum < 0\n");
 		}*/
 	}
-	TracPenRadial(tempEnergy, eFlux, maxSoundSpeed);
+	TracPenRadial(tempEnergy, eFlux, 0.5*maxSoundSpeed);
 
 	if(tempDensity[rgridNumber - 1] < middleDensity[rgridNumber - 1]){
 		printf("aaa\n");
@@ -432,6 +434,9 @@ void Simulation::evaluateHydrodynamic() {
 		double middleEnergy = tempEnergy[i];
 		alertNaNOrInfinity(middleEnergy, "energy = NaN");
 		middleVelocity[i] = middleMomentum/middleDensity[i];
+		/*if(middleVelocity[i] < 0){
+			printf("middleVelocity < 0\n");
+		}*/
 
 		middlePressure[i] = (middleEnergy - middleDensity[i]*middleVelocity[i]*middleVelocity[i]/2)*(gamma - 1);
 		if(middleDensity[i] <= epsilon*density0){
@@ -697,6 +702,17 @@ void Simulation::CheckNegativeDensity(){
 			alertNaNOrInfinity(dt, "dt = NaN");
 		}
 	}
+	/*for(int i = 1; i < rgridNumber; ++i){
+		for(int k = 0; k < pgridNumber; ++k){
+			double xp = (grid[i+1]+grid[i])/2;
+			double xm = (grid[i]+grid[i-1])/2;
+			double dV = (xp*xp*xp - xm*xm*xm)/3;
+			if(distributionFunction[i][k] - (dt/dV)*(xp*xp*middleVelocity[i]*distributionFunction[i][k] - xm*xm*middleVelocity[i-1]*distributionFunction[i-1][k]) < 0){
+				dt = 0.5*distributionFunction[i][k]*dV/(xp*xp*middleVelocity[i]*distributionFunction[i][k] - xm*xm*middleVelocity[i-1]*distributionFunction[i-1][k]);
+			}
+			alertNaNOrInfinity(dt, "dt = NaN");
+		}
+	}*/
 	deltaT = dt;
 }
 

@@ -7,7 +7,7 @@
 
 double Simulation::diffusionCoef(int i, double p){
 	double B = B0;
-	double coef = 1000*p*speed_of_light*speed_of_light/(electron_charge*B);
+	double coef = 10000*p*speed_of_light*speed_of_light/(electron_charge*B);
 	double dx = deltaR[i];
 	double lambda = coef/speed_of_light;
 	return coef;
@@ -50,6 +50,12 @@ void Simulation::evaluateCR(){
 		} else {
 			gkm = distributionFunction[0][k-1];
 		}
+		double gkpp;
+		if(k < pgridNumber-1){
+			gkpp = distributionFunction[0][k+1];
+		} else {
+			gkpp = 0;
+		}
 		double dx = (grid[1] + upstreamR/2)/2;
 		double dxp = grid[1] - grid[0];
 		double dxm = grid[0] + upstreamR/2;
@@ -71,6 +77,11 @@ void Simulation::evaluateCR(){
 			} else {
 				gkm=distributionFunction[i][k-1];
 			}
+			if(k < pgridNumber-1){
+				gkpp = distributionFunction[i][k+1];
+			} else {
+				gkpp = 0;
+			}
 			dx = (grid[i+1] - grid[i-1])/2;
 			dxp=grid[i+1]-grid[i];
 			dxm=grid[i]-grid[i-1];
@@ -84,8 +95,14 @@ void Simulation::evaluateCR(){
 			upper[i] = -(deltaT/(2*dV))*(xp*xp*diffusionCoef(i,p)/dxp);
 			f[i] = distributionFunction[i][k] + (deltaT/(2*dV))*(xp*xp*diffusionCoef(rgridNumber-1,p)*(distributionFunction[i+1][k] - distributionFunction[i][k])/dxp
 							- xm*xm*diffusionCoef(i-1,p)*(distributionFunction[i][k] - distributionFunction[i-1][k])/dxm)
-							- (deltaT/dV)*(xp*xp*middleVelocity[i]*distributionFunction[i][k] - xm*xm*middleVelocity[i-1]*distributionFunction[i-1][k])
-							+ (deltaT/3)*((xp*xp*middleVelocity[i] - xm*xm*middleVelocity[i-1])/dV)*((gkp - gkm)/deltaLogP);
+							- (deltaT/dV)*(xp*xp*middleVelocity[i]*distributionFunction[i][k] - xm*xm*middleVelocity[i-1]*distributionFunction[i-1][k]);
+			if((xp*xp*middleVelocity[i] - xm*xm*middleVelocity[i-1]) < 0){
+				if(gkp - gkm < 0)
+					f[i] += (deltaT/3)*((xp*xp*middleVelocity[i] - xm*xm*middleVelocity[i-1])/dV)*((gkp - gkm)/deltaLogP);
+			} else {
+				if(gkpp - gkp > 0)
+					f[i] += (deltaT/3)*((xp*xp*middleVelocity[i] - xm*xm*middleVelocity[i-1])/dV)*((gkpp - gkp)/deltaLogP);
+			}
 			if(i == shockWavePoint && k == injectionMomentum){
 				f[i] += deltaT*injection()*grid[i]*grid[i]/dV;
 				injectedParticles += injection()*deltaT*4*pi*volume(i)*deltaLogP*grid[i]*grid[i]/dV;
@@ -114,10 +131,13 @@ void Simulation::evaluateCR(){
 		for(int i = 0; i < rgridNumber; ++i){
 			//alertNegative(x[i],"tempDistribution < 0");
 			alertNaNOrInfinity(x[i],"tempDistribution <= NaN");
-			//if(x[i] < 0){
-				//tempDistributionFunction[i][k] = 0;
-			//}
 			tempDistributionFunction[i][k]= x[i];
+			if(x[i] < 0){
+				tempDistributionFunction[i][k] = 0;
+				if(abs(x[i]) > 1E-50){
+					printf("distribution[i] < 0\n");
+				}
+			}
 		}
 		//tempDistributionFunction[rgridNumber][k] =x[rgridNumber-1];
 		tempDistributionFunction[rgridNumber][k] = 0;
