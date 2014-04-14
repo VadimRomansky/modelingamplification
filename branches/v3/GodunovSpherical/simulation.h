@@ -69,6 +69,8 @@ public:
 	double** distributionFunction;
 	double** tempDistributionFunction;
 
+	double** magneticField;
+
 	double momentum(int i);
 	double energy(int i);
 	double kineticEnergy(int i);
@@ -109,6 +111,10 @@ public:
 	void updateParameters();
 	void updateTimeStep();
 	void evaluateCosmicRayPressure();
+
+	void evauateField();
+	void evaluateCRFlux(double* crflux);
+	void growthRate(double* crflux, double* rate);
 
 	void updateGrid();
 	//std::list<GridZone*> createZones(int* type, double* gradientU, int& smallGradientZoneCount, int& bigGradientZoneCount);

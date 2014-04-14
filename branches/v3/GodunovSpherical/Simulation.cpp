@@ -40,7 +40,10 @@ Simulation::~Simulation(){
 	for(int i = 0; i <= rgridNumber; ++i){
 		delete[] distributionFunction[i];
 		delete[] tempDistributionFunction[i];
+		delete[] magneticField[i];
 	}
+
+	delete[] magneticField;
 	delete[] distributionFunction;
 	delete[] tempDistributionFunction;
 }
@@ -149,7 +152,7 @@ void Simulation::initializeProfile(){
 			middleDensity[i] = density0;
 			middleVelocity[i] = 0;
 			{
-				int count = rgridNumber/20;
+				int count = 5;
 				if(i < count){
 					middlePressure[i] = (gamma- 1)*initialEnergy/(4*pi*cube(grid[count])/3);
 				} else {
@@ -290,22 +293,22 @@ void Simulation::simulate(){
 			printf("deltaT <=0\n");
 		}
 		//prevTime = clock();
-		//evaluateHydrodynamic();
+		evaluateHydrodynamic();
 		//currentTime = clock();
 		//printf("dT evaluating hydro = %lf\n", (currentTime - prevTime)*1.0/CLOCKS_PER_SEC);
 
 		//prevTime = clock();
-		//if(i > 100){
-			//evaluateCR();
-		//}
+		if(i > 5000){
+			evaluateCR();
+		}
 		//currentTime = clock();
 		//printf("dT evaluating cosmic ray = %lf\n", (currentTime - prevTime)*1.0/CLOCKS_PER_SEC);
 
-		if(i < 1000){
-			evaluateHydrodynamic();
-		} else {
-			evaluateCR();
-		}
+		//if(i < 5000){
+			//evaluateHydrodynamic();
+		//} else {
+			//evaluateCR();
+		//}
 
 		myTime = myTime + deltaT;
 
