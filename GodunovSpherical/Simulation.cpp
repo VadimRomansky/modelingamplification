@@ -34,6 +34,7 @@ Simulation::~Simulation(){
 	delete[] middlePressure;
 	delete[] cosmicRayPressure;
 	delete[] gridVelocity;
+	delete[] kgrid;
 
 	delete[] tempU;
 
@@ -69,6 +70,7 @@ void Simulation::initializeProfile(){
 	middlePressure = new double[rgridNumber];
 	cosmicRayPressure = new double[rgridNumber+1];
 	gridVelocity = new double[rgridNumber +1];
+	kgrid = new double[kgridNumber];
 
 	tempU = new double[rgridNumber];
 	distributionFunction = new double*[rgridNumber+1];
