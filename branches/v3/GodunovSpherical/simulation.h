@@ -62,6 +62,7 @@ public:
 	double* middlePressure;
 	double* cosmicRayPressure;
 	double* gridVelocity;
+	double* kgrid;
 	
 
 	double* tempU;
@@ -114,7 +115,7 @@ public:
 
 	void evauateField();
 	void evaluateCRFlux(double* crflux);
-	void growthRate(double* crflux, double* rate);
+	void growthRate(double** crflux, double** rate);
 
 	void updateGrid();
 	//std::list<GridZone*> createZones(int* type, double* gradientU, int& smallGradientZoneCount, int& bigGradientZoneCount);
