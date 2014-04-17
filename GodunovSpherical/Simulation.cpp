@@ -7,7 +7,7 @@
 
 //конструктор
 Simulation::Simulation(){
-	initialEnergy = 10E49;
+	initialEnergy = 10E45;
 	myTime = 0;
 	tracPen = true;
 	shockWavePoint = -1;
@@ -42,8 +42,15 @@ Simulation::~Simulation(){
 		delete[] distributionFunction[i];
 		delete[] tempDistributionFunction[i];
 		delete[] magneticField[i];
+		delete[] tempMagneticField[i];
+		delete[] crflux[i];
+		delete[] growth_rate[i];
 	}
 
+	delete[] magneticInductionSum;
+	delete[] tempMagneticField;
+	delete[] crflux;
+	delete[] growth_rate;
 	delete[] magneticField;
 	delete[] distributionFunction;
 	delete[] tempDistributionFunction;
@@ -72,6 +79,31 @@ void Simulation::initializeProfile(){
 	gridVelocity = new double[rgridNumber +1];
 	kgrid = new double[kgridNumber];
 
+	double kmin = 1;
+	double kmax = 10;
+	dk = (kmax - kmin)/(kgridNumber - 1);
+	for(int i = 0; i < kgridNumber; ++i){
+		kgrid[i] = kmin + i*dk;
+	}
+
+	magneticField = new double*[rgridNumber];
+	tempMagneticField = new double*[rgridNumber];
+	growth_rate = new double*[rgridNumber];
+	magneticInductionSum = new double[rgridNumber];
+	for(int i = 0; i < rgridNumber; ++i){
+		magneticField[i] = new double[kgridNumber];
+		tempMagneticField[i] = new double[kgridNumber];
+		growth_rate[i] = new double[kgridNumber];
+		for(int k = 0; k < kgridNumber; ++k){
+			magneticField[i][k] = 0.0001*B0*B0*power(kgrid[0]/kgrid[i], 5/3)/dk;
+		}
+	}
+
+	crflux = new double*[rgridNumber];
+	for(int i = 0; i < rgridNumber; ++i){
+		crflux[i] = new double[pgridNumber];
+	}
+
 	tempU = new double[rgridNumber];
 	distributionFunction = new double*[rgridNumber+1];
 	tempDistributionFunction = new double*[rgridNumber+1];
@@ -91,21 +123,24 @@ void Simulation::initializeProfile(){
 
 	deltaR0 = (upstreamR - downstreamR)/rgridNumber;
 	grid[0] = 0;
-	for(int i = 1; i <= rgridNumber; ++i){
+	/*for(int i = 1; i <= rgridNumber; ++i){
 		grid[i] = grid[i-1] + deltaR0;
-	}
-
-	/*double R0 = upstreamR*2/100000;
-	double a= upstreamR/2;
-	double b = upstreamR/2;
-	double h1=0.5*rgridNumber/log(1.0+a/R0);
-	double h2=0.5*rgridNumber/log(1.0+b/R0);
-	for(int i=1; i < rgridNumber/2; ++ i){ 
-		grid[i] = R0*(1 - exp(-(1.0*(i+1)-0.5*rgridNumber)/h1)) + upstreamR/2;
-	}
-	for(int i=rgridNumber/2; i < rgridNumber; ++i){
-		grid[i] = R0*(exp((1.0*(i+1)-0.5*rgridNumber)/h1)-1.0) + upstreamR/2;
 	}*/
+
+	int leftNumber = 100;
+	double shockWaveR = upstreamR/100;
+	double a = shockWaveR;
+	double b = upstreamR - shockWaveR;
+	double R1 = a/10;
+	double R2 = b/100;
+	double h1=leftNumber/log(1.0+a/R1);
+	double h2=(rgridNumber + 1 - leftNumber)/log(1.0+b/R2);
+	for(int i = 1; i < leftNumber; ++ i){ 
+		grid[i] = R1*(1 - exp(-(1.0*(i+1)-leftNumber)/h1)) + shockWaveR;
+	}
+	for(int i = leftNumber; i < rgridNumber; ++i){
+		grid[i] = R2*(exp((1.0*(i+1)- leftNumber)/h2)-1.0) + shockWaveR;
+	}
 	grid[rgridNumber] = upstreamR;
 
 	for(int i = 1; i <= rgridNumber; ++i){
@@ -154,7 +189,7 @@ void Simulation::initializeProfile(){
 			middleDensity[i] = density0;
 			middleVelocity[i] = 0;
 			{
-				int count = 5;
+				int count = 20;
 				if(i < count){
 					middlePressure[i] = (gamma- 1)*initialEnergy/(4*pi*cube(grid[count])/3);
 				} else {
@@ -300,9 +335,9 @@ void Simulation::simulate(){
 		//printf("dT evaluating hydro = %lf\n", (currentTime - prevTime)*1.0/CLOCKS_PER_SEC);
 
 		//prevTime = clock();
-		if(i > 5000){
-			evaluateCR();
-		}
+		//if(i > 5000){
+			//evaluateCR();
+		//}
 		//currentTime = clock();
 		//printf("dT evaluating cosmic ray = %lf\n", (currentTime - prevTime)*1.0/CLOCKS_PER_SEC);
 
@@ -311,6 +346,9 @@ void Simulation::simulate(){
 		//} else {
 			//evaluateCR();
 		//}
+
+		printf("field evaluating\n");
+		evaluateField();
 
 		myTime = myTime + deltaT;
 

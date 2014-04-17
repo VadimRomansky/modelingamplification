@@ -38,10 +38,20 @@ Simulation::~Simulation(){
 
 	delete[] tempU;
 
-	for(int i = 0; i < rgridNumber; ++i){
+	for(int i = 0; i <= rgridNumber; ++i){
 		delete[] distributionFunction[i];
 		delete[] tempDistributionFunction[i];
+		delete[] magneticField[i];
+		delete[] tempMagneticField[i];
+		delete[] crflux[i];
+		delete[] growth_rate[i];
 	}
+
+	delete[] magneticInductionSum;
+	delete[] tempMagneticField;
+	delete[] crflux;
+	delete[] growth_rate;
+	delete[] magneticField;
 	delete[] distributionFunction;
 	delete[] tempDistributionFunction;
 }
@@ -81,6 +91,33 @@ void Simulation::initializeProfile(){
 			distributionFunction[i][j] = 0;
 		}
 	}
+
+	kgrid = new double[kgridNumber];
+
+	double kmin = 1;
+	double kmax = 10;
+	dk = (kmax - kmin)/(kgridNumber - 1);
+	for(int i = 0; i < kgridNumber; ++i){
+		kgrid[i] = kmin + i*dk;
+	}
+	magneticField = new double*[rgridNumber];
+	tempMagneticField = new double*[rgridNumber];
+	growth_rate = new double*[rgridNumber];
+	magneticInductionSum = new double[rgridNumber];
+	for(int i = 0; i < rgridNumber; ++i){
+		magneticField[i] = new double[kgridNumber];
+		tempMagneticField[i] = new double[kgridNumber];
+		growth_rate[i] = new double[kgridNumber];
+		for(int k = 0; k < kgridNumber; ++k){
+			magneticField[i][k] = 0.0001*B0*B0*power(kgrid[0]/kgrid[i], 5/3)/dk;
+		}
+	}
+
+	crflux = new double*[rgridNumber];
+	for(int i = 0; i < rgridNumber; ++i){
+		crflux[i] = new double[pgridNumber];
+	}
+
 	double r = downstreamR;
 	double pressure0 = density0*kBoltzman*temperature/massProton;
 
@@ -300,9 +337,12 @@ void Simulation::simulate(){
 
 		//prevTime = clock();
 		//CheckNegativeDistribution();
-		//evaluateCR();
+		evaluateCR();
 		//currentTime = clock();
 		//printf("dT evaluating cosmic ray = %lf\n", (currentTime - prevTime)*1.0/CLOCKS_PER_SEC);
+
+		printf("evaluating magnetic field\n");
+		evaluateField();
 
 		myTime = myTime + deltaT;
 

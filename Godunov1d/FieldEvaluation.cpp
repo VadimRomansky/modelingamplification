@@ -8,7 +8,7 @@ void Simulation::evaluateField(){
 	growthRate();
 
 	for(int i = 1; i < rgridNumber; ++i){
-		for(int k = 0; k < kgridNumber; ++i){
+		for(int k = 0; k < kgridNumber; ++k){
 			tempMagneticField[i][k] = magneticField[i][k] + deltaT*(- 1.5*magneticField[i][k]*(middleVelocity[i] - middleVelocity[i-1])/middleDeltaR[i] - middleVelocity[i]*(magneticField[i-1][k] - magneticField[i][k])/middleDeltaR[i] + growth_rate[i][k]);
 			if(tempMagneticField[i][k] < 0){
 				tempMagneticField[i][k] = 0;
@@ -47,7 +47,7 @@ void Simulation::growthRate(){
 		}
 
 		double Bls = B0;
-		for(int k = 0; k < kgridNumber; ++i){
+		for(int k = 0; k < kgridNumber; ++k){
 			Bls = sqrt(4*pi*magneticField[i][k]*dk + Bls*Bls);
 			double kc = abs(4*pi*J/(speed_of_light*Bls));
 			double Va = Bls/sqrt(4*pi*middleDensity[i]);

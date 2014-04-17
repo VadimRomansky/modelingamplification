@@ -47,6 +47,8 @@ public:
 	double* logPgrid;
 	double deltaLogP;
 
+	double dk;
+
 	double* grid;
 	double* gridsquare;
 	double* volumeFactor;
@@ -71,6 +73,11 @@ public:
 	double** tempDistributionFunction;
 
 	double** magneticField;
+	double** tempMagneticField;
+	double** growth_rate;
+	double** crflux;
+
+	double* magneticInductionSum;
 
 	double momentum(int i);
 	double energy(int i);
@@ -113,9 +120,9 @@ public:
 	void updateTimeStep();
 	void evaluateCosmicRayPressure();
 
-	void evauateField();
-	void evaluateCRFlux(double* crflux);
-	void growthRate(double** crflux, double** rate);
+	void evaluateField();
+	void evaluateCRFlux();
+	void growthRate();
 
 	void updateGrid();
 	//std::list<GridZone*> createZones(int* type, double* gradientU, int& smallGradientZoneCount, int& bigGradientZoneCount);

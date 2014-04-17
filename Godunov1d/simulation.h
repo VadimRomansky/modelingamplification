@@ -47,6 +47,7 @@ public:
 	double* pgrid;
 	double* logPgrid;
 	double deltaLogP;
+	double dk;
 
 	double* grid;
 	double* middleGrid;
@@ -69,6 +70,15 @@ public:
 
 	double** distributionFunction;
 	double** tempDistributionFunction;
+
+	double* kgrid;
+
+	double** magneticField;
+	double** tempMagneticField;
+	double** growth_rate;
+	double** crflux;
+
+	double* magneticInductionSum;
 
 	double momentum(int i);
 	double energy(int i);
@@ -105,7 +115,10 @@ public:
 	void solveThreeDiagonal(double* middle, double* upper, double* lower, double* f, double* x, double* alpha, double* beta);
 	double injection();
 	void evaluateCosmicRayPressure();
-	void changeDistrFunction();
+
+	void evaluateField();
+	void evaluateCRFlux();
+	void growthRate();
 
 	double minmod(double a, double b);
 	double superbee(double a, double b);

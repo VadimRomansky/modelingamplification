@@ -183,12 +183,3 @@ void Simulation::evaluateCosmicRayPressure(){
 
 	delete[] partPressure;
 }
-
-void Simulation::changeDistrFunction(){
-	for(int j = 0; j < pgridNumber; ++j){
-		double p3 = cube(pgrid[j]);
-		for(int i = 0; i < rgridNumber; ++i){
-			distributionFunction[i][j] *= p3;
-		}
-	}
-}
