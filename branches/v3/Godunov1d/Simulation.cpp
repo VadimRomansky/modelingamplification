@@ -33,8 +33,8 @@ Simulation::~Simulation(){
 	delete[] cosmicRayPressure;
 	delete[] gridVelocity;
 
-	delete[] distrFunDerivative;
-	delete[] distrFunDerivative2;
+	delete[] kgrid;
+	delete[] logKgrid;
 
 	delete[] tempU;
 
@@ -61,9 +61,6 @@ Simulation::~Simulation(){
 void Simulation::initializeProfile(){
 	downstreamR = 0;
 	//upstreamR = 20000;
-
-	distrFunDerivative = new double[pgridNumber];
-	distrFunDerivative2 = new double[pgridNumber];
 
 	pgrid = new double[pgridNumber];
 	logPgrid = new double[pgridNumber];
@@ -93,12 +90,17 @@ void Simulation::initializeProfile(){
 	}
 
 	kgrid = new double[kgridNumber];
+	logKgrid = new double[kgridNumber];
 
-	double kmin = 1;
-	double kmax = 10;
-	dk = (kmax - kmin)/(kgridNumber - 1);
+	minP = 0.01*massProton*speed_of_light;
+	maxP = minP*10000000;
+
+	double kmin = (1E-9)*electron_charge*B0/(speed_of_light*maxP);
+	double kmax = (1E6)*electron_charge*B0/(speed_of_light*minP);
+	deltaLogK = (log(kmax) - log(kmin))/(kgridNumber - 1);
 	for(int i = 0; i < kgridNumber; ++i){
-		kgrid[i] = kmin + i*dk;
+		logKgrid[i] = log(kmin) + i*deltaLogK;
+		kgrid[i] = exp(logKgrid[i]);
 	}
 	magneticField = new double*[rgridNumber];
 	tempMagneticField = new double*[rgridNumber];
@@ -109,8 +111,18 @@ void Simulation::initializeProfile(){
 		tempMagneticField[i] = new double[kgridNumber];
 		growth_rate[i] = new double[kgridNumber];
 		for(int k = 0; k < kgridNumber; ++k){
-			magneticField[i][k] = 0.0001*B0*B0*power(kgrid[0]/kgrid[i], 5/3)/dk;
+			magneticField[i][k] = 0.00000001*B0*B0*power(kgrid[0]/kgrid[k], 5/3)/(kgrid[k]*deltaLogK);
+			tempMagneticField[i][k] = magneticField[i][k];
+			alertNaNOrInfinity(magneticField[i][k], "magnetic field = NaN");
 		}
+	}
+
+	for(int i = 0; i < rgridNumber; ++i){
+		double magneticEnergy = 0;
+		for(int k = 0; k < kgridNumber; ++k){
+			magneticEnergy += magneticField[i][k]*kgrid[k]*deltaLogK;
+		}
+		magneticInductionSum[i] = sqrt(4*pi*magneticEnergy + B0*B0);
 	}
 
 	crflux = new double*[rgridNumber];
@@ -122,8 +134,6 @@ void Simulation::initializeProfile(){
 	double pressure0 = density0*kBoltzman*temperature/massProton;
 
 	//minP = massProton*speed_of_light/10;
-	minP = 0.01*massProton*speed_of_light;
-	maxP = minP*10000000;
 
 
 	//deltaR0 = (upstreamR - downstreamR)/rgridNumber;
@@ -304,6 +314,9 @@ void Simulation::simulate(){
 	FILE* outDistributionDerivative;
 	fopen_s(&outDistributionDerivative, "./output/distributionDerivative.dat","w");
 	fclose(outDistributionDerivative);
+	FILE* outField;
+	fopen_s(&outField, "./output/field.dat","w");
+	fclose(outField);
 	updateShockWavePoint();
 	fopen_s(&outShockWave, "./output/shock_wave.dat","a");
 	double shockWaveR = 0;
@@ -341,8 +354,10 @@ void Simulation::simulate(){
 		//currentTime = clock();
 		//printf("dT evaluating cosmic ray = %lf\n", (currentTime - prevTime)*1.0/CLOCKS_PER_SEC);
 
-		printf("evaluating magnetic field\n");
-		evaluateField();
+		if(currentIteration > 1000){
+			printf("evaluating magnetic field\n");
+			evaluateField();
+		}
 
 		myTime = myTime + deltaT;
 
@@ -397,6 +412,10 @@ void Simulation::simulate(){
 			fopen_s(&outTempGrid, "./output/temp_grid.dat","a");
 			outputNewGrid(outTempGrid, this);
 			fclose(outTempGrid);
+
+			fopen_s(&outField, "./output/field.dat","a");
+			outputField(outField, this);
+			fclose(outField);
 		}
 	}
 }
