@@ -67,11 +67,6 @@ void outputDistributionP3(FILE* distributionFile, FILE* fullDistributionFile, FI
 	delete[] fullDistribution;
 }
 
-void outputDerivativeForDebug(FILE* outFile, Simulation* simulation){
-	for(int i = 0; i < pgridNumber; ++i){
-		fprintf(outFile, "%g %g %g\n", simulation->pgrid[i], simulation->distrFunDerivative[i], simulation->distrFunDerivative2[i]);
-	}
-}
 
 void outputNewGrid(FILE* outFile, Simulation* simulation){
 	for(int i = 0; i < simulation->rgridNumber; ++i){
@@ -86,4 +81,13 @@ void outMatrix(double* a, double* c, double* b, int N, double* f, double* x){
 		fprintf(file, "%g %g %g %g %g\n" , a[i-1], c[i], b[i-1], f[i], x[i]);
 	}
 	fclose(file);
+}
+
+void outputField(FILE* outFile, Simulation* simulation){
+	if(simulation->shockWavePoint > 0){
+		int shockWavePoint = simulation->shockWavePoint;
+		for(int k = 0; k < kgridNumber; ++k){
+			fprintf(outFile, "%g %g\n", simulation->kgrid[k], simulation->magneticField[shockWavePoint][k]);
+		}
+	}
 }

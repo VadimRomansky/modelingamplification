@@ -47,7 +47,7 @@ public:
 	double* pgrid;
 	double* logPgrid;
 	double deltaLogP;
-	double dk;
+	double deltaLogK;
 
 	double* grid;
 	double* middleGrid;
@@ -63,15 +63,13 @@ public:
 	double* cosmicRayPressure;
 	double* gridVelocity;
 
-	double* distrFunDerivative;
-	double* distrFunDerivative2;
-
 	double* tempU;
 
 	double** distributionFunction;
 	double** tempDistributionFunction;
 
 	double* kgrid;
+	double* logKgrid;
 
 	double** magneticField;
 	double** tempMagneticField;
