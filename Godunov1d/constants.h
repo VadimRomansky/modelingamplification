@@ -17,6 +17,5 @@ const int injectionMomentum = 29;
 const double gradientLevel = 0.2;
 const double gridExpLevel = 0.9;
 const double minDeltaR = 5.0E14;
-const int changeDistributionParameter = 1000000000000;
 
 #endif

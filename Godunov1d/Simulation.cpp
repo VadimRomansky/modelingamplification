@@ -111,8 +111,9 @@ void Simulation::initializeProfile(){
 		tempMagneticField[i] = new double[kgridNumber];
 		growth_rate[i] = new double[kgridNumber];
 		for(int k = 0; k < kgridNumber; ++k){
-			magneticField[i][k] = 0.00000001*B0*B0*power(kgrid[0]/kgrid[k], 5/3)/(kgrid[k]*deltaLogK);
+			magneticField[i][k] = 0.00001*B0*B0*power(1/kgrid[k], 5/3)*power(kgrid[0],2/3);
 			tempMagneticField[i][k] = magneticField[i][k];
+			growth_rate[i][k] = 0;
 			alertNaNOrInfinity(magneticField[i][k], "magnetic field = NaN");
 		}
 	}
@@ -340,6 +341,10 @@ void Simulation::simulate(){
 		printf("time = %lf\n", myTime);
 		printf("solving\n");
 		deltaT = min2(500, deltaT);
+		if(currentIteration > 200){
+			printf("evaluating magnetic field\n");
+			evaluateField();
+		}		
 		//deltaT = 5000;
 		//deltaT = 0.001;
 		//prevTime = clock();
@@ -353,11 +358,6 @@ void Simulation::simulate(){
 		evaluateCR();
 		//currentTime = clock();
 		//printf("dT evaluating cosmic ray = %lf\n", (currentTime - prevTime)*1.0/CLOCKS_PER_SEC);
-
-		if(currentIteration > 1000){
-			printf("evaluating magnetic field\n");
-			evaluateField();
-		}
 
 		myTime = myTime + deltaT;
 

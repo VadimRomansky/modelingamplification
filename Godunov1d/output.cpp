@@ -87,7 +87,7 @@ void outputField(FILE* outFile, Simulation* simulation){
 	if(simulation->shockWavePoint > 0){
 		int shockWavePoint = simulation->shockWavePoint;
 		for(int k = 0; k < kgridNumber; ++k){
-			fprintf(outFile, "%g %g\n", simulation->kgrid[k], simulation->magneticField[shockWavePoint][k]);
+			fprintf(outFile, "%g %g %g\n", simulation->kgrid[k], simulation->magneticField[shockWavePoint][k], simulation->growth_rate[shockWavePoint][k]);
 		}
 	}
 }
