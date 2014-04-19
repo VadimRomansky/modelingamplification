@@ -36,7 +36,7 @@ void Simulation::growthRate(){
 	for(int i = 0; i < rgridNumber; ++i){
 		double J = 0;
 		for(int j = 0; j < pgridNumber; ++j){
-			J = crflux[i][j]*cube(pgrid[j])*deltaLogP;
+			J += crflux[i][j]*cube(pgrid[j])*deltaLogP;
 		}
 
 		if(J == 0){
@@ -84,7 +84,8 @@ void Simulation::growthRate(){
 			}	
 			Complex b1 = (A1*electron_charge/J - 1)*sqr(kgrid[k]*Va)*(1 - (kc/kgrid[k]));
 			Complex b2 = (A2*electron_charge/J - 1)*sqr(kgrid[k]*Va)*(1 + (kc/kgrid[k]));
-			double alpha = 1.5;
+			//double alpha = 1.5;
+			double alpha = 0;
 			Complex d1 = Complex(0, -1)*((A1*0.5*electron_charge/J) + 1.5)*(kgrid[k]*kc)*alpha/(4*pi*middleDensity[i]);
 			Complex d2 = Complex(0, 1)*((A2*0.5*electron_charge/J) + 1.5)*(kgrid[k]*kc)*alpha/(4*pi*middleDensity[i]);
 
@@ -95,11 +96,19 @@ void Simulation::growthRate(){
 			Complex G2m = (csqrt(d2*d2 +b2*4) + d2)/(-2);
 
 			double rate = max2(max2(G1p.im, G1m.im), max2(G2p.im, G2m.im));
-			alertNaNOrInfinity(rate, "rate = NaN");
+			//alertNaNOrInfinity(rate, "rate = NaN");
 			if(rate > 0){
 				rate *= 2;
 			} else {
 				rate = 0;
+			}
+
+			if((rate != rate) || (0*rate != 0*rate)){
+				printf("rate = NaN\n");
+			}
+
+			if(rate*deltaT > 1){
+				deltaT = 0.5/rate;
 			}
 
 			growth_rate[i][k] = rate*magneticField[i][k];
