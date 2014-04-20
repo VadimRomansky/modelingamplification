@@ -12,6 +12,7 @@ void Simulation::evaluateField(){
 			tempMagneticField[i][k] = magneticField[i][k] + deltaT*(- 1.5*magneticField[i][k]*(middleVelocity[i] - middleVelocity[i-1])/middleDeltaR[i] - middleVelocity[i]*(magneticField[i][k] - magneticField[i-1][k])/middleDeltaR[i] + growth_rate[i][k]);
 			alertNaNOrInfinity(tempMagneticField[i][k], "magnetic field = NaN");
 			if(tempMagneticField[i][k] < 0){
+				printf("magneticField < 0\n");
 				tempMagneticField[i][k] = 0;
 			}
 		}
@@ -22,12 +23,21 @@ void Simulation::evaluateField(){
 			magneticField[i][k] = tempMagneticField[i][k];
 		}
 	}
+
+	for(int i = 0; i < rgridNumber; ++i){
+		double magneticEnergy = 0;
+		for(int k = 0; k < kgridNumber; ++k){
+			magneticEnergy += magneticField[i][k]*kgrid[k]*deltaLogK;
+			largeScaleField[i][k] = sqrt(4*pi*magneticEnergy + B0*B0);
+		}
+		magneticInductionSum[i] = sqrt(4*pi*magneticEnergy + B0*B0);
+	}
 }
 
 void Simulation::evaluateCRFlux(){
 	for(int i = 0; i < rgridNumber; ++i){
 		for(int j = 0; j < pgridNumber; ++j){
-			crflux[i][j] = electron_charge*diffusionCoef(i,pgrid[j])*(distributionFunction[i+1][j] - distributionFunction[i][j])/deltaR[i];
+			crflux[i][j] = electron_charge*diffusionCoef[i][j]*(distributionFunction[i+1][j] - distributionFunction[i][j])*cube(pgrid[j])*deltaLogP/deltaR[i];
 		}
 	}
 }
@@ -36,7 +46,7 @@ void Simulation::growthRate(){
 	for(int i = 0; i < rgridNumber; ++i){
 		double J = 0;
 		for(int j = 0; j < pgridNumber; ++j){
-			J += crflux[i][j]*cube(pgrid[j])*deltaLogP;
+			J += crflux[i][j];
 		}
 
 		if(J == 0){
@@ -76,11 +86,11 @@ void Simulation::growthRate(){
 				alertNaNOrInfinity(sigma1.im, "sigma = NaN");
 				sigma2 = sigma1.conjugate();
 
-				A1 = A1 + sigma1*(crflux[i][j]*cube(pgrid[j])*deltaLogP);
+				A1 = A1 + sigma1*crflux[i][j];
 
 				alertNaNOrInfinity(A1.real, "A = NaN");
 				alertNaNOrInfinity(A1.im, "A = NaN");
-				A2 = A2 + sigma2*(crflux[i][j]*cube(pgrid[j])*deltaLogP);
+				A2 = A2 + sigma2*crflux[i][j];
 			}	
 			Complex b1 = (A1*electron_charge/J - 1)*sqr(kgrid[k]*Va)*(1 - (kc/kgrid[k]));
 			Complex b2 = (A2*electron_charge/J - 1)*sqr(kgrid[k]*Va)*(1 + (kc/kgrid[k]));
