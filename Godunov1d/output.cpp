@@ -83,11 +83,20 @@ void outMatrix(double* a, double* c, double* b, int N, double* f, double* x){
 	fclose(file);
 }
 
-void outputField(FILE* outFile, Simulation* simulation){
+void outputField(FILE* outFile,FILE* outFull, FILE* xfile, FILE* kfile,  Simulation* simulation){
 	if(simulation->shockWavePoint > 0){
 		int shockWavePoint = simulation->shockWavePoint;
 		for(int k = 0; k < kgridNumber; ++k){
-			fprintf(outFile, "%g %g %g\n", simulation->kgrid[k], simulation->magneticField[shockWavePoint][k], simulation->growth_rate[shockWavePoint][k]);
+			fprintf(kfile, "%g\n", simulation->kgrid[k]);
+			fprintf(outFile, "%g %g %g\n", simulation->kgrid[k], simulation->magneticField[shockWavePoint][k], simulation->growth_rate[shockWavePoint][k]/simulation->magneticField[shockWavePoint][k]);
 		}
+	}
+
+	for(int i = 0; i < simulation->rgridNumber; ++i){
+		fprintf(xfile, "%g\n", simulation->grid[i]);
+		for(int k = 0; k < kgridNumber; ++k){
+			fprintf(outFull, "%g ", simulation->magneticField[i][k]);
+		}
+		fprintf(outFull, "\n");
 	}
 }

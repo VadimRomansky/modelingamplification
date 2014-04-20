@@ -125,7 +125,7 @@ void Simulation::initializeProfile(){
 		largeScaleField[i] = new double[kgridNumber];
 		growth_rate[i] = new double[kgridNumber];
 		for(int k = 0; k < kgridNumber; ++k){
-			magneticField[i][k] = 0.001*B0*B0*power(1/kgrid[k], 5/3)*power(kgrid[0],2/3);
+			magneticField[i][k] = 0.000001*B0*B0*power(1/kgrid[k], 5/3)*power(kgrid[0],2/3);
 			tempMagneticField[i][k] = magneticField[i][k];
 			if(k == 0){
 				largeScaleField[i][k] = sqrt(4*pi*magneticField[i][k]*kgrid[k]*deltaLogK + B0*B0);
@@ -331,14 +331,20 @@ void Simulation::simulate(){
 	fclose(outCoordinateDistribution);
 	fclose(outFullDistribution);
 	fclose(outDistribution);
-	FILE* outDistributionDerivative;
-	fopen_s(&outDistributionDerivative, "./output/distributionDerivative.dat","w");
-	fclose(outDistributionDerivative);
 	FILE* outField;
 	fopen_s(&outField, "./output/field.dat","w");
 	fclose(outField);
+	FILE* outFullField;
+	fopen_s(&outFullField, "./output/full_field.dat","w");
+	fclose(outFullField);
+	FILE* xFile;
+	fopen_s(&xFile, "./output/xfile.dat","w");
+	fclose(xFile);
+	FILE* kFile;
+	fopen_s(&kFile, "./output/kfile.dat","w");
+	fclose(kFile);
 	updateShockWavePoint();
-	fopen_s(&outShockWave, "./output/shock_wave.dat","a");
+	fopen_s(&outShockWave, "./output/shock_wave.dat","w");
 	double shockWaveR = 0;
 	if(shockWavePoint >= 0 && shockWavePoint <= rgridNumber){
 		shockWaveR = grid[shockWavePoint];
@@ -432,9 +438,15 @@ void Simulation::simulate(){
 			outputNewGrid(outTempGrid, this);
 			fclose(outTempGrid);
 
+			fopen_s(&outFullField, "./output/full_field.dat","w");
 			fopen_s(&outField, "./output/field.dat","a");
-			outputField(outField, this);
+			fopen_s(&xFile, "./output/xfile.dat","w");
+			fopen_s(&kFile, "./output/kfile.dat","w");
+			outputField(outField, outFullField, xFile, kFile, this);
 			fclose(outField);
+			fclose(outFullField);
+			fclose(xFile);
+			fclose(kFile);
 		}
 	}
 }

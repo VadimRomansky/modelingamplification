@@ -1,5 +1,8 @@
 clear;
 load field.dat;
+load full_field.dat;
+load kfile.dat;
+load xfile.dat;
 
 N1=1;
 N2=1000;
@@ -41,3 +44,6 @@ title ('G');
 xlabel ('k cm^-1');
 ylabel ('G');
 grid ;
+
+[X Y] = meshgrid(kfile, xfile);
+mesh(X, Y, full_field);
