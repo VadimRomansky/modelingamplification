@@ -65,6 +65,8 @@ public:
 
 	double* tempU;
 
+	double** diffusionCoef;
+
 	double** distributionFunction;
 	double** tempDistributionFunction;
 
@@ -73,6 +75,7 @@ public:
 
 	double** magneticField;
 	double** tempMagneticField;
+	double** largeScaleField;
 	double** growth_rate;
 	double** crflux;
 
@@ -90,7 +93,7 @@ public:
 	double momentumConvectiveFlux(int i);
 	double energyFlux(int i);
 
-	double Simulation::diffusionCoef(int i, double p);
+	void Simulation::updateDiffusionCoef();
 
 	Simulation();
 	~Simulation();

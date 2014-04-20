@@ -36,7 +36,7 @@ void alertNaNOrInfinity(double value, const char* s){
 	if(value != value || 0*value != 0*value){
 		printf(s);
 		printf("\n");
-		//Sleep(1000);
+		Sleep(100000);
 	}
 }
 

@@ -41,19 +41,23 @@ Simulation::~Simulation(){
 	for(int i = 0; i <= rgridNumber; ++i){
 		delete[] distributionFunction[i];
 		delete[] tempDistributionFunction[i];
+		delete[] largeScaleField[i];
 		delete[] magneticField[i];
 		delete[] tempMagneticField[i];
 		delete[] crflux[i];
 		delete[] growth_rate[i];
+		delete[] diffusionCoef[i];
 	}
 
 	delete[] magneticInductionSum;
 	delete[] tempMagneticField;
+	delete[] largeScaleField;
 	delete[] crflux;
 	delete[] growth_rate;
 	delete[] magneticField;
 	delete[] distributionFunction;
 	delete[] tempDistributionFunction;
+	delete[] diffusionCoef;
 }
 
 //инициализация профиля после считывания данных
@@ -89,6 +93,14 @@ void Simulation::initializeProfile(){
 		}
 	}
 
+	diffusionCoef = new double*[rgridNumber];
+	for(int i = 0; i < rgridNumber; ++i){
+		diffusionCoef[i] = new double[pgridNumber];
+		for(int j =0; j< pgridNumber; ++j){
+			diffusionCoef[i][j] = 1000*pgrid[j]*speed_of_light*speed_of_light/(electron_charge*B0);
+		}
+	}
+
 	kgrid = new double[kgridNumber];
 	logKgrid = new double[kgridNumber];
 
@@ -104,15 +116,22 @@ void Simulation::initializeProfile(){
 	}
 	magneticField = new double*[rgridNumber];
 	tempMagneticField = new double*[rgridNumber];
+	largeScaleField = new double*[rgridNumber];
 	growth_rate = new double*[rgridNumber];
 	magneticInductionSum = new double[rgridNumber];
 	for(int i = 0; i < rgridNumber; ++i){
 		magneticField[i] = new double[kgridNumber];
 		tempMagneticField[i] = new double[kgridNumber];
+		largeScaleField[i] = new double[kgridNumber];
 		growth_rate[i] = new double[kgridNumber];
 		for(int k = 0; k < kgridNumber; ++k){
-			magneticField[i][k] = 0.00001*B0*B0*power(1/kgrid[k], 5/3)*power(kgrid[0],2/3);
+			magneticField[i][k] = 0.001*B0*B0*power(1/kgrid[k], 5/3)*power(kgrid[0],2/3);
 			tempMagneticField[i][k] = magneticField[i][k];
+			if(k == 0){
+				largeScaleField[i][k] = sqrt(4*pi*magneticField[i][k]*kgrid[k]*deltaLogK + B0*B0);
+			} else {
+				largeScaleField[i][k] = sqrt(4*pi*magneticField[i][k]*kgrid[k]*deltaLogK + sqr(largeScaleField[i][k-1]));
+			}
 			growth_rate[i][k] = 0;
 			alertNaNOrInfinity(magneticField[i][k], "magnetic field = NaN");
 		}
