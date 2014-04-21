@@ -125,7 +125,7 @@ void Simulation::initializeProfile(){
 		largeScaleField[i] = new double[kgridNumber];
 		growth_rate[i] = new double[kgridNumber];
 		for(int k = 0; k < kgridNumber; ++k){
-			magneticField[i][k] = 0.000001*B0*B0*power(1/kgrid[k], 5/3)*power(kgrid[0],2/3);
+			magneticField[i][k] = 0.001*B0*B0*power(1/kgrid[k], 5/3)*power(kgrid[0],2/3);
 			tempMagneticField[i][k] = magneticField[i][k];
 			if(k == 0){
 				largeScaleField[i][k] = sqrt(4*pi*magneticField[i][k]*kgrid[k]*deltaLogK + B0*B0);
@@ -366,7 +366,7 @@ void Simulation::simulate(){
 		printf("time = %lf\n", myTime);
 		printf("solving\n");
 		deltaT = min2(500, deltaT);
-		if(currentIteration > 200){
+		if(currentIteration > 5000){
 			printf("evaluating magnetic field\n");
 			evaluateField();
 		}		
@@ -1044,6 +1044,20 @@ void Simulation::updateTimeStep(){
 		if(abs(middleVelocity[i] - middleVelocity[i-1])*tempdt > 0.5*abs(3*deltaLogP*middleDeltaR[i])){
 			tempdt = 0.5*abs(3*deltaLogP*middleDeltaR[i]/(middleVelocity[i] - middleVelocity[i-1]));
 		}
+	}
+
+
+	double maxDiffusion = 0;
+	for(int i = 0; i < rgridNumber; ++i){
+		for(int j = 0; j < pgridNumber; ++j){
+			if(diffusionCoef[i][j] > maxDiffusion){
+				maxDiffusion  = diffusionCoef[i][j];
+			}
+		}
+	}
+
+	if((deltaT/(2*deltaR[rgridNumber/2]))*(maxDiffusion/deltaR[rgridNumber/2]) > 1){
+		deltaT = 0.5*deltaR[rgridNumber/2]*deltaR[rgridNumber/2]/maxDiffusion;
 	}
 
 	deltaT = 0.5*tempdt;
