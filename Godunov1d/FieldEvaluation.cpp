@@ -32,12 +32,14 @@ void Simulation::evaluateField(){
 		}
 		magneticInductionSum[i] = sqrt(4*pi*magneticEnergy + B0*B0);
 	}
+
+	//updateDiffusionCoef();
 }
 
 void Simulation::evaluateCRFlux(){
 	for(int i = 0; i < rgridNumber; ++i){
-		for(int j = 0; j < pgridNumber; ++j){
-			crflux[i][j] = electron_charge*diffusionCoef[i][j]*(distributionFunction[i+1][j] - distributionFunction[i][j])*cube(pgrid[j])*deltaLogP/deltaR[i];
+		for(int j = 1; j < pgridNumber; ++j){
+			crflux[i][j] = - electron_charge*(diffusionCoef[i][j]*(distributionFunction[i+1][j] - distributionFunction[i][j])/deltaR[i] + middleVelocity[i]*(distributionFunction[i][j] - distributionFunction[i][j-1])/(3*deltaLogP))*cube(pgrid[j])*deltaLogP;
 		}
 	}
 }

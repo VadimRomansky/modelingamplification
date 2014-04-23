@@ -314,7 +314,7 @@ void Simulation::simulate(){
 	fprintf(outShockWave, "%d %lf %d %lf\n", 0, myTime, shockWavePoint, shockWaveR);
 	fclose(outShockWave);
 	int i = 0;
-	deltaT = min2(500, deltaT);
+	deltaT = min2(50, deltaT);
 
 	clock_t currentTime = clock();
 	clock_t prevTime = currentTime;
@@ -325,7 +325,7 @@ void Simulation::simulate(){
 		printf("iteration ¹ %d\n", i);
 		printf("time = %lf\n", myTime);
 		printf("solving\n");
-		deltaT = min2(500, deltaT);
+		deltaT = min2(50, deltaT);
 		if(deltaT <= 0){
 			printf("deltaT <=0\n");
 		}
@@ -348,7 +348,7 @@ void Simulation::simulate(){
 		//}
 
 		printf("field evaluating\n");
-		evaluateField();
+		//evaluateField();
 
 		myTime = myTime + deltaT;
 
