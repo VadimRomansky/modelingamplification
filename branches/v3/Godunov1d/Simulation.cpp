@@ -108,7 +108,7 @@ void Simulation::initializeProfile(){
 	maxP = minP*10000000;
 
 	double kmin = (1E-9)*electron_charge*B0/(speed_of_light*maxP);
-	double kmax = (1E6)*electron_charge*B0/(speed_of_light*minP);
+	double kmax = (1E4)*electron_charge*B0/(speed_of_light*minP);
 	deltaLogK = (log(kmax) - log(kmin))/(kgridNumber - 1);
 	for(int i = 0; i < kgridNumber; ++i){
 		logKgrid[i] = log(kmin) + i*deltaLogK;
@@ -125,7 +125,7 @@ void Simulation::initializeProfile(){
 		largeScaleField[i] = new double[kgridNumber];
 		growth_rate[i] = new double[kgridNumber];
 		for(int k = 0; k < kgridNumber; ++k){
-			magneticField[i][k] = 0.001*B0*B0*power(1/kgrid[k], 5/3)*power(kgrid[0],2/3);
+			magneticField[i][k] = 0.00001*B0*B0*power(1/kgrid[k], 5/3)*power(kgrid[0],2/3);
 			tempMagneticField[i][k] = magneticField[i][k];
 			if(k == 0){
 				largeScaleField[i][k] = sqrt(4*pi*magneticField[i][k]*kgrid[k]*deltaLogK + B0*B0);
@@ -148,6 +148,9 @@ void Simulation::initializeProfile(){
 	crflux = new double*[rgridNumber];
 	for(int i = 0; i < rgridNumber; ++i){
 		crflux[i] = new double[pgridNumber];
+		for(int j = 0;j < pgridNumber; ++j){
+			crflux[i][j] = 0;
+		}
 	}
 
 	double r = downstreamR;
@@ -162,12 +165,12 @@ void Simulation::initializeProfile(){
 		//grid[i] = grid[i-1] + deltaR0;
 	//}
 
-	double R0 = upstreamR*2/100000;
-	double a= upstreamR/2;
+	double R0 = upstreamR*2/10000;
+	double a = upstreamR/2;
 	double b = upstreamR/2;
-	double h1=0.5*rgridNumber/log(1.0+a/R0);
-	double h2=0.5*rgridNumber/log(1.0+b/R0);
-	for(int i=0; i < rgridNumber/2; ++ i){ 
+	double h1 = 0.5*rgridNumber/log(1.0+a/R0);
+	double h2 = 0.5*rgridNumber/log(1.0+b/R0);
+	for(int i = 0; i < rgridNumber/2; ++i){ 
 		grid[i] = R0*(1 - exp(-(1.0*(i+1)-0.5*rgridNumber)/h1));
 	}
 	for(int i=rgridNumber/2; i < rgridNumber; ++i){
@@ -366,20 +369,25 @@ void Simulation::simulate(){
 		printf("time = %lf\n", myTime);
 		printf("solving\n");
 		deltaT = min2(500, deltaT);
-		if(currentIteration > 5000){
+		CheckNegativeDensity();
+		if(currentIteration > 2000){
 			printf("evaluating magnetic field\n");
 			evaluateField();
 		}		
 		//deltaT = 5000;
 		//deltaT = 0.001;
 		//prevTime = clock();
-		evaluateHydrodynamic();
+		deltaT /= 10;
+		for(int i = 0; i < 10; ++i){
+			evaluateHydrodynamic();
+		}
+		deltaT *= 10;
 		
 		//currentTime = clock();
 		//printf("dT evaluating hydro = %lf\n", (currentTime - prevTime)*1.0/CLOCKS_PER_SEC);
 
 		//prevTime = clock();
-		//CheckNegativeDistribution();
+
 		evaluateCR();
 		//currentTime = clock();
 		//printf("dT evaluating cosmic ray = %lf\n", (currentTime - prevTime)*1.0/CLOCKS_PER_SEC);
@@ -394,6 +402,7 @@ void Simulation::simulate(){
 		updateMaxSoundSpeed();
 		updateShockWavePoint();
 		updateParameters();
+		updateDiffusionCoef();
 		updateTimeStep();
 		deltaT = min2(500, deltaT);
 		if(currentIteration % writeParameter == 0){
@@ -465,7 +474,7 @@ void Simulation::evaluateHydrodynamic() {
 		}
 	}*/
 	solveDiscontinious();
-	CheckNegativeDensity();
+	//CheckNegativeDensity();
 	//updateMaxSoundSpeed();
 	//updateTimeStep();
 	//deltaT = min2(500, deltaT);
@@ -1056,8 +1065,15 @@ void Simulation::updateTimeStep(){
 		}
 	}
 
-	if((deltaT/(2*deltaR[rgridNumber/2]))*(maxDiffusion/deltaR[rgridNumber/2]) > 1){
-		deltaT = 0.5*deltaR[rgridNumber/2]*deltaR[rgridNumber/2]/maxDiffusion;
+	//if((tempdt/(2*deltaR[rgridNumber/2]))*(maxDiffusion/deltaR[rgridNumber/2]) > 160000){
+	for(int i = 1; i < rgridNumber; ++i){
+		double dx = (grid[i+1] - grid[i-1])/2;
+		double dxp=grid[i+1]-grid[i];
+		double dxm=grid[i]-grid[i-1];
+		double a = ((diffusionCoef[i-1][kgridNumber-1]/dxp + diffusionCoef[i][kgridNumber-1]/dxm) - (diffusionCoef[i-1][kgridNumber-1]/dxm) -(diffusionCoef[i][kgridNumber-1]/dxp))/(2*dx);
+		if(1 + tempdt*a < 0){
+			tempdt = 0.5/abs(a);
+		}
 	}
 
 	deltaT = 0.5*tempdt;

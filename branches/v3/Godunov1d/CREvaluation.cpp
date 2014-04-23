@@ -30,7 +30,7 @@ double Simulation::injection(){
 	double dp = (pgrid[injectionMomentum + 1] - pgrid[injectionMomentum - 1])/2;
 	double xi = 3.2;
 	double eta = cube(xi)*exp(-xi*xi);
-	return eta*middleDensity[shockWavePoint]*abs(middleVelocity[shockWavePoint])*pf/(massProton*dp);
+	return 1000*middleDensity[shockWavePoint]*abs(middleVelocity[shockWavePoint])*pf/(massProton*dp);
 	//return 1;
 }
 
@@ -42,7 +42,6 @@ void Simulation::evaluateCR(){
 	/*if(shockWavePoint > 0 && shockWavePoint < rgridNumber){
 		distributionFunction[shockWavePoint][injectionMomentum] += injection()*deltaT;
 	}*/
-	updateDiffusionCoef();
 	double* upper = new double[rgridNumber+1];
 	double* middle = new double[rgridNumber+1];
 	double* lower = new double[rgridNumber+1];
@@ -132,7 +131,7 @@ void Simulation::evaluateCR(){
 			alertNaNOrInfinity(x[i],"tempDistribution = NaN");
 			if(x[i] < 0){
 				tempDistributionFunction[i][k] = 0;
-				if(abs(x[i]) > 1E-10){
+				if(abs(x[i]) > 1E-50){
 					printf("tenpDistribution < 0\n");
 				}
 			}
