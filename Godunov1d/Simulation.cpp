@@ -32,6 +32,9 @@ Simulation::~Simulation(){
 	delete[] middlePressure;
 	delete[] cosmicRayPressure;
 	delete[] gridVelocity;
+	delete[] tempDensity;
+	delete[] tempMomentum;
+	delete[] tempEnergy;
 
 	delete[] kgrid;
 	delete[] logKgrid;
@@ -47,6 +50,8 @@ Simulation::~Simulation(){
 		delete[] crflux[i];
 		delete[] growth_rate[i];
 		delete[] diffusionCoef[i];
+		delete[] sigmaIm[i];
+		delete[] sigmaRe[i];
 	}
 
 	delete[] magneticInductionSum;
@@ -58,6 +63,8 @@ Simulation::~Simulation(){
 	delete[] distributionFunction;
 	delete[] tempDistributionFunction;
 	delete[] diffusionCoef;
+	delete[] sigmaIm;
+	delete[] sigmaRe;
 }
 
 //инициализация профиля после считывания данных
@@ -73,17 +80,25 @@ void Simulation::initializeProfile(){
 	deltaR = new double[rgridNumber];
 	middleDeltaR = new double[rgridNumber];
 	tempGrid = new double[rgridNumber];
+
 	pointDensity = new double[rgridNumber + 1];
 	pointVelocity = new double[rgridNumber + 1];
 	pointPressure = new double[rgridNumber + 1];
 	middleDensity = new double[rgridNumber];
 	middleVelocity = new double[rgridNumber];
 	middlePressure = new double[rgridNumber];
+
+	tempDensity = new double[rgridNumber];
+	tempMomentum = new double[rgridNumber];
+	tempEnergy = new double[rgridNumber];
+
 	cosmicRayPressure = new double[rgridNumber+1];
 	gridVelocity = new double[rgridNumber+1];
 	tempU = new double[rgridNumber];
+
 	distributionFunction = new double*[rgridNumber+1];
 	tempDistributionFunction = new double*[rgridNumber+1];
+
 	for(int i = 0; i <= rgridNumber; i ++){
 		cosmicRayPressure[i] = 0;
 		distributionFunction[i] = new double[pgridNumber];
@@ -118,12 +133,16 @@ void Simulation::initializeProfile(){
 	tempMagneticField = new double*[rgridNumber];
 	largeScaleField = new double*[rgridNumber];
 	growth_rate = new double*[rgridNumber];
+	sigmaIm = new double*[rgridNumber];
+	sigmaRe = new double*[rgridNumber];
 	magneticInductionSum = new double[rgridNumber];
 	for(int i = 0; i < rgridNumber; ++i){
 		magneticField[i] = new double[kgridNumber];
 		tempMagneticField[i] = new double[kgridNumber];
 		largeScaleField[i] = new double[kgridNumber];
 		growth_rate[i] = new double[kgridNumber];
+		sigmaIm[i] = new double[kgridNumber];
+		sigmaRe[i] = new double[kgridNumber];
 		for(int k = 0; k < kgridNumber; ++k){
 			magneticField[i][k] = 0.00001*B0*B0*power(1/kgrid[k], 5/3)*power(kgrid[0],2/3);
 			tempMagneticField[i][k] = magneticField[i][k];
@@ -134,6 +153,8 @@ void Simulation::initializeProfile(){
 			}
 			growth_rate[i][k] = 0;
 			alertNaNOrInfinity(magneticField[i][k], "magnetic field = NaN");
+			sigmaIm[i][k] = 0;
+			sigmaRe[i][k] = 0;
 		}
 	}
 
@@ -165,7 +186,7 @@ void Simulation::initializeProfile(){
 		//grid[i] = grid[i-1] + deltaR0;
 	//}
 
-	double R0 = upstreamR*2/10000;
+	double R0 = upstreamR*2/1000;
 	double a = upstreamR/2;
 	double b = upstreamR/2;
 	double h1 = 0.5*rgridNumber/log(1.0+a/R0);
@@ -236,12 +257,12 @@ void Simulation::initializeProfile(){
 				int intCount = count/10;
 				if(i < count){
 					middleDensity[i] = density0/sigma;
-					middleVelocity[i] = U0 + 10000000;
+					middleVelocity[i] = U0;
 					//middleVelocity[i] = 1;
 					middlePressure[i] = pressure*0.0000000000001;
 				} else {
 					middleDensity[i] = density0;
-					middleVelocity[i] = U0/sigma + 10000000;
+					middleVelocity[i] = U0/sigma;
 					//middleVelocity[i] = 0.25;
 					middlePressure[i] = pressure*0.75;
 				}
@@ -288,6 +309,9 @@ void Simulation::initializeProfile(){
 		pointDensity[i] = middleDensity[i];
 		pointVelocity[i] = middleVelocity[i];
 		pointPressure[i] = middlePressure[i];
+		tempDensity[i] = middleDensity[i];
+		tempMomentum[i] = momentum(i);
+		tempEnergy[i] = energy(i);
 	}
 
 	pointDensity[rgridNumber] = pointDensity[rgridNumber - 1];
@@ -369,40 +393,23 @@ void Simulation::simulate(){
 		printf("time = %lf\n", myTime);
 		printf("solving\n");
 		deltaT = min2(500, deltaT);
-		CheckNegativeDensity();
-		if(currentIteration > 2000){
-			printf("evaluating magnetic field\n");
+
+		//evaluateHydrodynamic();
+		
+		evaluateCR();
+
+		if(currentIteration > 5000){
 			evaluateField();
 		}		
-		//deltaT = 5000;
-		//deltaT = 0.001;
-		//prevTime = clock();
-		deltaT /= 10;
-		for(int i = 0; i < 10; ++i){
-			evaluateHydrodynamic();
-		}
-		deltaT *= 10;
-		
-		//currentTime = clock();
-		//printf("dT evaluating hydro = %lf\n", (currentTime - prevTime)*1.0/CLOCKS_PER_SEC);
-
-		//prevTime = clock();
-
-		evaluateCR();
-		//currentTime = clock();
-		//printf("dT evaluating cosmic ray = %lf\n", (currentTime - prevTime)*1.0/CLOCKS_PER_SEC);
 
 		myTime = myTime + deltaT;
 
-		//prevTime = clock();
-		//updateGrid();
-		//currentTime = clock();
-		//printf("dT updating grid = %lf\n", (currentTime - prevTime)*1.0/CLOCKS_PER_SEC);
+		updateAll();
 
 		updateMaxSoundSpeed();
 		updateShockWavePoint();
 		updateParameters();
-		updateDiffusionCoef();
+
 		updateTimeStep();
 		deltaT = min2(500, deltaT);
 		if(currentIteration % writeParameter == 0){
@@ -462,6 +469,7 @@ void Simulation::simulate(){
 
 //расчет гидродинамики
 void Simulation::evaluateHydrodynamic() {
+	printf("evaluating hydrodynamic\n");
 
 	/*if(shockWavePoint > 0 && shockWavePoint < rgridNumber){
 		double shockWaveU = pointVelocity[shockWavePoint];
@@ -474,14 +482,11 @@ void Simulation::evaluateHydrodynamic() {
 		}
 	}*/
 	solveDiscontinious();
-	//CheckNegativeDensity();
+	CheckNegativeDensity();
 	//updateMaxSoundSpeed();
 	//updateTimeStep();
 	//deltaT = min2(500, deltaT);
 
-	double* tempDensity = new double[rgridNumber];
-	double* tempMomentum = new double[rgridNumber];
-	double* tempEnergy = new double[rgridNumber];
 	double* dFlux = new double[rgridNumber];
 	double* mFlux = new double[rgridNumber];
 	double* eFlux = new double[rgridNumber];
@@ -518,34 +523,6 @@ void Simulation::evaluateHydrodynamic() {
 	}
 	TracPen(tempEnergy, eFlux, maxSoundSpeed);
 
-	if(tempDensity[rgridNumber - 1] < middleDensity[rgridNumber - 1]){
-		printf("aaa\n");
-	}
-	for(int i = 0; i < rgridNumber; ++i){
-		//if(i != 0 || tempDensity[i] < middleDensity[i]){
-			middleDensity[i] = tempDensity[i];
-		//}
-		alertNaNOrInfinity(middleDensity[i], "density = NaN");
-		double middleMomentum = tempMomentum[i];
-		alertNaNOrInfinity(middleMomentum, "momentum = NaN");
-		double middleEnergy = tempEnergy[i];
-		alertNaNOrInfinity(middleEnergy, "energy = NaN");
-		middleVelocity[i] = middleMomentum/middleDensity[i];
-
-		middlePressure[i] = (middleEnergy - middleDensity[i]*middleVelocity[i]*middleVelocity[i]/2)*(gamma - 1);
-		if(middleDensity[i] <= epsilon*density0){
-			middleDensity[i] = epsilon*density0;
-			middleVelocity[i] = 0;
-			middlePressure[i] = middleDensity[i]*kBoltzman*temperature/massProton;
-		}
-		if(middlePressure[i] <= 0){
-			middlePressure[i] = epsilon*middleDensity[i]*kBoltzman*temperature/massProton;
-		}
-	}
-
-	delete[] tempDensity;
-	delete[] tempMomentum;
-	delete[] tempEnergy;
 	delete[] dFlux;
 	delete[] mFlux;
 	delete[] eFlux;
@@ -1065,7 +1042,6 @@ void Simulation::updateTimeStep(){
 		}
 	}
 
-	//if((tempdt/(2*deltaR[rgridNumber/2]))*(maxDiffusion/deltaR[rgridNumber/2]) > 160000){
 	for(int i = 1; i < rgridNumber; ++i){
 		double dx = (grid[i+1] - grid[i-1])/2;
 		double dxp=grid[i+1]-grid[i];
@@ -1076,6 +1052,9 @@ void Simulation::updateTimeStep(){
 		}
 	}
 
+	if(tempdt*maxDiffusion/sqr(deltaR[rgridNumber/2]) > 5){
+		tempdt = 5*sqr(deltaR[rgridNumber/2])/maxDiffusion;
+	}
 	deltaT = 0.5*tempdt;
 }
 
@@ -1135,4 +1114,61 @@ void Simulation::updateParameters(){
 			totalParticles += 4*pi*distributionFunction[i][j]*dr*dp/pgrid[j];
 		}
 	}
+}
+
+void Simulation::updateAll(){
+	//hydrodinamic
+	if(tempDensity[rgridNumber - 1] < middleDensity[rgridNumber - 1]){
+		printf("aaa\n");
+	}
+	for(int i = 0; i < rgridNumber; ++i){
+		//if(i != 0 || tempDensity[i] < middleDensity[i]){
+			middleDensity[i] = tempDensity[i];
+		//}
+		alertNaNOrInfinity(middleDensity[i], "density = NaN");
+		double middleMomentum = tempMomentum[i];
+		alertNaNOrInfinity(middleMomentum, "momentum = NaN");
+		double middleEnergy = tempEnergy[i];
+		alertNaNOrInfinity(middleEnergy, "energy = NaN");
+		middleVelocity[i] = middleMomentum/middleDensity[i];
+
+		middlePressure[i] = (middleEnergy - middleDensity[i]*middleVelocity[i]*middleVelocity[i]/2)*(gamma - 1);
+		if(middleDensity[i] <= epsilon*density0){
+			middleDensity[i] = epsilon*density0;
+			middleVelocity[i] = 0;
+			middlePressure[i] = middleDensity[i]*kBoltzman*temperature/massProton;
+		}
+		if(middlePressure[i] <= 0){
+			middlePressure[i] = epsilon*middleDensity[i]*kBoltzman*temperature/massProton;
+		}
+	}
+
+	//cosmic rays
+
+	for(int i = 0; i <= rgridNumber; ++i){
+		for(int j = 0; j < pgridNumber; ++j){
+			distributionFunction[i][j] = tempDistributionFunction[i][j];
+		}
+	}
+	evaluateCosmicRayPressure();
+
+
+	//field
+
+	for(int i = 1; i < rgridNumber; ++i){
+		for(int k = 0; k < kgridNumber; ++k){
+			magneticField[i][k] = tempMagneticField[i][k];
+		}
+	}
+
+	for(int i = 0; i < rgridNumber; ++i){
+		double magneticEnergy = 0;
+		for(int k = 0; k < kgridNumber; ++k){
+			magneticEnergy += magneticField[i][k]*kgrid[k]*deltaLogK;
+			largeScaleField[i][k] = sqrt(4*pi*magneticEnergy + B0*B0);
+		}
+		magneticInductionSum[i] = sqrt(4*pi*magneticEnergy + B0*B0);
+	}
+
+	updateDiffusionCoef();
 }

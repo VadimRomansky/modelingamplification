@@ -4,6 +4,8 @@
 #include "complex.h"
 
 void Simulation::evaluateField(){
+	printf("evaluating magnetic field\n");
+
 	evaluateCRFlux();
 	growthRate();
 
@@ -18,34 +20,25 @@ void Simulation::evaluateField(){
 		}
 	}
 
-	for(int i = 1; i < rgridNumber; ++i){
-		for(int k = 0; k < kgridNumber; ++k){
-			magneticField[i][k] = tempMagneticField[i][k];
-		}
-	}
-
-	for(int i = 0; i < rgridNumber; ++i){
-		double magneticEnergy = 0;
-		for(int k = 0; k < kgridNumber; ++k){
-			magneticEnergy += magneticField[i][k]*kgrid[k]*deltaLogK;
-			largeScaleField[i][k] = sqrt(4*pi*magneticEnergy + B0*B0);
-		}
-		magneticInductionSum[i] = sqrt(4*pi*magneticEnergy + B0*B0);
-	}
-
 	//updateDiffusionCoef();
 }
 
 void Simulation::evaluateCRFlux(){
 	for(int i = 0; i < rgridNumber; ++i){
 		for(int j = 1; j < pgridNumber; ++j){
-			crflux[i][j] = - electron_charge*(diffusionCoef[i][j]*(distributionFunction[i+1][j] - distributionFunction[i][j])/deltaR[i] + middleVelocity[i]*(distributionFunction[i][j] - distributionFunction[i][j-1])/(3*deltaLogP))*cube(pgrid[j])*deltaLogP;
+			crflux[i][j] = - electron_charge*(diffusionCoef[i][j]*(distributionFunction[i+1][j] - distributionFunction[i][j])/deltaR[i])*cube(pgrid[j])*deltaLogP;
 		}
 	}
 }
 
 void Simulation::growthRate(){
 	for(int i = 0; i < rgridNumber; ++i){
+		if(i > shockWavePoint){
+			for(int k = 0; k < kgridNumber; ++k){
+				growth_rate[i][k] = 0;
+			}
+			continue;
+		}
 		double J = 0;
 		for(int j = 0; j < pgridNumber; ++j){
 			J += crflux[i][j];
@@ -94,12 +87,12 @@ void Simulation::growthRate(){
 				alertNaNOrInfinity(A1.im, "A = NaN");
 				A2 = A2 + sigma2*crflux[i][j];
 			}	
-			Complex b1 = (A1*electron_charge/J - 1)*sqr(kgrid[k]*Va)*(1 - (kc/kgrid[k]));
-			Complex b2 = (A2*electron_charge/J - 1)*sqr(kgrid[k]*Va)*(1 + (kc/kgrid[k]));
+			Complex b1 = (A1/J - 1)*sqr(kgrid[k]*Va)*(1 - (kc/kgrid[k]));
+			Complex b2 = (A2/J - 1)*sqr(kgrid[k]*Va)*(1 + (kc/kgrid[k]));
 			//double alpha = 1.5;
 			double alpha = 0;
-			Complex d1 = Complex(0, -1)*((A1*0.5*electron_charge/J) + 1.5)*(kgrid[k]*kc)*alpha/(4*pi*middleDensity[i]);
-			Complex d2 = Complex(0, 1)*((A2*0.5*electron_charge/J) + 1.5)*(kgrid[k]*kc)*alpha/(4*pi*middleDensity[i]);
+			Complex d1 = Complex(0, -1)*((A1*0.5/J) + 1.5)*(kgrid[k]*kc)*alpha/(4*pi*middleDensity[i]);
+			Complex d2 = Complex(0, 1)*((A2*0.5/J) + 1.5)*(kgrid[k]*kc)*alpha/(4*pi*middleDensity[i]);
 
 			Complex G1p = (csqrt(d1*d1 +b1*4) - d1)/2;
 			Complex G1m = (csqrt(d1*d1 +b1*4) + d1)/(-2);
