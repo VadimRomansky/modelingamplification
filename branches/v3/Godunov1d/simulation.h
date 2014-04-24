@@ -62,6 +62,9 @@ public:
 	double* middlePressure;
 	double* cosmicRayPressure;
 	double* gridVelocity;
+	double* tempDensity;
+	double* tempMomentum;
+	double* tempEnergy;
 
 	double* tempU;
 
@@ -78,6 +81,9 @@ public:
 	double** largeScaleField;
 	double** growth_rate;
 	double** crflux;
+
+	double** sigmaIm;
+	double** sigmaRe;
 
 	double* magneticInductionSum;
 
@@ -127,6 +133,8 @@ public:
 	void updateShockWavePoint();
 	void updateParameters();
 	void updateTimeStep();
+
+	void updateAll();
 
 	void updateGrid();
 	//std::list<GridZone*> createZones(int* type, double* gradientU, int& smallGradientZoneCount, int& bigGradientZoneCount);

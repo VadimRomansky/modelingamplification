@@ -90,14 +90,16 @@ void Simulation::evaluateCR(){
 			xm=(grid[i]+grid[i-1])/2;
 			gip=(distributionFunction[i+1][k] + distributionFunction[i][k])/2;
 			gim=(distributionFunction[i][k] + distributionFunction[i-1][k])/2;
-			lower[i-1] = -(deltaT/(2*dx))*(diffusionCoef[i-1][k]/dxm);// - 0.5*deltaT*middleVelocity[i-1]/dx;
-			middle[i] = 1 + (deltaT/(2*dx))*(diffusionCoef[i-1][k]/dxp + diffusionCoef[i][k]/dxm);// + 0.5*(middleVelocity[i] - middleVelocity[i-1])/dx;
-			upper[i] = -(deltaT/(2*dx))*(diffusionCoef[i][k]/dxp);//  + 0.5*deltaT*middleVelocity[i]/dx;
-			f[i] = distributionFunction[i][k] + (deltaT/(2*dx))*(diffusionCoef[i][k]*(distributionFunction[i+1][k] - distributionFunction[i][k])/dxp
-							- diffusionCoef[i-1][k]*(distributionFunction[i][k] - distributionFunction[i-1][k])/dxm)
-							//- (deltaT/dx)*(middleVelocity[i]*gip - middleVelocity[i-1]*gim)
+			lower[i-1] = -(deltaT/(dx))*(diffusionCoef[i-1][k]/dxm);// - 0.5*deltaT*middleVelocity[i-1]/dx;
+			middle[i] = 1 + (deltaT/(dx))*(diffusionCoef[i-1][k]/dxp + diffusionCoef[i][k]/dxm);// + 0.5*(middleVelocity[i] - middleVelocity[i-1])/dx;
+			upper[i] = -(deltaT/(dx))*(diffusionCoef[i][k]/dxp);//  + 0.5*deltaT*middleVelocity[i]/dx;
+			f[i] = distributionFunction[i][k] // + (deltaT/(2*dx))*(diffusionCoef[i][k]*(distributionFunction[i+1][k] - distributionFunction[i][k])/dxp
+							//- diffusionCoef[i-1][k]*(distributionFunction[i][k] - distributionFunction[i-1][k])/dxm)
 							- (deltaT/dx)*(middleVelocity[i]*distributionFunction[i][k] - middleVelocity[i-1]*distributionFunction[i-1][k])
 							+ (deltaT/3)*((middleVelocity[i] - middleVelocity[i-1])/dx)*((gkp - gkm)/deltaLogP);
+			if(f[i] < 0){
+				printf("f[i] < 0\n");
+			}
 			//if(i == shockWavePoint && k == injectionMomentum && currentIteration > 500){
 			if(i == shockWavePoint && k == injectionMomentum && currentIteration > 50){
 				f[i] += deltaT*injection();
@@ -131,7 +133,7 @@ void Simulation::evaluateCR(){
 			alertNaNOrInfinity(x[i],"tempDistribution = NaN");
 			if(x[i] < 0){
 				tempDistributionFunction[i][k] = 0;
-				if(abs(x[i]) > 1E-50){
+				if(abs(x[i]) > 1E-100){
 					printf("tenpDistribution < 0\n");
 				}
 			}
@@ -139,13 +141,6 @@ void Simulation::evaluateCR(){
 		}
 		tempDistributionFunction[rgridNumber][k] =x[rgridNumber-1];
 	}
-
-	for(int i = 0; i <= rgridNumber; ++i){
-		for(int j = 0; j < pgridNumber; ++j){
-			distributionFunction[i][j] = tempDistributionFunction[i][j];
-		}
-	}
-	evaluateCosmicRayPressure();
 
 	delete[] upper;
 	delete[] middle;
