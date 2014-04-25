@@ -5,12 +5,23 @@
 #include "output.h"
 #include "progon.h"
 
-double Simulation::diffusionCoef(int i, double p){
-	double B = B0;
-	double coef = 10000*p*speed_of_light*speed_of_light/(electron_charge*B);
-	double dx = deltaR[i];
-	double lambda = coef/speed_of_light;
-	return coef;
+void Simulation::updateDiffusionCoef(){
+	for(int i = 0; i < rgridNumber; ++i){
+		for(int j = 0; j < pgridNumber; ++j){
+			double p = pgrid[j];
+			double B = B0;
+			for(int k = 0; k < kgridNumber; ++k){
+				if(kgrid[k] > electron_charge*largeScaleField[i][k]/(speed_of_light*p) ){
+					B = largeScaleField[i][k];
+					break;
+				}
+			}
+			double coef = p*speed_of_light*speed_of_light/(electron_charge*B);
+			double dx = deltaR[i];
+			double lambda = coef/speed_of_light;
+			diffusionCoef[i][j] = coef;
+		}
+	}
 }
 
 //инжекционный член
@@ -90,11 +101,11 @@ void Simulation::evaluateCR(){
 			dV = (xp*xp*xp - xm*xm*xm)/3;
 			gip=(distributionFunction[i+1][k] + distributionFunction[i][k])/2;
 			gim=(distributionFunction[i][k] + distributionFunction[i-1][k])/2;
-			lower[i-1] = -(deltaT/(2*dV))*(xm*xm*diffusionCoef(i-1,p)/dxm);
-			middle[i] = 1 + (deltaT/(2*dV))*(xp*xp*diffusionCoef(i-1,p)/dxp + xm*xm*diffusionCoef(i,p)/dxm);
-			upper[i] = -(deltaT/(2*dV))*(xp*xp*diffusionCoef(i,p)/dxp);
-			f[i] = distributionFunction[i][k] + (deltaT/(2*dV))*(xp*xp*diffusionCoef(rgridNumber-1,p)*(distributionFunction[i+1][k] - distributionFunction[i][k])/dxp
-							- xm*xm*diffusionCoef(i-1,p)*(distributionFunction[i][k] - distributionFunction[i-1][k])/dxm)
+			lower[i-1] = -(deltaT/(2*dV))*(xm*xm*diffusionCoef[i-1][k]/dxm);
+			middle[i] = 1 + (deltaT/(2*dV))*(xp*xp*diffusionCoef[i-1][k]/dxp + xm*xm*diffusionCoef[i][k]/dxm);
+			upper[i] = -(deltaT/(2*dV))*(xp*xp*diffusionCoef[i][k]/dxp);
+			f[i] = distributionFunction[i][k] + (deltaT/(2*dV))*(xp*xp*diffusionCoef[i][k]*(distributionFunction[i+1][k] - distributionFunction[i][k])/dxp
+							- xm*xm*diffusionCoef[i-1][k]*(distributionFunction[i][k] - distributionFunction[i-1][k])/dxm)
 							- (deltaT/dV)*(xp*xp*middleVelocity[i]*distributionFunction[i][k] - xm*xm*middleVelocity[i-1]*distributionFunction[i-1][k]);
 			if((xp*xp*middleVelocity[i] - xm*xm*middleVelocity[i-1]) < 0){
 				if(gkp - gkm < 0)
@@ -121,9 +132,9 @@ void Simulation::evaluateCR(){
 		dV = (xp*xp*xp - xm*xm*xm)/3;
 		gip = distributionFunction[rgridNumber-1][k];
 		gim = (distributionFunction[rgridNumber-1][k] + distributionFunction[rgridNumber - 2][k])/2;
-		lower[rgridNumber-2] = -(deltaT/(2*dV))*(xp*xp*diffusionCoef(rgridNumber-1,p)/dxp);
-		middle[rgridNumber-1] = 1 + (deltaT/(2*dV))*(xm*xm*diffusionCoef(rgridNumber-1,p)/dxm);
-		f[rgridNumber-1] = distributionFunction[rgridNumber-1][k] - (deltaT/(2*dV))*(xm*xm*diffusionCoef(rgridNumber-2,p)*(distributionFunction[rgridNumber-1][k] - distributionFunction[rgridNumber - 2][k])/dxm)
+		lower[rgridNumber-2] = -(deltaT/(2*dV))*(xp*xp*diffusionCoef[rgridNumber-1][k]/dxp);
+		middle[rgridNumber-1] = 1 + (deltaT/(2*dV))*(xm*xm*diffusionCoef[rgridNumber-1][k]/dxm);
+		f[rgridNumber-1] = distributionFunction[rgridNumber-1][k] - (deltaT/(2*dV))*(xm*xm*diffusionCoef[rgridNumber-2][k]*(distributionFunction[rgridNumber-1][k] - distributionFunction[rgridNumber - 2][k])/dxm)
 							  - (deltaT/dV)*grid[rgridNumber-1]*grid[rgridNumber-1]*(middleVelocity[rgridNumber-1]*gip - middleVelocity[rgridNumber-2]*gim)
 							  + (deltaT/3)*((xp*xp*middleVelocity[rgridNumber-1] - xm*xm*middleVelocity[rgridNumber-2])/dV)*((gkp - gkm)/deltaLogP);
 		progon(lower,middle, upper,rgridNumber-1,f,x, alpha, beta);

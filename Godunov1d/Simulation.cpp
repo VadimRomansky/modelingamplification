@@ -112,7 +112,7 @@ void Simulation::initializeProfile(){
 	for(int i = 0; i < rgridNumber; ++i){
 		diffusionCoef[i] = new double[pgridNumber];
 		for(int j =0; j< pgridNumber; ++j){
-			diffusionCoef[i][j] = 1000*pgrid[j]*speed_of_light*speed_of_light/(electron_charge*B0);
+			diffusionCoef[i][j] = pgrid[j]*speed_of_light*speed_of_light/(electron_charge*B0);
 		}
 	}
 
@@ -318,6 +318,11 @@ void Simulation::initializeProfile(){
 	pointVelocity[rgridNumber] = pointVelocity[rgridNumber - 1];
 	pointPressure[rgridNumber] = pointPressure[rgridNumber - 1];
 	//grid[rgridNumber] = upstreamR;
+
+	prevShockWavePoint = -1;
+	shockWavePoint = -1;
+	shockWaveT = 0;
+	shockWaveSpeed = 0;
 }
 
 //главная функция
@@ -421,11 +426,13 @@ void Simulation::simulate(){
 
 			fopen_s(&outShockWave, "./output/shock_wave.dat","a");
 			double shockWaveR = 0;
+			double gasSpeed = 0;
 			if(shockWavePoint >= 0 && shockWavePoint <= rgridNumber){
 				shockWaveR = grid[shockWavePoint];
+				gasSpeed = middleVelocity[shockWavePoint - 1];
 			}
 
-			fprintf(outShockWave, "%d %lf %d %lf\n", currentIteration, myTime, shockWavePoint, shockWaveR);
+			fprintf(outShockWave, "%d %lf %d %lf %lf %lf\n", currentIteration, myTime, shockWavePoint, shockWaveR, shockWaveSpeed, gasSpeed);
 			fclose(outShockWave);
 
 			fopen_s(&outDistribution, "./output/distribution.dat","a");
@@ -1070,6 +1077,7 @@ void Simulation::updateTimeStep(){
 
 void Simulation::updateShockWavePoint(){
 	int tempShockWavePoint = -1;
+	shockWaveT += deltaT;
 	//double maxGrad = density0;
 	double maxGrad = U0/upstreamR;
 	for(int i = 10; i < 9*rgridNumber/10 - 1; ++i){
@@ -1083,6 +1091,11 @@ void Simulation::updateShockWavePoint(){
 		}
 	}
 	shockWaveMoved = (tempShockWavePoint != shockWavePoint);
+	if(shockWaveMoved && (tempShockWavePoint > -1) && (shockWavePoint > -1)){
+		prevShockWavePoint = shockWavePoint;
+		shockWaveSpeed = (grid[tempShockWavePoint] - grid[prevShockWavePoint])/(shockWaveT);
+		shockWaveT = 0;
+	}
 	shockWavePoint = tempShockWavePoint;
 }
 
