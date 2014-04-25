@@ -379,7 +379,7 @@ void Simulation::simulate(){
 
 	fprintf(outShockWave, "%d %lf %d %lf\n", 0, time, shockWavePoint, shockWaveR);
 	fclose(outShockWave);
-	deltaT = min2(500, deltaT);
+	deltaT = min2(1000, deltaT);
 	//deltaT = 5000;
 	//deltaT = 0.001;
 
@@ -392,7 +392,7 @@ void Simulation::simulate(){
 		printf("iteration ¹ %d\n", currentIteration);
 		printf("time = %lf\n", myTime);
 		printf("solving\n");
-		deltaT = min2(500, deltaT);
+		deltaT = min2(1000, deltaT);
 
 		//evaluateHydrodynamic();
 		
@@ -1052,8 +1052,16 @@ void Simulation::updateTimeStep(){
 		}
 	}
 
-	if(tempdt*maxDiffusion/sqr(deltaR[rgridNumber/2]) > 5){
+	/*if(tempdt*maxDiffusion/sqr(deltaR[rgridNumber/2]) > 5){
 		tempdt = 5*sqr(deltaR[rgridNumber/2])/maxDiffusion;
+	}*/
+	for(int i = 1; i < rgridNumber-1; ++i){
+		for(int j = 0; j < pgridNumber; ++j){
+			double der = (diffusionCoef[i][j]*((distributionFunction[i+1][j] - distributionFunction[i][j])/deltaR[i]) - diffusionCoef[i-1][j]*((distributionFunction[i][j] - distributionFunction[i-1][j])/deltaR[i-1]))/middleDeltaR[i];
+			if(distributionFunction[i][j] + der*tempdt < 0){
+				//tempdt = 0.5*abs(distributionFunction[i][j]/der);
+			}
+		}
 	}
 	deltaT = 0.5*tempdt;
 }
