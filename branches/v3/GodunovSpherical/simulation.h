@@ -25,11 +25,18 @@ public:
 	bool tracPen;
 
 	int rgridNumber;
+
 	int shockWavePoint;
+	int prevShockWavePoint;
 	bool shockWaveMoved;
+	double shockWaveSpeed;
+
+	double shockWaveT;
 
 	double R0;
 	double myTime;
+
+	int currentIteration;
 
 	double maxSoundSpeed;
 
@@ -47,7 +54,7 @@ public:
 	double* logPgrid;
 	double deltaLogP;
 
-	double dk;
+	double deltaLogK;
 
 	double* grid;
 	double* gridsquare;
@@ -64,9 +71,14 @@ public:
 	double* middlePressure;
 	double* cosmicRayPressure;
 	double* gridVelocity;
-	double* kgrid;
-	
+	double* tempDensity;
+	double* tempMomentum;
+	double* tempEnergy;
 
+	double* kgrid;
+	double* logKgrid;
+
+	double** diffusionCoef;
 	double* tempU;
 
 	double** distributionFunction;
@@ -74,6 +86,7 @@ public:
 
 	double** magneticField;
 	double** tempMagneticField;
+	double** largeScaleField;
 	double** growth_rate;
 	double** crflux;
 
@@ -90,8 +103,6 @@ public:
 	double densityFlux(int i);
 	double momentumConvectiveFlux(int i);
 	double energyFlux(int i);
-
-	double diffusionCoef(int i, double p);
 
 	Simulation();
 	~Simulation();
@@ -120,11 +131,14 @@ public:
 	void updateTimeStep();
 	void evaluateCosmicRayPressure();
 
+	void updateDiffusionCoef();
 	void evaluateField();
 	void evaluateCRFlux();
 	void growthRate();
 
 	void updateGrid();
+
+	void updateAll();
 	//std::list<GridZone*> createZones(int* type, double* gradientU, int& smallGradientZoneCount, int& bigGradientZoneCount);
     //void putPointsIntoZones(std::list<GridZone*>& zones, int pointsCount, int smallGradientZoneCount, int bigGradientZoneCount);
 	//void convertZonesToGrid(std::list<GridZone*>& zones);

@@ -27,7 +27,11 @@ public:
 
 	int rgridNumber;
 	int shockWavePoint;
+	int prevShockWavePoint;
 	bool shockWaveMoved;
+	double shockWaveSpeed;
+
+	double shockWaveT;
 
 	double R0;
 	double myTime;
@@ -99,7 +103,7 @@ public:
 	double momentumConvectiveFlux(int i);
 	double energyFlux(int i);
 
-	void Simulation::updateDiffusionCoef();
+	void updateDiffusionCoef();
 
 	Simulation();
 	~Simulation();
