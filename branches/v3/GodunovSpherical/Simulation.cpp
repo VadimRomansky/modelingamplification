@@ -102,6 +102,7 @@ void Simulation::initializeProfile(){
 		tempDistributionFunction[i] = new double[pgridNumber];
 		for(int j = 0; j < pgridNumber; ++j){
 			distributionFunction[i][j] = 0;
+			tempDistributionFunction[i][j] = 0;
 		}
 	}
 
@@ -118,6 +119,15 @@ void Simulation::initializeProfile(){
 
 	minP = massProton*speed_of_light/10;
 	maxP = minP*10000000;
+	logPgrid[0] = log(minP);
+	logPgrid[pgridNumber - 1] = log(maxP);
+	deltaLogP = (logPgrid[pgridNumber - 1] - logPgrid[0])/(pgridNumber - 1);
+	pgrid[0] = minP;
+	for(int i = 1; i < pgridNumber; ++i){
+		logPgrid[i] = logPgrid[i-1] + deltaLogP;
+		pgrid[i] = exp(logPgrid[i]);
+	}
+	pgrid[pgridNumber-1] = maxP;
 
 	kgrid = new double[kgridNumber];
 	logKgrid = new double[kgridNumber];
@@ -282,15 +292,6 @@ void Simulation::initializeProfile(){
 			break;
 		}
 	}
-	logPgrid[0] = log(minP);
-	logPgrid[pgridNumber - 1] = log(maxP);
-	deltaLogP = (logPgrid[pgridNumber - 1] - logPgrid[0])/(pgridNumber - 1);
-	pgrid[0] = minP;
-	for(int i = 1; i < pgridNumber; ++i){
-		logPgrid[i] = logPgrid[i-1] + deltaLogP;
-		pgrid[i] = exp(logPgrid[i]);
-	}
-	pgrid[pgridNumber-1] = maxP;
 
 	for(int i = 0; i < rgridNumber; ++i){
 		volumeFactor[i] = (cube(grid[i+1]) - cube(grid[i]))/3;
@@ -332,6 +333,7 @@ void Simulation::simulate(){
 	updateMaxSoundSpeed();
 	updateParameters();
 	updateTimeStep();
+	updateDiffusionCoef();
 
 	printf("creating files\n");
 	FILE* outFile;
@@ -384,7 +386,7 @@ void Simulation::simulate(){
 
 		evaluateHydrodynamic();
 		
-		//evaluateCR();
+		evaluateCR();
 
 		if(currentIteration > 5000){
 			//evaluateField();
@@ -411,7 +413,11 @@ void Simulation::simulate(){
 			double gasSpeed = 0;
 			if(shockWavePoint >= 0 && shockWavePoint <= rgridNumber){
 				shockWaveR = grid[shockWavePoint];
-				gasSpeed = middleVelocity[shockWavePoint - 1];
+				for(int i = shockWavePoint - 1; i > 0; --i){
+					if(middleVelocity[i] > gasSpeed){
+						gasSpeed = middleVelocity[i];
+					}
+				}
 			}
 
 			fprintf(outShockWave, "%d %lf %d %lf %lf %lf\n", currentIteration, myTime, shockWavePoint, shockWaveR, shockWaveSpeed, gasSpeed);
@@ -1026,10 +1032,12 @@ void Simulation::updateShockWavePoint(){
 	int tempShockWavePoint = -1;
 	shockWaveT += deltaT;
 
-	double maxGrad = U0/upstreamR;
+	//double maxGrad = U0/upstreamR;
+	double maxGrad = U0;
 	for(int i = 10; i < 9*rgridNumber/10 - 1; ++i){
 
-		double grad = (middleVelocity[i] - middleVelocity[i + 1])/middleDeltaR[i+1];
+		//double grad = (middleVelocity[i] - middleVelocity[i + 1])/middleDeltaR[i+1];
+		double grad = middleVelocity[i];
 
 		if(grad > maxGrad){
 			maxGrad = grad;
@@ -1127,8 +1135,8 @@ void Simulation::updateAll(){
 			largeScaleField[i][k] = sqrt(4*pi*magneticEnergy + B0*B0);
 		}
 		magneticInductionSum[i] = sqrt(4*pi*magneticEnergy + B0*B0);
-	}
+	}*/
 
-	updateDiffusionCoef();*/
+	updateDiffusionCoef();
 }
 
