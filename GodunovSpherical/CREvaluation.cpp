@@ -114,7 +114,7 @@ void Simulation::evaluateCR(){
 				if(gkpp - gkp > 0)
 					f[i] += (deltaT/3)*((xp*xp*middleVelocity[i] - xm*xm*middleVelocity[i-1])/dV)*((gkpp - gkp)/deltaLogP);
 			}
-			if(i == shockWavePoint && k == injectionMomentum){
+			if(i == shockWavePoint && k == injectionMomentum && currentIteration> 500){
 				f[i] += deltaT*injection()*grid[i]*grid[i]/dV;
 				injectedParticles += injection()*deltaT*4*pi*volume(i)*deltaLogP*grid[i]*grid[i]/dV;
 			}
@@ -145,9 +145,9 @@ void Simulation::evaluateCR(){
 			tempDistributionFunction[i][k]= x[i];
 			if(x[i] < 0){
 				tempDistributionFunction[i][k] = 0;
-				if(abs(x[i]) > 1E-50){
+				/*if(abs(x[i]) > 1E-50){
 					printf("distribution[i] < 0\n");
-				}
+				}*/
 			}
 		}
 		//tempDistributionFunction[rgridNumber][k] =x[rgridNumber-1];
@@ -159,7 +159,7 @@ void Simulation::evaluateCR(){
 			distributionFunction[i][j] = tempDistributionFunction[i][j];
 		}
 	}
-	evaluateCosmicRayPressure();
+	//evaluateCosmicRayPressure();
 
 	delete[] upper;
 	delete[] middle;
