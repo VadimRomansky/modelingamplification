@@ -123,7 +123,7 @@ void Simulation::initializeProfile(){
 	maxP = minP*10000000;
 
 	double kmin = (1E-9)*electron_charge*B0/(speed_of_light*maxP);
-	double kmax = (1E4)*electron_charge*B0/(speed_of_light*minP);
+	double kmax = (1E6)*electron_charge*B0/(speed_of_light*minP);
 	deltaLogK = (log(kmax) - log(kmin))/(kgridNumber - 1);
 	for(int i = 0; i < kgridNumber; ++i){
 		logKgrid[i] = log(kmin) + i*deltaLogK;
@@ -144,7 +144,7 @@ void Simulation::initializeProfile(){
 		sigmaIm[i] = new double[kgridNumber];
 		sigmaRe[i] = new double[kgridNumber];
 		for(int k = 0; k < kgridNumber; ++k){
-			magneticField[i][k] = 0.00001*B0*B0*power(1/kgrid[k], 5/3)*power(kgrid[0],2/3);
+			magneticField[i][k] = (1E-6)*B0*B0*power(1/kgrid[k], 5/3)*power(kgrid[0],2/3);
 			tempMagneticField[i][k] = magneticField[i][k];
 			if(k == 0){
 				largeScaleField[i][k] = sqrt(4*pi*magneticField[i][k]*kgrid[k]*deltaLogK + B0*B0);
@@ -186,7 +186,7 @@ void Simulation::initializeProfile(){
 		//grid[i] = grid[i-1] + deltaR0;
 	//}
 
-	double R0 = upstreamR*2/1000;
+	double R0 = upstreamR*2/100000;
 	double a = upstreamR/2;
 	double b = upstreamR/2;
 	double h1 = 0.5*rgridNumber/log(1.0+a/R0);
@@ -369,6 +369,9 @@ void Simulation::simulate(){
 	FILE* outFullField;
 	fopen_s(&outFullField, "./output/full_field.dat","w");
 	fclose(outFullField);
+	FILE* outCoef;
+	fopen_s(&outCoef, "./output/diff_coef.dat","w");
+	fclose(outCoef);
 	FILE* xFile;
 	fopen_s(&xFile, "./output/xfile.dat","w");
 	fclose(xFile);
@@ -397,13 +400,12 @@ void Simulation::simulate(){
 		printf("iteration № %d\n", currentIteration);
 		printf("time = %lf\n", myTime);
 		printf("solving\n");
-		deltaT = min2(1000, deltaT);
 
 		//evaluateHydrodynamic();
 		
 		evaluateCR();
 
-		if(currentIteration > 5000){
+		if(currentIteration > 1000){
 			evaluateField();
 		}		
 
@@ -416,7 +418,7 @@ void Simulation::simulate(){
 		updateParameters();
 
 		updateTimeStep();
-		deltaT = min2(500, deltaT);
+		deltaT = min2(1000, deltaT);
 		if(currentIteration % writeParameter == 0){
 			//вывод на некоторых итерациях
 			printf("outputing\n");
@@ -463,11 +465,13 @@ void Simulation::simulate(){
 
 			fopen_s(&outFullField, "./output/full_field.dat","w");
 			fopen_s(&outField, "./output/field.dat","a");
+			fopen_s(&outCoef, "./output/diff_coef.dat","a");
 			fopen_s(&xFile, "./output/xfile.dat","w");
 			fopen_s(&kFile, "./output/kfile.dat","w");
-			outputField(outField, outFullField, xFile, kFile, this);
+			outputField(outField, outFullField, outCoef, xFile, kFile, this);
 			fclose(outField);
 			fclose(outFullField);
+			fclose(outCoef);
 			fclose(xFile);
 			fclose(kFile);
 		}
@@ -478,21 +482,9 @@ void Simulation::simulate(){
 void Simulation::evaluateHydrodynamic() {
 	printf("evaluating hydrodynamic\n");
 
-	/*if(shockWavePoint > 0 && shockWavePoint < rgridNumber){
-		double shockWaveU = pointVelocity[shockWavePoint];
-		for(int i = 1; i < rgridNumber; ++i){
-			if(i <= shockWavePoint){
-				gridVelocity[i] = shockWaveU*(grid[i] + upstreamR/2)/(grid[shockWavePoint] + upstreamR/2);
-			} else {
-				gridVelocity[i] = shockWaveU*(grid[i] - upstreamR/2)/(grid[shockWavePoint] - upstreamR/2);
-			}
-		}
-	}*/
 	solveDiscontinious();
 	CheckNegativeDensity();
-	//updateMaxSoundSpeed();
-	//updateTimeStep();
-	//deltaT = min2(500, deltaT);
+
 
 	double* dFlux = new double[rgridNumber];
 	double* mFlux = new double[rgridNumber];
@@ -506,20 +498,7 @@ void Simulation::evaluateHydrodynamic() {
 		mFlux[i] = momentumConvectiveFlux(i);
 		eFlux[i] = energyFlux(i);
 	}
-	//updateFlux(dFlux);
-	//updateFlux(mFlux);
-	//updateFlux(eFlux);
 
-	//for(int i = 0; i <= rgridNumber; ++i){
-		//grid[i] += deltaT*gridVelocity[i];
-	//}
-
-	//for(int i = 0; i < rgridNumber; ++i){
-		//middleGrid[i] = (grid[i] + grid[i+1])/2;
-		//tempGrid[i] = grid[i];
-		//deltaR[i] = grid[i+1] - grid[i];
-		//gridVelocity[i] = 0;
-	//}
 
 	TracPen(tempDensity, dFlux, maxSoundSpeed);
 
@@ -1063,10 +1042,18 @@ void Simulation::updateTimeStep(){
 		tempdt = 5*sqr(deltaR[rgridNumber/2])/maxDiffusion;
 	}*/
 	for(int i = 1; i < rgridNumber-1; ++i){
-		for(int j = 0; j < pgridNumber; ++j){
-			double der = (diffusionCoef[i][j]*((distributionFunction[i+1][j] - distributionFunction[i][j])/deltaR[i]) - diffusionCoef[i-1][j]*((distributionFunction[i][j] - distributionFunction[i-1][j])/deltaR[i-1]))/middleDeltaR[i];
+		double dx = (grid[i+1] - grid[i-1])/2;
+		double dxp=grid[i+1]-grid[i];
+		double dxm=grid[i]-grid[i-1];
+		for(int j = 1; j < pgridNumber; ++j){
+			double gkp = distributionFunction[i][j];
+			double gkm = distributionFunction[i][j-1];
+			double der = (1/(2*dx))*(diffusionCoef[i][j]*(distributionFunction[i+1][j] - distributionFunction[i][j])/dxp - diffusionCoef[i-1][j]*(distributionFunction[i][j] - distributionFunction[i-1][j])/dxm) - (1/dx)*(middleVelocity[i]*distributionFunction[i][j] - middleVelocity[i-1]*distributionFunction[i-1][j]) + (1.0/3)*((middleVelocity[i] - middleVelocity[i-1])/dx)*((gkp - gkm)/deltaLogP);
 			if(distributionFunction[i][j] + der*tempdt < 0){
-				//tempdt = 0.5*abs(distributionFunction[i][j]/der);
+				tempdt = 0.5*abs(distributionFunction[i][j]/der);
+				if(tempdt < 0.1){
+					printf("ooo\n");
+				}
 			}
 		}
 	}

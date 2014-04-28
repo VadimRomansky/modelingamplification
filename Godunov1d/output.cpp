@@ -22,12 +22,12 @@ void outputDistribution(FILE* distributionFile, FILE* fullDistributionFile, FILE
 			double p = simulation->pgrid[j];
 			fullDistribution[j] += simulation->volume(i)*simulation->distributionFunction[i][j];
 		}
-		fprintf(coordinateDistributionFile, "%20.10lf %g\n", simulation->grid[i], simulation->distributionFunction[i][injectionMomentum]);
+		fprintf(coordinateDistributionFile, "%20.10lf %g %g\n", simulation->grid[i], simulation->distributionFunction[i][injectionMomentum], simulation->crflux[i][injectionMomentum]);
 	}
 
 	if(simulation->shockWavePoint > 0 && simulation->shockWavePoint < simulation->rgridNumber){
 		for(int j = 0; j < pgridNumber; ++j){
-			fprintf(distributionFile, "%g %g\n", simulation->pgrid[j], simulation->distributionFunction[simulation->shockWavePoint][j]);
+			fprintf(distributionFile, "%g %g %g\n", simulation->pgrid[j], simulation->distributionFunction[simulation->shockWavePoint][j], simulation->crflux[simulation->shockWavePoint][j]);
 		}
 	}
 
@@ -83,7 +83,7 @@ void outMatrix(double* a, double* c, double* b, int N, double* f, double* x){
 	fclose(file);
 }
 
-void outputField(FILE* outFile,FILE* outFull, FILE* xfile, FILE* kfile,  Simulation* simulation){
+void outputField(FILE* outFile,FILE* outFull, FILE* coefFile, FILE* xfile, FILE* kfile,  Simulation* simulation){
 	double* integralField = new double[kgridNumber];
 	for(int k = 0; k < kgridNumber; ++k){
 		integralField[k] = 0;
@@ -114,7 +114,12 @@ void outputField(FILE* outFile,FILE* outFull, FILE* xfile, FILE* kfile,  Simulat
 			fprintf(kfile, "%g\n", simulation->kgrid[k]);
 			fprintf(outFile, "%g %g %g %g\n", simulation->kgrid[k], simulation->magneticField[shockWavePoint][k], simulation->growth_rate[shockWavePoint][k]/simulation->magneticField[shockWavePoint][k], integralField[k]);
 		}
+
+		for(int j = 0; j < pgridNumber; ++j){
+			fprintf(coefFile, "%g %g %g %g\n", simulation->pgrid[j], simulation->diffusionCoef[shockWavePoint-1][j], simulation->diffusionCoef[shockWavePoint][j], simulation->diffusionCoef[shockWavePoint+1][j]);
+		}
 	}
+
 
 	delete[] integralField;
 }
