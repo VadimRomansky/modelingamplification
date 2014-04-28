@@ -36,7 +36,7 @@ double Simulation::injection(int i){
 	double dp = (pgrid[injectionMomentum + 1] - pgrid[injectionMomentum - 1])/2;
 	double xi = 3;
 	double eta = cube(xi)*exp(-xi*xi);
-	return 1000*middleDensity[i]*abs(middleVelocity[i])*pf/(massProton*dp);
+	return eta*middleDensity[i]*abs(middleVelocity[i])*pf/(massProton*dp);
 	//return abs(pf*middleDensity[i]*((middleVelocity[i+1] - middleVelocity[i])/middleDeltaR[shockWavePoint])/(3*massProton));
 	//return 1;
 }
@@ -106,7 +106,7 @@ void Simulation::evaluateCR(){
 				printf("f[i] < 0\n");
 			}
 			//if(i == shockWavePoint && k == injectionMomentum && currentIteration > 500){
-			if(abs(i-shockWavePoint) < 7 && abs(k - injectionMomentum) < 1 && currentIteration > 50){
+			if(abs(i-shockWavePoint) < 1 && abs(k - injectionMomentum) < 1 && currentIteration > 50){
 				f[i] += deltaT*injection(i);
 				injectedParticles += injection(i)*deltaT*4*pi*(middleGrid[i] - middleGrid[i-1])*deltaLogP;
 			}
