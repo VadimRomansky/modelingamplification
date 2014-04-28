@@ -36,7 +36,7 @@ double Simulation::injection(int i){
 	double dp = (pgrid[injectionMomentum + 1] - pgrid[injectionMomentum - 1])/2;
 	double xi = 3;
 	double eta = cube(xi)*exp(-xi*xi);
-	return eta*middleDensity[i]*abs(middleVelocity[i])*pf/(massProton*dp);
+	return (1E20)*middleDensity[i]*abs(middleVelocity[i])*pf/(massProton*dp);
 	//return abs(pf*middleDensity[i]*((middleVelocity[i+1] - middleVelocity[i])/middleDeltaR[shockWavePoint])/(3*massProton));
 	//return 1;
 }
