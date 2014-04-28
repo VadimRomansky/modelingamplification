@@ -67,7 +67,7 @@ Complex Complex::operator*(double a){
 }
 
 Complex Complex::operator/(double a){
-	Complex result = Complex(real/a, real/a);
+	Complex result = Complex(real/a, im/a);
 	return result;
 }
 
@@ -84,5 +84,6 @@ Complex csqrt(Complex a){
 
 	phi = phi/2;
 
-	return Complex(module*cos(phi), module*sin(phi));
+	Complex result = Complex(module*cos(phi), module*sin(phi));
+	return result;
 }

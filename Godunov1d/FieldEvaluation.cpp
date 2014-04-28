@@ -7,7 +7,7 @@ void Simulation::evaluateField(){
 	printf("evaluating magnetic field\n");
 
 	evaluateCRFlux();
-	growthRate();
+	//growthRate();
 
 	for(int i = 1; i < rgridNumber; ++i){
 		for(int k = 0; k < kgridNumber; ++k){
@@ -62,7 +62,7 @@ void Simulation::growthRate(){
 				alertNaNOrInfinity(z, "z = NaN");
 				Complex sigma1;
 				Complex sigma2;
-				if( z == 1){
+				if( abs(z - 1) < 0.00001){
 					sigma1 = 3/2;
 				} else if(z > 1) {
 					sigma1 = (1.5/sqr(z)) + 0.75*(1 - 1/(sqr(z)))*log(abs((z+1)/(z-1)))/z;
@@ -85,8 +85,9 @@ void Simulation::growthRate(){
 				alertNaNOrInfinity(A1.im, "A = NaN");
 				A2 = A2 + sigma2*crflux[i][j];
 			}	
-			Complex b1 = (A1/J - 1)*sqr(kgrid[k]*Va)*(1 - (kc/kgrid[k]));
-			Complex b2 = (A2/J - 1)*sqr(kgrid[k]*Va)*(1 + (kc/kgrid[k]));
+			Complex complex1 = Complex(1);
+			Complex b1 = (complex1 - (A1/J - 1)*(kc/kgrid[k]))*sqr(kgrid[k]*Va);
+			Complex b2 = (complex1 + (A2/J - 1)*(kc/kgrid[k]))*sqr(kgrid[k]*Va);
 			//double alpha = 1.5;
 			double alpha = 0;
 			Complex d1 = Complex(0, -1)*((A1*0.5/J) + 1.5)*(kgrid[k]*kc)*alpha/(4*pi*middleDensity[i]);
@@ -110,9 +111,9 @@ void Simulation::growthRate(){
 				printf("rate = NaN\n");
 			}
 
-			if(rate*deltaT > 1){
+			/*if(rate*deltaT > 1){
 				deltaT = 0.5/rate;
-			}
+			}*/
 
 			growth_rate[i][k] = rate*magneticField[i][k];
 			alertNaNOrInfinity(growth_rate[i][k], "growth_rate[i][k] = NaN");

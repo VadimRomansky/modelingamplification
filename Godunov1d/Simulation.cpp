@@ -359,7 +359,7 @@ void Simulation::simulate(){
 	fopen_s(&outDistribution, "./output/distribution.dat","w");
 	fopen_s(&outFullDistribution, "./output/fullDistribution.dat","w");
 	fopen_s(&outCoordinateDistribution, "./output/coordinateDistribution.dat","w");
-	outputDistribution(outDistribution, outFullDistribution, outCoordinateDistribution, this);
+	outputDistributionP3(outDistribution, outFullDistribution, outCoordinateDistribution, this);
 	fclose(outCoordinateDistribution);
 	fclose(outFullDistribution);
 	fclose(outDistribution);
@@ -1057,6 +1057,14 @@ void Simulation::updateTimeStep(){
 			}
 		}
 	}
+
+	for(int i = 1; i < rgridNumber; ++i){
+		for(int k = 0; k < kgridNumber; ++k){
+			if(tempdt*growth_rate[i][k] > magneticField[i][k]){
+				tempdt = 0.5*abs(magneticField[i][k]/growth_rate[i][k]);
+			}
+		}
+	}
 	deltaT = 0.5*tempdt;
 }
 
@@ -1179,4 +1187,5 @@ void Simulation::updateAll(){
 	}
 
 	updateDiffusionCoef();
+	growthRate();
 }
