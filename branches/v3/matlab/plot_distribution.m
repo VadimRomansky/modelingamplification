@@ -3,7 +3,7 @@ load distribution.dat;
 load fullDistribution.dat;
 load coordinateDistribution.dat;
 N1=1;
-N2=200;
+N2=1000;
 N3=100;
 
 m = 1.67*10^-24;
@@ -90,3 +90,10 @@ grid ;
 %xlabel ('p/mc');
 %ylabel ('f');
 %grid ;
+
+figure(8);
+plot (coordinateDistribution(b1*N2 + (1:N2),1), coordinateDistribution(b1*N2 + (1:N2),3),'blue', coordinateDistribution(b2*N2 + (1:N2),1), coordinateDistribution(b2*N2 + (1:N2),3),'green', coordinateDistribution(b3*N2 + (1:N2),1), coordinateDistribution(b3*N2 + (1:N2),3),'red');
+title ('J(p = const, r)');
+xlabel ('r');
+ylabel ('J');
+grid ;

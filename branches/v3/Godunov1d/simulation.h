@@ -124,7 +124,7 @@ public:
 
 	void evaluateCR();
 	void solveThreeDiagonal(double* middle, double* upper, double* lower, double* f, double* x, double* alpha, double* beta);
-	double injection();
+	double injection(int i);
 	void evaluateCosmicRayPressure();
 
 	void evaluateField();

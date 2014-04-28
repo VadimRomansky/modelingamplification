@@ -7,6 +7,6 @@ void outputDistribution(FILE* distributionFile, FILE* fullDistributionFile, FILE
 void outputDistributionP3(FILE* distributionFile, FILE* fullDistributionFile, FILE* coordinateDistributionFile, Simulation* simulation);
 void outputNewGrid(FILE* outFile, Simulation* simulation);
 void outMatrix(double* a, double* c, double* b, int N, double* f, double* x);
-void outputField(FILE* outFile, FILE* outFull, FILE* xfile, FILE* kfile, Simulation* simulation);
+void outputField(FILE* outFile, FILE* outFull, FILE* coefFile, FILE* xfile, FILE* kfile, Simulation* simulation);
 
 #endif

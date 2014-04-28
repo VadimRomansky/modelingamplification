@@ -1,7 +1,7 @@
 clear;
 load temp_grid.dat;
 N1=1;
-N2=100;
+N2=1000;
 N3=6;
 e = size(temp_grid,1)/N2 - 1;
 d = fix(3*e/4);
