@@ -10,8 +10,9 @@ void Simulation::evaluateField(){
 	//growthRate();
 
 	for(int i = 1; i < rgridNumber; ++i){
+		double delta = 5.0/21;
 		for(int k = 0; k < kgridNumber; ++k){
-			tempMagneticField[i][k] = magneticField[i][k] + deltaT*(- 1.5*(magneticField[i][k]*middleVelocity[i] - magneticField[i-1][k]*middleVelocity[i-1])/middleDeltaR[i] + 0.5*0.5*(middleVelocity[i]+middleVelocity[i-1])*(magneticField[i][k] - magneticField[i-1][k])/middleDeltaR[i] + growth_rate[i][k]);
+			tempMagneticField[i][k] = magneticField[i][k] + deltaT*(- 1.5*(magneticField[i][k]*middleVelocity[i] - magneticField[i-1][k]*middleVelocity[i-1])/middleDeltaR[i] + 0.5*(delta*middleVelocity[i]+(1-delta)*middleVelocity[i-1])*(magneticField[i][k] - magneticField[i-1][k])/middleDeltaR[i] + growth_rate[i][k]);
 			alertNaNOrInfinity(tempMagneticField[i][k], "magnetic field = NaN");
 			if(tempMagneticField[i][k] < 0){
 				printf("magneticField < 0\n");
