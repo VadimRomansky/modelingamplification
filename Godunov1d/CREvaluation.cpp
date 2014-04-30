@@ -147,6 +147,13 @@ void Simulation::evaluateCR(){
 		tempDistributionFunction[rgridNumber][k] =x[rgridNumber-1];
 	}
 
+	//if(currentIteration == 1000){
+	/*if(shockWavePoint > 1 && shockWavePoint < rgridNumber && currentIteration > 1000){
+		for(int j = 0; j < pgridNumber; ++j){
+			tempDistributionFunction[shockWavePoint+1][j] = tempDistributionFunction[shockWavePoint+2][j];
+		}
+	}*/
+
 	delete[] upper;
 	delete[] middle;
 	delete[] lower;
