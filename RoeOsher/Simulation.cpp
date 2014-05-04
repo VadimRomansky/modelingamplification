@@ -113,6 +113,7 @@ void Simulation::initializeProfile(){
 		tempDistributionFunction[i] = new double[pgridNumber];
 		for(int j = 0; j < pgridNumber; ++j){
 			distributionFunction[i][j] = 0;
+			tempDistributionFunction[i][j] = 0;
 		}
 	}
 
@@ -262,12 +263,12 @@ void Simulation::initializeProfile(){
 				int intCount = count/10;
 				if(i < count){
 					middleDensity[i] = density0/sigma;
-					middleVelocity[i] = U0 + 10000000;
+					middleVelocity[i] = U0;
 					//middleVelocity[i] = 1;
 					middlePressure[i] = pressure*1E-20;
 				} else {
 					middleDensity[i] = density0;
-					middleVelocity[i] = U0/sigma + 10000000;
+					middleVelocity[i] = U0/sigma;
 					//middleVelocity[i] = 0.25;
 					middlePressure[i] = pressure*0.75;
 				}
@@ -321,7 +322,7 @@ void Simulation::initializeProfile(){
 
 	pointDensity[rgridNumber] = pointDensity[rgridNumber - 1];
 	pointVelocity[rgridNumber] = pointVelocity[rgridNumber - 1];
-	pointEnthalpy[rgridNumber] = (energy(rgridNumber) + middlePressure[rgridNumber])/middleDensity[rgridNumber];
+	pointEnthalpy[rgridNumber] = (energy(rgridNumber-1) + middlePressure[rgridNumber-1])/middleDensity[rgridNumber-1];
 	//grid[rgridNumber] = upstreamR;
 
 	shockWaveT = 0;
@@ -337,6 +338,7 @@ void Simulation::simulate(){
 	//updateGrid();
 	updateMaxSoundSpeed();
 	updateParameters();
+	updateDiffusionCoef();
 	updateTimeStep();
 
 	printf("creating files\n");
@@ -409,7 +411,7 @@ void Simulation::simulate(){
 
 		evaluateHydrodynamic();
 		
-		//evaluateCR();
+		evaluateCR();
 
 		if(currentIteration > 1000){
 			//evaluateField();
@@ -707,14 +709,6 @@ double* Simulation::flux(int i){
 		result[1] = (leftMflux + rightMflux)/2;
 		result[2] = (leftEflux + rightEflux)/2;
 
-		//result[0] = pointDensity[i]*pointVelocity[i];
-		//result[1] = pointDensity[i]*pointVelocity[i]*pointVelocity[i] + pointDensity[i]*pointSoundSpeed[i]*pointSoundSpeed[i]/gamma;
-		//result[2] = pointDensity[i]*pointVelocity[i]*pointEnthalpy[i];
-
-		//result[0] = middleDensity[i-1]*middleVelocity[i-1];
-		//result[1] = middleDensity[i-1]*middleVelocity[i-1]*middleVelocity[i-1] + middlePressure[i-1];
-		//result[2] = middleVelocity[i-1]*(energy(i-1)+ middlePressure[i-1]);
-
 		for(int k = 0; k < 3; ++k){
 			for(int j = 0; j < 3; ++j){
 				result[k] -= 0.5*abs(lambda[j])*deltaS[j]*vectors[k][j];
@@ -773,34 +767,17 @@ double Simulation::superbee(double a, double b){
 
 void Simulation::updateMaxSoundSpeed(){
 	maxSoundSpeed = (sqrt(gamma*middlePressure[0]/middleDensity[0]) + abs(middleVelocity[0]));
-	//double tempdt = min2(deltaR[0]/maxSoundSpeed, deltaR[1]/maxSoundSpeed);
 	double cs = maxSoundSpeed;
 	for(int i = 1; i < rgridNumber - 1; ++i){
 		cs = (sqrt(gamma*middlePressure[i]/middleDensity[i]) + abs(middleVelocity[i]));
 		if(cs > maxSoundSpeed){
 			maxSoundSpeed = cs;
 		}
-		/*if(deltaR[i]/cs < tempdt){
-			tempdt = deltaR[i]/cs;
-		}
-		if(deltaR[i-1]/cs < tempdt){
-			tempdt = deltaR[i-1]/cs;
-		}
-		if(deltaR[i+1]/cs < tempdt){
-			tempdt = deltaR[i+1]/cs;
-		}*/
 	}
 	cs = (sqrt(gamma*middlePressure[rgridNumber - 1]/middleDensity[rgridNumber - 1]) + abs(middleVelocity[rgridNumber - 1]));
 	if(cs > maxSoundSpeed){
 		maxSoundSpeed = cs;
 	}
-	/*if(deltaR[rgridNumber - 1]/cs < tempdt){
-		tempdt = deltaR[rgridNumber - 1]/cs;
-	}
-	if(deltaR[rgridNumber - 2]/cs < tempdt){
-		tempdt = deltaR[rgridNumber - 2]/cs;
-	}
-	deltaT = 0.1*tempdt;*/
 }
 
 void Simulation::updateTimeStep(){
@@ -825,7 +802,7 @@ void Simulation::updateTimeStep(){
 	}
 
 	//by dp
-	/*for(int i = 1; i < rgridNumber; ++i){
+	for(int i = 1; i < rgridNumber; ++i){
 		if(abs(middleVelocity[i] - middleVelocity[i-1])*tempdt > 0.5*abs(3*deltaLogP*middleDeltaR[i])){
 			tempdt = 0.5*abs(3*deltaLogP*middleDeltaR[i]/(middleVelocity[i] - middleVelocity[i-1]));
 		}
@@ -849,7 +826,7 @@ void Simulation::updateTimeStep(){
 		if(1 + tempdt*a < 0){
 			tempdt = 0.5/abs(a);
 		}
-	}*/
+	}
 
 
 	/*for(int i = 1; i < rgridNumber-1; ++i){
@@ -985,13 +962,13 @@ void Simulation::updateAll(){
 
 	//cosmic rays
 
-	/*for(int i = 0; i <= rgridNumber; ++i){
+	for(int i = 0; i <= rgridNumber; ++i){
 		for(int j = 0; j < pgridNumber; ++j){
 			distributionFunction[i][j] = tempDistributionFunction[i][j];
 		}
 	}
 	evaluateCosmicRayPressure();
-	evaluateCRFlux();*/
+	evaluateCRFlux();
 
 
 	//field
