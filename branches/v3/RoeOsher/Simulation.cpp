@@ -264,7 +264,7 @@ void Simulation::initializeProfile(){
 					middleDensity[i] = density0/sigma;
 					middleVelocity[i] = U0 + 10000000;
 					//middleVelocity[i] = 1;
-					middlePressure[i] = pressure*0.0000000000001;
+					middlePressure[i] = pressure*1E-20;
 				} else {
 					middleDensity[i] = density0;
 					middleVelocity[i] = U0/sigma + 10000000;
@@ -539,7 +539,7 @@ void Simulation::solveDiscontinious(){
 		pointDensity[i] = sqrt(rho1*rho2);
 		pointVelocity[i] = (sqrt(rho1)*middleVelocity[i-1] + sqrt(middleDensity[i])*middleVelocity[i])/(sqrt(rho1) + sqrt(rho2));
 		pointEnthalpy[i] = (sqrt(rho1)*h1 + sqrt(rho2)*h2)/(sqrt(rho1) + sqrt(rho2));
-		pointSoundSpeed[i] = sqrt((sqrt(rho1)*c1*c1 + sqrt(rho2)*c2*c2)/(sqrt(rho1) + sqrt(rho2)) + 0.5*(gamma - 1)*(sqrt(rho1*rho2)/sqr(sqrt(rho1)+ sqrt(rho1)))*sqr(u1 - u2));
+		pointSoundSpeed[i] = sqrt((sqrt(rho1)*c1*c1 + sqrt(rho2)*c2*c2)/(sqrt(rho1) + sqrt(rho2)) + 0.5*(gamma - 1)*(sqrt(rho1*rho2)/sqr(sqrt(rho1)+ sqrt(rho2)))*sqr(u1 - u2));
 	}
 	pointEnthalpy[0] = (middlePressure[0] + energy(0))/middleDensity[0];
 	pointDensity[0] = middleDensity[0];

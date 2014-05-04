@@ -262,7 +262,7 @@ void Simulation::initializeProfile(){
 					middleDensity[i] = density0/sigma;
 					middleVelocity[i] = U0 + 10000000;
 					//middleVelocity[i] = 1;
-					middlePressure[i] = pressure*0.0000000000001;
+					middlePressure[i] = pressure*1E-15;
 				} else {
 					middleDensity[i] = density0;
 					middleVelocity[i] = U0/sigma + 10000000;
