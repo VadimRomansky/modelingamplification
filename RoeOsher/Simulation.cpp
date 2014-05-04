@@ -165,12 +165,12 @@ void Simulation::initializeProfile(){
 				int intCount = count/10;
 				if(i < count){
 					middleDensity[i] = density0/sigma;
-					middleVelocity[i] = U0 + 10000000;
+					middleVelocity[i] = U0;
 					//middleVelocity[i] = 1;
 					middlePressure[i] = pressure*0.0000000000001;
 				} else {
 					middleDensity[i] = density0;
-					middleVelocity[i] = U0/sigma + 10000000;
+					middleVelocity[i] = U0/sigma;
 					//middleVelocity[i] = 0.25;
 					middlePressure[i] = pressure*0.75;
 				}
@@ -446,7 +446,7 @@ void Simulation::solveDiscontinious(){
 		double h2 = (energy(i) + middlePressure[i])/rho2;
 		pointDensity[i] = sqrt(rho1*rho2);
 		pointVelocity[i] = (sqrt(rho1)*middleVelocity[i-1] + sqrt(middleDensity[i])*middleVelocity[i])/(sqrt(rho1) + sqrt(rho2));
-		pointEnthalpy[i] = (sqr(rho1)*h1 + sqrt(rho2)*h2)/(sqrt(rho1) + sqrt(rho2));
+		pointEnthalpy[i] = (sqrt(rho1)*h1 + sqrt(rho2)*h2)/(sqrt(rho1) + sqrt(rho2));
 		pointSoundSpeed[i] = sqrt((sqrt(rho1)*c1*c1 + sqrt(rho2)*c2*c2)/(sqrt(rho1) + sqrt(rho2)) + 0.5*(gamma - 1)*(sqrt(rho1*rho2)/sqr(sqrt(rho1)+ sqrt(rho1)))*sqr(u1 - u2));
 	}
 	pointEnthalpy[0] = (middlePressure[0] + energy(0))/middleDensity[0];
@@ -474,7 +474,6 @@ void Simulation::CheckNegativeDensity(){
 //Трак и Пен, немного модифицированные
 
 void Simulation::TracPen(double* u, double* flux, double cs){
-	cs = cs;
 
 	tempU[0] = u[0] - deltaT*(flux[1] - flux[0])/deltaR[0];
 	for(int i = 1; i < rgridNumber - 1; ++i){
@@ -626,8 +625,8 @@ double* Simulation::flux(int i){
 		deltaS[2] = ((middlePressure[i] - middlePressure[i-1]) + pointDensity[i]*pointSoundSpeed[i]*(middleVelocity[i] - middleVelocity[i-1]))/(2*sqr(pointSoundSpeed[i]));
 
 		double** vectors = new double*[3];
-		for(int i = 0; i < 3; ++i){
-			vectors[i] = new double[3];
+		for(int k = 0; k < 3; ++k){
+			vectors[k] = new double[3];
 		}
 
 		vectors[0][0] = 1;
@@ -640,26 +639,26 @@ double* Simulation::flux(int i){
 		vectors[2][1] = sqr(pointVelocity[i]);
 		vectors[2][2] = pointEnthalpy[i] + pointVelocity[i]*pointSoundSpeed[i];
 
-		//result[0] = (leftDflux + rightDflux)/2;
-		//result[1] = (leftMflux + rightMflux)/2;
-		//result[2] = (leftEflux + rightEflux)/2;
+		result[0] = (leftDflux + rightDflux)/2;
+		result[1] = (leftMflux + rightMflux)/2;
+		result[2] = (leftEflux + rightEflux)/2;
 
 		//result[0] = pointDensity[i]*pointVelocity[i];
 		//result[1] = pointDensity[i]*pointVelocity[i]*pointVelocity[i] + pointDensity[i]*pointSoundSpeed[i]*pointSoundSpeed[i]/gamma;
 		//result[2] = pointDensity[i]*pointVelocity[i]*pointEnthalpy[i];
 
-		result[0] = middleDensity[i-1]*middleVelocity[i-1];
-		result[1] = middleDensity[i-1]*middleVelocity[i-1]*middleVelocity[i-1] + middlePressure[i-1];
-		result[2] = middleVelocity[i-1]*(energy(i-1)+ middlePressure[i-1]);
+		//result[0] = middleDensity[i-1]*middleVelocity[i-1];
+		//result[1] = middleDensity[i-1]*middleVelocity[i-1]*middleVelocity[i-1] + middlePressure[i-1];
+		//result[2] = middleVelocity[i-1]*(energy(i-1)+ middlePressure[i-1]);
 
-		for(int i = 0; i < 3; ++i){
+		for(int k = 0; k < 3; ++k){
 			for(int j = 0; j < 3; ++j){
-				result[i] -= 0.5*abs(lambda[j])*deltaS[j]*vectors[i][j];
+				result[k] -= 0.5*abs(lambda[j])*deltaS[j]*vectors[k][j];
 			}
 		}
 
-		for(int i = 0; i < 3; ++i){
-			delete[] vectors[i];
+		for(int k = 0; k < 3; ++k){
+			delete[] vectors[k];
 		}
 		delete[] vectors;
 		delete[] deltaS;
