@@ -43,6 +43,8 @@ public:
 	double totalEnergy;
 	double totalKineticEnergy;
 	double totalTermalEnergy;
+	double totalMagneticEnergy;
+	double totalParticleEnergy;
 	double totalParticles;
 	double injectedParticles;
 
@@ -85,6 +87,7 @@ public:
 	double** largeScaleField;
 	double** growth_rate;
 	double** crflux;
+	double* integratedFlux;
 
 	double** sigmaIm;
 	double** sigmaRe;

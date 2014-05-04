@@ -34,9 +34,10 @@ void Simulation::updateDiffusionCoef(){
 double Simulation::injection(int i){
 	double pf = pgrid[injectionMomentum];
 	double dp = (pgrid[injectionMomentum + 1] - pgrid[injectionMomentum - 1])/2;
-	double xi = 3;
-	double eta = cube(xi)*exp(-xi*xi);
-	return (1E20)*middleDensity[i]*abs(middleVelocity[i])*pf/(massProton*dp);
+	//double xi = 5;
+	double xi = pgrid[injectionMomentum]*speed_of_light/(kBoltzman*temperatureIn(i+1));
+	double eta = cube(xi)*exp(-xi);
+	return (1E-17)*middleDensity[i]*abs(middleVelocity[i])*pf/(massProton*dp);
 	//return abs(pf*middleDensity[i]*((middleVelocity[i+1] - middleVelocity[i])/middleDeltaR[shockWavePoint])/(3*massProton));
 	//return 1;
 }

@@ -50,7 +50,7 @@ void outputDistributionP3(FILE* distributionFile, FILE* fullDistributionFile, FI
 			double p = simulation->pgrid[j];
 			fullDistribution[j] += simulation->volume(i)*simulation->distributionFunction[i][j];
 		}
-		fprintf(coordinateDistributionFile, "%20.10lf %g %g\n", simulation->grid[i], simulation->distributionFunction[i][injectionMomentum]/(cube(simulation->pgrid[injectionMomentum])), simulation->crflux[i][injectionMomentum]);
+		fprintf(coordinateDistributionFile, "%20.10lf %g %g %g %g %g\n", simulation->grid[i], simulation->distributionFunction[i][injectionMomentum]/(cube(simulation->pgrid[injectionMomentum])), simulation->distributionFunction[i][pgridNumber-1]/(cube(simulation->pgrid[pgridNumber-1])), simulation->crflux[i][injectionMomentum], simulation->crflux[i][pgridNumber-1], simulation->integratedFlux[i]);
 	}
 
 	if(simulation->shockWavePoint > 0 && simulation->shockWavePoint < simulation->rgridNumber){
@@ -83,7 +83,7 @@ void outMatrix(double* a, double* c, double* b, int N, double* f, double* x){
 	fclose(file);
 }
 
-void outputField(FILE* outFile,FILE* outFull, FILE* coefFile, FILE* xfile, FILE* kfile,  Simulation* simulation){
+void outputField(FILE* outFile, FILE* coordinateFile, FILE* outFull, FILE* coefFile, FILE* xfile, FILE* kfile,  Simulation* simulation){
 	double* integralField = new double[kgridNumber];
 	for(int k = 0; k < kgridNumber; ++k){
 		integralField[k] = 0;
@@ -92,6 +92,7 @@ void outputField(FILE* outFile,FILE* outFull, FILE* coefFile, FILE* xfile, FILE*
 	double volume = 0; 
 	for(int i = 0; i < simulation->rgridNumber; ++i){
 		fprintf(xfile, "%g\n", simulation->grid[i]);
+		fprintf(coordinateFile, "%g %g\n", simulation->grid[i],simulation->magneticField[i][35]);
 		if(abs(i-simulation->shockWavePoint) < 20){
 			volume += simulation->volume(i);
 		}
@@ -112,7 +113,7 @@ void outputField(FILE* outFile,FILE* outFull, FILE* coefFile, FILE* xfile, FILE*
 		int shockWavePoint = simulation->shockWavePoint;
 		for(int k = 0; k < kgridNumber; ++k){
 			fprintf(kfile, "%g\n", simulation->kgrid[k]);
-			fprintf(outFile, "%g %g %g %g\n", simulation->kgrid[k], simulation->magneticField[shockWavePoint][k], simulation->growth_rate[shockWavePoint][k]/simulation->magneticField[shockWavePoint][k], integralField[k]);
+			fprintf(outFile, "%g %g %g %g\n", simulation->kgrid[k], simulation->magneticField[shockWavePoint][k], simulation->growth_rate[shockWavePoint][k], integralField[k]);
 		}
 
 		for(int j = 0; j < pgridNumber; ++j){

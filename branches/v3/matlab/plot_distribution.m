@@ -97,3 +97,10 @@ title ('J(p = const, r)');
 xlabel ('r');
 ylabel ('J');
 grid ;
+
+figure(8);
+plot (coordinateDistribution(b1*N2 + (1:N2),1), coordinateDistribution(b1*N2 + (1:N2),4),'blue', coordinateDistribution(b2*N2 + (1:N2),1), coordinateDistribution(b2*N2 + (1:N2),4),'green', coordinateDistribution(b3*N2 + (1:N2),1), coordinateDistribution(b3*N2 + (1:N2),4),'red');
+title ('full J(r)');
+xlabel ('r');
+ylabel ('J');
+grid ;
