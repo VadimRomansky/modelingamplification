@@ -104,7 +104,7 @@ void Simulation::evaluateCR(){
 			f[i] = distributionFunction[i][k]  + deltaT*((1/(2*dx))*(diffusionCoef[i][k]*(distributionFunction[i+1][k] - distributionFunction[i][k])/dxp - diffusionCoef[i-1][k]*(distributionFunction[i][k] - distributionFunction[i-1][k])/dxm) - (1/dx)*(middleVelocity[i]*distributionFunction[i][k] - middleVelocity[i-1]*distributionFunction[i-1][k]) + (1.0/3)*((middleVelocity[i] - middleVelocity[i-1])/dx)*((gkp - gkm)/deltaLogP));
 
 			if(f[i] < 0 ){
-				printf("f[i] < 0\n");
+				//printf("f[i] < 0\n");
 			}
 			//if(i == shockWavePoint && k == injectionMomentum && currentIteration > 500){
 			if(abs(i-shockWavePoint) < 1 && abs(k - injectionMomentum) < 1 && currentIteration > 50){

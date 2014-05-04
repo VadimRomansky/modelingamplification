@@ -407,7 +407,7 @@ void Simulation::simulate(){
 
 		evaluateHydrodynamic();
 		
-		//evaluateCR();
+		evaluateCR();
 
 		if(currentIteration > 1000){
 			//evaluateField();
