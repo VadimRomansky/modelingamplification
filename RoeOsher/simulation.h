@@ -27,7 +27,11 @@ public:
 
 	int rgridNumber;
 	int shockWavePoint;
+	int prevShockWavePoint;
 	bool shockWaveMoved;
+	double shockWaveSpeed;
+
+	double shockWaveT;
 
 	double R0;
 	double myTime;
@@ -39,6 +43,8 @@ public:
 	double totalEnergy;
 	double totalKineticEnergy;
 	double totalTermalEnergy;
+	double totalMagneticEnergy;
+	double totalParticleEnergy;
 	double totalParticles;
 	double injectedParticles;
 
@@ -46,7 +52,10 @@ public:
 	double maxP;
 	double* pgrid;
 	double* logPgrid;
+	double* kgrid;
+	double* logKgrid;
 	double deltaLogP;
+	double deltaLogK;
 
 	double* grid;
 	double* middleGrid;
@@ -61,14 +70,25 @@ public:
 	double* middlePressure;
 	double* cosmicRayPressure;
 	double* pointSoundSpeed;
-
-	double* distrFunDerivative;
-	double* distrFunDerivative2;
+	double* tempDensity;
+	double* tempMomentum;
+	double* tempEnergy;
 
 	double* tempU;
 
+	double** diffusionCoef;
+
 	double** distributionFunction;
 	double** tempDistributionFunction;
+
+	double** magneticField;
+	double** tempMagneticField;
+	double** largeScaleField;
+	double** growth_rate;
+	double** crflux;
+	double* integratedFlux;
+
+	double* magneticInductionSum;
 
 	double momentum(int i);
 	double energy(int i);
@@ -80,7 +100,7 @@ public:
 	double densityFlux(int i);
 	double* flux(int i);
 
-	double Simulation::diffusionCoef(int i, double p);
+	void updateDiffusionCoef();
 
 	Simulation();
 	~Simulation();
@@ -96,9 +116,12 @@ public:
 
 	void evaluateCR();
 	void solveThreeDiagonal(double* middle, double* upper, double* lower, double* f, double* x, double* alpha, double* beta);
-	double injection();
+	double injection(int i);
 	void evaluateCosmicRayPressure();
-	void changeDistrFunction();
+
+	void evaluateField();
+	void evaluateCRFlux();
+	void growthRate();
 
 	double minmod(double a, double b);
 	double superbee(double a, double b);
@@ -106,6 +129,8 @@ public:
 	void updateShockWavePoint();
 	void updateParameters();
 	void updateTimeStep();
+
+	void updateAll();
 
 	void updateGrid();
 	//std::list<GridZone*> createZones(int* type, double* gradientU, int& smallGradientZoneCount, int& bigGradientZoneCount);

@@ -67,7 +67,6 @@ public:
 	double* pointPressure;
 	double* middlePressure;
 	double* cosmicRayPressure;
-	double* gridVelocity;
 	double* tempDensity;
 	double* tempMomentum;
 	double* tempEnergy;
@@ -88,9 +87,6 @@ public:
 	double** growth_rate;
 	double** crflux;
 	double* integratedFlux;
-
-	double** sigmaIm;
-	double** sigmaRe;
 
 	double* magneticInductionSum;
 
@@ -122,8 +118,6 @@ public:
 	double firstApproximationPressure(double rho1, double rho2, double u1, double u2, double p1, double p2);
 	void CheckNegativeDensity();
 	void TracPen(double* u, double* flux, double cs);
-	void updateFlux(double* flux);
-	bool CheckShockWave(double& u, double p1, double p2,double u1, double u2, double rho1, double rho2);
 
 	void evaluateCR();
 	void solveThreeDiagonal(double* middle, double* upper, double* lower, double* f, double* x, double* alpha, double* beta);
