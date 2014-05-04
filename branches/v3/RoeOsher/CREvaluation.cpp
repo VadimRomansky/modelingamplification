@@ -5,17 +5,40 @@
 #include "output.h"
 #include "progon.h"
 
-double Simulation::diffusionCoef(int i, double p){
-	double B = B0;
-	return p*speed_of_light*speed_of_light/(electron_charge*B);
-	//return 0.1*p;
+void Simulation::updateDiffusionCoef(){
+	for(int i = 0; i < rgridNumber; ++i){
+		for(int j = 0; j < pgridNumber; ++j){
+			double p = pgrid[j];
+			//double p = pgrid[0];
+			double B = B0;
+			for(int k = 0; k < kgridNumber; ++k){
+				if(kgrid[k] > electron_charge*largeScaleField[i][k]/(speed_of_light*p) ){
+					B = largeScaleField[i][k];
+					break;
+				}
+			}
+			double coef = p*speed_of_light*speed_of_light/(electron_charge*B);
+			double dx = deltaR[i];
+			double lambda = coef/speed_of_light;
+			if(abs(i - shockWavePoint) < 10 && j >= injectionMomentum){
+				if(lambda < dx){
+					//printf("lambda < deltaR i = %d j = %d\n",i,j);
+				}
+			}
+			diffusionCoef[i][j] = coef;
+		}
+	}
 }
 
 //инжекционный член
-double Simulation::injection(){
+double Simulation::injection(int i){
 	double pf = pgrid[injectionMomentum];
 	double dp = (pgrid[injectionMomentum + 1] - pgrid[injectionMomentum - 1])/2;
-	return (1E-20)*middleDensity[shockWavePoint]*abs(middleVelocity[shockWavePoint])*pf/(massProton*dp);
+	//double xi = 5;
+	double xi = pgrid[injectionMomentum]*speed_of_light/(kBoltzman*temperatureIn(i+1));
+	double eta = cube(xi)*exp(-xi);
+	return (1E-17)*middleDensity[i]*abs(middleVelocity[i])*pf/(massProton*dp);
+	//return abs(pf*middleDensity[i]*((middleVelocity[i+1] - middleVelocity[i])/middleDeltaR[shockWavePoint])/(3*massProton));
 	//return 1;
 }
 
@@ -27,7 +50,6 @@ void Simulation::evaluateCR(){
 	/*if(shockWavePoint > 0 && shockWavePoint < rgridNumber){
 		distributionFunction[shockWavePoint][injectionMomentum] += injection()*deltaT;
 	}*/
-	
 	double* upper = new double[rgridNumber+1];
 	double* middle = new double[rgridNumber+1];
 	double* lower = new double[rgridNumber+1];
@@ -56,10 +78,10 @@ void Simulation::evaluateCR(){
 		double xm = (grid[0] - upstreamR/2)/2;
 		double gip = (distributionFunction[1][k] + distributionFunction[0][k])/2;
 		double gim = distributionFunction[0][k]/2;
-		middle[0] = 1 + (deltaT/(2*dx))*(diffusionCoef(0,p)/dxp + diffusionCoef(0,p)/dxm);
-		upper[0] = -(deltaT/(2*dx))*(diffusionCoef(0,p)/dxp);
-		f[0]=distributionFunction[0][k] + (deltaT/(2*dx))*(diffusionCoef(0,p)*distributionFunction[1][k]/dxp)
-					  - (deltaT/(2*dx))*(diffusionCoef(0,p)/dxp+diffusionCoef(0,p)/dxm)*distributionFunction[0][k] 
+		middle[0] = 1 + (deltaT/(2*dx))*(diffusionCoef[0][k]/dxp + diffusionCoef[0][k]/dxm);
+		upper[0] = -(deltaT/(2*dx))*(diffusionCoef[0][k]/dxp);
+		f[0]=distributionFunction[0][k] + (deltaT/(2*dx))*(diffusionCoef[0][k]*distributionFunction[1][k]/dxp)
+					  - (deltaT/(2*dx))*(diffusionCoef[0][k]/dxp+diffusionCoef[0][k]/dxm)*distributionFunction[0][k] 
 					  - (deltaT/dx)*(middleVelocity[1]*gip - middleVelocity[0]*gim)
 					  + (deltaT/3)*((middleVelocity[1] - middleVelocity[0])/dx)*((gkp-gkm)/deltaLogP);
 		for(int i = 1; i < rgridNumber-1; ++i){
@@ -76,17 +98,18 @@ void Simulation::evaluateCR(){
 			xm=(grid[i]+grid[i-1])/2;
 			gip=(distributionFunction[i+1][k] + distributionFunction[i][k])/2;
 			gim=(distributionFunction[i][k] + distributionFunction[i-1][k])/2;
-			lower[i-1] = -(deltaT/(2*dx))*(diffusionCoef(i-1,p)/dxm);// - 0.5*deltaT*middleVelocity[i-1]/dx;
-			middle[i] = 1 + (deltaT/(2*dx))*(diffusionCoef(i-1,p)/dxp + diffusionCoef(i,p)/dxm);// + 0.5*(middleVelocity[i] - middleVelocity[i-1])/dx;
-			upper[i] = -(deltaT/(2*dx))*(diffusionCoef(i,p)/dxp);//  + 0.5*deltaT*middleVelocity[i]/dx;
-			f[i] = distributionFunction[i][k] + (deltaT/(2*dx))*(diffusionCoef(rgridNumber-1,p)*(distributionFunction[i+1][k] - distributionFunction[i][k])/dxp
-							- diffusionCoef(i-1,p)*(distributionFunction[i][k] - distributionFunction[i-1][k])/dxm)
-							//- (deltaT/dx)*(middleVelocity[i]*gip - middleVelocity[i-1]*gim)
-							- (deltaT/dx)*(middleVelocity[i]*distributionFunction[i][k] - middleVelocity[i-1]*distributionFunction[i-1][k])
-							+ (deltaT/3)*((middleVelocity[i] - middleVelocity[i-1])/dx)*((gkp - gkm)/deltaLogP);
-			if(i == shockWavePoint && k == injectionMomentum){
-				f[i] += deltaT*injection();
-				injectedParticles += injection()*deltaT*4*pi*(middleGrid[i] - middleGrid[i-1])*deltaLogP;
+			lower[i-1] = -(deltaT/(2*dx))*(diffusionCoef[i-1][k]/dxm);// - 0.5*deltaT*middleVelocity[i-1]/dx;
+			middle[i] = 1 + (deltaT/(2*dx))*(diffusionCoef[i-1][k]/dxp + diffusionCoef[i][k]/dxm);// + 0.5*(middleVelocity[i] - middleVelocity[i-1])/dx;
+			upper[i] = -(deltaT/(2*dx))*(diffusionCoef[i][k]/dxp);//  + 0.5*deltaT*middleVelocity[i]/dx;
+			f[i] = distributionFunction[i][k]  + deltaT*((1/(2*dx))*(diffusionCoef[i][k]*(distributionFunction[i+1][k] - distributionFunction[i][k])/dxp - diffusionCoef[i-1][k]*(distributionFunction[i][k] - distributionFunction[i-1][k])/dxm) - (1/dx)*(middleVelocity[i]*distributionFunction[i][k] - middleVelocity[i-1]*distributionFunction[i-1][k]) + (1.0/3)*((middleVelocity[i] - middleVelocity[i-1])/dx)*((gkp - gkm)/deltaLogP));
+
+			if(f[i] < 0 ){
+				printf("f[i] < 0\n");
+			}
+			//if(i == shockWavePoint && k == injectionMomentum && currentIteration > 500){
+			if(abs(i-shockWavePoint) < 1 && abs(k - injectionMomentum) < 1 && currentIteration > 50){
+				f[i] += deltaT*injection(i);
+				injectedParticles += injection(i)*deltaT*4*pi*(middleGrid[i] - middleGrid[i-1])*deltaLogP;
 			}
 		}
 		gkp = distributionFunction[rgridNumber-1][k];
@@ -101,9 +124,9 @@ void Simulation::evaluateCR(){
 		xm = (grid[rgridNumber-1] + grid[rgridNumber-2])/2;
 		gip = distributionFunction[rgridNumber-1][k];
 		gim = (distributionFunction[rgridNumber-1][k] + distributionFunction[rgridNumber - 2][k])/2;
-		lower[rgridNumber-2] = -(deltaT/(2*dx))*(diffusionCoef(rgridNumber-1,p)/dxp);
-		middle[rgridNumber-1] = 1 + (deltaT/(2*dx))*(diffusionCoef(rgridNumber-1,p)/dxm);
-		f[rgridNumber-1] = distributionFunction[rgridNumber-1][k] - (deltaT/(2*dx))*(diffusionCoef(rgridNumber-2,p)*(distributionFunction[rgridNumber-1][k] - distributionFunction[rgridNumber - 2][k])/dxm)
+		lower[rgridNumber-2] = -(deltaT/(2*dx))*(diffusionCoef[rgridNumber-1][k]/dxp);
+		middle[rgridNumber-1] = 1 + (deltaT/(2*dx))*(diffusionCoef[rgridNumber-1][k]/dxm);
+		f[rgridNumber-1] = distributionFunction[rgridNumber-1][k] - (deltaT/(2*dx))*(diffusionCoef[rgridNumber-2][k]*(distributionFunction[rgridNumber-1][k] - distributionFunction[rgridNumber - 2][k])/dxm)
 							  - (deltaT/dx)*(middleVelocity[rgridNumber-1]*gip - middleVelocity[rgridNumber-2]*gim)
 							  + (deltaT/3)*((middleVelocity[rgridNumber-1] - middleVelocity[rgridNumber-2])/dx)*((gkp - gkm)/deltaLogP);
 		progon(lower,middle, upper,rgridNumber-1,f,x, alpha, beta);
@@ -113,21 +136,24 @@ void Simulation::evaluateCR(){
 		}
 		for(int i = 0; i < rgridNumber; ++i){
 			//alertNegative(x[i],"tempDistribution < 0");
-			alertNaNOrInfinity(x[i],"tempDistribution <= NaN");
-			//if(x[i] < 0){
-				//tempDistributionFunction[i][k] = 0;
-			//}
+			alertNaNOrInfinity(x[i],"tempDistribution = NaN");
+			if(x[i] < 0){
+				tempDistributionFunction[i][k] = 0;
+				if(abs(x[i]) > 1E-100){
+					printf("tenpDistribution < 0\n");
+				}
+			}
 			tempDistributionFunction[i][k]= x[i];
 		}
 		tempDistributionFunction[rgridNumber][k] =x[rgridNumber-1];
 	}
 
-	for(int i = 0; i <= rgridNumber; ++i){
+	//if(currentIteration == 1000){
+	/*if(shockWavePoint > 1 && shockWavePoint < rgridNumber && currentIteration > 1000){
 		for(int j = 0; j < pgridNumber; ++j){
-			distributionFunction[i][j] = tempDistributionFunction[i][j];
+			tempDistributionFunction[shockWavePoint+1][j] = tempDistributionFunction[shockWavePoint+2][j];
 		}
-	}
-	evaluateCosmicRayPressure();
+	}*/
 
 	delete[] upper;
 	delete[] middle;
@@ -179,13 +205,4 @@ void Simulation::evaluateCosmicRayPressure(){
 	}
 
 	delete[] partPressure;
-}
-
-void Simulation::changeDistrFunction(){
-	for(int j = 0; j < pgridNumber; ++j){
-		double p3 = cube(pgrid[j]);
-		for(int i = 0; i < rgridNumber; ++i){
-			distributionFunction[i][j] *= p3;
-		}
-	}
 }
