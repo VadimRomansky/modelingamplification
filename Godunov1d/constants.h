@@ -17,5 +17,6 @@ const int injectionMomentum = 5;
 const double gradientLevel = 0.2;
 const double gridExpLevel = 0.9;
 const double minDeltaR = 5.0E14;
+const double minT = 50;
 
 #endif

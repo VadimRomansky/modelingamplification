@@ -391,7 +391,7 @@ void Simulation::simulate(){
 
 	fprintf(outShockWave, "%d %lf %d %lf\n", 0, time, shockWavePoint, shockWaveR);
 	fclose(outShockWave);
-	deltaT = min2(500, deltaT);
+	deltaT = min2(minT, deltaT);
 	//deltaT = 5000;
 	//deltaT = 0.001;
 
@@ -422,7 +422,7 @@ void Simulation::simulate(){
 		updateParameters();
 
 		updateTimeStep();
-		deltaT = min2(500, deltaT);
+		deltaT = min2(minT, deltaT);
 		if(currentIteration % writeParameter == 0){
 			//вывод на некоторых итерациях
 			printf("outputing\n");
@@ -511,9 +511,21 @@ void Simulation::evaluateHydrodynamic() {
 	TracPen(tempMomentum, mFlux, maxSoundSpeed);
 	for(int i = 0; i < rgridNumber - 1; ++i){
 		//tempMomentum[i] -= deltaT*(pointPressure[i+1] - pointPressure[i])/(deltaR[i]);
-		//tempMomentum[i] -= deltaT*(cosmicRayPressure[i+1] - cosmicRayPressure[i])/(deltaR[i]);
+		tempMomentum[i] -= deltaT*(cosmicRayPressure[i+1] - cosmicRayPressure[i])/(deltaR[i]);
+		
+		if(i > 0 && i < rgridNumber-1){
+			for(int k = 0; k < kgridNumber; ++k){
+				tempMomentum[i] -= deltaT*0.5*(magneticField[i][k] - magneticField[i-1][k])*kgrid[k]*deltaLogK/deltaR[i];
+			}
+		}
+		
 	}
-	TracPen(tempEnergy, eFlux, maxSoundSpeed);
+	TracPen(tempEnergy, eFlux, 0);
+	for(int i = 1; i < rgridNumber-1; ++i){
+		for(int k = 0; k < kgridNumber; ++k){
+			tempEnergy[i] -= deltaT*0.5*middleVelocity[i]*(magneticField[i][k] - magneticField[i-1][k])*kgrid[k]*deltaLogK/deltaR[i];
+		}
+	}
 
 	delete[] dFlux;
 	delete[] mFlux;
@@ -1112,7 +1124,7 @@ void Simulation::updateParameters(){
 	mass -= deltaT*(middleDensity[0]*middleVelocity[0] - middleDensity[rgridNumber-1]*middleVelocity[rgridNumber-1]);
 	totalMomentum -= deltaT*(middleDensity[0]*sqr(middleVelocity[0]) + middlePressure[0] - middleDensity[rgridNumber-1]*sqr(middleVelocity[rgridNumber-1]) - middlePressure[rgridNumber-1]);
 	for(int k = 0; k < kgridNumber; ++k){
-		totalMagneticEnergy -= deltaT*(magneticField[0][k] - magneticField[rgridNumber-1][k])*kgrid[k]*deltaLogK;
+		totalMagneticEnergy -= deltaT*(magneticField[0][k]*middleVelocity[0] - magneticField[rgridNumber-1][k]*middleVelocity[rgridNumber-1])*kgrid[k]*deltaLogK;
 	}
 	totalKineticEnergy -= deltaT*(middleDensity[0]*cube(middleVelocity[0]) - middleDensity[rgridNumber-1]*cube(middleVelocity[rgridNumber-1]))/2;
 	totalTermalEnergy -= deltaT*(middlePressure[0]*middleVelocity[0] - middlePressure[rgridNumber-1]*middleVelocity[rgridNumber-1])*gamma/(gamma-1);

@@ -31,6 +31,7 @@ Simulation::~Simulation(){
 	delete[] deltaR;
 	delete[] middleDeltaR;
 	delete[] tempGrid;
+	delete[] gridsquare;
 	delete[] pointDensity;
 	delete[] pointVelocity;
 	delete[] pointEnthalpy;
@@ -83,6 +84,7 @@ void Simulation::initializeProfile(){
 	pgrid = new double[pgridNumber];
 	logPgrid = new double[pgridNumber];
 	grid = new double[rgridNumber + 1];
+	gridsquare = new double[rgridNumber+ 1];
 	middleGrid = new double[rgridNumber];
 	deltaR = new double[rgridNumber];
 	middleDeltaR = new double[rgridNumber];
@@ -193,23 +195,33 @@ void Simulation::initializeProfile(){
 		//grid[i] = grid[i-1] + deltaR0;
 	//}
 
-	double R0 = upstreamR*2/100000;
-	double a = upstreamR/2;
-	double b = upstreamR/2;
-	double h1 = 0.5*rgridNumber/log(1.0+a/R0);
-	double h2 = 0.5*rgridNumber/log(1.0+b/R0);
-	for(int i = 0; i < rgridNumber/2; ++i){ 
-		grid[i] = R0*(1 - exp(-(1.0*(i+1)-0.5*rgridNumber)/h1));
+	int leftNumber = 100;
+	double shockWaveR = upstreamR/40;
+	double a = shockWaveR;
+	double b = upstreamR - shockWaveR;
+	double R1 = a/10;
+	double R2 = b/100;
+	double h1=leftNumber/log(1.0+a/R1);
+	double h2=(rgridNumber + 1 - leftNumber)/log(1.0+b/R2);
+	for(int i = 1; i < leftNumber; ++ i){ 
+		grid[i] = R1*(1 - exp(-(1.0*(i+1)-leftNumber)/h1)) + shockWaveR;
 	}
-	for(int i=rgridNumber/2; i < rgridNumber; ++i){
-		grid[i] = R0*(exp((1.0*(i+1)-0.5*rgridNumber)/h1)-1.0);
+	for(int i = leftNumber; i < rgridNumber; ++i){
+		grid[i] = R2*(exp((1.0*(i+1)- leftNumber)/h2)-1.0) + shockWaveR;
 	}
-	grid[rgridNumber] = upstreamR/2*(1 + 1.0/(rgridNumber));
+	grid[rgridNumber] = upstreamR;
+
+	for(int i = 1; i <= rgridNumber; ++i){
+		if(grid[i] <= grid[i-1]){
+			printf("grid[i] <= grid[i-1]\n");
+		}
+	}
 
 	for(int i = 0; i < rgridNumber; ++i){
 		middleGrid[i] = (grid[i] + grid[i+1])/2;
 		tempGrid[i] = grid[i];
 		deltaR[i] = grid[i+1] - grid[i];
+		gridsquare[i] = sqr(grid[i]);
 	}
 	tempGrid[rgridNumber] = grid[rgridNumber];
 
@@ -245,9 +257,9 @@ void Simulation::initializeProfile(){
 			middleDensity[i] = density0;
 			middleVelocity[i] = 0;
 			{
-				int count = rgridNumber/100;
+				int count = 20;
 				if(i < count){
-					middlePressure[i] = initialEnergy/(count*deltaR0);
+					middlePressure[i] = (gamma- 1)*initialEnergy/(4*pi*cube(grid[count])/3);
 				} else {
 					middlePressure[i] = pressure0;
 				}
@@ -261,14 +273,18 @@ void Simulation::initializeProfile(){
 				double pressure = density0*U0*U0/sigma;
 				int count = rgridNumber/2 - 1;
 				int intCount = count/10;
-				if(i < count){
+				if(i < intCount){
 					middleDensity[i] = density0/sigma;
-					middleVelocity[i] = U0;
+					middleVelocity[i] = (U0*(grid[i] -grid[0])/(grid[intCount] -grid[0]));
+					middlePressure[i] = pressure*0.0000000000001;
+				} else if(i < count){
+					middleDensity[i] = density0/sigma;//*sqr(middleGrid[i]/middleGrid[count-1]);
+					middleVelocity[i] = U0 + 10000000;
 					//middleVelocity[i] = 1;
-					middlePressure[i] = pressure*1E-20;
+					middlePressure[i] = pressure*0.0000000000001;
 				} else {
-					middleDensity[i] = density0;
-					middleVelocity[i] = U0/sigma;
+					middleDensity[i] = density0;//*sqr(middleGrid[i]/middleGrid[count]);
+					middleVelocity[i] = U0/sigma + 10000000;
 					//middleVelocity[i] = 0.25;
 					middlePressure[i] = pressure*0.75;
 				}
@@ -389,11 +405,13 @@ void Simulation::simulate(){
 	updateShockWavePoint();
 	fopen_s(&outShockWave, "./output/shock_wave.dat","w");
 	double shockWaveR = 0;
+	double gasSpeed = 0;
 	if(shockWavePoint >= 0 && shockWavePoint <= rgridNumber){
 		shockWaveR = grid[shockWavePoint];
+		gasSpeed = middleVelocity[shockWavePoint - 1];
 	}
 
-	fprintf(outShockWave, "%d %lf %d %lf\n", 0, time, shockWavePoint, shockWaveR);
+	fprintf(outShockWave, "%d %lf %d %lf %lf %lf\n", 0, myTime, shockWavePoint, shockWaveR, shockWaveSpeed, gasSpeed);
 	fclose(outShockWave);
 	deltaT = min2(minT, deltaT);
 	//deltaT = 5000;
@@ -411,10 +429,10 @@ void Simulation::simulate(){
 
 		evaluateHydrodynamic();
 		
-		evaluateCR();
+		//evaluateCR();
 
 		if(currentIteration > 1000){
-			evaluateField();
+			//evaluateField();
 		}		
 
 		myTime = myTime + deltaT;
@@ -435,8 +453,8 @@ void Simulation::simulate(){
 			fclose(outFile);
 
 			fopen_s(&outShockWave, "./output/shock_wave.dat","a");
-			double shockWaveR = 0;
-			double gasSpeed = 0;
+			shockWaveR = 0;
+			gasSpeed = 0;
 			if(shockWavePoint >= 0 && shockWavePoint <= rgridNumber){
 				shockWaveR = grid[shockWavePoint];
 				gasSpeed = middleVelocity[shockWavePoint - 1];
@@ -510,26 +528,27 @@ void Simulation::evaluateHydrodynamic() {
 		delete[] tflux;
 	}
 
-	TracPen(tempDensity, dFlux, 0);
+	TracPenRadial(tempDensity, dFlux);
 
-	TracPen(tempMomentum, mFlux, 0);
+	TracPenRadial(tempMomentum, mFlux);
 	for(int i = 0; i < rgridNumber - 1; ++i){
-		
+		tempMomentum[i] += deltaT*2*middlePressure[i]/middleGrid[i];
+
 		//tempMomentum[i] -= deltaT*(cosmicRayPressure[i+1] - cosmicRayPressure[i])/(deltaR[i]);
 		
-		if(i > 0 && i < rgridNumber-1){
+		/*if(i > 0 && i < rgridNumber-1){
 			for(int k = 0; k < kgridNumber; ++k){
 				tempMomentum[i] -= deltaT*0.5*(magneticField[i][k] - magneticField[i-1][k])*kgrid[k]*deltaLogK/deltaR[i];
 			}
-		}
+		}*/
 		
 	}
-	TracPen(tempEnergy, eFlux, 0);
-	for(int i = 1; i < rgridNumber-1; ++i){
+	TracPenRadial(tempEnergy, eFlux);
+	/*for(int i = 1; i < rgridNumber-1; ++i){
 		for(int k = 0; k < kgridNumber; ++k){
-			tempEnergy[i] -= deltaT*0.5*middleVelocity[i]*(magneticField[i][k] - magneticField[i-1][k])*kgrid[k]*deltaLogK/deltaR[i];
+			tempEnergu[i] -= deltaT*0.5*middleVelocity[i]*(magneticField[i][k] - magneticField[i-1][k])*kgrid[k]*deltaLogK/deltaR[i];
 		}
-	}
+	}*/
 
 	delete[] dFlux;
 	delete[] mFlux;
@@ -568,8 +587,8 @@ void Simulation::solveDiscontinious(){
 void Simulation::CheckNegativeDensity(){
 	double dt = deltaT;
 	for(int i = 0; i < rgridNumber; ++i){
-		if(middleDensity[i]*volume(i) - dt*4*pi*(densityFlux(i+1) - densityFlux(i))< 0){
-			dt = 0.5*(middleDensity[i]*volume(i)/(4*pi*(densityFlux(i+1) - densityFlux(i))));
+		if(middleDensity[i]*volume(i) - dt*4*pi*(gridsquare[i+1]*densityFlux(i+1) - gridsquare[i]*densityFlux(i))< 0){
+			dt = 0.5*(middleDensity[i]*volume(i)/(4*pi*(gridsquare[i+1]*densityFlux(i+1) - gridsquare[i]*densityFlux(i))));
 			alertNaNOrInfinity(dt, "dt = NaN");
 		}
 	}
@@ -579,11 +598,15 @@ void Simulation::CheckNegativeDensity(){
 
 //Трак и Пен, немного модифицированные
 
-void Simulation::TracPen(double* u, double* flux, double cs){
+//с учетом сферичности
+void Simulation::TracPenRadial(double* u, double* flux){
 
-	tempU[0] = u[0] - deltaT*(flux[1] - flux[0])/deltaR[0];
+	tempU[0] = u[0] - deltaT*(gridsquare[1]*flux[1] - gridsquare[0]*flux[0])/(middleGrid[0]*middleGrid[0]*deltaR[0]);
 	for(int i = 1; i < rgridNumber - 1; ++i){
-		tempU[i] = u[i] - deltaT*((flux[i+1] - flux[i]) - cs*(u[i+1] - 2*u[i] + u[i-1])/2)/deltaR[i];
+		tempU[i] = u[i] - deltaT*((gridsquare[i+1]*flux[i+1] - gridsquare[i]*flux[i])/(middleGrid[i]*middleGrid[i]*deltaR[i]));
+		/*if(tempU[i] < 0){
+			printf("temp U < 0\n");
+		}*/
 	}
 	tempU[rgridNumber - 1] = u[rgridNumber - 1];
 
@@ -748,7 +771,7 @@ double Simulation::volume(int i){
 	if(i < 0){
 		printf("i < 0");
 	} else if(i >= 0 && i <= rgridNumber) {
-		return deltaR[i];
+		return 4*pi*(cube(grid[i+1]) - cube(grid[i]))/3;
 	} else {
 		printf("i > rgridNumber");
 	}
@@ -815,8 +838,8 @@ void Simulation::updateTimeStep(){
 
 	//by dp
 	for(int i = 1; i < rgridNumber; ++i){
-		if(abs(middleVelocity[i] - middleVelocity[i-1])*tempdt > 0.5*abs(3*deltaLogP*middleDeltaR[i])){
-			tempdt = 0.5*abs(3*deltaLogP*middleDeltaR[i]/(middleVelocity[i] - middleVelocity[i-1]));
+		if(abs(middleGrid[i]*middleGrid[i]*middleVelocity[i] - middleGrid[i]*middleGrid[i]*middleVelocity[i-1])*tempdt > 0.5*abs(3*deltaLogP*middleDeltaR[i]*gridsquare[i])){
+			tempdt = 0.5*abs(3*deltaLogP*gridsquare[i]*middleDeltaR[i]/(middleGrid[i]*middleGrid[i]*middleVelocity[i] - middleGrid[i]*middleGrid[i]*middleVelocity[i-1]));
 		}
 	}
 
@@ -834,9 +857,9 @@ void Simulation::updateTimeStep(){
 		double dx = (grid[i+1] - grid[i-1])/2;
 		double dxp=grid[i+1]-grid[i];
 		double dxm=grid[i]-grid[i-1];
-		double a = ((diffusionCoef[i-1][kgridNumber-1]/dxp + diffusionCoef[i][kgridNumber-1]/dxm) - (diffusionCoef[i-1][kgridNumber-1]/dxm) -(diffusionCoef[i][kgridNumber-1]/dxp))/(2*dx);
-		if(1 + tempdt*a < 0){
-			tempdt = 0.5/abs(a);
+		double a = ((sqr(middleGrid[i-1])*diffusionCoef[i-1][kgridNumber-1]/dxm + sqr(middleGrid[i])*diffusionCoef[i][kgridNumber-1]/dxp) - (sqr(middleGrid[i-1])*diffusionCoef[i-1][kgridNumber-1]/dxm) -sqr(middleGrid[i])*(diffusionCoef[i][kgridNumber-1]/dxp))/(2*dx);
+		if(gridsquare[i] + tempdt*a < 0){
+			tempdt = 0.5*gridsquare[i]/abs(a);
 		}
 	}
 
@@ -935,13 +958,13 @@ void Simulation::updateParameters(){
 			totalParticleEnergy += 4*pi*speed_of_light*distributionFunction[i][j]*dr*dp;
 		}
 	}
-	mass -= deltaT*(middleDensity[0]*middleVelocity[0] - middleDensity[rgridNumber-1]*middleVelocity[rgridNumber-1]);
-	totalMomentum -= deltaT*(middleDensity[0]*sqr(middleVelocity[0]) + middlePressure[0] - middleDensity[rgridNumber-1]*sqr(middleVelocity[rgridNumber-1]) - middlePressure[rgridNumber-1]);
+	mass -= deltaT*(0 - middleDensity[rgridNumber-1]*middleVelocity[rgridNumber-1]);
+	totalMomentum -= deltaT*(middlePressure[0] - middleDensity[rgridNumber-1]*sqr(middleVelocity[rgridNumber-1]) - middlePressure[rgridNumber-1]);
 	for(int k = 0; k < kgridNumber; ++k){
-		totalMagneticEnergy -= deltaT*(magneticField[0][k]*middleVelocity[0] - magneticField[rgridNumber-1][k]*middleVelocity[rgridNumber-1])*kgrid[k]*deltaLogK;
+		totalMagneticEnergy -= deltaT*(0 - magneticField[rgridNumber-1][k]*middleVelocity[rgridNumber-1])*kgrid[k]*deltaLogK;
 	}
-	totalKineticEnergy -= deltaT*(middleDensity[0]*cube(middleVelocity[0]) - middleDensity[rgridNumber-1]*cube(middleVelocity[rgridNumber-1]))/2;
-	totalTermalEnergy -= deltaT*(middlePressure[0]*middleVelocity[0] - middlePressure[rgridNumber-1]*middleVelocity[rgridNumber-1])*gamma/(gamma-1);
+	totalKineticEnergy -= deltaT*(0 - middleDensity[rgridNumber-1]*cube(middleVelocity[rgridNumber-1]))/2;
+	totalTermalEnergy -= deltaT*(0 - middlePressure[rgridNumber-1]*middleVelocity[rgridNumber-1])*gamma/(gamma-1);
 	totalEnergy = totalTermalEnergy + totalKineticEnergy + totalParticleEnergy + totalMagneticEnergy;
 }
 

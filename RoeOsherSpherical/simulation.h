@@ -20,12 +20,12 @@ public:
 	double initialEnergy;
 	int A;
 	int Z;
+	int currentIteration;
 
 	int simulationType;
 	bool tracPen;
 
 	int rgridNumber;
-
 	int shockWavePoint;
 	int prevShockWavePoint;
 	bool shockWaveMoved;
@@ -36,8 +36,6 @@ public:
 	double R0;
 	double myTime;
 
-	int currentIteration;
-
 	double maxSoundSpeed;
 
 	double mass;
@@ -45,6 +43,8 @@ public:
 	double totalEnergy;
 	double totalKineticEnergy;
 	double totalTermalEnergy;
+	double totalMagneticEnergy;
+	double totalParticleEnergy;
 	double totalParticles;
 	double injectedParticles;
 
@@ -52,13 +52,13 @@ public:
 	double maxP;
 	double* pgrid;
 	double* logPgrid;
+	double* kgrid;
+	double* logKgrid;
 	double deltaLogP;
-
 	double deltaLogK;
 
 	double* grid;
 	double* gridsquare;
-	double* volumeFactor;
 	double* middleGrid;
 	double* deltaR;
 	double* middleDeltaR;
@@ -67,19 +67,17 @@ public:
 	double* middleDensity;
 	double* pointVelocity;
 	double* middleVelocity;
-	double* pointPressure;
+	double* pointEnthalpy;
 	double* middlePressure;
 	double* cosmicRayPressure;
-	double* gridVelocity;
+	double* pointSoundSpeed;
 	double* tempDensity;
 	double* tempMomentum;
 	double* tempEnergy;
 
-	double* kgrid;
-	double* logKgrid;
+	double* tempU;
 
 	double** diffusionCoef;
-	double* tempU;
 
 	double** distributionFunction;
 	double** tempDistributionFunction;
@@ -89,6 +87,7 @@ public:
 	double** largeScaleField;
 	double** growth_rate;
 	double** crflux;
+	double* integratedFlux;
 
 	double* magneticInductionSum;
 
@@ -99,10 +98,10 @@ public:
 	double temperatureIn(int i);
 	double soundSpeed(int i);
 	double volume(int i);
-
 	double densityFlux(int i);
-	double momentumConvectiveFlux(int i);
-	double energyFlux(int i);
+	double* flux(int i);
+
+	void updateDiffusionCoef();
 
 	Simulation();
 	~Simulation();
@@ -111,33 +110,30 @@ public:
 	void simulate();
 	void evaluateHydrodynamic();
 	void solveDiscontinious();
-	double pressureFunction(double p, double p1, double rho1);
-	double pressureFunctionDerivative(double p, double p1, double rho1);
-	double pressureFunctionDerivative2(double p, double p1, double rho1);
-	void successiveApproximationPressure(double& p, double& u, double& R1, double& R2, double& alpha1, double& alpha2, double p1, double p2, double u1, double u2, double rho1, double rho2);
-	double firstApproximationPressure(double rho1, double rho2, double u1, double u2, double p1, double p2);
 	void CheckNegativeDensity();
-	void TracPenRadial(double* u, double* flux, double cs);
+	void TracPenRadial(double* u, double* flux);
+	void updateFlux(double* flux);
+	bool CheckShockWave(double& u, double p1, double p2,double u1, double u2, double rho1, double rho2);
 
 	void evaluateCR();
 	void solveThreeDiagonal(double* middle, double* upper, double* lower, double* f, double* x, double* alpha, double* beta);
-	double injection();
-
-	double minmod(double a, double b);
-	void updateMaxSoundSpeed();
-	void updateShockWavePoint();
-	void updateParameters();
-	void updateTimeStep();
+	double injection(int i);
 	void evaluateCosmicRayPressure();
 
-	void updateDiffusionCoef();
 	void evaluateField();
 	void evaluateCRFlux();
 	void growthRate();
 
-	void updateGrid();
+	double minmod(double a, double b);
+	double superbee(double a, double b);
+	void updateMaxSoundSpeed();
+	void updateShockWavePoint();
+	void updateParameters();
+	void updateTimeStep();
 
 	void updateAll();
+
+	void updateGrid();
 	//std::list<GridZone*> createZones(int* type, double* gradientU, int& smallGradientZoneCount, int& bigGradientZoneCount);
     //void putPointsIntoZones(std::list<GridZone*>& zones, int pointsCount, int smallGradientZoneCount, int bigGradientZoneCount);
 	//void convertZonesToGrid(std::list<GridZone*>& zones);
