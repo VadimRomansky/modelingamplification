@@ -44,6 +44,25 @@ Simulation::~Simulation(){
 	delete[] tempMomentum;
 	delete[] tempEnergy;
 
+	for(int i = 0; i < rgridNumber; ++i){
+		delete[] dFluxPlus[i];
+		delete[] dFluxMinus[i];
+		delete[] mFluxPlus[i];
+		delete[] mFluxMinus[i];
+		delete[] eFluxPlus[i];
+		delete[] eFluxMinus[i];
+	}
+
+	delete[] dFlux;
+	delete[] mFlux;
+	delete[] eFlux;
+	delete[] dFluxPlus;
+	delete[] mFluxPlus;
+	delete[] eFluxPlus;
+	delete[] dFluxMinus;
+	delete[] mFluxMinus;
+	delete[] eFluxMinus;
+
 	delete[] kgrid;
 	delete[] logKgrid;
 
@@ -101,6 +120,27 @@ void Simulation::initializeProfile(){
 	tempDensity = new double[rgridNumber];
 	tempMomentum = new double[rgridNumber];
 	tempEnergy = new double[rgridNumber];
+
+	dFlux = new double[rgridNumber];
+	dFluxPlus = new double*[rgridNumber];
+	dFluxMinus = new double*[rgridNumber];
+
+	mFlux = new double[rgridNumber];
+	mFluxPlus = new double*[rgridNumber];
+	mFluxMinus = new double*[rgridNumber];
+
+	eFlux = new double[rgridNumber];
+	eFluxPlus = new double*[rgridNumber];
+	eFluxMinus = new double*[rgridNumber];
+
+	for(int i = 0; i < rgridNumber; ++i){
+		dFluxPlus[i] = new double[3];
+		dFluxMinus[i] = new double[3];
+		mFluxPlus[i] = new double[3];
+		mFluxMinus[i] = new double[3];
+		eFluxPlus[i] = new double[3];
+		eFluxMinus[i] = new double[3];
+	}
 
 	cosmicRayPressure = new double[rgridNumber+1];
 	tempU = new double[rgridNumber];
@@ -203,6 +243,7 @@ void Simulation::initializeProfile(){
 	double R2 = b/100;
 	double h1=leftNumber/log(1.0+a/R1);
 	double h2=(rgridNumber + 1 - leftNumber)/log(1.0+b/R2);
+	grid[0]=0;
 	for(int i = 1; i < leftNumber; ++ i){ 
 		grid[i] = R1*(1 - exp(-(1.0*(i+1)-leftNumber)/h1)) + shockWaveR;
 	}
@@ -279,12 +320,12 @@ void Simulation::initializeProfile(){
 					middlePressure[i] = pressure*0.0000000000001;
 				} else if(i < count){
 					middleDensity[i] = density0/sigma;//*sqr(middleGrid[i]/middleGrid[count-1]);
-					middleVelocity[i] = U0 + 10000000;
+					middleVelocity[i] = U0;
 					//middleVelocity[i] = 1;
 					middlePressure[i] = pressure*0.0000000000001;
 				} else {
 					middleDensity[i] = density0;//*sqr(middleGrid[i]/middleGrid[count]);
-					middleVelocity[i] = U0/sigma + 10000000;
+					middleVelocity[i] = U0/sigma;
 					//middleVelocity[i] = 0.25;
 					middlePressure[i] = pressure*0.75;
 				}
@@ -427,11 +468,14 @@ void Simulation::simulate(){
 		printf("time = %lf\n", myTime);
 		printf("solving\n");
 
+		//if(currentIteration < 2000)
 		evaluateHydrodynamic();
 		
-		evaluateCR();
+		//if(currentIteration > startCRevaluation){
+			//evaluateCR();
+		//}
 
-		if(currentIteration > 1000){
+		if(currentIteration > startFieldEvaluation){
 			//evaluateField();
 		}		
 
@@ -513,20 +557,15 @@ void Simulation::evaluateHydrodynamic() {
 	solveDiscontinious();
 	CheckNegativeDensity();
 
-	double* dFlux = new double[rgridNumber];
-	double* mFlux = new double[rgridNumber];
-	double* eFlux = new double[rgridNumber];
-
 	for(int i = 0; i < rgridNumber; ++i){
 		tempDensity[i] = middleDensity[i];
 		tempMomentum[i] = momentum(i);
 		tempEnergy[i] = energy(i);
-		double* tflux = flux(i);
-		dFlux[i] = tflux[0];
-		mFlux[i] = tflux[1];
-		eFlux[i] = tflux[2];
-		delete[] tflux;
 	}
+	evaluateFluxes();
+
+	//for Einfeldt
+	//updateFluxes();
 
 	TracPenRadial(tempDensity, dFlux);
 
@@ -550,9 +589,6 @@ void Simulation::evaluateHydrodynamic() {
 		}
 	}*/
 
-	delete[] dFlux;
-	delete[] mFlux;
-	delete[] eFlux;
 }
 
 
@@ -695,16 +731,22 @@ double Simulation::soundSpeed(int i){
 	return 0;
 }
 
-double* Simulation::flux(int i){
-	if(i < 0){
-		printf("i < 0");
-		return flux(1);
-	} else if(i == 0){
-		return flux(1);
-	} else if(i < rgridNumber){
+void Simulation::evaluateFluxes(){
+	dFlux[0] = middleDensity[0]*middleVelocity[0];
+	mFlux[0] = dFlux[0]*middleVelocity[0] + middlePressure[0];
+	eFlux[0] = middleVelocity[0]*(energy(0) + middlePressure[0]);
 
-		double* result = new double[3];
+	double* deltaS = new double[3];
+	double* lambdaPlus = new double[3];
+	double* lambdaMinus = new double[3];
+	double* lambdaMod = new double[3];
+	double** vectors = new double*[3];
 
+	for(int k = 0; k < 3; ++k){
+		vectors[k] = new double[3];
+	}
+
+	for(int i = 1; i < rgridNumber; ++i){
 		double leftDflux = middleVelocity[i-1]*middleDensity[i-1];
 		double rightDflux = middleVelocity[i]*middleDensity[i];
 		double leftMflux = leftDflux*middleVelocity[i-1] + middlePressure[i-1];
@@ -712,23 +754,25 @@ double* Simulation::flux(int i){
 		double leftEflux = leftDflux*middleVelocity[i-1]*middleVelocity[i-1]/2 + middleVelocity[i-1]*middlePressure[i-1]*gamma/(gamma-1);
 		double rightEflux = rightDflux*middleVelocity[i]*middleVelocity[i]/2 + middleVelocity[i]*middlePressure[i]*gamma/(gamma-1);
 
-		double* deltaS = new double[3];
-		double* lambda = new double[3];
+		lambdaMod[0] = min2(middleVelocity[i-1] - sqrt(gamma*middlePressure[i-1]/middleDensity[i-1]), pointVelocity[i] - pointSoundSpeed[i]);
+		lambdaMod[1] = pointVelocity[i];
+		lambdaMod[2] = max2(middleVelocity[i] + sqrt(gamma*middlePressure[i]/middleDensity[i]), pointVelocity[i] + pointSoundSpeed[i]);
 
-		//lambda[0] = min2(middleVelocity[i-1] - sqrt(gamma*middlePressure[i-1]/middleDensity[i-1]), pointVelocity[i] - pointSoundSpeed[i]);
-		lambda[0] = pointVelocity[i] - pointSoundSpeed[i];
-		lambda[1] = pointVelocity[i];
-		lambda[2] = pointVelocity[i] + pointSoundSpeed[i];
-		//lambda[2] = max2(middleVelocity[i] + sqrt(gamma*middlePressure[i]/middleDensity[i]), pointVelocity[i] + pointSoundSpeed[i]);
+		double lambda1 = pointVelocity[i] - pointSoundSpeed[i];
+		double lambda2 = pointVelocity[i];
+		double lambda3 = pointVelocity[i] + pointSoundSpeed[i];
+
+		lambdaPlus[0] = lambda1*(lambda1 > 0);
+		lambdaPlus[1] = lambda2*(lambda2 > 0);
+		lambdaPlus[2] = lambda3*(lambda3 > 0);
+
+		lambdaMinus[0] = lambda1*(lambda1 < 0);
+		lambdaMinus[1] = lambda2*(lambda2 < 0);
+		lambdaMinus[2] = lambda3*(lambda3 < 0);
 
 		deltaS[0] = ((middlePressure[i] - middlePressure[i-1]) - pointDensity[i]*pointSoundSpeed[i]*(middleVelocity[i] - middleVelocity[i-1]))/(2*sqr(pointSoundSpeed[i]));
 		deltaS[1] = (sqr(pointSoundSpeed[i])*(middleDensity[i] - middleDensity[i-1]) - (middlePressure[i] - middlePressure[i-1]))/(2*sqr(pointSoundSpeed[i]));
 		deltaS[2] = ((middlePressure[i] - middlePressure[i-1]) + pointDensity[i]*pointSoundSpeed[i]*(middleVelocity[i] - middleVelocity[i-1]))/(2*sqr(pointSoundSpeed[i]));
-
-		double** vectors = new double*[3];
-		for(int k = 0; k < 3; ++k){
-			vectors[k] = new double[3];
-		}
 
 		vectors[0][0] = 1;
 		vectors[0][1] = 2;
@@ -740,30 +784,58 @@ double* Simulation::flux(int i){
 		vectors[2][1] = sqr(pointVelocity[i]);
 		vectors[2][2] = pointEnthalpy[i] + pointVelocity[i]*pointSoundSpeed[i];
 
-		result[0] = (leftDflux + rightDflux)/2;
-		result[1] = (leftMflux + rightMflux)/2;
-		result[2] = (leftEflux + rightEflux)/2;
+		dFlux[i] = (leftDflux + rightDflux)/2;
+		mFlux[i] = (leftMflux + rightMflux)/2;
+		eFlux[i] = (leftEflux + rightEflux)/2;
 
-		for(int k = 0; k < 3; ++k){
-			for(int j = 0; j < 3; ++j){
-				result[k] -= 0.5*abs(lambda[j])*deltaS[j]*vectors[k][j];
-			}
+		//for density
+		for(int j = 0; j < 3; ++j){
+			dFlux[i] -= 0.5*abs(lambdaMod[j])*deltaS[j]*vectors[0][j];
+			dFluxPlus[i][j] = lambdaPlus[j]*deltaS[j]*vectors[0][j];
+			dFluxMinus[i][j] = lambdaMinus[j]*deltaS[j]*vectors[0][j];
 		}
-
-		for(int k = 0; k < 3; ++k){
-			delete[] vectors[k];
+		//for momentum
+		for(int j = 0; j < 3; ++j){
+			mFlux[i] -= 0.5*abs(lambdaMod[j])*deltaS[j]*vectors[1][j];
+			mFluxPlus[i][j] = lambdaPlus[j]*deltaS[j]*vectors[1][j];
+			mFluxMinus[i][j] = lambdaMinus[j]*deltaS[j]*vectors[1][j];
 		}
-		delete[] vectors;
-		delete[] deltaS;
-		delete[] lambda;
+		//for energy
+		for(int j = 0; j < 3; ++j){
+			eFlux[i] -= 0.5*abs(lambdaMod[j])*deltaS[j]*vectors[2][j];
+			eFluxPlus[i][j] = lambdaPlus[j]*deltaS[j]*vectors[2][j];
+			eFluxMinus[i][j] = lambdaMinus[j]*deltaS[j]*vectors[2][j];
+		}
+	}
 
+	for(int k = 0; k < 3; ++k){
+		delete[] vectors[k];
+	}
+	delete[] vectors;
+	delete[] deltaS;
+	delete[] lambdaPlus;
+	delete[] lambdaMinus;
+	delete[] lambdaMod;
+}
 
-		return result;
-	} else if(i == rgridNumber){
-		return flux(rgridNumber - 1);
-	} else {
-		printf("i > rgridNumber\n");
-		return flux(rgridNumber-1);
+void Simulation::updateFluxes(){
+	updateFluxes(dFlux, dFluxPlus, dFluxMinus);
+	updateFluxes(mFlux, mFluxPlus, mFluxMinus);
+	updateFluxes(eFlux, eFluxPlus, eFluxMinus);
+}
+
+void Simulation::updateFluxes(double* flux, double** fluxPlus, double** fluxMinus){
+	double beta = 0.5;
+	double phi = 0.5;
+
+	for(int i = 1; i < rgridNumber-1; ++i){
+		for(int j = 0; j < 3; ++j){
+			flux[i] += 0.25*(1+phi)*minmod(fluxPlus[i][j], beta*fluxPlus[i-1][j])
+					   +0.25*(1-phi)*minmod(beta*fluxPlus[i-1][j], fluxPlus[i][j])
+					   -0.25*(1+phi)*minmod(fluxMinus[i][j], beta*fluxMinus[i+1][j])
+					   -0.25*(1-phi)*minmod(beta*fluxMinus[i][j], fluxMinus[i+1][j]);
+
+		}
 	}
 }
 

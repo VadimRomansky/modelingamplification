@@ -117,7 +117,9 @@ public:
 	void successiveApproximationPressure(double& p, double& u, double& R1, double& R2, double& alpha1, double& alpha2, double p1, double p2, double u1, double u2, double rho1, double rho2);
 	double firstApproximationPressure(double rho1, double rho2, double u1, double u2, double p1, double p2);
 	void CheckNegativeDensity();
+	void TracPen(double* u, double* flux, double cs);
 	void TracPenRadial(double* u, double* flux, double cs);
+	void updateFluxes();
 
 	void evaluateCR();
 	void solveThreeDiagonal(double* middle, double* upper, double* lower, double* f, double* x, double* alpha, double* beta);
