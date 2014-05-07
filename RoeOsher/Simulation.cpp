@@ -423,7 +423,7 @@ void Simulation::simulate(){
 		shockWaveR = grid[shockWavePoint];
 	}
 
-	fprintf(outShockWave, "%d %lf %d %lf\n", 0, time, shockWavePoint, shockWaveR);
+	fprintf(outShockWave, "%d %lf %d %lf\n", 0, myTime, shockWavePoint, shockWaveR, 0, 0);
 	fclose(outShockWave);
 	deltaT = min2(minT, deltaT);
 	//deltaT = 5000;
@@ -441,9 +441,11 @@ void Simulation::simulate(){
 
 		evaluateHydrodynamic();
 		
-		evaluateCR();
+		if(currentIteration > startCRevaluation){
+			evaluateCR();
+		}
 
-		if(currentIteration > 1000){
+		if(currentIteration > startFieldEvaluation){
 			evaluateField();
 		}		
 
@@ -537,7 +539,7 @@ void Simulation::evaluateHydrodynamic() {
 	TracPen(tempDensity, dFlux, 0);
 
 	TracPen(tempMomentum, mFlux, 0);
-	for(int i = 0; i < rgridNumber - 1; ++i){
+	/*for(int i = 0; i < rgridNumber - 1; ++i){
 		
 		//tempMomentum[i] -= deltaT*(cosmicRayPressure[i+1] - cosmicRayPressure[i])/(deltaR[i]);
 		
@@ -547,11 +549,11 @@ void Simulation::evaluateHydrodynamic() {
 			}
 		}
 		
-	}
+	}*/
 	TracPen(tempEnergy, eFlux, 0);
 	for(int i = 1; i < rgridNumber-1; ++i){
 		for(int k = 0; k < kgridNumber; ++k){
-			tempEnergy[i] -= deltaT*0.5*middleVelocity[i]*(magneticField[i][k] - magneticField[i-1][k])*kgrid[k]*deltaLogK/deltaR[i];
+			//tempEnergy[i] -= deltaT*0.5*middleVelocity[i]*(magneticField[i][k] - magneticField[i-1][k])*kgrid[k]*deltaLogK/deltaR[i];
 		}
 	}
 }
@@ -588,8 +590,8 @@ void Simulation::solveDiscontinious(){
 void Simulation::CheckNegativeDensity(){
 	double dt = deltaT;
 	for(int i = 0; i < rgridNumber; ++i){
-		if(middleDensity[i]*volume(i) - dt*4*pi*(densityFlux(i+1) - densityFlux(i))< 0){
-			dt = 0.5*(middleDensity[i]*volume(i)/(4*pi*(densityFlux(i+1) - densityFlux(i))));
+		if(middleDensity[i]*volume(i) - dt*(densityFlux(i+1) - densityFlux(i))< 0){
+			dt = 0.5*(middleDensity[i]*volume(i)/(densityFlux(i+1) - densityFlux(i)));
 			alertNaNOrInfinity(dt, "dt = NaN");
 		}
 	}
@@ -603,7 +605,7 @@ void Simulation::TracPen(double* u, double* flux, double cs){
 
 	tempU[0] = u[0] - deltaT*(flux[1] - flux[0])/deltaR[0];
 	for(int i = 1; i < rgridNumber - 1; ++i){
-		tempU[i] = u[i] - deltaT*((flux[i+1] - flux[i]) - cs*(u[i+1] - 2*u[i] + u[i-1])/2)/deltaR[i];
+		tempU[i] = u[i] - deltaT*(flux[i+1] - flux[i])/deltaR[i];
 	}
 	tempU[rgridNumber - 1] = u[rgridNumber - 1];
 
@@ -789,7 +791,7 @@ void Simulation::updateFluxes(double* flux, double** fluxPlus, double** fluxMinu
 	double beta = 0.5;
 	double phi = 0.5;
 
-	for(int i = 1; i < rgridNumber-1; ++i){
+	for(int i = 2; i < rgridNumber-1; ++i){
 		for(int j = 0; j < 3; ++j){
 			flux[i] += 0.25*(1+phi)*minmod(fluxPlus[i][j], beta*fluxPlus[i-1][j])
 					   +0.25*(1-phi)*minmod(beta*fluxPlus[i-1][j], fluxPlus[i][j])
@@ -897,7 +899,7 @@ void Simulation::updateTimeStep(){
 	}
 
 
-	/*for(int i = 1; i < rgridNumber-1; ++i){
+	for(int i = 1; i < rgridNumber-1; ++i){
 		double dx = (grid[i+1] - grid[i-1])/2;
 		double dxp=grid[i+1]-grid[i];
 		double dxm=grid[i]-grid[i-1];
@@ -914,13 +916,14 @@ void Simulation::updateTimeStep(){
 		}
 	}
 
+	//by field
 	for(int i = 1; i < rgridNumber; ++i){
 		for(int k = 0; k < kgridNumber; ++k){
 			if(tempdt*growth_rate[i][k] > 2){
 				tempdt = 0.5*abs(1/growth_rate[i][k]);
 			}
 		}
-	}*/
+	}
 	deltaT = 0.5*tempdt;
 }
 
@@ -1030,34 +1033,36 @@ void Simulation::updateAll(){
 
 	//cosmic rays
 
-	for(int i = 0; i <= rgridNumber; ++i){
-		for(int j = 0; j < pgridNumber; ++j){
-			distributionFunction[i][j] = tempDistributionFunction[i][j];
+	if(currentIteration > startCRevaluation){
+		for(int i = 0; i <= rgridNumber; ++i){
+			for(int j = 0; j < pgridNumber; ++j){
+				distributionFunction[i][j] = tempDistributionFunction[i][j];
+			}
 		}
+		evaluateCosmicRayPressure();
+		evaluateCRFlux();
 	}
-	evaluateCosmicRayPressure();
-	evaluateCRFlux();
 
 
 	//field
 
-	/*for(int i = 1; i < rgridNumber; ++i){
-		for(int k = 0; k < kgridNumber; ++k){
-			magneticField[i][k] = tempMagneticField[i][k];
+	if(currentIteration > startFieldEvaluation){
+		for(int i = 1; i < rgridNumber; ++i){
+			for(int k = 0; k < kgridNumber; ++k){
+				magneticField[i][k] = tempMagneticField[i][k];
+			}
 		}
-	}
 
-	for(int i = 0; i < rgridNumber; ++i){
-		double magneticEnergy = 0;
-		for(int k = 0; k < kgridNumber; ++k){
-			magneticEnergy += magneticField[i][k]*kgrid[k]*deltaLogK;
-			largeScaleField[i][k] = sqrt(4*pi*magneticEnergy + B0*B0);
+		for(int i = 0; i < rgridNumber; ++i){
+			double magneticEnergy = 0;
+			for(int k = 0; k < kgridNumber; ++k){
+				magneticEnergy += magneticField[i][k]*kgrid[k]*deltaLogK;
+				largeScaleField[i][k] = sqrt(4*pi*magneticEnergy + B0*B0);
+			}
+			magneticInductionSum[i] = sqrt(4*pi*magneticEnergy + B0*B0);
 		}
-		magneticInductionSum[i] = sqrt(4*pi*magneticEnergy + B0*B0);
-	}
 
-	updateDiffusionCoef();
-	if(currentIteration >= 999){
+		updateDiffusionCoef();
 		growthRate();
-	}*/
+	}
 }
