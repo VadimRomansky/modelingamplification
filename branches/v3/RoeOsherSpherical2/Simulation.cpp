@@ -597,23 +597,25 @@ void Simulation::evaluateHydrodynamic() {
 void Simulation::solveDiscontinious(){
 	double rho1, rho2, u1, u2, c1, c2;
 	for(int i = 1; i < rgridNumber; ++i){
-		rho1 = middleDensity[i-1];
-		rho2 = middleDensity[i];
+		double r1square = sqr(middleGrid[i-1]);
+		double r2square = sqr(middleGrid[i]);
+		rho1 = middleDensity[i-1]*r1square;
+		rho2 = middleDensity[i]*r2square;
 		u1 = middleVelocity[i-1];
 		u2 = middleVelocity[i];
-		c1 = sqrt(gamma*middlePressure[i-1]/rho1);
-		c2 = sqrt(gamma*middlePressure[i]/rho2);
-		double h1 = (energy(i-1) + middlePressure[i-1])/rho1;
-		double h2 = (energy(i) + middlePressure[i])/rho2;
+		c1 = sqrt(gamma*middlePressure[i-1]*r1square/rho1);
+		c2 = sqrt(gamma*middlePressure[i]*r2square/rho2);
+		double h1 = (energy(i-1) + middlePressure[i-1])*r1square/rho1;
+		double h2 = (energy(i) + middlePressure[i])*r2square/rho2;
 		pointDensity[i] = sqrt(rho1*rho2);
 		pointVelocity[i] = (sqrt(rho1)*middleVelocity[i-1] + sqrt(middleDensity[i])*middleVelocity[i])/(sqrt(rho1) + sqrt(rho2));
 		pointEnthalpy[i] = (sqrt(rho1)*h1 + sqrt(rho2)*h2)/(sqrt(rho1) + sqrt(rho2));
 		pointSoundSpeed[i] = sqrt((sqrt(rho1)*c1*c1 + sqrt(rho2)*c2*c2)/(sqrt(rho1) + sqrt(rho2)) + 0.5*(gamma - 1)*(sqrt(rho1*rho2)/sqr(sqrt(rho1)+ sqrt(rho2)))*sqr(u1 - u2));
 	}
 	pointEnthalpy[0] = (middlePressure[0] + energy(0))/middleDensity[0];
-	pointDensity[0] = middleDensity[0];
-	//pointVelocity[0] = 0;
-	pointVelocity[0] = middleVelocity[0];
+	pointDensity[0] = middleDensity[0]*middleGrid[0]*middleGrid[0];
+	pointVelocity[0] = 0;
+	//pointVelocity[0] = middleVelocity[0];
 	pointSoundSpeed[0] = sqrt(gamma*middlePressure[0]/middleDensity[0]);
 }
 
@@ -637,9 +639,9 @@ void Simulation::CheckNegativeDensity(){
 //с учетом сферичности
 void Simulation::TracPenRadial(double* u, double* flux){
 
-	tempU[0] = u[0] - deltaT*(gridsquare[1]*flux[1] - gridsquare[0]*flux[0])/(middleGrid[0]*middleGrid[0]*deltaR[0]);
+	tempU[0] = u[0] - deltaT*(flux[1] - flux[0])/(middleGrid[0]*middleGrid[0]*deltaR[0]);
 	for(int i = 1; i < rgridNumber - 1; ++i){
-		tempU[i] = u[i] - deltaT*((gridsquare[i+1]*flux[i+1] - gridsquare[i]*flux[i])/(middleGrid[i]*middleGrid[i]*deltaR[i]));
+		tempU[i] = u[i] - deltaT*((flux[i+1] - flux[i])/(middleGrid[i]*middleGrid[i]*deltaR[i]));
 		/*if(tempU[i] < 0){
 			printf("temp U < 0\n");
 		}*/
@@ -656,7 +658,7 @@ double Simulation::densityFlux(int i){
 		printf("i < 0");
 	} else if(i >= 0 && i <= rgridNumber) {
 		if(i == 0) return middleVelocity[0]*middleDensity[0];
-		return pointDensity[i]*pointVelocity[i];
+		return pointDensity[i]*pointVelocity[i]/gridsquare[i];
 		//return middleDensity[i-1]*middleVelocity[i-1];
 	} else {
 		printf("i > rgridNumber");
@@ -732,11 +734,8 @@ double Simulation::soundSpeed(int i){
 }
 
 void Simulation::evaluateFluxes(){
-	//dFlux[0] = middleDensity[0]*middleVelocity[0];
-	//mFlux[0] = dFlux[0]*middleVelocity[0] + middlePressure[0];
-	//eFlux[0] = middleVelocity[0]*(energy(0) + middlePressure[0]);
 	dFlux[0] = 0;
-	mFlux[0] = middlePressure[0];
+	mFlux[0] = middlePressure[0]*sqr(middleGrid[0]);
 	eFlux[0] = 0;
 
 	double* deltaS = new double[3];
@@ -750,12 +749,14 @@ void Simulation::evaluateFluxes(){
 	}
 
 	for(int i = 1; i < rgridNumber; ++i){
-		double leftDflux = middleVelocity[i-1]*middleDensity[i-1];
-		double rightDflux = middleVelocity[i]*middleDensity[i];
-		double leftMflux = leftDflux*middleVelocity[i-1] + middlePressure[i-1];
-		double rightMflux = rightDflux*middleVelocity[i] + middlePressure[i];
-		double leftEflux = leftDflux*middleVelocity[i-1]*middleVelocity[i-1]/2 + middleVelocity[i-1]*middlePressure[i-1]*gamma/(gamma-1);
-		double rightEflux = rightDflux*middleVelocity[i]*middleVelocity[i]/2 + middleVelocity[i]*middlePressure[i]*gamma/(gamma-1);
+		double r1square = sqr(middleGrid[i-1]);
+		double r2square = sqr(middleGrid[i]);
+		double leftDflux = middleVelocity[i-1]*middleDensity[i-1]*r1square;
+		double rightDflux = middleVelocity[i]*middleDensity[i]*r2square;
+		double leftMflux = leftDflux*middleVelocity[i-1] + middlePressure[i-1]*r1square;
+		double rightMflux = rightDflux*middleVelocity[i] + middlePressure[i]*r2square;
+		double leftEflux = (leftDflux*middleVelocity[i-1]*middleVelocity[i-1]/2 + middleVelocity[i-1]*middlePressure[i-1]*gamma/(gamma-1))*r1square;
+		double rightEflux = (rightDflux*middleVelocity[i]*middleVelocity[i]/2 + middleVelocity[i]*middlePressure[i]*gamma/(gamma-1))*r2square;
 
 		lambdaMod[0] = min2(middleVelocity[i-1] - sqrt(gamma*middlePressure[i-1]/middleDensity[i-1]), pointVelocity[i] - pointSoundSpeed[i]);
 		lambdaMod[1] = pointVelocity[i];
@@ -773,9 +774,9 @@ void Simulation::evaluateFluxes(){
 		lambdaMinus[1] = lambda2*(lambda2 < 0);
 		lambdaMinus[2] = lambda3*(lambda3 < 0);
 
-		deltaS[0] = ((middlePressure[i] - middlePressure[i-1]) - pointDensity[i]*pointSoundSpeed[i]*(middleVelocity[i] - middleVelocity[i-1]))/(2*sqr(pointSoundSpeed[i]));
-		deltaS[1] = (sqr(pointSoundSpeed[i])*(middleDensity[i] - middleDensity[i-1]) - (middlePressure[i] - middlePressure[i-1]))/(2*sqr(pointSoundSpeed[i]));
-		deltaS[2] = ((middlePressure[i] - middlePressure[i-1]) + pointDensity[i]*pointSoundSpeed[i]*(middleVelocity[i] - middleVelocity[i-1]))/(2*sqr(pointSoundSpeed[i]));
+		deltaS[0] = ((middlePressure[i]*r2square - middlePressure[i-1]*r1square) - pointDensity[i]*pointSoundSpeed[i]*(middleVelocity[i] - middleVelocity[i-1]))/(2*sqr(pointSoundSpeed[i]));
+		deltaS[1] = (sqr(pointSoundSpeed[i])*(middleDensity[i]*r2square - middleDensity[i-1]*r1square) - (middlePressure[i]*r2square - middlePressure[i-1]*r1square))/(2*sqr(pointSoundSpeed[i]));
+		deltaS[2] = ((middlePressure[i]*r2square - middlePressure[i-1]*r1square) + pointDensity[i]*pointSoundSpeed[i]*(middleVelocity[i] - middleVelocity[i-1]))/(2*sqr(pointSoundSpeed[i]));
 
 		vectors[0][0] = 1;
 		vectors[0][1] = 2;
@@ -912,7 +913,7 @@ void Simulation::updateTimeStep(){
 	}
 
 	//by dp
-	for(int i = 1; i < rgridNumber; ++i){
+	/*for(int i = 1; i < rgridNumber; ++i){
 		if(abs(middleGrid[i]*middleGrid[i]*middleVelocity[i] - middleGrid[i]*middleGrid[i]*middleVelocity[i-1])*tempdt > 0.5*abs(3*deltaLogP*middleDeltaR[i]*gridsquare[i])){
 			tempdt = 0.5*abs(3*deltaLogP*gridsquare[i]*middleDeltaR[i]/(middleGrid[i]*middleGrid[i]*middleVelocity[i] - middleGrid[i]*middleGrid[i]*middleVelocity[i-1]));
 		}
@@ -967,7 +968,7 @@ void Simulation::updateTimeStep(){
 				tempdt = 0.5*abs(1/growth_rate[i][k]);
 			}
 		}
-	}
+	}*/
 	deltaT = 0.5*tempdt;
 }
 

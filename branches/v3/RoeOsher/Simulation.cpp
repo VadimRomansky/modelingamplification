@@ -535,7 +535,7 @@ void Simulation::evaluateHydrodynamic() {
 	}
 	evaluateFluxes();
 
-	updateFluxes();
+	//updateFluxes();
 
 	TracPen(tempDensity, dFlux, 0);
 
@@ -900,7 +900,7 @@ void Simulation::updateTimeStep(){
 	}
 
 
-	for(int i = 1; i < rgridNumber-1; ++i){
+	/*for(int i = 1; i < rgridNumber-1; ++i){
 		double dx = (grid[i+1] - grid[i-1])/2;
 		double dxp=grid[i+1]-grid[i];
 		double dxm=grid[i]-grid[i-1];
@@ -915,7 +915,7 @@ void Simulation::updateTimeStep(){
 				}
 			}
 		}
-	}
+	}*/
 
 	//by field
 	for(int i = 1; i < rgridNumber; ++i){
