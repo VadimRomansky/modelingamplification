@@ -75,6 +75,16 @@ public:
 	double* tempMomentum;
 	double* tempEnergy;
 
+	double* dFlux;
+	double* mFlux;
+	double* eFlux;
+	double** dFluxPlus;
+	double** mFluxPlus;
+	double** eFluxPlus;
+	double** dFluxMinus;
+	double** mFluxMinus;
+	double** eFluxMinus;
+
 	double* tempU;
 
 	double** diffusionCoef;
@@ -99,7 +109,9 @@ public:
 	double soundSpeed(int i);
 	double volume(int i);
 	double densityFlux(int i);
-	double* flux(int i);
+	void evaluateFluxes();
+	void updateFluxes();
+	void updateFluxes(double* flux, double** fluxPlus, double** fluxMinus);
 
 	void updateDiffusionCoef();
 
@@ -112,7 +124,6 @@ public:
 	void solveDiscontinious();
 	void CheckNegativeDensity();
 	void TracPenRadial(double* u, double* flux);
-	void updateFlux(double* flux);
 	bool CheckShockWave(double& u, double p1, double p2,double u1, double u2, double rho1, double rho2);
 
 	void evaluateCR();

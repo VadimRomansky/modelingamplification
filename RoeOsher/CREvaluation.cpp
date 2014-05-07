@@ -107,7 +107,7 @@ void Simulation::evaluateCR(){
 				//printf("f[i] < 0\n");
 			}
 			//if(i == shockWavePoint && k == injectionMomentum && currentIteration > 500){
-			if(abs(i-shockWavePoint) < 1 && abs(k - injectionMomentum) < 1 && currentIteration > 50){
+			if(abs(i-shockWavePoint) < 1 && abs(k - injectionMomentum) < 1 && currentIteration >5000){
 				f[i] += deltaT*injection(i);
 				injectedParticles += injection(i)*deltaT*4*pi*(middleGrid[i] - middleGrid[i-1])*deltaLogP;
 			}
