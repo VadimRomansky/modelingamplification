@@ -432,6 +432,7 @@ void Simulation::simulate(){
 	clock_t currentTime = clock();
 	clock_t prevTime = currentTime;
 	currentIteration = 0;
+	updateDiffusionCoef();
 	//основной цикл
 	while(myTime < maxTime && currentIteration < iterationNumber){
 		++currentIteration;
@@ -907,7 +908,7 @@ void Simulation::updateTimeStep(){
 			double gkp = distributionFunction[i][j];
 			double gkm = distributionFunction[i][j-1];
 			double der = (1/(2*dx))*(diffusionCoef[i][j]*(distributionFunction[i+1][j] - distributionFunction[i][j])/dxp - diffusionCoef[i-1][j]*(distributionFunction[i][j] - distributionFunction[i-1][j])/dxm) - (1/dx)*(middleVelocity[i]*distributionFunction[i][j] - middleVelocity[i-1]*distributionFunction[i-1][j]) + (1.0/3)*((middleVelocity[i] - middleVelocity[i-1])/dx)*((gkp - gkm)/deltaLogP);
-			if(distributionFunction[i][j] + der*tempdt < 0){
+			if((distributionFunction[i][j] > 0) && (distributionFunction[i][j] + der*tempdt < 0)){
 				tempdt = 0.5*abs(distributionFunction[i][j]/der);
 				if(tempdt < 0.1){
 					printf("ooo\n");

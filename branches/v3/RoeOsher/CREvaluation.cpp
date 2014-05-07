@@ -106,7 +106,6 @@ void Simulation::evaluateCR(){
 			if(f[i] < 0 ){
 				//printf("f[i] < 0\n");
 			}
-			//if(i == shockWavePoint && k == injectionMomentum && currentIteration > 500){
 			if(abs(i-shockWavePoint) < 1 && abs(k - injectionMomentum) < 1){
 				f[i] += deltaT*injection(i);
 				injectedParticles += injection(i)*deltaT*4*pi*(middleGrid[i] - middleGrid[i-1])*deltaLogP;
@@ -139,8 +138,8 @@ void Simulation::evaluateCR(){
 			alertNaNOrInfinity(x[i],"tempDistribution = NaN");
 			if(x[i] < 0){
 				tempDistributionFunction[i][k] = 0;
-				if(abs(x[i]) > 1E-100){
-					printf("tenpDistribution < 0\n");
+				if(abs(x[i]) > 1E-20){
+					printf("tempDistribution < 0\n");
 				}
 			}
 			tempDistributionFunction[i][k]= x[i];
