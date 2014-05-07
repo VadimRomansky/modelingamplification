@@ -375,7 +375,7 @@ void Simulation::simulate(){
 
 	clock_t currentTime = clock();
 	clock_t prevTime = currentTime;
-
+	updateDiffusionCoef();
 	updateTimeStep();
 	while(myTime < maxTime && currentIteration < iterationNumber){
 		++currentIteration;

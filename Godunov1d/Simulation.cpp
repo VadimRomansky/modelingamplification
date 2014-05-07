@@ -398,6 +398,7 @@ void Simulation::simulate(){
 	clock_t currentTime = clock();
 	clock_t prevTime = currentTime;
 	currentIteration = 0;
+	updateDiffusionCoef();
 	//основной цикл
 	while(myTime < maxTime && currentIteration < iterationNumber){
 		++currentIteration;
@@ -405,7 +406,7 @@ void Simulation::simulate(){
 		printf("time = %lf\n", myTime);
 		printf("solving\n");
 
-		evaluateHydrodynamic();
+		//evaluateHydrodynamic();
 		
 		evaluateCR();
 
@@ -1000,7 +1001,7 @@ void Simulation::updateTimeStep(){
 	}
 
 	//by dp
-	/*for(int i = 1; i < rgridNumber; ++i){
+	for(int i = 1; i < rgridNumber; ++i){
 		if(abs(middleVelocity[i] - middleVelocity[i-1])*tempdt > 0.5*abs(3*deltaLogP*middleDeltaR[i])){
 			tempdt = 0.5*abs(3*deltaLogP*middleDeltaR[i]/(middleVelocity[i] - middleVelocity[i-1]));
 		}
@@ -1024,10 +1025,10 @@ void Simulation::updateTimeStep(){
 		if(1 + tempdt*a < 0){
 			tempdt = 0.5/abs(a);
 		}
-	}*/
+	}
 
 
-	/*for(int i = 1; i < rgridNumber-1; ++i){
+	for(int i = 1; i < rgridNumber-1; ++i){
 		double dx = (grid[i+1] - grid[i-1])/2;
 		double dxp=grid[i+1]-grid[i];
 		double dxm=grid[i]-grid[i-1];
@@ -1035,7 +1036,7 @@ void Simulation::updateTimeStep(){
 			double gkp = distributionFunction[i][j];
 			double gkm = distributionFunction[i][j-1];
 			double der = (1/(2*dx))*(diffusionCoef[i][j]*(distributionFunction[i+1][j] - distributionFunction[i][j])/dxp - diffusionCoef[i-1][j]*(distributionFunction[i][j] - distributionFunction[i-1][j])/dxm) - (1/dx)*(middleVelocity[i]*distributionFunction[i][j] - middleVelocity[i-1]*distributionFunction[i-1][j]) + (1.0/3)*((middleVelocity[i] - middleVelocity[i-1])/dx)*((gkp - gkm)/deltaLogP);
-			if(distributionFunction[i][j] + der*tempdt < 0){
+			if((distributionFunction[i][j] > 0) && (distributionFunction[i][j] + der*tempdt < 0)){
 				tempdt = 0.5*abs(distributionFunction[i][j]/der);
 				if(tempdt < 0.1){
 					printf("ooo\n");
@@ -1044,7 +1045,7 @@ void Simulation::updateTimeStep(){
 		}
 	}
 
-	for(int i = 1; i < rgridNumber; ++i){
+	/*for(int i = 1; i < rgridNumber; ++i){
 		for(int k = 0; k < kgridNumber; ++k){
 			if(tempdt*growth_rate[i][k] > 2){
 				tempdt = 0.5*abs(1/growth_rate[i][k]);
@@ -1160,13 +1161,13 @@ void Simulation::updateAll(){
 
 	//cosmic rays
 
-	/*for(int i = 0; i <= rgridNumber; ++i){
+	for(int i = 0; i <= rgridNumber; ++i){
 		for(int j = 0; j < pgridNumber; ++j){
 			distributionFunction[i][j] = tempDistributionFunction[i][j];
 		}
 	}
 	evaluateCosmicRayPressure();
-	evaluateCRFlux();*/
+	evaluateCRFlux();
 
 
 	//field
