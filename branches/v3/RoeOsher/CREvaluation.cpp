@@ -17,7 +17,7 @@ void Simulation::updateDiffusionCoef(){
 					break;
 				}
 			}
-			double coef = 10*p*speed_of_light*speed_of_light/(electron_charge*B);
+			double coef = p*speed_of_light*speed_of_light/(electron_charge*B);
 			double dx = deltaR[i];
 			double lambda = coef/speed_of_light;
 			if(abs(i - shockWavePoint) < 10 && j >= injectionMomentum){
