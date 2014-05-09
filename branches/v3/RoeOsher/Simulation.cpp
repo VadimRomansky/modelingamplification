@@ -159,7 +159,7 @@ void Simulation::initializeProfile(){
 	kgrid = new double[kgridNumber];
 	logKgrid = new double[kgridNumber];
 
-	minP = 0.01*massProton*speed_of_light;
+	minP = 0.5*massProton*speed_of_light;
 	maxP = minP*10000000;
 
 	double kmin = (1E-9)*electron_charge*B0/(speed_of_light*maxP);
@@ -174,6 +174,7 @@ void Simulation::initializeProfile(){
 	largeScaleField = new double*[rgridNumber];
 	growth_rate = new double*[rgridNumber];
 	magneticInductionSum = new double[rgridNumber];
+	maxRate = new double[rgridNumber];
 	for(int i = 0; i < rgridNumber; ++i){
 		magneticField[i] = new double[kgridNumber];
 		tempMagneticField[i] = new double[kgridNumber];
@@ -440,7 +441,7 @@ void Simulation::simulate(){
 		printf("time = %lf\n", myTime);
 		printf("solving\n");
 
-		evaluateHydrodynamic();
+		//evaluateHydrodynamic();
 		
 		if(currentIteration > startCRevaluation){
 			evaluateCR();

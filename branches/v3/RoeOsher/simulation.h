@@ -97,6 +97,7 @@ public:
 	double** growth_rate;
 	double** crflux;
 	double* integratedFlux;
+	double* maxRate;
 
 	double* magneticInductionSum;
 
