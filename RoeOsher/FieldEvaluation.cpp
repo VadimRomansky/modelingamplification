@@ -12,7 +12,7 @@ void Simulation::evaluateField(){
 	for(int i = 1; i < rgridNumber; ++i){
 		double delta = 5.0/21;
 		int maxRateK = 0;
-		double maxRate = 0;
+		maxRate[i] = 0;
 		for(int k = 0; k < kgridNumber; ++k){
 			double Ualpha = power(middleVelocity[i],1.5);
 			double z = magneticField[i][k]*Ualpha;
@@ -26,9 +26,9 @@ void Simulation::evaluateField(){
 			tempMagneticField[i][k] -= deltaT*(z - prevZ)/(sqrt(middleVelocity[i])*deltaR[i]);
 
 			tempMagneticField[i][k] +=  deltaT*growth_rate[i][k]*magneticField[i][k];
-			if(growth_rate[i][k] > maxRate){
+			if(growth_rate[i][k] > maxRate[i]){
 				maxRateK = k;
-				maxRate = growth_rate[i][k];
+				maxRate[i] = growth_rate[i][k];
 			}
 			//tempMagneticField[i][k] = magneticField[i][k] + deltaT*(- 1.5*(magneticField[i][k]*middleVelocity[i] - magneticField[i-1][k]*middleVelocity[i-1])/middleDeltaR[i] + 0.5*(delta*middleVelocity[i]+(1-delta)*middleVelocity[i-1])*(magneticField[i][k] - magneticField[i-1][k])/middleDeltaR[i] + growth_rate[i][k]);
 			alertNaNOrInfinity(tempMagneticField[i][k], "magnetic field = NaN");
@@ -37,8 +37,8 @@ void Simulation::evaluateField(){
 				tempMagneticField[i][k] = 0;
 			}
 		}
-		if(maxRate > fullMaxRate){
-			fullMaxRate = maxRate;
+		if(maxRate[i] > fullMaxRate){
+			fullMaxRate = maxRate[i];
 		}
 	}
 }
