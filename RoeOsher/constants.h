@@ -17,8 +17,8 @@ const int injectionMomentum = 5;
 const double gradientLevel = 0.2;
 const double gridExpLevel = 0.9;
 const double minDeltaR = 5.0E14;
-const double minT = 100;
-const int startCRevaluation = 1000;
-const int startFieldEvaluation = 20000;
+const double minT = 10000;
+const int startCRevaluation = 300;
+const int startFieldEvaluation = 5000;
 
 #endif

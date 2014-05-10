@@ -17,7 +17,7 @@ void Simulation::updateDiffusionCoef(){
 					break;
 				}
 			}
-			double coef = p*speed_of_light*speed_of_light/(electron_charge*B);
+			double coef = 10*p*speed_of_light*speed_of_light/(electron_charge*B);
 			double dx = deltaR[i];
 			double lambda = coef/speed_of_light;
 			if(abs(i - shockWavePoint) < 10 && j >= injectionMomentum){
@@ -37,7 +37,7 @@ double Simulation::injection(int i){
 	//double xi = 5;
 	double xi = pgrid[injectionMomentum]*speed_of_light/(kBoltzman*temperatureIn(i+1));
 	double eta = cube(xi)*exp(-xi);
-	return (1E-17)*middleDensity[i]*abs(middleVelocity[i])*pf/(massProton*dp);
+	return (5E-20)*middleDensity[i]*abs(middleVelocity[i])*pf/(massProton*dp);
 	//return abs(pf*middleDensity[i]*((middleVelocity[i+1] - middleVelocity[i])/middleDeltaR[shockWavePoint])/(3*massProton));
 	//return 1;
 }
@@ -107,7 +107,7 @@ void Simulation::evaluateCR(){
 				//printf("f[i] < 0\n");
 				f[i] = 0;
 			}
-			if(abs(i-shockWavePoint) < 3 && abs(k - injectionMomentum) < 3){
+			if(abs(i-shockWavePoint) < 1 && abs(k - injectionMomentum) < 3){
 				f[i] += deltaT*injection(i);
 				injectedParticles += injection(i)*deltaT*4*pi*(middleGrid[i] - middleGrid[i-1])*deltaLogP;
 			}
@@ -193,8 +193,9 @@ void Simulation::evaluateCosmicRayPressure(){
 	double* partPressure = new double[pgridNumber];
 	double deltaLogP = logPgrid[1] - logPgrid[0];
 	for(int j = 0; j < pgridNumber; ++j){
-		double momentum = pgrid[j];
-		partPressure[j] = momentum*(momentum/sqrt(massProton*massProton + momentum*momentum/(speed_of_light*speed_of_light)))*deltaLogP;
+		double p = pgrid[j];
+		double v = p/sqrt(massProton*massProton + p*p/(speed_of_light*speed_of_light));
+		partPressure[j] = p*v*deltaLogP;
 	}
 	for(int i = 0; i < rgridNumber; ++i){
 		double pressure = 0;
