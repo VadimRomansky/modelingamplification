@@ -17,7 +17,7 @@ void Simulation::updateDiffusionCoef(){
 					break;
 				}
 			}
-			double coef = 10*p*speed_of_light*speed_of_light/(electron_charge*B);
+			double coef = p*speed_of_light*speed_of_light/(electron_charge*B);
 			double dx = deltaR[i];
 			double lambda = coef/speed_of_light;
 			if(abs(i - shockWavePoint) < 10 && j >= injectionMomentum){
@@ -37,7 +37,7 @@ double Simulation::injection(int i){
 	//double xi = 5;
 	double xi = pgrid[injectionMomentum]*speed_of_light/(kBoltzman*temperatureIn(i+1));
 	double eta = cube(xi)*exp(-xi);
-	return (5E-20)*middleDensity[i]*abs(middleVelocity[i])*pf/(massProton*dp);
+	return (1E-8)*middleDensity[i]*abs(middleVelocity[i])*pf/(massProton*dp*middleDeltaR[i]);
 	//return abs(pf*middleDensity[i]*((middleVelocity[i+1] - middleVelocity[i])/middleDeltaR[shockWavePoint])/(3*massProton));
 	//return 1;
 }
@@ -107,9 +107,22 @@ void Simulation::evaluateCR(){
 				//printf("f[i] < 0\n");
 				f[i] = 0;
 			}
-			if(abs(i-shockWavePoint) < 1 && abs(k - injectionMomentum) < 3){
-				f[i] += deltaT*injection(i);
-				injectedParticles += injection(i)*deltaT*4*pi*(middleGrid[i] - middleGrid[i-1])*deltaLogP;
+			if(abs(i-shockWavePoint) < 1 && abs(k - injectionMomentum) < 1){
+				double inj = injection(i);
+				f[i] += deltaT*inj;
+				injectedParticles += inj*deltaT*4*pi*(middleGrid[i] - middleGrid[i-1])*deltaLogP;
+				//tempDensity[i] -= deltaT*inj*massProton*4*pi*deltaLogP;
+				//tempMomentum[i] -= deltaT*inj*massProton*4*pi*deltaLogP*middleVelocity[i];
+				//tempEnergy[i] -= deltaT*inj*pgrid[k]*speed_of_light*4*pi*deltaLogP;
+				if(tempDensity[i] < 0){
+					printf("tempDensity[i] < 0 by CR\n");
+				}
+				if(tempEnergy[i] < 0){
+					printf("tempEnergy[i] < 0 by CR\n");
+				}
+				alertNaNOrInfinity(tempDensity[i], "density = NaN");
+				alertNaNOrInfinity(tempMomentum[i], "momentum = NaN");
+				alertNaNOrInfinity(tempEnergy[i], "energy = NaN");
 			}
 		}
 		gkp = distributionFunction[rgridNumber-1][k];
