@@ -18,6 +18,7 @@ pressure(1:N2,1:N3 + 1) = 0;
 crpressure(1:N2,1:N3 + 1) = 0;
 flux(1:N2,1:N3 + 1) = 0;
 field(1:N2,1:N3 + 1) = 0;
+field_pressure(1:N2,1:N3 + 1) = 0;
 tau(1:N2,1:N3 + 1) = 0;
 for j=1:N2,
     r(j,1) = tamc_radial_profile(j,1);
@@ -75,6 +76,13 @@ for j=1:N2,
     field(j,5)=tamc_radial_profile(c*N2 + j,7);
     field(j,6)=tamc_radial_profile(d*N2 + j,7);
     field(j,7)=tamc_radial_profile(e*N2 + j,7);
+    field_pressure(j,1)=field(j,1);
+    field_pressure(j,2)=field(j,2)*field(j,2)/(4*3.14);
+    field_pressure(j,3)=field(j,3)*field(j,3)/(4*3.14);
+    field_pressure(j,4)=field(j,4)*field(j,4)/(4*3.14);
+    field_pressure(j,5)=field(j,5)*field(j,5)/(4*3.14);
+    field_pressure(j,6)=field(j,6)*field(j,6)/(4*3.14);
+    field_pressure(j,7)=field(j,7)*field(j,7)/(4*3.14);
     tau(j,1)=tamc_radial_profile(j,1);
     tau(j,2)=tamc_radial_profile(j,8);
     tau(j,3)=tamc_radial_profile(a*N2 + j,8);
@@ -125,7 +133,15 @@ title ('B');
 xlabel ('r cm');
 ylabel ('B gauss');
 grid;
+
 figure(8);
+plot (r(1:N2,1),field_pressure(1:N2,2),'cyan',r(1:N2,2),field_pressure(1:N2,3),'green',r(1:N2,3),field_pressure(1:N2,4),'blue',r(1:N2,4),field_pressure(1:N2,5),'black',r(1:N2,5),field_pressure(1:N2,6),'yellow',r(1:N2,6),field_pressure(1:N2,7),'red');
+title ('B^2/4pi');
+xlabel ('r cm');
+ylabel ('erg/cm^3');
+grid;
+
+figure(9);
 plot (r(1:N2,1),tau(1:N2,2),'cyan',r(1:N2,2),tau(1:N2,3),'green',r(1:N2,3),tau(1:N2,4),'blue',r(1:N2,4),tau(1:N2,5),'black',r(1:N2,5),tau(1:N2,6),'yellow',r(1:N2,6),tau(1:N2,7),'red');
 title ('tau*Gmax');
 xlabel ('r cm');
