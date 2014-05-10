@@ -550,20 +550,23 @@ void Simulation::evaluateHydrodynamic() {
 	for(int i = 0; i < rgridNumber - 1; ++i){
 		
 		tempMomentum[i] -= deltaT*(cosmicRayPressure[i+1] - cosmicRayPressure[i])/(deltaR[i]);
+		alertNaNOrInfinity(tempMomentum[i], "momentum = NaN");
 		
 		if(i > 0 && i < rgridNumber-1){
 			for(int k = 0; k < kgridNumber; ++k){
 				tempMomentum[i] -= deltaT*0.5*(magneticField[i][k] - magneticField[i-1][k])*kgrid[k]*deltaLogK/deltaR[i];
+				alertNaNOrInfinity(tempMomentum[i], "momentum = NaN");
 			}
 		}
 		
 	}
 	TracPen(tempEnergy, eFlux, 0);
-	double deltaE = 0;
+
 	for(int i = 1; i < rgridNumber-1; ++i){
 		for(int k = 0; k < kgridNumber; ++k){
 			tempEnergy[i] -= deltaT*0.5*0.5*(middleVelocity[i]+middleVelocity[i-1])*(magneticField[i][k] - magneticField[i-1][k])*kgrid[k]*deltaLogK/deltaR[i];
 			tempEnergy[i] -= deltaT*growth_rate[i][k]*magneticField[i][k]*kgrid[k]*deltaLogK;
+			alertNaNOrInfinity(tempEnergy[i], "energy = NaN");
 		}
 	}
 }
@@ -605,6 +608,12 @@ void Simulation::CheckNegativeDensity(){
 			alertNaNOrInfinity(dt, "dt = NaN");
 		}
 	}
+	if(shockWavePoint > 1 && shockWavePoint < rgridNumber){
+		double deltaE = injection(shockWavePoint)*pgrid[injectionMomentum]*speed_of_light*4*pi*deltaLogP;
+		if(energy(shockWavePoint) - dt*deltaE < 0){
+			dt = 0.5*abs(energy(shockWavePoint)/deltaE);
+		}
+	}
 	deltaT = dt;
 }
 
@@ -616,6 +625,7 @@ void Simulation::TracPen(double* u, double* flux, double cs){
 	tempU[0] = u[0] - deltaT*(flux[1] - flux[0])/deltaR[0];
 	for(int i = 1; i < rgridNumber - 1; ++i){
 		tempU[i] = u[i] - deltaT*(flux[i+1] - flux[i])/deltaR[i];
+		alertNaNOrInfinity(tempU[i],"tempU = NaN");
 	}
 	tempU[rgridNumber - 1] = u[rgridNumber - 1];
 
