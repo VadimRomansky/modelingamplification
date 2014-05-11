@@ -12,23 +12,31 @@ void Simulation::evaluateField(){
 	for(int i = 1; i < rgridNumber; ++i){
 		double delta = 5.0/21;
 		int maxRateK = 0;
-		double maxRate = 0;
+		maxRate[i] = 0;
 		for(int k = 0; k < kgridNumber; ++k){
-			double Ualpha = power(middleVelocity[i],1.5);
-			double z = magneticField[i][k]*Ualpha;
-			double prevZ = magneticField[i-1][k]*power(middleVelocity[i-1],1.5);
 			tempMagneticField[i][k] = magneticField[i][k];
-			//todo add du/dt !!!!!!!!!!
-			//double tempZ = z + deltaT*((-1.5*(0.5*(middleVelocity[i]+middleVelocity[i-1]))*(z - prevZ)/middleDeltaR[i]));
-			//tempMagneticField[i][k] = tempZ/Ualpha;
-			//tempMagneticField[i][k] += (-(middleVelocity[i]*magneticField[i][k] - middleVelocity[i-1]*magneticField[i][k]) + 0.5*(z + prevZ)*((1/sqrt(middleVelocity[i])) - (1/sqrt(middleVelocity[i-1]))))*deltaT/deltaR[i]; 
-			//tempMagneticField[i][k] += -deltaT*1.5*((middleVelocity[i]*magneticField[i][k] - middleVelocity[i-1]*magneticField[i-1][k])/deltaR[i]) + deltaT*0.5*0.5*(middleVelocity[i]+middleVelocity[i-1])*(magneticField[i][k] - magneticField[i-1][k])/deltaR[i];
-			tempMagneticField[i][k] -= deltaT*(z - prevZ)/(sqrt(middleVelocity[i])*deltaR[i]);
+			if((middleVelocity[i] > 0) && (middleVelocity[i-1]>0)){
+				double Ualpha = power(middleVelocity[i],1.5);
+				double z = magneticField[i][k]*Ualpha;
+				double prevZ = magneticField[i-1][k]*power(middleVelocity[i-1],1.5);
+				//double tempZ = z + deltaT*((-1.5*(0.5*(middleVelocity[i]+middleVelocity[i-1]))*(z - prevZ)/middleDeltaR[i]));
+				//tempMagneticField[i][k] = tempZ/Ualpha;
+				//tempMagneticField[i][k] += (-(middleVelocity[i]*magneticField[i][k] - middleVelocity[i-1]*magneticField[i][k]) + 0.5*(z + prevZ)*((1/sqrt(middleVelocity[i])) - (1/sqrt(middleVelocity[i-1]))))*deltaT/deltaR[i]; 
+				//tempMagneticField[i][k] += -deltaT*1.5*((middleVelocity[i]*magneticField[i][k] - middleVelocity[i-1]*magneticField[i-1][k])/deltaR[i]) + deltaT*0.5*0.5*(middleVelocity[i]+middleVelocity[i-1])*(magneticField[i][k] - magneticField[i-1][k])/deltaR[i];
+				tempMagneticField[i][k] -= deltaT*(z - prevZ)/(sqrt(middleVelocity[i])*deltaR[i]);
+			} else if(middleVelocity[i] < 0 && middleVelocity[i-1] < 0){
+				double Ualpha = power(-middleVelocity[i],1.5);
+				double z = magneticField[i][k]*Ualpha;
+				double prevZ = magneticField[i-1][k]*power(-middleVelocity[i-1],1.5);
+				tempMagneticField[i][k] += deltaT*(z - prevZ)/(sqrt(-middleVelocity[i])*deltaR[i]);
+			} else {
+				tempMagneticField[i][k] += -deltaT*1.5*((middleVelocity[i]*magneticField[i][k] - middleVelocity[i-1]*magneticField[i-1][k])/deltaR[i]) + deltaT*0.5*0.5*(middleVelocity[i]+middleVelocity[i-1])*(magneticField[i][k] - magneticField[i-1][k])/deltaR[i];
+			}
 
 			tempMagneticField[i][k] +=  deltaT*growth_rate[i][k]*magneticField[i][k];
-			if(growth_rate[i][k] > maxRate){
+			if(growth_rate[i][k] > maxRate[i]){
 				maxRateK = k;
-				maxRate = growth_rate[i][k];
+				maxRate[i] = growth_rate[i][k];
 			}
 			//tempMagneticField[i][k] = magneticField[i][k] + deltaT*(- 1.5*(magneticField[i][k]*middleVelocity[i] - magneticField[i-1][k]*middleVelocity[i-1])/middleDeltaR[i] + 0.5*(delta*middleVelocity[i]+(1-delta)*middleVelocity[i-1])*(magneticField[i][k] - magneticField[i-1][k])/middleDeltaR[i] + growth_rate[i][k]);
 			alertNaNOrInfinity(tempMagneticField[i][k], "magnetic field = NaN");
@@ -37,8 +45,8 @@ void Simulation::evaluateField(){
 				tempMagneticField[i][k] = 0;
 			}
 		}
-		if(maxRate > fullMaxRate){
-			fullMaxRate = maxRate;
+		if(maxRate[i] > fullMaxRate){
+			fullMaxRate = maxRate[i];
 		}
 	}
 }
@@ -52,7 +60,6 @@ void Simulation::evaluateCRFlux(){
 }
 
 void Simulation::growthRate(){
-	//evaluateCRFlux();
 	for(int i = 0; i < rgridNumber; ++i){
 		if(i > shockWavePoint+1){
 			for(int k = 0; k < kgridNumber; ++k){

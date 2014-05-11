@@ -17,7 +17,7 @@ void Simulation::updateDiffusionCoef(){
 					break;
 				}
 			}
-			double coef = p*speed_of_light*speed_of_light/(electron_charge*B);
+			double coef = 100*p*speed_of_light*speed_of_light/(electron_charge*B);
 			double dx = deltaR[i];
 			double lambda = coef/speed_of_light;
 			if(abs(i - shockWavePoint) < 10 && j >= injectionMomentum){
@@ -37,7 +37,7 @@ double Simulation::injection(int i){
 	//double xi = 5;
 	double xi = pgrid[injectionMomentum]*speed_of_light/(kBoltzman*temperatureIn(i+1));
 	double eta = cube(xi)*exp(-xi);
-	return (1E-8)*middleDensity[i]*abs(middleVelocity[i])*pf/(massProton*dp*middleDeltaR[i]);
+	return (1E-6)*middleDensity[i]*abs(middleVelocity[i]*middleVelocity[i]/speed_of_light)*pf/(massProton*dp*middleDeltaR[i]);
 	//return abs(pf*middleDensity[i]*((middleVelocity[i+1] - middleVelocity[i])/middleDeltaR[shockWavePoint])/(3*massProton));
 	//return 1;
 }
