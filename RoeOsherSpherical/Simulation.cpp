@@ -471,9 +471,9 @@ void Simulation::simulate(){
 		printf("time = %lf\n", myTime);
 		printf("solving\n");
 
-		if(currentIteration < startCRevaluation){
+		//if(currentIteration < startCRevaluation){
 			evaluateHydrodynamic();
-		}
+		//}
 		
 		if(currentIteration > startCRevaluation){
 			evaluateCR();
