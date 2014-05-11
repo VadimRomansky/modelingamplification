@@ -182,7 +182,7 @@ void Simulation::initializeProfile(){
 		largeScaleField[i] = new double[kgridNumber];
 		growth_rate[i] = new double[kgridNumber];
 		for(int k = 0; k < kgridNumber; ++k){
-			magneticField[i][k] = (1E-8)*B0*B0*power(1/kgrid[k], 5/3)*power(kgrid[0],2/3);
+			magneticField[i][k] = (1E-11)*B0*B0*power(1/kgrid[k], 5/3)*power(kgrid[0],2/3);
 			if(i >= rgridNumber/2-1){
 				magneticField[i][k] *= 8;
 			}
@@ -567,6 +567,7 @@ void Simulation::evaluateHydrodynamic() {
 			tempEnergy[i] -= deltaT*0.5*0.5*(middleVelocity[i]+middleVelocity[i-1])*(magneticField[i][k] - magneticField[i-1][k])*kgrid[k]*deltaLogK/deltaR[i];
 			tempEnergy[i] -= deltaT*growth_rate[i][k]*magneticField[i][k]*kgrid[k]*deltaLogK;
 			alertNaNOrInfinity(tempEnergy[i], "energy = NaN");
+			alertNegative(tempEnergy[i], "energy < 0");
 		}
 	}
 }
@@ -610,8 +611,8 @@ void Simulation::CheckNegativeDensity(){
 	}
 	if(shockWavePoint > 1 && shockWavePoint < rgridNumber){
 		double deltaE = injection(shockWavePoint)*pgrid[injectionMomentum]*speed_of_light*4*pi*deltaLogP;
-		if(energy(shockWavePoint) - dt*deltaE < 0){
-			dt = 0.5*abs(energy(shockWavePoint)/deltaE);
+		if(0.5*energy(shockWavePoint) - dt*deltaE < 0){
+			dt = 0.5*0.5*abs(energy(shockWavePoint)/deltaE);
 		}
 	}
 	deltaT = dt;

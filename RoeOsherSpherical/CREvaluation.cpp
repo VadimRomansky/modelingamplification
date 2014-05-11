@@ -16,7 +16,7 @@ void Simulation::updateDiffusionCoef(){
 					break;
 				}
 			}
-			double coef = (1E1)*p*speed_of_light*speed_of_light/(electron_charge*B);
+			double coef = (1E4)*p*speed_of_light*speed_of_light/(electron_charge*B);
 			double dx = deltaR[i];
 			double lambda = coef/speed_of_light;
 			diffusionCoef[i][j] = coef;
@@ -31,7 +31,7 @@ double Simulation::injection(int i){
 	//double xi = 5;
 	double xi = pgrid[injectionMomentum]*speed_of_light/(kBoltzman*temperatureIn(i+1));
 	double eta = cube(xi)*exp(-xi);
-	return (1E-19)*middleDensity[i]*abs(middleVelocity[i])*pf/(massProton*dp);
+	return (1E-7)*middleDensity[i]*abs(middleVelocity[i]*middleVelocity[i]/speed_of_light)*pf/(massProton*dp*volume(i));
 }
 
 
@@ -110,7 +110,7 @@ void Simulation::evaluateCR(){
 							- xm*xm*diffusionCoef[i-1][k]*(distributionFunction[i][k] - distributionFunction[i-1][k])/dxm)
 							- (deltaT/dV)*(xp*xp*middleVelocity[i]*distributionFunction[i][k] - xm*xm*middleVelocity[i-1]*distributionFunction[i-1][k]);
 			if(f[i] < 0){
-				printf("f[i] < 0\n");
+				//printf("f[i] < 0\n");
 				f[i] = 0;
 			}
 			if((xp*xp*middleVelocity[i] - xm*xm*middleVelocity[i-1]) < 0){
@@ -120,9 +120,23 @@ void Simulation::evaluateCR(){
 				if(gkpp - gkp > 0)
 					f[i] += (deltaT/3)*((xp*xp*middleVelocity[i] - xm*xm*middleVelocity[i-1])/dV)*((gkpp - gkp)/deltaLogP);
 			}
-			if(abs(i - shockWavePoint)<3 && abs(k - injectionMomentum) < 3 && currentIteration < stopInjection){
-				f[i] += deltaT*injection(i)*grid[i]*grid[i]/dV;
-				injectedParticles += injection(i)*deltaT*4*pi*volume(i)*deltaLogP*grid[i]*grid[i]/dV;
+			if(abs(i - shockWavePoint)<1 && abs(k - injectionMomentum) < 1){
+				double inj = injection(i);
+				f[i] += deltaT*inj;
+				//todo shift volume to 1/2
+				injectedParticles += inj*deltaT*4*pi*volume(i)*deltaLogP;
+				//tempDensity[i] -= deltaT*inj*massProton*4*pi*deltaLogP;
+				//tempMomentum[i] -= deltaT*inj*massProton*4*pi*deltaLogP*middleVelocity[i];
+				//tempEnergy[i] -= deltaT*inj*pgrid[k]*speed_of_light*4*pi*deltaLogP;
+				if(tempDensity[i] < 0){
+					printf("tempDensity[i] < 0 by CR\n");
+				}
+				if(tempEnergy[i] < 0){
+					printf("tempEnergy[i] < 0 by CR\n");
+				}
+				alertNaNOrInfinity(tempDensity[i], "density = NaN");
+				alertNaNOrInfinity(tempMomentum[i], "momentum = NaN");
+				alertNaNOrInfinity(tempEnergy[i], "energy = NaN");
 			}
 		}
 		gkp = distributionFunction[rgridNumber-1][k];
@@ -211,7 +225,6 @@ void Simulation::evaluateCosmicRayPressure(){
 	for(int i = 0; i < rgridNumber; ++i){
 		double pressure = 0;
 		for(int j = 0; j < pgridNumber; ++j){
-			//pressure += distributionFunction[i][j]*momentum*momentum*momentum*(momentum/sqrt(massProton*massProton + momentum*momentum/(speed_of_light*speed_of_light)))*(pgrid[j+1] - pgrid[j]);
 			pressure += distributionFunction[i][j]*partPressure[j];
 		}
 		pressure *= 4*pi;
