@@ -132,6 +132,14 @@ void Simulation::growthRate(){
 
 			double rate = max2(max2(G1p.im, G1m.im), max2(G2p.im, G2m.im));
 			//alertNaNOrInfinity(rate, "rate = NaN");
+
+			//Bell
+
+			/*double rate = 0;
+			if(kgrid[k] < kc){
+				rate = Va*sqrt(-kgrid[k]*kgrid[k] + kgrid[k]*kc);
+			}*/
+
 			if(rate > 0){
 				rate *= 2;
 			} else {

@@ -39,6 +39,7 @@ Simulation::~Simulation(){
 	delete[] middleVelocity;
 	delete[] middlePressure;
 	delete[] cosmicRayPressure;
+	delete[] cosmicRayConcentration;
 	delete[] tempDensity;
 	delete[] tempMomentum;
 	delete[] tempEnergy;
@@ -131,6 +132,7 @@ void Simulation::initializeProfile(){
 	}
 
 	cosmicRayPressure = new double[rgridNumber+1];
+	cosmicRayConcentration = new double[rgridNumber+1];
 	tempU = new double[rgridNumber];
 	integratedFlux = new double[rgridNumber];
 
@@ -159,8 +161,8 @@ void Simulation::initializeProfile(){
 	kgrid = new double[kgridNumber];
 	logKgrid = new double[kgridNumber];
 
-	minP = 0.5*massProton*speed_of_light;
-	maxP = minP*10000000;
+	minP = 0.5*massProton*speed_of_light/100;
+	maxP = minP*100000000;
 
 	double kmin = (1E-9)*electron_charge*B0/(speed_of_light*maxP);
 	double kmax = (1E6)*electron_charge*B0/(speed_of_light*minP);
@@ -182,7 +184,7 @@ void Simulation::initializeProfile(){
 		largeScaleField[i] = new double[kgridNumber];
 		growth_rate[i] = new double[kgridNumber];
 		for(int k = 0; k < kgridNumber; ++k){
-			magneticField[i][k] = (1E-11)*B0*B0*power(1/kgrid[k], 5/3)*power(kgrid[0],2/3);
+			magneticField[i][k] = (1E-9)*B0*B0*power(1/kgrid[k], 5/3)*power(kgrid[0],2/3);
 			if(i >= rgridNumber/2-1){
 				magneticField[i][k] *= 8;
 			}
@@ -996,6 +998,7 @@ void Simulation::updateParameters(){
 		}
 		for(int j = 0; j < pgridNumber; ++j){
 			double dp;
+			double p = pgrid[j];
 			if(j == 0){
 				dp = (pgrid[j + 1] - pgrid[j]);
 			} else if(j == pgridNumber -1){
@@ -1011,8 +1014,9 @@ void Simulation::updateParameters(){
 			} else {
 				dr = middleGrid[i] - middleGrid[i-1];
 			}
+			double particleEnergy = sqrt(massProton*massProton*power(speed_of_light,4) + sqr(p*speed_of_light)) - massProton*speed_of_light*speed_of_light;
 			totalParticles += 4*pi*distributionFunction[i][j]*dr*dp/pgrid[j];
-			totalParticleEnergy += 4*pi*speed_of_light*distributionFunction[i][j]*dr*dp;
+			totalParticleEnergy += 4*pi*distributionFunction[i][j]*dr*particleEnergy*deltaLogP;
 		}
 	}
 	mass -= deltaT*(middleDensity[0]*middleVelocity[0] - middleDensity[rgridNumber-1]*middleVelocity[rgridNumber-1]);

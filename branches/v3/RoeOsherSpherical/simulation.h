@@ -91,6 +91,7 @@ public:
 
 	double** distributionFunction;
 	double** tempDistributionFunction;
+	double* cosmicRayConcentration;
 
 	double** magneticField;
 	double** tempMagneticField;

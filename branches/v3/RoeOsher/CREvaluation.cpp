@@ -37,7 +37,7 @@ double Simulation::injection(int i){
 	//double xi = 5;
 	double xi = pgrid[injectionMomentum]*speed_of_light/(kBoltzman*temperatureIn(i+1));
 	double eta = cube(xi)*exp(-xi);
-	return (1E-6)*middleDensity[i]*abs(middleVelocity[i]*middleVelocity[i]/speed_of_light)*pf/(massProton*dp*middleDeltaR[i]);
+	return (2E-3)*middleDensity[i]*abs(middleVelocity[i]*middleVelocity[i]/speed_of_light)*pf/(massProton*dp*middleDeltaR[i]);
 	//return abs(pf*middleDensity[i]*((middleVelocity[i+1] - middleVelocity[i])/middleDeltaR[shockWavePoint])/(3*massProton));
 	//return 1;
 }
@@ -111,9 +111,9 @@ void Simulation::evaluateCR(){
 				double inj = injection(i);
 				f[i] += deltaT*inj;
 				injectedParticles += inj*deltaT*4*pi*(middleGrid[i] - middleGrid[i-1])*deltaLogP;
-				//tempDensity[i] -= deltaT*inj*massProton*4*pi*deltaLogP;
-				//tempMomentum[i] -= deltaT*inj*massProton*4*pi*deltaLogP*middleVelocity[i];
-				//tempEnergy[i] -= deltaT*inj*pgrid[k]*speed_of_light*4*pi*deltaLogP;
+				tempDensity[i] -= deltaT*inj*massProton*4*pi*deltaLogP;
+				tempMomentum[i] -= deltaT*inj*massProton*4*pi*deltaLogP*middleVelocity[i];
+				tempEnergy[i] -= deltaT*inj*pgrid[k]*speed_of_light*4*pi*deltaLogP;
 				if(tempDensity[i] < 0){
 					printf("tempDensity[i] < 0 by CR\n");
 				}
@@ -212,10 +212,13 @@ void Simulation::evaluateCosmicRayPressure(){
 	}
 	for(int i = 0; i < rgridNumber; ++i){
 		double pressure = 0;
+		double concentration = 0;
 		for(int j = 0; j < pgridNumber; ++j){
 			pressure += distributionFunction[i][j]*partPressure[j];
+			concentration += distributionFunction[i][j]*deltaLogP;
 		}
 		cosmicRayPressure[i] = 4*pi*pressure;
+		cosmicRayConcentration[i] = 4*pi*concentration;
 	}
 
 	delete[] partPressure;
