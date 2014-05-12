@@ -40,6 +40,7 @@ Simulation::~Simulation(){
 	delete[] middleVelocity;
 	delete[] middlePressure;
 	delete[] cosmicRayPressure;
+	delete[] cosmicRayConcentration;
 	delete[] tempDensity;
 	delete[] tempMomentum;
 	delete[] tempEnergy;
@@ -143,6 +144,7 @@ void Simulation::initializeProfile(){
 	}
 
 	cosmicRayPressure = new double[rgridNumber+1];
+	cosmicRayConcentration = new double[rgridNumber+1];
 	tempU = new double[rgridNumber];
 	integratedFlux = new double[rgridNumber];
 

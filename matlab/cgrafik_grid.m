@@ -16,6 +16,7 @@ rho(1:N2,1:N3 + 1)= 0;
 temp(1:N2,1:N3 + 1) = 0;
 pressure(1:N2,1:N3 + 1) = 0;
 crpressure(1:N2,1:N3 + 1) = 0;
+crconcentration(1:N2,1:N3 + 1) = 0;
 flux(1:N2,1:N3 + 1) = 0;
 field(1:N2,1:N3 + 1) = 0;
 field_pressure(1:N2,1:N3 + 1) = 0;
@@ -90,6 +91,13 @@ for j=1:N2,
     tau(j,5)=tamc_radial_profile(c*N2 + j,8);
     tau(j,6)=tamc_radial_profile(d*N2 + j,8);
     tau(j,7)=tamc_radial_profile(e*N2 + j,8);
+    crpressure(j,1)=tamc_radial_profile(j,1);
+    crpressure(j,2)=tamc_radial_profile(j,9);
+    crpressure(j,3)=tamc_radial_profile(a*N2 + j,9);
+    crpressure(j,4)=tamc_radial_profile(b*N2 + j,9);
+    crpressure(j,5)=tamc_radial_profile(c*N2 + j,9);
+    crpressure(j,6)=tamc_radial_profile(d*N2 + j,9);
+    crpressure(j,7)=tamc_radial_profile(e*N2 + j,9);
 end;
 figure(1);
 plot (r(1:N2,1),vel(1:N2,2),'cyan',r(1:N2,2),vel(1:N2,3),'green',r(1:N2,3),vel(1:N2,4),'blue',r(1:N2,4),vel(1:N2,5),'black',r(1:N2,5),vel(1:N2,6),'yellow',r(1:N2,6),vel(1:N2,7),'red');
@@ -146,4 +154,11 @@ plot (r(1:N2,1),tau(1:N2,2),'cyan',r(1:N2,2),tau(1:N2,3),'green',r(1:N2,3),tau(1
 title ('tau*Gmax');
 xlabel ('r cm');
 ylabel ('tau*Gmax');
+grid;
+
+figure(10);
+plot (r(1:N2,1),crconcentration(1:N2,2),'cyan',r(1:N2,2),crconcentration(1:N2,3),'green',r(1:N2,3),crconcentration(1:N2,4),'blue',r(1:N2,4),crconcentration(1:N2,5),'black',r(1:N2,5),crconcentration(1:N2,6),'yellow',r(1:N2,6),crconcentration(1:N2,7),'red');
+title ('cosnic ray concentration');
+xlabel ('r cm');
+ylabel ('n cm^-3');
 grid;
