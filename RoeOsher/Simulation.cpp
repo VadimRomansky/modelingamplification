@@ -43,6 +43,7 @@ Simulation::~Simulation(){
 	delete[] tempDensity;
 	delete[] tempMomentum;
 	delete[] tempEnergy;
+	delete[] vscattering;
 
 	delete[] kgrid;
 	delete[] logKgrid;
@@ -105,6 +106,7 @@ void Simulation::initializeProfile(){
 	middleDensity = new double[rgridNumber];
 	middleVelocity = new double[rgridNumber];
 	middlePressure = new double[rgridNumber];
+	vscattering = new double[rgridNumber];
 
 	tempDensity = new double[rgridNumber];
 	tempMomentum = new double[rgridNumber];
@@ -123,6 +125,7 @@ void Simulation::initializeProfile(){
 	eFluxMinus = new double*[rgridNumber];
 
 	for(int i = 0; i < rgridNumber; ++i){
+		vscattering[i] = 0;
 		dFluxPlus[i] = new double[3];
 		dFluxMinus[i] = new double[3];
 		mFluxPlus[i] = new double[3];
@@ -455,9 +458,9 @@ void Simulation::simulate(){
 			evaluateCR();
 		}
 
-		if(currentIteration > startFieldEvaluation){
+		//if(currentIteration > startFieldEvaluation){
 			evaluateField();
-		}		
+		//}		
 
 		myTime = myTime + deltaT;
 
@@ -556,7 +559,7 @@ void Simulation::evaluateHydrodynamic() {
 		
 		if(i > 0 && i < rgridNumber-1){
 			for(int k = 0; k < kgridNumber; ++k){
-				tempMomentum[i] -= deltaT*0.5*(magneticField[i][k] - magneticField[i-1][k])*kgrid[k]*deltaLogK/deltaR[i];
+				tempMomentum[i] -= deltaT*0.5*0.5*(magneticField[i+1][k] - magneticField[i-1][k])*kgrid[k]*deltaLogK/deltaR[i];
 				alertNaNOrInfinity(tempMomentum[i], "momentum = NaN");
 			}
 		}
@@ -565,11 +568,16 @@ void Simulation::evaluateHydrodynamic() {
 	TracPen(tempEnergy, eFlux, 0);
 
 	for(int i = 1; i < rgridNumber-1; ++i){
+		double deltaE = 0;
 		for(int k = 0; k < kgridNumber; ++k){
+			deltaE += deltaT*growth_rate[i][k]*magneticField[i][k]*kgrid[k]*deltaLogK;
 			tempEnergy[i] -= deltaT*0.5*0.5*(middleVelocity[i]+middleVelocity[i-1])*(magneticField[i][k] - magneticField[i-1][k])*kgrid[k]*deltaLogK/deltaR[i];
 			tempEnergy[i] -= deltaT*growth_rate[i][k]*magneticField[i][k]*kgrid[k]*deltaLogK;
 			alertNaNOrInfinity(tempEnergy[i], "energy = NaN");
 			alertNegative(tempEnergy[i], "energy < 0");
+		}
+		if(abs(cosmicRayPressure[i+1] - cosmicRayPressure[i]) > 1E-100){
+			vscattering[i] = abs(deltaE*deltaR[i]/(cosmicRayPressure[i+1] - cosmicRayPressure[i]));
 		}
 	}
 }
@@ -1071,7 +1079,7 @@ void Simulation::updateAll(){
 
 	//field
 
-	if(currentIteration > startFieldEvaluation){
+	//if(currentIteration > startFieldEvaluation){
 		for(int i = 1; i < rgridNumber; ++i){
 			for(int k = 0; k < kgridNumber; ++k){
 				magneticField[i][k] = tempMagneticField[i][k];
@@ -1088,6 +1096,8 @@ void Simulation::updateAll(){
 		}
 
 		updateDiffusionCoef();
-		growthRate();
-	}
+		if(currentIteration > startFieldEvaluation){
+			growthRate();
+		}
+	//}
 }

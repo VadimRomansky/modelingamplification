@@ -125,9 +125,9 @@ void Simulation::evaluateCR(){
 				f[i] += deltaT*inj;
 				//todo shift volume to 1/2
 				injectedParticles += inj*deltaT*4*pi*volume(i)*deltaLogP;
-				//tempDensity[i] -= deltaT*inj*massProton*4*pi*deltaLogP;
-				//tempMomentum[i] -= deltaT*inj*massProton*4*pi*deltaLogP*middleVelocity[i];
-				//tempEnergy[i] -= deltaT*inj*pgrid[k]*speed_of_light*4*pi*deltaLogP;
+				tempDensity[i] -= deltaT*inj*massProton*4*pi*deltaLogP;
+				tempMomentum[i] -= deltaT*inj*massProton*4*pi*deltaLogP*middleVelocity[i];
+				tempEnergy[i] -= deltaT*inj*pgrid[k]*speed_of_light*4*pi*deltaLogP;
 				if(tempDensity[i] < 0){
 					printf("tempDensity[i] < 0 by CR\n");
 				}

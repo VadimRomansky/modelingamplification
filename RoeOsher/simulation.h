@@ -73,6 +73,7 @@ public:
 	double* tempDensity;
 	double* tempMomentum;
 	double* tempEnergy;
+	double* vscattering;
 
 	double* dFlux;
 	double* mFlux;
