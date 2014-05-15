@@ -192,7 +192,7 @@ void Simulation::initializeProfile(){
 		growth_rate[i] = new double[kgridNumber];
 		magneticEnergy[i] = 0;
 		for(int k = 0; k < kgridNumber; ++k){
-			magneticField[i][k] = (1E-9)*B0*B0*power(1/kgrid[k], 5/3)*power(kgrid[0],2/3);
+			magneticField[i][k] = (1E-5)*B0*B0*power(1/kgrid[k], 5/3)*power(kgrid[0],2/3);
 			if(i >= rgridNumber/2-1){
 				magneticField[i][k] *= 8;
 			}
@@ -271,7 +271,7 @@ void Simulation::initializeProfile(){
 			break;
 		case 2 :
 			{
-				double lambda = 5E17;
+				double lambda = upstreamR/20;
 				double c = sqrt(gamma*pressure0/density0);
 				middleDensity[i] = density0 + density0*0.01*sin(middleGrid[i]*2*pi/lambda);
 				middleVelocity[i] = c*0.01*sin(middleGrid[i]*2*pi/lambda);
@@ -459,7 +459,7 @@ void Simulation::simulate(){
 		printf("time = %lf\n", myTime);
 		printf("solving\n");
 
-		//evaluateHydrodynamic();
+		evaluateHydrodynamic();
 		
 		if(currentIteration > startCRevaluation){
 			evaluateCR();
@@ -566,7 +566,7 @@ void Simulation::evaluateHydrodynamic() {
 		
 		if(i > 0 && i < rgridNumber-1){
 			for(int k = 0; k < kgridNumber; ++k){
-				//tempMomentum[i] -= deltaT*0.5*0.5*(magneticField[i+1][k] - magneticField[i-1][k])*kgrid[k]*deltaLogK/deltaR[i];
+				tempMomentum[i] -= deltaT*0.5*0.5*(magneticField[i+1][k] - magneticField[i-1][k])*kgrid[k]*deltaLogK/deltaR[i];
 				alertNaNOrInfinity(tempMomentum[i], "momentum = NaN");
 			}
 		}
@@ -578,8 +578,8 @@ void Simulation::evaluateHydrodynamic() {
 		double deltaE = 0;
 		for(int k = 0; k < kgridNumber; ++k){
 			deltaE += deltaT*growth_rate[i][k]*magneticField[i][k]*kgrid[k]*deltaLogK;
-			//tempEnergy[i] -= deltaT*0.5*0.5*(middleVelocity[i]+middleVelocity[i-1])*(magneticField[i][k] - magneticField[i-1][k])*kgrid[k]*deltaLogK/deltaR[i];
-			//tempEnergy[i] -= deltaT*growth_rate[i][k]*magneticField[i][k]*kgrid[k]*deltaLogK;
+			tempEnergy[i] -= deltaT*0.5*0.5*(middleVelocity[i]+middleVelocity[i-1])*(magneticField[i][k] - magneticField[i-1][k])*kgrid[k]*deltaLogK/deltaR[i];
+			tempEnergy[i] -= deltaT*growth_rate[i][k]*magneticField[i][k]*kgrid[k]*deltaLogK;
 			alertNaNOrInfinity(tempEnergy[i], "energy = NaN");
 			alertNegative(tempEnergy[i], "energy < 0");
 		}
