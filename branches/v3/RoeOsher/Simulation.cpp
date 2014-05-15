@@ -49,6 +49,8 @@ Simulation::~Simulation(){
 	delete[] logKgrid;
 
 	delete[] tempU;
+	delete[] magneticEnergy;
+	delete[] tempMagneticEnergy;
 
 	for(int i = 0; i < rgridNumber; ++i){
 		delete[] dFluxPlus[i];
@@ -164,7 +166,7 @@ void Simulation::initializeProfile(){
 	kgrid = new double[kgridNumber];
 	logKgrid = new double[kgridNumber];
 
-	minP = 0.5*massProton*speed_of_light/100;
+	minP = 0.5*massProton*speed_of_light/10;
 	maxP = minP*100000000;
 
 	double kmin = (1E-9)*electron_charge*B0/(speed_of_light*maxP);
@@ -180,12 +182,15 @@ void Simulation::initializeProfile(){
 	growth_rate = new double*[rgridNumber];
 	magneticInductionSum = new double[rgridNumber];
 	maxRate = new double[rgridNumber];
+	magneticEnergy = new double[rgridNumber];
+	tempMagneticEnergy = new double[rgridNumber];
 	for(int i = 0; i < rgridNumber; ++i){
 		maxRate[i] = 0;
 		magneticField[i] = new double[kgridNumber];
 		tempMagneticField[i] = new double[kgridNumber];
 		largeScaleField[i] = new double[kgridNumber];
 		growth_rate[i] = new double[kgridNumber];
+		magneticEnergy[i] = 0;
 		for(int k = 0; k < kgridNumber; ++k){
 			magneticField[i][k] = (1E-9)*B0*B0*power(1/kgrid[k], 5/3)*power(kgrid[0],2/3);
 			if(i >= rgridNumber/2-1){
@@ -199,7 +204,9 @@ void Simulation::initializeProfile(){
 			}
 			growth_rate[i][k] = 0;
 			alertNaNOrInfinity(magneticField[i][k], "magnetic field = NaN");
+			magneticEnergy[i] += magneticField[i][k]*kgrid[k]*deltaLogK;
 		}
+		tempMagneticEnergy[i] = magneticEnergy[i];
 	}
 
 	for(int i = 0; i < rgridNumber; ++i){
@@ -452,14 +459,14 @@ void Simulation::simulate(){
 		printf("time = %lf\n", myTime);
 		printf("solving\n");
 
-		evaluateHydrodynamic();
+		//evaluateHydrodynamic();
 		
-		if(currentIteration > startCRevaluation){
+		//if(currentIteration > startCRevaluation){
 			evaluateCR();
-		}
+		//}
 
 		//if(currentIteration > startFieldEvaluation){
-			evaluateField();
+			//evaluateField();
 		//}		
 
 		myTime = myTime + deltaT;
@@ -559,7 +566,7 @@ void Simulation::evaluateHydrodynamic() {
 		
 		if(i > 0 && i < rgridNumber-1){
 			for(int k = 0; k < kgridNumber; ++k){
-				tempMomentum[i] -= deltaT*0.5*0.5*(magneticField[i+1][k] - magneticField[i-1][k])*kgrid[k]*deltaLogK/deltaR[i];
+				//tempMomentum[i] -= deltaT*0.5*0.5*(magneticField[i+1][k] - magneticField[i-1][k])*kgrid[k]*deltaLogK/deltaR[i];
 				alertNaNOrInfinity(tempMomentum[i], "momentum = NaN");
 			}
 		}
@@ -571,8 +578,8 @@ void Simulation::evaluateHydrodynamic() {
 		double deltaE = 0;
 		for(int k = 0; k < kgridNumber; ++k){
 			deltaE += deltaT*growth_rate[i][k]*magneticField[i][k]*kgrid[k]*deltaLogK;
-			tempEnergy[i] -= deltaT*0.5*0.5*(middleVelocity[i]+middleVelocity[i-1])*(magneticField[i][k] - magneticField[i-1][k])*kgrid[k]*deltaLogK/deltaR[i];
-			tempEnergy[i] -= deltaT*growth_rate[i][k]*magneticField[i][k]*kgrid[k]*deltaLogK;
+			//tempEnergy[i] -= deltaT*0.5*0.5*(middleVelocity[i]+middleVelocity[i-1])*(magneticField[i][k] - magneticField[i-1][k])*kgrid[k]*deltaLogK/deltaR[i];
+			//tempEnergy[i] -= deltaT*growth_rate[i][k]*magneticField[i][k]*kgrid[k]*deltaLogK;
 			alertNaNOrInfinity(tempEnergy[i], "energy = NaN");
 			alertNegative(tempEnergy[i], "energy < 0");
 		}
@@ -941,7 +948,7 @@ void Simulation::updateTimeStep(){
 			if((distributionFunction[i][j] > 0) && (distributionFunction[i][j] + der*tempdt < 0)){
 				tempdt = 0.5*abs(distributionFunction[i][j]/der);
 				if(tempdt < 0.1){
-					printf("ooo\n");
+					//printf("ooo\n");
 				}
 			}
 		}
@@ -972,7 +979,7 @@ void Simulation::updateShockWavePoint(){
 		//double grad = (middleDensity[i]);
 		if(grad > maxGrad){
 			maxGrad = grad;
-			tempShockWavePoint = i;
+			tempShockWavePoint = i+1;
 		}
 	}
 	shockWaveMoved = (tempShockWavePoint != shockWavePoint);
@@ -1084,6 +1091,7 @@ void Simulation::updateAll(){
 			for(int k = 0; k < kgridNumber; ++k){
 				magneticField[i][k] = tempMagneticField[i][k];
 			}
+			magneticEnergy[i] = tempMagneticEnergy[i];
 		}
 
 		for(int i = 0; i < rgridNumber; ++i){

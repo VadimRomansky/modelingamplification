@@ -96,6 +96,8 @@ public:
 	double** magneticField;
 	double** tempMagneticField;
 	double** largeScaleField;
+	double* magneticEnergy;
+	double* tempMagneticEnergy;
 	double** growth_rate;
 	double** crflux;
 	double* integratedFlux;

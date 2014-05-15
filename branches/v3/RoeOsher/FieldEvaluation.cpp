@@ -10,15 +10,27 @@ void Simulation::evaluateField(){
 
 	double fullMaxRate = 0;
 	for(int i = 1; i < rgridNumber; ++i){
+		double Ualpha = power(middleVelocity[i],1.5);
+		double prevUalpha = power(middleVelocity[i-1],1.5);
 		double delta = 5.0/21;
 		int maxRateK = 0;
 		maxRate[i] = 0;
+
+
+		tempMagneticEnergy[i] = magneticEnergy[i];
+		double y = magneticEnergy[i]*Ualpha;
+		double prevY = magneticEnergy[i-1]*prevUalpha;
+		tempMagneticEnergy[i] -= deltaT*(y - prevY)/(sqrt(middleVelocity[i])*deltaR[i]);
+		double Va = sqrt((magneticEnergy[i]+B0*B0/(4*pi))/middleDensity[i]);
+		if(i <= shockWavePoint){
+			tempMagneticEnergy[i] += deltaT*Va*(cosmicRayPressure[i+1] - cosmicRayPressure[i])/deltaR[i];
+		}
+
 		for(int k = 0; k < kgridNumber; ++k){
-			tempMagneticField[i][k] = magneticField[i][k];
-			if((middleVelocity[i] > 0) && (middleVelocity[i-1]>0)){
-				double Ualpha = power(middleVelocity[i],1.5);
+			if(middleVelocity[i] > 0 && middleVelocity[i-1] > 0){
+				tempMagneticField[i][k] = magneticField[i][k];
 				double z = magneticField[i][k]*Ualpha;
-				double prevZ = magneticField[i-1][k]*power(middleVelocity[i-1],1.5);
+				double prevZ = magneticField[i-1][k]*prevUalpha;
 				double nextZ = z;
 				if(i < rgridNumber-1) {
 					magneticField[i+1][k]*power(middleVelocity[i+1],1.5);
