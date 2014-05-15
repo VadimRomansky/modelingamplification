@@ -18,7 +18,7 @@ void Simulation::updateDiffusionCoef(){
 				}
 			}
 			double v = p/sqrt(massProton*massProton + p*p/(speed_of_light*speed_of_light));
-			double coef = 10*p*v*speed_of_light/(electron_charge*B);
+			double coef = 1000*p*v*speed_of_light/(electron_charge*B);
 			double dx = deltaR[i];
 			double lambda = coef/speed_of_light;
 			if(abs(i - shockWavePoint) < 10 && j >= injectionMomentum){
@@ -111,10 +111,10 @@ void Simulation::evaluateCR(){
 			if(abs(i-shockWavePoint) < 1 && abs(k - injectionMomentum) < 1){
 				double inj = injection(i);
 				f[i] += deltaT*inj;
-				injectedParticles += inj*deltaT*4*pi*(middleGrid[i] - middleGrid[i-1])*deltaLogP;
-				tempDensity[i] -= deltaT*inj*massProton*4*pi*deltaLogP;
-				tempMomentum[i] -= deltaT*inj*massProton*4*pi*deltaLogP*middleVelocity[i];
-				tempEnergy[i] -= deltaT*inj*pgrid[k]*speed_of_light*4*pi*deltaLogP;
+				injectedParticles += inj*deltaT*(middleGrid[i] - middleGrid[i-1])*deltaLogP;
+				//tempDensity[i] -= deltaT*inj*massProton*deltaLogP;
+				//tempMomentum[i] -= deltaT*inj*massProton*deltaLogP*middleVelocity[i];
+				//tempEnergy[i] -= deltaT*inj*pgrid[k]*speed_of_light*deltaLogP;
 				if(tempDensity[i] < 0){
 					printf("tempDensity[i] < 0 by CR\n");
 				}
@@ -218,8 +218,9 @@ void Simulation::evaluateCosmicRayPressure(){
 			pressure += distributionFunction[i][j]*partPressure[j];
 			concentration += distributionFunction[i][j]*deltaLogP;
 		}
-		cosmicRayPressure[i] = 4*pi*pressure;
-		cosmicRayConcentration[i] = 4*pi*concentration;
+		//4pi?
+		cosmicRayPressure[i] = pressure;
+		cosmicRayConcentration[i] = concentration;
 	}
 
 	delete[] partPressure;
