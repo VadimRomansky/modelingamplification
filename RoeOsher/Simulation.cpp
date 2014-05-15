@@ -461,13 +461,13 @@ void Simulation::simulate(){
 
 		//evaluateHydrodynamic();
 		
-		//if(currentIteration > startCRevaluation){
+		if(currentIteration > startCRevaluation){
 			evaluateCR();
-		//}
+		}
 
-		//if(currentIteration > startFieldEvaluation){
-			//evaluateField();
-		//}		
+		if(currentIteration > startFieldEvaluation){
+			evaluateField();
+		}		
 
 		myTime = myTime + deltaT;
 
