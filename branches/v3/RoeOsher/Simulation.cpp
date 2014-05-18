@@ -163,14 +163,37 @@ void Simulation::initializeProfile(){
 		}
 	}
 
+	double R0 = upstreamR*2/100000;
+	double a = upstreamR/2;
+	double b = upstreamR/2;
+	double h1 = 0.5*rgridNumber/log(1.0+a/R0);
+	double h2 = 0.5*rgridNumber/log(1.0+b/R0);
+	for(int i = 0; i < rgridNumber/2; ++i){ 
+		grid[i] = R0*(1 - exp(-(1.0*(i+1)-0.5*rgridNumber)/h1));
+	}
+	for(int i=rgridNumber/2; i < rgridNumber; ++i){
+		grid[i] = R0*(exp((1.0*(i+1)-0.5*rgridNumber)/h1)-1.0);
+	}
+	grid[rgridNumber] = upstreamR/2*(1 + 1.0/(rgridNumber));
+
+	for(int i = 0; i < rgridNumber; ++i){
+		middleGrid[i] = (grid[i] + grid[i+1])/2;
+		tempGrid[i] = grid[i];
+		deltaR[i] = grid[i+1] - grid[i];
+	}
+	tempGrid[rgridNumber] = grid[rgridNumber];
+
 	kgrid = new double[kgridNumber];
 	logKgrid = new double[kgridNumber];
 
 	minP = 0.5*massProton*speed_of_light/10;
 	maxP = minP*100000000;
 
-	double kmin = (1E-9)*electron_charge*B0/(speed_of_light*maxP);
+	double kmin = max2((1E-9)*electron_charge*B0/(speed_of_light*maxP),0.01/deltaR[rgridNumber/2]);
 	double kmax = (1E6)*electron_charge*B0/(speed_of_light*minP);
+	if(kmin > kmax/10000000){
+		printf("kmin > kmax/10000000\n");
+	}
 	deltaLogK = (log(kmax) - log(kmin))/(kgridNumber - 1);
 	for(int i = 0; i < kgridNumber; ++i){
 		logKgrid[i] = log(kmin) + i*deltaLogK;
@@ -236,26 +259,6 @@ void Simulation::initializeProfile(){
 	//for(int i = 1; i <= rgridNumber; ++i){
 		//grid[i] = grid[i-1] + deltaR0;
 	//}
-
-	double R0 = upstreamR*2/100000;
-	double a = upstreamR/2;
-	double b = upstreamR/2;
-	double h1 = 0.5*rgridNumber/log(1.0+a/R0);
-	double h2 = 0.5*rgridNumber/log(1.0+b/R0);
-	for(int i = 0; i < rgridNumber/2; ++i){ 
-		grid[i] = R0*(1 - exp(-(1.0*(i+1)-0.5*rgridNumber)/h1));
-	}
-	for(int i=rgridNumber/2; i < rgridNumber; ++i){
-		grid[i] = R0*(exp((1.0*(i+1)-0.5*rgridNumber)/h1)-1.0);
-	}
-	grid[rgridNumber] = upstreamR/2*(1 + 1.0/(rgridNumber));
-
-	for(int i = 0; i < rgridNumber; ++i){
-		middleGrid[i] = (grid[i] + grid[i+1])/2;
-		tempGrid[i] = grid[i];
-		deltaR[i] = grid[i+1] - grid[i];
-	}
-	tempGrid[rgridNumber] = grid[rgridNumber];
 	
 	for(int i = 0; i < rgridNumber; ++i){
 		switch(simulationType){
@@ -369,6 +372,22 @@ void Simulation::initializeProfile(){
 		tempEnergy[i] = energy(i);
 	}
 
+	updateDiffusionCoef();
+	//test distribution
+	/*double Q = (3E-4)*middleDensity[rgridNumber/2-1]*abs(middleVelocity[rgridNumber/2-1]*middleVelocity[rgridNumber/2-1]/speed_of_light)*pgrid[injectionMomentum]/massProton;
+	for(int i = 0; i < rgridNumber; ++i){
+		double p0 = pgrid[injectionMomentum];
+		for(int j = injectionMomentum; j < pgridNumber; ++j){
+			double p = pgrid[j];
+			if(grid[i] > 0){
+				distributionFunction[i][j] = 3*Q/(p*0.75*U0);
+			} else{
+				distributionFunction[i][j] = 3*Q/(p*0.75*U0)*exp(middleVelocity[i]*grid[i]/diffusionCoef[i][j]);
+			}
+			tempDistributionFunction[i][j] = distributionFunction[i][j];
+		}
+	}*/
+
 	pointDensity[rgridNumber] = pointDensity[rgridNumber - 1];
 	pointVelocity[rgridNumber] = pointVelocity[rgridNumber - 1];
 	pointEnthalpy[rgridNumber] = (energy(rgridNumber-1) + middlePressure[rgridNumber-1])/middleDensity[rgridNumber-1];
@@ -414,6 +433,7 @@ void Simulation::simulate(){
 	fopen_s(&outFullDistribution, "./output/fullDistribution.dat","w");
 	fopen_s(&outCoordinateDistribution, "./output/coordinateDistribution.dat","w");
 	outputDistributionP3(outDistribution, outFullDistribution, outCoordinateDistribution, this);
+	//outputDistribution(outDistribution, outFullDistribution, outCoordinateDistribution, this);
 	fclose(outCoordinateDistribution);
 	fclose(outFullDistribution);
 	fclose(outDistribution);
@@ -459,14 +479,14 @@ void Simulation::simulate(){
 		printf("time = %lf\n", myTime);
 		printf("solving\n");
 
-		evaluateHydrodynamic();
+		//evaluateHydrodynamic();
 		
 		if(currentIteration > startCRevaluation){
 			evaluateCR();
 		}
 
 		if(currentIteration > startFieldEvaluation){
-			evaluateField();
+			//evaluateField();
 		}		
 
 		myTime = myTime + deltaT;
@@ -502,6 +522,7 @@ void Simulation::simulate(){
 			fopen_s(&outCoordinateDistribution, "./output/coordinateDistribution.dat","a");
 
 			outputDistributionP3(outDistribution, outFullDistribution, outCoordinateDistribution, this);
+			//outputDistribution(outDistribution, outFullDistribution, outCoordinateDistribution, this);
 
 			fclose(outCoordinateDistribution);
 			fclose(outFullDistribution);

@@ -18,11 +18,12 @@ void outputDistribution(FILE* distributionFile, FILE* fullDistributionFile, FILE
 		fullDistribution[j] = 0;
 	}
 	for(int i = 0; i < simulation->rgridNumber; ++i){
+		int outP = injectionMomentum;
 		for(int j = 0; j < pgridNumber - 1; ++j){
 			double p = simulation->pgrid[j];
 			fullDistribution[j] += simulation->volume(i)*simulation->distributionFunction[i][j];
 		}
-		fprintf(coordinateDistributionFile, "%20.10lf %g %g\n", simulation->grid[i], simulation->distributionFunction[i][injectionMomentum], simulation->crflux[i][injectionMomentum]);
+		fprintf(coordinateDistributionFile, "%20.10lf %g %g %g %g %g\n", simulation->grid[i], simulation->distributionFunction[i][outP], simulation->distributionFunction[i][pgridNumber-1], simulation->crflux[i][outP], simulation->crflux[i][pgridNumber-1], simulation->integratedFlux[i]);
 	}
 
 	if(simulation->shockWavePoint > 0 && simulation->shockWavePoint < simulation->rgridNumber){
@@ -34,7 +35,7 @@ void outputDistribution(FILE* distributionFile, FILE* fullDistributionFile, FILE
 	for(int j = 0; j < pgridNumber; ++j){
 		fullDistribution[j] /= volume;
 		double p = simulation->pgrid[j];
-		fprintf(fullDistributionFile, "%g %g\n", p, fullDistribution[j]);
+		fprintf(fullDistributionFile, "%g %g\n", p, fullDistribution[j]/(cube(p)));
 	}
 	delete[] fullDistribution;
 }
@@ -46,11 +47,12 @@ void outputDistributionP3(FILE* distributionFile, FILE* fullDistributionFile, FI
 		fullDistribution[j] = 0;
 	}
 	for(int i = 0; i < simulation->rgridNumber; ++i){
+		int outP = 10;
 		for(int j = 0; j < pgridNumber - 1; ++j){
 			double p = simulation->pgrid[j];
 			fullDistribution[j] += simulation->volume(i)*simulation->distributionFunction[i][j];
 		}
-		fprintf(coordinateDistributionFile, "%20.10lf %g %g %g %g %g\n", simulation->grid[i], simulation->distributionFunction[i][injectionMomentum]/(cube(simulation->pgrid[injectionMomentum])), simulation->distributionFunction[i][pgridNumber-1]/(cube(simulation->pgrid[pgridNumber-1])), simulation->crflux[i][injectionMomentum], simulation->crflux[i][pgridNumber-1], simulation->integratedFlux[i]);
+		fprintf(coordinateDistributionFile, "%20.10lf %g %g %g %g %g\n", simulation->grid[i], simulation->distributionFunction[i][outP]/(cube(simulation->pgrid[outP])), simulation->distributionFunction[i][pgridNumber-1]/(cube(simulation->pgrid[pgridNumber-1])), simulation->crflux[i][outP], simulation->crflux[i][pgridNumber-1], simulation->integratedFlux[i]);
 	}
 
 	if(simulation->shockWavePoint > 0 && simulation->shockWavePoint < simulation->rgridNumber){
