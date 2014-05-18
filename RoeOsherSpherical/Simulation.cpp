@@ -7,7 +7,7 @@
 
 //конструктор
 Simulation::Simulation(){
-	initialEnergy = 10E49;
+	initialEnergy = 10E44;
 	myTime = 0;
 	tracPen = true;
 	shockWavePoint = -1;
@@ -122,6 +122,8 @@ void Simulation::initializeProfile(){
 	tempMomentum = new double[rgridNumber];
 	tempEnergy = new double[rgridNumber];
 
+	vscattering = new double[rgridNumber];
+
 	dFlux = new double[rgridNumber];
 	dFluxPlus = new double*[rgridNumber];
 	dFluxMinus = new double*[rgridNumber];
@@ -135,6 +137,7 @@ void Simulation::initializeProfile(){
 	eFluxMinus = new double*[rgridNumber];
 
 	for(int i = 0; i < rgridNumber; ++i){
+		vscattering[i] = 0;
 		dFluxPlus[i] = new double[3];
 		dFluxMinus[i] = new double[3];
 		mFluxPlus[i] = new double[3];
@@ -173,8 +176,8 @@ void Simulation::initializeProfile(){
 	kgrid = new double[kgridNumber];
 	logKgrid = new double[kgridNumber];
 
-	minP = 0.001*massProton*speed_of_light;
-	maxP = minP*100000000;
+	minP = 0.05*massProton*speed_of_light;
+	maxP = minP*10000000;
 
 	double kmin = (1E-9)*electron_charge*B0/(speed_of_light*maxP);
 	double kmax = (1E6)*electron_charge*B0/(speed_of_light*minP);
@@ -589,14 +592,19 @@ void Simulation::evaluateHydrodynamic() {
 		
 	}
 	TracPenRadial(tempEnergy, eFlux);
-	/*for(int i = 1; i < rgridNumber-1; ++i){
+	for(int i = 1; i < rgridNumber-1; ++i){
+		double deltaE = 0;
 		for(int k = 0; k < kgridNumber; ++k){
-			tempEnergu[i] -= deltaT*0.5*middleVelocity[i]*(magneticField[i][k] - magneticField[i-1][k])*kgrid[k]*deltaLogK/deltaR[i];
-			tempEnergy[i] -= deltaT*growth_rate[i][k]*magneticField[i][k]*kgrid[k]*deltaLogK;
-			alertNaNOrInfinity(tempEnergy[i], "energy = NaN");
-			alertNegative(tempEnergy[i], "energy < 0");
+			deltaE += deltaT*growth_rate[i][k]*magneticField[i][k]*kgrid[k]*deltaLogK;
+			//tempEnergy[i] -= deltaT*0.5*middleVelocity[i]*(magneticField[i][k] - magneticField[i-1][k])*kgrid[k]*deltaLogK/deltaR[i];
+			//tempEnergy[i] -= deltaT*growth_rate[i][k]*magneticField[i][k]*kgrid[k]*deltaLogK;
+			//alertNaNOrInfinity(tempEnergy[i], "energy = NaN");
+			//alertNegative(tempEnergy[i], "energy < 0");
 		}
-	}*/
+		if(abs(cosmicRayPressure[i+1] - cosmicRayPressure[i]) > 1E-100){
+			vscattering[i] = abs(deltaE*deltaR[i]/(cosmicRayPressure[i+1] - cosmicRayPressure[i]));
+		}
+	}
 
 }
 
@@ -964,7 +972,7 @@ void Simulation::updateTimeStep(){
 			if((distributionFunction[i][j] > 0) && (distributionFunction[i][j] + der*tempdt < 0)){
 				//tempdt = 0.5*abs(distributionFunction[i][j]/der);
 				if(tempdt < 0.1){
-					printf("ooo\n");
+					//printf("ooo\n");
 				}
 			}
 		}
@@ -994,7 +1002,7 @@ void Simulation::updateShockWavePoint(){
 		//double grad = (middleDensity[i]);
 		if(grad > maxGrad){
 			maxGrad = grad;
-			tempShockWavePoint = i;
+			tempShockWavePoint = i+1;
 		}
 	}
 	shockWaveMoved = (tempShockWavePoint != shockWavePoint);
