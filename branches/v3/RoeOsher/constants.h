@@ -19,6 +19,6 @@ const double gridExpLevel = 0.9;
 const double minDeltaR = 5.0E14;
 const double minT = 100;
 const int startCRevaluation = 100;
-const int startFieldEvaluation = 10000;
+const int startFieldEvaluation = 100000000;
 
 #endif
