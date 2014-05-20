@@ -47,12 +47,12 @@ void outputDistributionP3(FILE* distributionFile, FILE* fullDistributionFile, FI
 		fullDistribution[j] = 0;
 	}
 	for(int i = 0; i < simulation->rgridNumber; ++i){
-		int outP = 10;
+		int outP = injectionMomentum;
 		for(int j = 0; j < pgridNumber - 1; ++j){
 			double p = simulation->pgrid[j];
 			fullDistribution[j] += simulation->volume(i)*simulation->distributionFunction[i][j];
 		}
-		fprintf(coordinateDistributionFile, "%20.10lf %g %g %g %g %g\n", simulation->grid[i], simulation->distributionFunction[i][outP]/(cube(simulation->pgrid[outP])), simulation->distributionFunction[i][pgridNumber-1]/(cube(simulation->pgrid[pgridNumber-1])), simulation->crflux[i][outP], simulation->crflux[i][pgridNumber-1], simulation->integratedFlux[i]);
+		fprintf(coordinateDistributionFile, "%20.10lf %g %g %g %g %g %g %g\n", simulation->grid[i], simulation->distributionFunction[i][outP]/(cube(simulation->pgrid[outP])), simulation->distributionFunction[i][pgridNumber-1]/(cube(simulation->pgrid[pgridNumber-1])), simulation->crflux[i][outP], simulation->crflux[i][pgridNumber-1], simulation->integratedFlux[i], simulation->distributionFunction[i][outP+5]/(cube(simulation->pgrid[outP+5])), simulation->distributionFunction[i][outP+1]/(cube(simulation->pgrid[outP+1])));
 	}
 
 	if(simulation->shockWavePoint > 0 && simulation->shockWavePoint < simulation->rgridNumber){

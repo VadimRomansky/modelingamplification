@@ -163,18 +163,23 @@ void Simulation::initializeProfile(){
 		}
 	}
 
-	double R0 = upstreamR*2/100000;
-	double a = upstreamR/2;
-	double b = upstreamR/2;
-	double h1 = 0.5*rgridNumber/log(1.0+a/R0);
-	double h2 = 0.5*rgridNumber/log(1.0+b/R0);
+	double R0 = upstreamR;
+	double a = 10000;
+	double b = 10000;
+	double h1 = 0.5*rgridNumber/log(1.0+a/4);
+	double h2 = 0.5*rgridNumber/log(1.0+b/4);
 	for(int i = 0; i < rgridNumber/2; ++i){ 
-		grid[i] = R0*(1 - exp(-(1.0*(i+1)-0.5*rgridNumber)/h1));
+		grid[i] = (2*R0/a)*(1 - exp(-(1.0*(i+1)-0.5*rgridNumber)/h1));
 	}
 	for(int i=rgridNumber/2; i < rgridNumber; ++i){
-		grid[i] = R0*(exp((1.0*(i+1)-0.5*rgridNumber)/h1)-1.0);
+		grid[i] = (2*R0/b)*(exp((1.0*(i+1)-0.5*rgridNumber)/h2)-1.0);
 	}
 	grid[rgridNumber] = upstreamR/2*(1 + 1.0/(rgridNumber));
+	for(int i = 1; i <= rgridNumber; ++i){
+		if(grid[i] < grid[i-1]){
+			printf("grid[i] < grid[i-1]\n");
+		}
+	}
 
 	for(int i = 0; i < rgridNumber; ++i){
 		middleGrid[i] = (grid[i] + grid[i+1])/2;
@@ -186,7 +191,7 @@ void Simulation::initializeProfile(){
 	kgrid = new double[kgridNumber];
 	logKgrid = new double[kgridNumber];
 
-	minP = 0.5*massProton*speed_of_light/10;
+	minP = 0.5*massProton*speed_of_light;
 	maxP = minP*100000000;
 
 	double kmin = max2((1E-9)*electron_charge*B0/(speed_of_light*maxP),0.01/deltaR[rgridNumber/2]);
@@ -983,7 +988,7 @@ void Simulation::updateTimeStep(){
 			}
 		}
 	}
-	deltaT = 0.5*tempdt;
+	deltaT = 0.9*tempdt;
 }
 
 //определение точки ударной волны

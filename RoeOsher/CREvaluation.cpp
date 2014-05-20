@@ -108,11 +108,13 @@ void Simulation::evaluateCR(){
 			middle[i] = 1 + (deltaT/(2*dx))*(diffusionCoef[i-1][k]/dxp + diffusionCoef[i][k]/dxm);// + 0.5*(middleVelocity[i] - middleVelocity[i-1])/dx;
 			upper[i] = -(deltaT/(2*dx))*(diffusionCoef[i][k]/dxp);//  + 0.5*deltaT*middleVelocity[i]/dx;
 
-			//if(i == shockWavePoint){
-				//f[i] = distributionFunction[i][k]  + deltaT*((1/(2*dx))*(diffusionCoef[i][k]*(distributionFunction[i+1][k] - distributionFunction[i][k])/dxp - diffusionCoef[i-1][k]*(distributionFunction[i][k] - distributionFunction[i-1][k])/dxm) - (1/dx)*distributionFunction[i][k]*(middleVelocity[i] - middleVelocity[i-1]) + (1.0/3)*((middleVelocity[i] - middleVelocity[i-1])/dx)*((gkp - gkm)/deltaLogP));
-			//} else {
-			    f[i] = distributionFunction[i][k]  + deltaT*((1/(2*dx))*(diffusionCoef[i][k]*(distributionFunction[i+1][k] - distributionFunction[i][k])/dxp - diffusionCoef[i-1][k]*(distributionFunction[i][k] - distributionFunction[i-1][k])/dxm) - (1/dx)*(middleVelocity[i]*distributionFunction[i][k] - middleVelocity[i-1]*distributionFunction[i-1][k]) + (1.0/3)*0.5*((middleVelocity[i+1] - middleVelocity[i-1])/dx)*((gkp - gkm)/deltaLogP));
-			//}
+			if(i == shockWavePoint){
+				f[i] = distributionFunction[i][k]  + deltaT*((1/(2*dx))*(diffusionCoef[i][k]*(distributionFunction[i+1][k] - distributionFunction[i][k])/dxp - diffusionCoef[i-1][k]*(distributionFunction[i][k] - distributionFunction[i-1][k])/dxm) - (1/dx)*distributionFunction[i][k]*(middleVelocity[i] - middleVelocity[i-1]) + (1.0/3)*((middleVelocity[i] - middleVelocity[i-1])/dx)*((gkp - gkm)/deltaLogP));
+			} else if(i == shockWavePoint-1){
+				f[i] = distributionFunction[i][k]  + deltaT*((1/(2*dx))*(diffusionCoef[i][k]*(distributionFunction[i+1][k] - distributionFunction[i][k])/dxp - diffusionCoef[i-1][k]*(distributionFunction[i][k] - distributionFunction[i-1][k])/dxm) - (1/dx)*(middleVelocity[i]*distributionFunction[i+1][k] - middleVelocity[i-1]*distributionFunction[i-1][k]) + (1.0/3)*((middleVelocity[i] - middleVelocity[i-1])/dx)*((gkp - gkm)/deltaLogP));
+			} else {
+			    f[i] = distributionFunction[i][k]  + deltaT*((1/(2*dx))*(diffusionCoef[i][k]*(distributionFunction[i+1][k] - distributionFunction[i][k])/dxp - diffusionCoef[i-1][k]*(distributionFunction[i][k] - distributionFunction[i-1][k])/dxm) - (1/dx)*0.5*(middleVelocity[i+1]*distributionFunction[i+1][k] - middleVelocity[i-1]*distributionFunction[i-1][k]) + (1.0/3)*0.5*((middleVelocity[i+1] - middleVelocity[i-1])/dx)*((gkp - gkm)/deltaLogP));
+			}
 
 			if(f[i] < 0 ){
 				//printf("f[i] < 0\n");
@@ -163,7 +165,7 @@ void Simulation::evaluateCR(){
 			alertNaNOrInfinity(x[i],"tempDistribution = NaN");
 			if(x[i] < 0){
 				tempDistributionFunction[i][k] = 0;
-				if(abs(x[i]) > 1E-100){
+				if(abs(x[i]) > 1E-10){
 					printf("tenpDistribution < 0\n");
 				}
 			}

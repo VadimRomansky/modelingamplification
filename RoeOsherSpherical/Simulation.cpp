@@ -485,7 +485,7 @@ void Simulation::simulate(){
 		}
 
 		if(currentIteration > startFieldEvaluation){
-			//evaluateField();
+			evaluateField();
 		}		
 
 		myTime = myTime + deltaT;
