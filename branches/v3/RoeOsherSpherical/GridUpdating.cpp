@@ -14,76 +14,38 @@ void Simulation::updateGrid(){
 	printf("updating grid\n");
 	double shockWaveR = grid[shockWavePoint];
 	double rightR = grid[rgridNumber] - shockWaveR;
-	double tempRightGridLevel = (0.5*rightR - minDeltaR)/(0.5*rightR - deltaR0);
-	if(tempRightGridLevel < 1){
-		return;
+
+	int leftPoints = shockWavePoint- 4;
+	int rightPonts = rgridNumber - 3 - shockWavePoint + 1;
+
+	double R1 = grid[shockWavePoint-4];
+	double R2 = grid[rgridNumber] - grid[shockWavePoint+3];
+	double a = 10000;
+	double b = 10000;
+	double h1 = leftPoints/log(1.0+a);
+	double h2 = rightPonts/log(1.0+b);
+
+	for(int i = 0; i < shockWavePoint - 3; ++i){
+		tempGrid[i] = (R1/a)*(1 - exp(-(1.0*(i+1)-leftPoints)/h1)) + R1;
 	}
 
-	int rightPointsExp = log(deltaR0/minDeltaR)/log(tempRightGridLevel);
-	if(rightPointsExp > 6*rgridNumber/10){
-		rightPointsExp = 6*rgridNumber/10;
-
-	/*int rightPointsExp = log(deltaR0/minDeltaR)/log(tempRightGridLevel);
-	if(rightPointsExp > 7*rgridNumber/10){
-		rightPointsExp = 7*rgridNumber/10;*/
-
+	for(int i = shockWavePoint -3; i < shockWavePoint + 3; ++i){
+		tempGrid[i] = grid[i];
 	}
-	if(rightPointsExp <= 1){
-		printf("rightPoints <= 1!!!\n");
-	}
-	if(rightPointsExp < rgridNumber/10){
-		return;
-	}
-	int rightPointsLinear = rightPointsExp/5;
 
-	//double deltaR0Left = 0.5*shockWaveR/(rgridNumber - rightPointsExp - rightPointsLinear);
-	//double tempLeftGridLevel = (0.5*shockWaveR - minDeltaR)/(0.5*shockWaveR - deltaR0Left);
-	//int leftPointsExp = log(deltaR0Left/minDeltaR)/log(tempLeftGridLevel);
-	//leftPointsExp = min2((rgridNumber - rightPointsExp - rightPointsLinear)/10, leftPointsExp);
-	// leftPointsLinear = rgridNumber - leftPointsExp - rightPointsExp - rightPointsLinear;
-	int leftPointsLinear = rgridNumber - rightPointsExp - rightPointsLinear;
+	for(int i = shockWavePoint + 3; i < rgridNumber; ++i){
+		tempGrid[i] = (R2/b)*(exp((1.0*(i+1)-rgridNumber)/h2)-1.0) + upstreamR;
+	}
+
+	for(int i = 1; i <= rgridNumber; ++i){
+		if(tempGrid[i] < tempGrid[i-1]){
+			printf("grid[i] < grid[i-1]\n");
+		}
+	}
 
 	tempGrid[0] = 0;
 	tempGrid[rgridNumber] = grid[rgridNumber];
-	//tempGrid[leftPointsLinear + leftPointsExp] = shockWaveR;
-	tempGrid[leftPointsLinear] = shockWaveR;
-	//shockWavePoint = leftPointsLinear + leftPointsExp;
-	shockWavePoint = leftPointsLinear;
 
-	/*double dRLeft = deltaR0Left*exp(-leftPointsExp*log(tempLeftGridLevel));
-	if(dRLeft < deltaR0Left){
-		printf("dRLeft < minDeltaR");
-	}
-	double logLevelLeft = log(tempLeftGridLevel);
-	for(int i =  leftPointsLinear + leftPointsExp - 1; i > leftPointsLinear; --i){
-		tempGrid[i] = tempGrid[i + 1] - dRLeft*exp(-(i - leftPointsLinear - leftPointsExp + 1)*logLevelLeft);
-	}*/
-
-	//double leftDeltaR = (tempGrid[leftPointsLinear + 1] - grid[0])/(leftPointsLinear + 1);
-
-	double leftDeltaR = (shockWaveR - grid[0])/(leftPointsLinear + 1);
-
-	for(int i = 1; i < leftPointsLinear; ++i){
-		tempGrid[i] = tempGrid[i-1] + leftDeltaR;
-	}
-	double dR = deltaR0*exp(-rightPointsExp*log(tempRightGridLevel));
-	double logLevel = log(tempRightGridLevel);
-	/*for(int i = leftPointsLinear + leftPointsExp + 1; i < leftPointsLinear + leftPointsExp + rightPointsExp; ++i){
-		tempGrid[i] = tempGrid[i - 1] + dR*exp((i - leftPointsLinear - leftPointsExp - 1)*logLevel);
-	}*/
-	//dR = (grid[rgridNumber] - tempGrid[leftPointsLinear + rightPointsExp - 1])/(rightPointsLinear + 1);
-	for(int i = leftPointsLinear + 1; i < leftPointsLinear + rightPointsExp; ++i){
-		tempGrid[i] = tempGrid[i - 1] + dR*exp((i - leftPointsLinear - 1)*logLevel);
-	}
-	dR = (grid[rgridNumber] - tempGrid[leftPointsLinear + rightPointsExp - 1])/(rightPointsLinear + 1);
-	for(int i = leftPointsLinear + rightPointsExp; i < rgridNumber; ++i){
-		tempGrid[i] = tempGrid[i - 1] + dR;
-		if(tempGrid[i] > grid[rgridNumber]){
-			printf("grid > upstreamR\n");
-		}
-	}
-	tempGrid[rgridNumber - 1] = (tempGrid[rgridNumber - 2] + tempGrid[rgridNumber])/2;
-	redistributeValues();
 }
 
 
