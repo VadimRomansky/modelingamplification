@@ -484,14 +484,14 @@ void Simulation::simulate(){
 		printf("time = %lf\n", myTime);
 		printf("solving\n");
 
-		//evaluateHydrodynamic();
+		evaluateHydrodynamic();
 		
 		if(currentIteration > startCRevaluation){
 			evaluateCR();
 		}
 
 		if(currentIteration > startFieldEvaluation){
-			//evaluateField();
+			evaluateField();
 		}		
 
 		myTime = myTime + deltaT;
