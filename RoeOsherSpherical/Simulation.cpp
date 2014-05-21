@@ -481,12 +481,14 @@ void Simulation::simulate(){
 		//}
 		
 		if(currentIteration > startCRevaluation){
-			evaluateCR();
+			//evaluateCR();
 		}
 
 		if(currentIteration > startFieldEvaluation){
-			evaluateField();
-		}		
+			//evaluateField();
+		}
+
+		updateGrid();
 
 		myTime = myTime + deltaT;
 
