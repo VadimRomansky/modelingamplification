@@ -481,14 +481,12 @@ void Simulation::simulate(){
 		//}
 		
 		if(currentIteration > startCRevaluation){
-			//evaluateCR();
+			evaluateCR();
 		}
 
 		if(currentIteration > startFieldEvaluation){
 			//evaluateField();
 		}
-
-		updateGrid();
 
 		myTime = myTime + deltaT;
 
@@ -631,8 +629,7 @@ void Simulation::solveDiscontinious(){
 	}
 	pointEnthalpy[0] = (middlePressure[0] + energy(0))/middleDensity[0];
 	pointDensity[0] = middleDensity[0];
-	//pointVelocity[0] = 0;
-	pointVelocity[0] = middleVelocity[0];
+	pointVelocity[0] = 0;
 	pointSoundSpeed[0] = sqrt(gamma*middlePressure[0]/middleDensity[0]);
 }
 
