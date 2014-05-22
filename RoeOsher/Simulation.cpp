@@ -487,11 +487,11 @@ void Simulation::simulate(){
 		evaluateHydrodynamic();
 		
 		if(currentIteration > startCRevaluation){
-			//evaluateCR();
+			evaluateCR();
 		}
 
 		if(currentIteration > startFieldEvaluation){
-			//evaluateField();
+			evaluateField();
 		}		
 
 		myTime = myTime + deltaT;
@@ -587,12 +587,12 @@ void Simulation::evaluateHydrodynamic() {
 	TracPen(tempMomentum, mFlux, 0);
 	for(int i = 0; i < rgridNumber - 1; ++i){
 		
-		//tempMomentum[i] -= deltaT*(cosmicRayPressure[i+1] - cosmicRayPressure[i])/(deltaR[i]);
+		tempMomentum[i] -= deltaT*(cosmicRayPressure[i+1] - cosmicRayPressure[i])/(deltaR[i]);
 		alertNaNOrInfinity(tempMomentum[i], "momentum = NaN");
 		
 		if(i > 0 && i < rgridNumber-1){
 			for(int k = 0; k < kgridNumber; ++k){
-				//tempMomentum[i] -= deltaT*0.5*0.5*(magneticField[i+1][k] - magneticField[i-1][k])*kgrid[k]*deltaLogK/deltaR[i];
+				tempMomentum[i] -= deltaT*0.5*0.5*(magneticField[i+1][k] - magneticField[i-1][k])*kgrid[k]*deltaLogK/deltaR[i];
 				alertNaNOrInfinity(tempMomentum[i], "momentum = NaN");
 			}
 		}
@@ -604,8 +604,8 @@ void Simulation::evaluateHydrodynamic() {
 		double deltaE = 0;
 		for(int k = 0; k < kgridNumber; ++k){
 			deltaE += deltaT*growth_rate[i][k]*magneticField[i][k]*kgrid[k]*deltaLogK;
-			//tempEnergy[i] -= deltaT*0.5*0.5*(middleVelocity[i]+middleVelocity[i-1])*(magneticField[i][k] - magneticField[i-1][k])*kgrid[k]*deltaLogK/deltaR[i];
-			//tempEnergy[i] -= deltaT*growth_rate[i][k]*magneticField[i][k]*kgrid[k]*deltaLogK;
+			tempEnergy[i] -= deltaT*0.5*0.5*(middleVelocity[i]+middleVelocity[i-1])*(magneticField[i][k] - magneticField[i-1][k])*kgrid[k]*deltaLogK/deltaR[i];
+			tempEnergy[i] -= deltaT*growth_rate[i][k]*magneticField[i][k]*kgrid[k]*deltaLogK;
 			alertNaNOrInfinity(tempEnergy[i], "energy = NaN");
 			alertNegative(tempEnergy[i], "energy < 0");
 		}
