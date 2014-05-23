@@ -1,4 +1,7 @@
 #include <time.h>
+#include "math.h"
+#include "stdio.h"
+#include <stdlib.h>
 #include "simulation.h"
 #include "util.h"
 #include "constants.h"
@@ -16,7 +19,7 @@ void Simulation::updateDiffusionCoef(){
 					break;
 				}
 			}
-			double coef = p*speed_of_light*speed_of_light/(electron_charge*B);
+			double coef = 0.1*p*speed_of_light*speed_of_light/(electron_charge*B);
 			double dx = deltaR[i];
 			double lambda = coef/speed_of_light;
 			diffusionCoef[i][j] = coef;

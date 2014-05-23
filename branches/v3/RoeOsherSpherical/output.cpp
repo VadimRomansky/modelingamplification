@@ -1,3 +1,5 @@
+#include "stdio.h"
+#include <stdlib.h>
 #include "output.h"
 #include "constants.h"
 #include "util.h"
@@ -5,9 +7,9 @@
 void output(FILE* outFile, Simulation* simulation){
 	for(int i = 0; i < simulation->rgridNumber; ++i){
 		double t = simulation->temperatureIn(i);
-		//fprintf(outFile,"%lf %lf %lf %lf %lf\n", simulation->grid[i], simulation->middleVelocity[i], simulation->middleDensity[i], simulation->middlePressure[i], t);
-		fprintf(outFile,"%17.12lf %17.12lf %38.30lf %28.20lf %28.20lf %17.12lf  %17.12lf %g %g %g\n", simulation->grid[i], simulation->middleVelocity[i], simulation->middleDensity[i], simulation->middlePressure[i], simulation->cosmicRayPressure[i], t, simulation->magneticInductionSum[i]-simulation->B0, abs(simulation->middleGrid[i]*simulation->maxRate[i]/simulation->middleGrid[i]), simulation->cosmicRayConcentration[i], simulation->vscattering[i]);
-		//fprintf(outFile,"%lf %lf %lf %lf %lf\n", simulation->grid[i], simulation->middleVelocity[i], simulation->middleDensity[i], simulation->middlePressure[i], simulation->temperatureIn(i));
+		double tau = abs(simulation->middleGrid[i]*simulation->maxRate[i]/simulation->middleGrid[i]);
+		fprintf(outFile, "%g %g %g %g %g %g %g %g %g", simulation->grid[i], simulation->middleVelocity[i], simulation->middleDensity[i], simulation->middlePressure[i], simulation->cosmicRayPressure[i], t, simulation->magneticInductionSum[i]-simulation->B0, tau, simulation->cosmicRayConcentration[i]);
+		fprintf(outFile, "\n");
 	}
 }
 

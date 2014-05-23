@@ -1,3 +1,6 @@
+#include "math.h"
+#include "stdio.h"
+#include <stdlib.h>
 #include "simulation.h"
 #include "constants.h"
 #include "util.h"

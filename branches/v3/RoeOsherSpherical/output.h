@@ -1,5 +1,6 @@
 #ifndef _OUTPUT_H_
 #define _OUTPUT_H_
+#include "stdio.h"
 #include "simulation.h"
 
 void output(FILE* outFile, Simulation* simulation);
