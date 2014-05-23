@@ -3,6 +3,7 @@
 #include "math.h"
 #include "stdio.h"
 #include <stdlib.h>
+#include <omp.h>
 #include "simulation.h"
 #include "util.h"
 #include "constants.h"
@@ -558,10 +559,15 @@ void Simulation::evaluateHydrodynamic() {
 	solveDiscontinious();
 	CheckNegativeDensity();
 
-	for(int i = 0; i < rgridNumber; ++i){
-		tempDensity[i] = middleDensity[i];
-		tempMomentum[i] = momentum(i);
-		tempEnergy[i] = energy(i);
+	int i;
+	#pragma omp parallel private(i)
+	{
+	#pragma omp for
+		for(i = 0; i < rgridNumber; ++i){
+			tempDensity[i] = middleDensity[i];
+			tempMomentum[i] = momentum(i);
+			tempEnergy[i] = energy(i);
+		}
 	}
 	evaluateFluxes();
 
@@ -584,17 +590,22 @@ void Simulation::evaluateHydrodynamic() {
 		
 	}
 	TracPenRadial(tempEnergy, eFlux);
-	for(int i = 1; i < rgridNumber-1; ++i){
-		double deltaE = 0;
-		for(int k = 0; k < kgridNumber; ++k){
-			deltaE += deltaT*growth_rate[i][k]*magneticField[i][k]*kgrid[k]*deltaLogK;
-			//tempEnergy[i] -= deltaT*0.5*middleVelocity[i]*(magneticField[i][k] - magneticField[i-1][k])*kgrid[k]*deltaLogK/deltaR[i];
-			//tempEnergy[i] -= deltaT*growth_rate[i][k]*magneticField[i][k]*kgrid[k]*deltaLogK;
-			//alertNaNOrInfinity(tempEnergy[i], "energy = NaN");
-			//alertNegative(tempEnergy[i], "energy < 0");
-		}
-		if(abs(cosmicRayPressure[i+1] - cosmicRayPressure[i]) > 1E-100){
-			vscattering[i] = abs(deltaE*deltaR[i]/(cosmicRayPressure[i+1] - cosmicRayPressure[i]));
+
+	#pragma omp parallel private(i)
+	{
+	#pragma omp for
+		for(i = 1; i < rgridNumber-1; ++i){
+			double deltaE = 0;
+			for(int k = 0; k < kgridNumber; ++k){
+				deltaE += deltaT*growth_rate[i][k]*magneticField[i][k]*kgrid[k]*deltaLogK;
+				//tempEnergy[i] -= deltaT*0.5*middleVelocity[i]*(magneticField[i][k] - magneticField[i-1][k])*kgrid[k]*deltaLogK/deltaR[i];
+				//tempEnergy[i] -= deltaT*growth_rate[i][k]*magneticField[i][k]*kgrid[k]*deltaLogK;
+				//alertNaNOrInfinity(tempEnergy[i], "energy = NaN");
+				//alertNegative(tempEnergy[i], "energy < 0");
+			}
+			if(abs(cosmicRayPressure[i+1] - cosmicRayPressure[i]) > 1E-100){
+				vscattering[i] = abs(deltaE*deltaR[i]/(cosmicRayPressure[i+1] - cosmicRayPressure[i]));
+			}
 		}
 	}
 
@@ -604,21 +615,24 @@ void Simulation::evaluateHydrodynamic() {
 //расчет разрывов, задача Римана
 
 void Simulation::solveDiscontinious(){
-	double rho1, rho2, u1, u2, c1, c2;
-	for(int i = 1; i < rgridNumber; ++i){
-		rho1 = middleDensity[i-1];
-		rho2 = middleDensity[i];
-		u1 = middleVelocity[i-1];
-		u2 = middleVelocity[i];
-		c1 = sqrt(_gamma*middlePressure[i-1]/rho1);
-		c2 = sqrt(_gamma*middlePressure[i]/rho2);
-		double h1 = (energy(i-1) + middlePressure[i-1])/rho1;
-		double h2 = (energy(i) + middlePressure[i])/rho2;
-		pointDensity[i] = sqrt(rho1*rho2);
-		pointVelocity[i] = (sqrt(rho1)*middleVelocity[i-1] + sqrt(middleDensity[i])*middleVelocity[i])/(sqrt(rho1) + sqrt(rho2));
-		pointEnthalpy[i] = (sqrt(rho1)*h1 + sqrt(rho2)*h2)/(sqrt(rho1) + sqrt(rho2));
-		pointSoundSpeed[i] = sqrt((sqrt(rho1)*c1*c1 + sqrt(rho2)*c2*c2)/(sqrt(rho1) + sqrt(rho2)) + 0.5*(_gamma - 1)*(sqrt(rho1*rho2)/sqr(sqrt(rho1)+ sqrt(rho2)))*sqr(u1 - u2));
-	}
+	int i;
+	#pragma omp parallel for private(i)
+		for(i = 1; i < rgridNumber; ++i){
+			//printf("%d\n",i);
+			double rho1, rho2, u1, u2, c1, c2;
+			rho1 = middleDensity[i-1];
+			rho2 = middleDensity[i];
+			u1 = middleVelocity[i-1];
+			u2 = middleVelocity[i];
+			c1 = sqrt(_gamma*middlePressure[i-1]/rho1);
+			c2 = sqrt(_gamma*middlePressure[i]/rho2);
+			double h1 = (energy(i-1) + middlePressure[i-1])/rho1;
+			double h2 = (energy(i) + middlePressure[i])/rho2;
+			pointDensity[i] = sqrt(rho1*rho2);
+			pointVelocity[i] = (sqrt(rho1)*middleVelocity[i-1] + sqrt(middleDensity[i])*middleVelocity[i])/(sqrt(rho1) + sqrt(rho2));
+			pointEnthalpy[i] = (sqrt(rho1)*h1 + sqrt(rho2)*h2)/(sqrt(rho1) + sqrt(rho2));
+			pointSoundSpeed[i] = sqrt((sqrt(rho1)*c1*c1 + sqrt(rho2)*c2*c2)/(sqrt(rho1) + sqrt(rho2)) + 0.5*(_gamma - 1)*(sqrt(rho1*rho2)/sqr(sqrt(rho1)+ sqrt(rho2)))*sqr(u1 - u2));
+		}
 	pointEnthalpy[0] = (middlePressure[0] + energy(0))/middleDensity[0];
 	pointDensity[0] = middleDensity[0];
 	pointVelocity[0] = 0;
@@ -646,15 +660,17 @@ void Simulation::CheckNegativeDensity(){
 void Simulation::TracPenRadial(double* u, double* flux){
 
 	tempU[0] = u[0] - deltaT*(gridsquare[1]*flux[1] - gridsquare[0]*flux[0])/(middleGrid[0]*middleGrid[0]*deltaR[0]);
-	for(int i = 1; i < rgridNumber - 1; ++i){
-		tempU[i] = u[i] - deltaT*((gridsquare[i+1]*flux[i+1] - gridsquare[i]*flux[i])/(middleGrid[i]*middleGrid[i]*deltaR[i]));
-		/*if(tempU[i] < 0){
-			printf("temp U < 0\n");
-		}*/
-	}
+	int i;
+	#pragma omp parallel for private(i)
+		for(i = 1; i < rgridNumber - 1; ++i){
+			tempU[i] = u[i] - deltaT*((gridsquare[i+1]*flux[i+1] - gridsquare[i]*flux[i])/(middleGrid[i]*middleGrid[i]*deltaR[i]));
+			/*if(tempU[i] < 0){
+				printf("temp U < 0\n");
+			}*/
+		}
 	tempU[rgridNumber - 1] = u[rgridNumber - 1];
 
-	for(int i = 0; i < rgridNumber; ++i){
+	for(i = 0; i < rgridNumber; ++i){
 		u[i] = tempU[i];
 	}
 }
@@ -747,86 +763,89 @@ void Simulation::evaluateFluxes(){
 	mFlux[0] = middlePressure[0];
 	eFlux[0] = 0;
 
-	double* deltaS = new double[3];
-	double* lambdaPlus = new double[3];
-	double* lambdaMinus = new double[3];
-	double* lambdaMod = new double[3];
-	double** vectors = new double*[3];
+	int i;
+	#pragma omp parallel for private(i)
+		for(i = 1; i < rgridNumber; ++i){
+			double** vectors = new double*[3];
+			double* deltaS = new double[3];
+			double* lambdaPlus = new double[3];
+			double* lambdaMinus = new double[3];
+			double* lambdaMod = new double[3];
 
-	for(int k = 0; k < 3; ++k){
-		vectors[k] = new double[3];
-	}
+			for(int k = 0; k < 3; ++k){
+				vectors[k] = new double[3];
+			}
+			double leftDflux = middleVelocity[i-1]*middleDensity[i-1];
+			double rightDflux = middleVelocity[i]*middleDensity[i];
+			double leftMflux = leftDflux*middleVelocity[i-1] + middlePressure[i-1];
+			double rightMflux = rightDflux*middleVelocity[i] + middlePressure[i];
+			double leftEflux = leftDflux*middleVelocity[i-1]*middleVelocity[i-1]/2 + middleVelocity[i-1]*middlePressure[i-1]*_gamma/(_gamma-1);
+			double rightEflux = rightDflux*middleVelocity[i]*middleVelocity[i]/2 + middleVelocity[i]*middlePressure[i]*_gamma/(_gamma-1);
 
-	for(int i = 1; i < rgridNumber; ++i){
-		double leftDflux = middleVelocity[i-1]*middleDensity[i-1];
-		double rightDflux = middleVelocity[i]*middleDensity[i];
-		double leftMflux = leftDflux*middleVelocity[i-1] + middlePressure[i-1];
-		double rightMflux = rightDflux*middleVelocity[i] + middlePressure[i];
-		double leftEflux = leftDflux*middleVelocity[i-1]*middleVelocity[i-1]/2 + middleVelocity[i-1]*middlePressure[i-1]*_gamma/(_gamma-1);
-		double rightEflux = rightDflux*middleVelocity[i]*middleVelocity[i]/2 + middleVelocity[i]*middlePressure[i]*_gamma/(_gamma-1);
+			lambdaMod[0] = min2(middleVelocity[i-1] - sqrt(_gamma*middlePressure[i-1]/middleDensity[i-1]), pointVelocity[i] - pointSoundSpeed[i]);
+			lambdaMod[1] = pointVelocity[i];
+			lambdaMod[2] = max2(middleVelocity[i] + sqrt(_gamma*middlePressure[i]/middleDensity[i]), pointVelocity[i] + pointSoundSpeed[i]);
 
-		lambdaMod[0] = min2(middleVelocity[i-1] - sqrt(_gamma*middlePressure[i-1]/middleDensity[i-1]), pointVelocity[i] - pointSoundSpeed[i]);
-		lambdaMod[1] = pointVelocity[i];
-		lambdaMod[2] = max2(middleVelocity[i] + sqrt(_gamma*middlePressure[i]/middleDensity[i]), pointVelocity[i] + pointSoundSpeed[i]);
+			double lambda1 = pointVelocity[i] - pointSoundSpeed[i];
+			double lambda2 = pointVelocity[i];
+			double lambda3 = pointVelocity[i] + pointSoundSpeed[i];
 
-		double lambda1 = pointVelocity[i] - pointSoundSpeed[i];
-		double lambda2 = pointVelocity[i];
-		double lambda3 = pointVelocity[i] + pointSoundSpeed[i];
+			lambdaPlus[0] = lambda1*(lambda1 > 0);
+			lambdaPlus[1] = lambda2*(lambda2 > 0);
+			lambdaPlus[2] = lambda3*(lambda3 > 0);
 
-		lambdaPlus[0] = lambda1*(lambda1 > 0);
-		lambdaPlus[1] = lambda2*(lambda2 > 0);
-		lambdaPlus[2] = lambda3*(lambda3 > 0);
+			lambdaMinus[0] = lambda1*(lambda1 < 0);
+			lambdaMinus[1] = lambda2*(lambda2 < 0);
+			lambdaMinus[2] = lambda3*(lambda3 < 0);
 
-		lambdaMinus[0] = lambda1*(lambda1 < 0);
-		lambdaMinus[1] = lambda2*(lambda2 < 0);
-		lambdaMinus[2] = lambda3*(lambda3 < 0);
+			deltaS[0] = ((middlePressure[i] - middlePressure[i-1]) - pointDensity[i]*pointSoundSpeed[i]*(middleVelocity[i] - middleVelocity[i-1]))/(2*sqr(pointSoundSpeed[i]));
+			deltaS[1] = (sqr(pointSoundSpeed[i])*(middleDensity[i] - middleDensity[i-1]) - (middlePressure[i] - middlePressure[i-1]))/(2*sqr(pointSoundSpeed[i]));
+			deltaS[2] = ((middlePressure[i] - middlePressure[i-1]) + pointDensity[i]*pointSoundSpeed[i]*(middleVelocity[i] - middleVelocity[i-1]))/(2*sqr(pointSoundSpeed[i]));
 
-		deltaS[0] = ((middlePressure[i] - middlePressure[i-1]) - pointDensity[i]*pointSoundSpeed[i]*(middleVelocity[i] - middleVelocity[i-1]))/(2*sqr(pointSoundSpeed[i]));
-		deltaS[1] = (sqr(pointSoundSpeed[i])*(middleDensity[i] - middleDensity[i-1]) - (middlePressure[i] - middlePressure[i-1]))/(2*sqr(pointSoundSpeed[i]));
-		deltaS[2] = ((middlePressure[i] - middlePressure[i-1]) + pointDensity[i]*pointSoundSpeed[i]*(middleVelocity[i] - middleVelocity[i-1]))/(2*sqr(pointSoundSpeed[i]));
+			vectors[0][0] = 1;
+			vectors[0][1] = 2;
+			vectors[0][2] = 1;
+			vectors[1][0] = pointVelocity[i] - pointSoundSpeed[i];
+			vectors[1][1] = 2*pointVelocity[i];
+			vectors[1][2] = pointVelocity[i] + pointSoundSpeed[i];
+			vectors[2][0] = pointEnthalpy[i] - pointVelocity[i]*pointSoundSpeed[i];
+			vectors[2][1] = sqr(pointVelocity[i]);
+			vectors[2][2] = pointEnthalpy[i] + pointVelocity[i]*pointSoundSpeed[i];
 
-		vectors[0][0] = 1;
-		vectors[0][1] = 2;
-		vectors[0][2] = 1;
-		vectors[1][0] = pointVelocity[i] - pointSoundSpeed[i];
-		vectors[1][1] = 2*pointVelocity[i];
-		vectors[1][2] = pointVelocity[i] + pointSoundSpeed[i];
-		vectors[2][0] = pointEnthalpy[i] - pointVelocity[i]*pointSoundSpeed[i];
-		vectors[2][1] = sqr(pointVelocity[i]);
-		vectors[2][2] = pointEnthalpy[i] + pointVelocity[i]*pointSoundSpeed[i];
+			dFlux[i] = (leftDflux + rightDflux)/2;
+			mFlux[i] = (leftMflux + rightMflux)/2;
+			eFlux[i] = (leftEflux + rightEflux)/2;
 
-		dFlux[i] = (leftDflux + rightDflux)/2;
-		mFlux[i] = (leftMflux + rightMflux)/2;
-		eFlux[i] = (leftEflux + rightEflux)/2;
+			//for density
+			for(int j = 0; j < 3; ++j){
+				dFlux[i] -= 0.5*abs(lambdaMod[j])*deltaS[j]*vectors[0][j];
+				dFluxPlus[i][j] = lambdaPlus[j]*deltaS[j]*vectors[0][j];
+				dFluxMinus[i][j] = lambdaMinus[j]*deltaS[j]*vectors[0][j];
+			}
+			//for momentum
+			for(int j = 0; j < 3; ++j){
+				mFlux[i] -= 0.5*abs(lambdaMod[j])*deltaS[j]*vectors[1][j];
+				mFluxPlus[i][j] = lambdaPlus[j]*deltaS[j]*vectors[1][j];
+				mFluxMinus[i][j] = lambdaMinus[j]*deltaS[j]*vectors[1][j];
+			}
+			//for energy
+			for(int j = 0; j < 3; ++j){
+				eFlux[i] -= 0.5*abs(lambdaMod[j])*deltaS[j]*vectors[2][j];
+				eFluxPlus[i][j] = lambdaPlus[j]*deltaS[j]*vectors[2][j];
+				eFluxMinus[i][j] = lambdaMinus[j]*deltaS[j]*vectors[2][j];
+			}
 
-		//for density
-		for(int j = 0; j < 3; ++j){
-			dFlux[i] -= 0.5*abs(lambdaMod[j])*deltaS[j]*vectors[0][j];
-			dFluxPlus[i][j] = lambdaPlus[j]*deltaS[j]*vectors[0][j];
-			dFluxMinus[i][j] = lambdaMinus[j]*deltaS[j]*vectors[0][j];
+			for(int k = 0; k < 3; ++k){
+				delete[] vectors[k];
+			}
+			delete[] vectors;
+			delete[] deltaS;
+			delete[] lambdaPlus;
+			delete[] lambdaMinus;
+			delete[] lambdaMod;
 		}
-		//for momentum
-		for(int j = 0; j < 3; ++j){
-			mFlux[i] -= 0.5*abs(lambdaMod[j])*deltaS[j]*vectors[1][j];
-			mFluxPlus[i][j] = lambdaPlus[j]*deltaS[j]*vectors[1][j];
-			mFluxMinus[i][j] = lambdaMinus[j]*deltaS[j]*vectors[1][j];
-		}
-		//for energy
-		for(int j = 0; j < 3; ++j){
-			eFlux[i] -= 0.5*abs(lambdaMod[j])*deltaS[j]*vectors[2][j];
-			eFluxPlus[i][j] = lambdaPlus[j]*deltaS[j]*vectors[2][j];
-			eFluxMinus[i][j] = lambdaMinus[j]*deltaS[j]*vectors[2][j];
-		}
-	}
+	
 
-	for(int k = 0; k < 3; ++k){
-		delete[] vectors[k];
-	}
-	delete[] vectors;
-	delete[] deltaS;
-	delete[] lambdaPlus;
-	delete[] lambdaMinus;
-	delete[] lambdaMod;
 }
 
 void Simulation::updateFluxes(){
@@ -1061,57 +1080,67 @@ void Simulation::updateAll(){
 	if(tempDensity[rgridNumber - 1] < middleDensity[rgridNumber - 1]){
 		printf("aaa\n");
 	}
-	for(int i = 0; i < rgridNumber; ++i){
-		//if(i != 0 || tempDensity[i] < middleDensity[i]){
-			middleDensity[i] = tempDensity[i];
-		//}
-		alertNaNOrInfinity(middleDensity[i], "density = NaN");
-		double middleMomentum = tempMomentum[i];
-		alertNaNOrInfinity(middleMomentum, "momentum = NaN");
-		double middleEnergy = tempEnergy[i];
-		alertNaNOrInfinity(middleEnergy, "energy = NaN");
-		middleVelocity[i] = middleMomentum/middleDensity[i];
 
-		middlePressure[i] = (middleEnergy - middleDensity[i]*middleVelocity[i]*middleVelocity[i]/2)*(_gamma - 1);
-		if(middleDensity[i] <= epsilon*density0){
-			middleDensity[i] = epsilon*density0;
-			middleVelocity[i] = 0;
-			middlePressure[i] = middleDensity[i]*kBoltzman*temperature/massProton;
-		}
-		if(middlePressure[i] <= 0){
-			middlePressure[i] = epsilon*middleDensity[i]*kBoltzman*temperature/massProton;
-		}
+	int i;
+	#pragma omp parallel for private(i)
+		for(i = 0; i < rgridNumber; ++i){
+			//if(i != 0 || tempDensity[i] < middleDensity[i]){
+				middleDensity[i] = tempDensity[i];
+			//}
+			alertNaNOrInfinity(middleDensity[i], "density = NaN");
+			double middleMomentum = tempMomentum[i];
+			alertNaNOrInfinity(middleMomentum, "momentum = NaN");
+			double middleEnergy = tempEnergy[i];
+			alertNaNOrInfinity(middleEnergy, "energy = NaN");
+			middleVelocity[i] = middleMomentum/middleDensity[i];
+
+			middlePressure[i] = (middleEnergy - middleDensity[i]*middleVelocity[i]*middleVelocity[i]/2)*(_gamma - 1);
+			if(middleDensity[i] <= epsilon*density0){
+				middleDensity[i] = epsilon*density0;
+				middleVelocity[i] = 0;
+				middlePressure[i] = middleDensity[i]*kBoltzman*temperature/massProton;
+			}
+			if(middlePressure[i] <= 0){
+				middlePressure[i] = epsilon*middleDensity[i]*kBoltzman*temperature/massProton;
+			}
+		
 	}
 
 	//cosmic rays
 	if(currentIteration > startCRevaluation){
-		for(int i = 0; i <= rgridNumber; ++i){
-			for(int j = 0; j < pgridNumber; ++j){
-				distributionFunction[i][j] = tempDistributionFunction[i][j];
+	#pragma omp parallel for private(i)
+			for(i = 0; i <= rgridNumber; ++i){
+				for(int j = 0; j < pgridNumber; ++j){
+					distributionFunction[i][j] = tempDistributionFunction[i][j];
+				}
 			}
-		}
+		
+		evaluateCosmicRayPressure();
+		evaluateCRFlux();
 	}
-	evaluateCosmicRayPressure();
-	evaluateCRFlux();
 
 
 	//field
 
 	if(currentIteration > startFieldEvaluation){
-		for(int i = 1; i < rgridNumber; ++i){
-			for(int k = 0; k < kgridNumber; ++k){
-				magneticField[i][k] = tempMagneticField[i][k];
+	#pragma omp parallel for private(i)
+			for(i = 1; i < rgridNumber; ++i){
+				for(int k = 0; k < kgridNumber; ++k){
+					magneticField[i][k] = tempMagneticField[i][k];
+				}
 			}
-		}
+		
 
-		for(int i = 0; i < rgridNumber; ++i){
-			double magneticEnergy = 0;
-			for(int k = 0; k < kgridNumber; ++k){
-				magneticEnergy += magneticField[i][k]*kgrid[k]*deltaLogK;
-				largeScaleField[i][k] = sqrt(4*pi*magneticEnergy + B0*B0);
+	#pragma omp parallel for private(i)
+			for(i = 0; i < rgridNumber; ++i){
+				double magneticEnergy = 0;
+				for(int k = 0; k < kgridNumber; ++k){
+					magneticEnergy += magneticField[i][k]*kgrid[k]*deltaLogK;
+					largeScaleField[i][k] = sqrt(4*pi*magneticEnergy + B0*B0);
+				}
+				magneticInductionSum[i] = sqrt(4*pi*magneticEnergy + B0*B0);
 			}
-			magneticInductionSum[i] = sqrt(4*pi*magneticEnergy + B0*B0);
-		}
+		
 
 		updateDiffusionCoef();
 		growthRate();
