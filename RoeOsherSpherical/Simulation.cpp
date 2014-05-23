@@ -615,10 +615,11 @@ void Simulation::evaluateHydrodynamic() {
 //расчет разрывов, задача Римана
 
 void Simulation::solveDiscontinious(){
-	int i;
-	#pragma omp parallel for private(i)
-		for(i = 1; i < rgridNumber; ++i){
-			//printf("%d\n",i);
+	int ompi = 0;
+	#pragma omp parallel for private(ompi)
+	for(ompi = 0; ompi < numThreads; ++ ompi){
+		for(int i = ompi+1; i < rgridNumber; i = i + numThreads){
+			printf("%d\n",i);
 			double rho1, rho2, u1, u2, c1, c2;
 			rho1 = middleDensity[i-1];
 			rho2 = middleDensity[i];
@@ -633,6 +634,7 @@ void Simulation::solveDiscontinious(){
 			pointEnthalpy[i] = (sqrt(rho1)*h1 + sqrt(rho2)*h2)/(sqrt(rho1) + sqrt(rho2));
 			pointSoundSpeed[i] = sqrt((sqrt(rho1)*c1*c1 + sqrt(rho2)*c2*c2)/(sqrt(rho1) + sqrt(rho2)) + 0.5*(_gamma - 1)*(sqrt(rho1*rho2)/sqr(sqrt(rho1)+ sqrt(rho2)))*sqr(u1 - u2));
 		}
+	}
 	pointEnthalpy[0] = (middlePressure[0] + energy(0))/middleDensity[0];
 	pointDensity[0] = middleDensity[0];
 	pointVelocity[0] = 0;
@@ -763,9 +765,10 @@ void Simulation::evaluateFluxes(){
 	mFlux[0] = middlePressure[0];
 	eFlux[0] = 0;
 
-	int i;
-	#pragma omp parallel for private(i)
-		for(i = 1; i < rgridNumber; ++i){
+	int ompi = 0;
+	#pragma omp parallel for private(ompi)
+	for(ompi = 0; ompi < numThreads; ++ ompi){
+		for(int i = ompi; i < rgridNumber; i = i + numThreads){
 			double** vectors = new double*[3];
 			double* deltaS = new double[3];
 			double* lambdaPlus = new double[3];
@@ -845,7 +848,7 @@ void Simulation::evaluateFluxes(){
 			delete[] lambdaMod;
 		}
 	
-
+	}
 }
 
 void Simulation::updateFluxes(){
@@ -1081,9 +1084,10 @@ void Simulation::updateAll(){
 		printf("aaa\n");
 	}
 
-	int i;
-	#pragma omp parallel for private(i)
-		for(i = 0; i < rgridNumber; ++i){
+	int ompi = 0;
+	#pragma omp parallel for private(ompi)
+	for(ompi = 0; ompi < numThreads; ++ ompi){
+		for(int i = ompi; i < rgridNumber; i = i + numThreads){
 			//if(i != 0 || tempDensity[i] < middleDensity[i]){
 				middleDensity[i] = tempDensity[i];
 			//}
@@ -1103,17 +1107,19 @@ void Simulation::updateAll(){
 			if(middlePressure[i] <= 0){
 				middlePressure[i] = epsilon*middleDensity[i]*kBoltzman*temperature/massProton;
 			}
-		
+		}
 	}
 
 	//cosmic rays
 	if(currentIteration > startCRevaluation){
-	#pragma omp parallel for private(i)
-			for(i = 0; i <= rgridNumber; ++i){
+		#pragma omp parallel for private(ompi)
+		for(ompi = 0; ompi < numThreads; ++ ompi){
+			for(int i = ompi; i < rgridNumber; i = i + numThreads){
 				for(int j = 0; j < pgridNumber; ++j){
 					distributionFunction[i][j] = tempDistributionFunction[i][j];
 				}
 			}
+		}
 		
 		evaluateCosmicRayPressure();
 		evaluateCRFlux();
@@ -1123,16 +1129,19 @@ void Simulation::updateAll(){
 	//field
 
 	if(currentIteration > startFieldEvaluation){
-	#pragma omp parallel for private(i)
-			for(i = 1; i < rgridNumber; ++i){
+		#pragma omp parallel for private(ompi)
+		for(ompi = 0; ompi < numThreads; ++ ompi){
+			for(int i = ompi; i < rgridNumber; i = i + numThreads){
 				for(int k = 0; k < kgridNumber; ++k){
 					magneticField[i][k] = tempMagneticField[i][k];
 				}
 			}
+		}
 		
 
-	#pragma omp parallel for private(i)
-			for(i = 0; i < rgridNumber; ++i){
+		#pragma omp parallel for private(ompi)
+		for(ompi = 0; ompi < numThreads; ++ ompi){
+			for(int i = ompi; i < rgridNumber; i = i + numThreads){
 				double magneticEnergy = 0;
 				for(int k = 0; k < kgridNumber; ++k){
 					magneticEnergy += magneticField[i][k]*kgrid[k]*deltaLogK;
@@ -1140,6 +1149,7 @@ void Simulation::updateAll(){
 				}
 				magneticInductionSum[i] = sqrt(4*pi*magneticEnergy + B0*B0);
 			}
+		}
 		
 
 		updateDiffusionCoef();
