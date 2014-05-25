@@ -7,7 +7,7 @@
 void output(FILE* outFile, Simulation* simulation){
 	for(int i = 0; i < simulation->rgridNumber; ++i){
 		double t = simulation->temperatureIn(i);
-		double tau = abs(simulation->middleGrid[i]*simulation->maxRate[i]/simulation->middleGrid[i]);
+        double tau = abs2(simulation->middleGrid[i]*simulation->maxRate[i]/simulation->middleGrid[i]);
 		fprintf(outFile, "%g %g %g %g %g %g %g %g %g", simulation->grid[i], simulation->middleVelocity[i], simulation->middleDensity[i], simulation->middlePressure[i], simulation->cosmicRayPressure[i], t, simulation->magneticInductionSum[i]-simulation->B0, tau, simulation->cosmicRayConcentration[i]);
 		fprintf(outFile, "\n");
 	}
@@ -95,12 +95,12 @@ void outputField(FILE* outFile, FILE* coordinateFile, FILE* outFull, FILE* coefF
 	for(int i = 0; i < simulation->rgridNumber; ++i){
 		fprintf(xfile, "%g\n", simulation->grid[i]);
 		fprintf(coordinateFile, "%g %g\n", simulation->grid[i],simulation->magneticField[i][35]);
-		if(abs(i-simulation->shockWavePoint) < 20){
+        if(abs2(i-simulation->shockWavePoint) < 20){
 			volume += simulation->volume(i);
 		}
 		for(int k = 0; k < kgridNumber; ++k){
 			fprintf(outFull, "%g ", simulation->magneticField[i][k]);
-			if(abs(i-simulation->shockWavePoint) < 20){
+            if(abs2(i-simulation->shockWavePoint) < 20){
 				integralField[k] += simulation->magneticField[i][k]*simulation->volume(i);
 			}
 		}

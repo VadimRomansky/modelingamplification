@@ -1,3 +1,6 @@
+#include "math.h"
+#include "stdio.h"
+#include "stdlib.h"
 #include "simulation.h"
 #include "constants.h"
 #include "util.h"
@@ -78,6 +81,7 @@ void Simulation::evaluateCRFlux(){
 }
 
 void Simulation::growthRate(){
+	#pragma omp parallel for
 	for(int i = 0; i < rgridNumber; ++i){
 		if(i > shockWavePoint+1){
 			for(int k = 0; k < kgridNumber; ++k){

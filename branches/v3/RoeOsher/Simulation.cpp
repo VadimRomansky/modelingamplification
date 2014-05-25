@@ -1,5 +1,8 @@
 #include <list>
 #include <time.h>
+#include "math.h"
+#include "stdio.h"
+#include "stdlib.h"
 #include "simulation.h"
 #include "util.h"
 #include "constants.h"
@@ -280,7 +283,7 @@ void Simulation::initializeProfile(){
 		case 2 :
 			{
 				double lambda = upstreamR/20;
-				double c = sqrt(gamma*pressure0/density0);
+				double c = sqrt(_gamma*pressure0/density0);
 				middleDensity[i] = density0 + density0*0.01*sin(middleGrid[i]*2*pi/lambda);
 				middleVelocity[i] = c*0.01*sin(middleGrid[i]*2*pi/lambda);
 				middlePressure[i] = pressure0 + c*c*density0*0.01*sin(middleGrid[i]*2*pi/lambda);
@@ -415,59 +418,49 @@ void Simulation::simulate(){
 	updateTimeStep();
 
 	printf("creating files\n");
-	FILE* outFile;
-	FILE* outIteration;
-	fopen_s(&outIteration, "./output/iterations.dat","w");
+	FILE* outIteration = fopen("./output/iterations.dat","w");
 	fclose(outIteration);
-	FILE* outExtraIteration;
-	fopen_s(&outExtraIteration, "./output/extra_iterations.dat","w");
+	FILE* outExtraIteration = fopen("./output/extra_iterations.dat","w");
 	fclose(outExtraIteration);
-	FILE* outTempGrid;
-	fopen_s(&outTempGrid, "./output/temp_grid.dat","w");
+	FILE* outTempGrid = fopen("./output/temp_grid.dat","w");
 	fclose(outTempGrid);
-	FILE* outShockWave;
-	fopen_s(&outShockWave, "./output/shock_wave.dat","w");
+	FILE* outShockWave = fopen("./output/shock_wave.dat","w");
 	fclose(outShockWave);
-	fopen_s(&outFile, "./output/tamc_radial_profile.dat","w");
+	FILE* outFile = fopen("./output/tamc_radial_profile.dat","w");
 	output(outFile,this);
 	fclose(outFile);
 	FILE* outDistribution;
 	FILE* outFullDistribution;
 	FILE* outCoordinateDistribution;
-	fopen_s(&outDistribution, "./output/distribution.dat","w");
-	fopen_s(&outFullDistribution, "./output/fullDistribution.dat","w");
-	fopen_s(&outCoordinateDistribution, "./output/coordinateDistribution.dat","w");
+	outDistribution  = fopen("./output/distribution.dat","w");
+	outFullDistribution  = fopen("./output/fullDistribution.dat","w");
+	outCoordinateDistribution  = fopen("./output/coordinateDistribution.dat","w");
 	outputDistributionP3(outDistribution, outFullDistribution, outCoordinateDistribution, this);
-	//outputDistribution(outDistribution, outFullDistribution, outCoordinateDistribution, this);
 	fclose(outCoordinateDistribution);
 	fclose(outFullDistribution);
 	fclose(outDistribution);
-	FILE* outField;
-	fopen_s(&outField, "./output/field.dat","w");
+	FILE* outField = fopen("./output/field.dat","w");
 	fclose(outField);
-	FILE* coordinateField;
-	fopen_s(&coordinateField, "./output/coordinate_field.dat","w");
+	FILE* coordinateField = fopen("./output/coordinate_field.dat","w");
 	fclose(coordinateField);
-	FILE* outFullField;
-	fopen_s(&outFullField, "./output/full_field.dat","w");
+	FILE* outFullField = fopen("./output/full_field.dat","w");
 	fclose(outFullField);
-	FILE* outCoef;
-	fopen_s(&outCoef, "./output/diff_coef.dat","w");
+	FILE* outCoef = fopen("./output/diff_coef.dat","w");
 	fclose(outCoef);
-	FILE* xFile;
-	fopen_s(&xFile, "./output/xfile.dat","w");
+	FILE* xFile = fopen("./output/xfile.dat","w");
 	fclose(xFile);
-	FILE* kFile;
-	fopen_s(&kFile, "./output/kfile.dat","w");
+	FILE* kFile = fopen("./output/kfile.dat","w");
 	fclose(kFile);
 	updateShockWavePoint();
-	fopen_s(&outShockWave, "./output/shock_wave.dat","w");
+	outShockWave = fopen("./output/shock_wave.dat","w");
 	double shockWaveR = 0;
+	double gasSpeed = 0;
 	if(shockWavePoint >= 0 && shockWavePoint <= rgridNumber){
 		shockWaveR = grid[shockWavePoint];
+		gasSpeed = middleVelocity[shockWavePoint - 1];
 	}
 
-	fprintf(outShockWave, "%d %lf %d %lf\n", 0, myTime, shockWavePoint, shockWaveR, 0, 0);
+	fprintf(outShockWave, "%d %lf %d %lf %lf %lf\n", 0, myTime, shockWavePoint, shockWaveR, shockWaveSpeed, gasSpeed);
 	fclose(outShockWave);
 	deltaT = min2(minT, deltaT);
 	//deltaT = 5000;
@@ -480,9 +473,9 @@ void Simulation::simulate(){
 	//основной цикл
 	while(myTime < maxTime && currentIteration < iterationNumber){
 		++currentIteration;
-		printf("iteration є %d\n", currentIteration);
-		printf("time = %lf\n", myTime);
-		printf("solving\n");
+		//printf("iteration є %d\n", currentIteration);
+		//printf("time = %lf\n", myTime);
+		//printf("solving\n");
 
 		evaluateHydrodynamic();
 		
@@ -507,13 +500,13 @@ void Simulation::simulate(){
 		if(currentIteration % writeParameter == 0){
 			//вывод на некоторых итераци€х
 			printf("outputing\n");
-			fopen_s(&outFile, "./output/tamc_radial_profile.dat","a");
+			outFile = fopen("./output/tamc_radial_profile.dat","a");
 			output(outFile, this);
 			fclose(outFile);
 
-			fopen_s(&outShockWave, "./output/shock_wave.dat","a");
-			double shockWaveR = 0;
-			double gasSpeed = 0;
+			outShockWave = fopen("./output/shock_wave.dat","a");
+			shockWaveR = 0;
+			gasSpeed = 0;
 			if(shockWavePoint >= 0 && shockWavePoint <= rgridNumber){
 				shockWaveR = grid[shockWavePoint];
 				gasSpeed = middleVelocity[shockWavePoint - 1];
@@ -522,12 +515,11 @@ void Simulation::simulate(){
 			fprintf(outShockWave, "%d %lf %d %lf %lf %lf\n", currentIteration, myTime, shockWavePoint, shockWaveR, shockWaveSpeed, gasSpeed);
 			fclose(outShockWave);
 
-			fopen_s(&outDistribution, "./output/distribution.dat","a");
-			fopen_s(&outFullDistribution, "./output/fullDistribution.dat","a");
-			fopen_s(&outCoordinateDistribution, "./output/coordinateDistribution.dat","a");
+			outDistribution = fopen("./output/distribution.dat","a");
+			outFullDistribution = fopen("./output/fullDistribution.dat","a");
+			outCoordinateDistribution = fopen("./output/coordinateDistribution.dat","a");
 
 			outputDistributionP3(outDistribution, outFullDistribution, outCoordinateDistribution, this);
-			//outputDistribution(outDistribution, outFullDistribution, outCoordinateDistribution, this);
 
 			fclose(outCoordinateDistribution);
 			fclose(outFullDistribution);
@@ -537,24 +529,24 @@ void Simulation::simulate(){
 			outputDerivativeForDebug(outDistributionDerivative, this);
 			fclose(outDistributionDerivative);*/
 
-			fopen_s(&outIteration, "./output/iterations.dat","a");
+			outIteration = fopen("./output/iterations.dat","a");
 			fprintf(outIteration, "%d %g %g %g %g %g %g\n", currentIteration, myTime, mass, totalMomentum, totalEnergy, injectedParticles, totalParticles);
 			fclose(outIteration);
 
-			fopen_s(&outExtraIteration, "./output/extra_iterations.dat","a");
+			outExtraIteration = fopen("./output/extra_iterations.dat","a");
 			fprintf(outExtraIteration, "%d %g %g %g %g %g %g %g %g %g %g\n", currentIteration, myTime, mass, totalMomentum, totalEnergy, totalKineticEnergy, totalTermalEnergy, totalParticleEnergy, totalMagneticEnergy, injectedParticles, totalParticles);
 			fclose(outExtraIteration);
 
-			fopen_s(&outTempGrid, "./output/temp_grid.dat","a");
+			outTempGrid = fopen("./output/temp_grid.dat","a");
 			outputNewGrid(outTempGrid, this);
 			fclose(outTempGrid);
 
-			fopen_s(&outFullField, "./output/full_field.dat","w");
-			fopen_s(&coordinateField, "./output/coordinate_field.dat","a");
-			fopen_s(&outField, "./output/field.dat","a");
-			fopen_s(&outCoef, "./output/diff_coef.dat","a");
-			fopen_s(&xFile, "./output/xfile.dat","w");
-			fopen_s(&kFile, "./output/kfile.dat","w");
+			outFullField = fopen("./output/full_field.dat","w");
+			coordinateField = fopen("./output/coordinate_field.dat","a");
+			outField = fopen("./output/field.dat","a");
+			outCoef = fopen("./output/diff_coef.dat","a");
+			xFile = fopen("./output/xfile.dat","w");
+			kFile = fopen("./output/kfile.dat","w");
 			outputField(outField, coordinateField, outFullField, outCoef, xFile, kFile, this);
 			fclose(outField);
 			fclose(coordinateField);
@@ -580,7 +572,7 @@ void Simulation::evaluateHydrodynamic() {
 	}
 	evaluateFluxes();
 
-	//updateFluxes();
+	updateFluxes();
 
 	TracPen(tempDensity, dFlux, 0);
 
@@ -625,20 +617,20 @@ void Simulation::solveDiscontinious(){
 		rho2 = middleDensity[i];
 		u1 = middleVelocity[i-1];
 		u2 = middleVelocity[i];
-		c1 = sqrt(gamma*middlePressure[i-1]/rho1);
-		c2 = sqrt(gamma*middlePressure[i]/rho2);
+		c1 = sqrt(_gamma*middlePressure[i-1]/rho1);
+		c2 = sqrt(_gamma*middlePressure[i]/rho2);
 		double h1 = (energy(i-1) + middlePressure[i-1])/rho1;
 		double h2 = (energy(i) + middlePressure[i])/rho2;
 		pointDensity[i] = sqrt(rho1*rho2);
 		pointVelocity[i] = (sqrt(rho1)*middleVelocity[i-1] + sqrt(middleDensity[i])*middleVelocity[i])/(sqrt(rho1) + sqrt(rho2));
 		pointEnthalpy[i] = (sqrt(rho1)*h1 + sqrt(rho2)*h2)/(sqrt(rho1) + sqrt(rho2));
-		pointSoundSpeed[i] = sqrt((sqrt(rho1)*c1*c1 + sqrt(rho2)*c2*c2)/(sqrt(rho1) + sqrt(rho2)) + 0.5*(gamma - 1)*(sqrt(rho1*rho2)/sqr(sqrt(rho1)+ sqrt(rho2)))*sqr(u1 - u2));
+		pointSoundSpeed[i] = sqrt((sqrt(rho1)*c1*c1 + sqrt(rho2)*c2*c2)/(sqrt(rho1) + sqrt(rho2)) + 0.5*(_gamma - 1)*(sqrt(rho1*rho2)/sqr(sqrt(rho1)+ sqrt(rho2)))*sqr(u1 - u2));
 	}
 	pointEnthalpy[0] = (middlePressure[0] + energy(0))/middleDensity[0];
 	pointDensity[0] = middleDensity[0];
 	//pointVelocity[0] = 0;
 	pointVelocity[0] = middleVelocity[0];
-	pointSoundSpeed[0] = sqrt(gamma*middlePressure[0]/middleDensity[0]);
+	pointSoundSpeed[0] = sqrt(_gamma*middlePressure[0]/middleDensity[0]);
 }
 
 
@@ -707,7 +699,7 @@ double Simulation::energy(int i){
 	if(i < 0){
 		printf("i < 0");
 	} else if(i >= 0 && i < rgridNumber) {
-		return middlePressure[i]/(gamma - 1) + middleDensity[i]*middleVelocity[i]*middleVelocity[i]/2;
+		return middlePressure[i]/(_gamma - 1) + middleDensity[i]*middleVelocity[i]*middleVelocity[i]/2;
 	} else {
 		printf("i >= rgridNumber");
 	}
@@ -729,7 +721,7 @@ double Simulation::termalEnergy(int i){
 	if(i < 0){
 		printf("i < 0");
 	} else if(i >= 0 && i < rgridNumber) {
-		return middlePressure[i]/(gamma - 1);
+		return middlePressure[i]/(_gamma - 1);
 	} else {
 		printf("i >= rgridNumber");
 	}
@@ -751,7 +743,7 @@ double Simulation::soundSpeed(int i){
 	if(i < 0){
 		printf("i < 0");
 	} else if(i >= 0 && i < rgridNumber) {
-		return sqrt(gamma*middlePressure[i]/middleDensity[i]);
+		return sqrt(_gamma*middlePressure[i]/middleDensity[i]);
 	} else {
 		printf("i >= rgridNumber");
 	}
@@ -778,12 +770,12 @@ void Simulation::evaluateFluxes(){
 		double rightDflux = middleVelocity[i]*middleDensity[i];
 		double leftMflux = leftDflux*middleVelocity[i-1] + middlePressure[i-1];
 		double rightMflux = rightDflux*middleVelocity[i] + middlePressure[i];
-		double leftEflux = leftDflux*middleVelocity[i-1]*middleVelocity[i-1]/2 + middleVelocity[i-1]*middlePressure[i-1]*gamma/(gamma-1);
-		double rightEflux = rightDflux*middleVelocity[i]*middleVelocity[i]/2 + middleVelocity[i]*middlePressure[i]*gamma/(gamma-1);
+		double leftEflux = leftDflux*middleVelocity[i-1]*middleVelocity[i-1]/2 + middleVelocity[i-1]*middlePressure[i-1]*_gamma/(_gamma-1);
+		double rightEflux = rightDflux*middleVelocity[i]*middleVelocity[i]/2 + middleVelocity[i]*middlePressure[i]*_gamma/(_gamma-1);
 
-		lambdaMod[0] = min2(middleVelocity[i-1] - sqrt(gamma*middlePressure[i-1]/middleDensity[i-1]), pointVelocity[i] - pointSoundSpeed[i]);
+		lambdaMod[0] = min2(middleVelocity[i-1] - sqrt(_gamma*middlePressure[i-1]/middleDensity[i-1]), pointVelocity[i] - pointSoundSpeed[i]);
 		lambdaMod[1] = pointVelocity[i];
-		lambdaMod[2] = max2(middleVelocity[i] + sqrt(gamma*middlePressure[i]/middleDensity[i]), pointVelocity[i] + pointSoundSpeed[i]);
+		lambdaMod[2] = max2(middleVelocity[i] + sqrt(_gamma*middlePressure[i]/middleDensity[i]), pointVelocity[i] + pointSoundSpeed[i]);
 
 		double lambda1 = pointVelocity[i] - pointSoundSpeed[i];
 		double lambda2 = pointVelocity[i];
@@ -853,7 +845,7 @@ void Simulation::updateFluxes(){
 
 void Simulation::updateFluxes(double* flux, double** fluxPlus, double** fluxMinus){
 	double beta = 0.5;
-	double phi = 0.5;
+	double phi = 1.0/3;
 
 	for(int i = 2; i < rgridNumber-1; ++i){
 		for(int j = 0; j < 3; ++j){
@@ -900,15 +892,15 @@ double Simulation::superbee(double a, double b){
 //пересчет шага по времени и максимальной скорости звука
 
 void Simulation::updateMaxSoundSpeed(){
-	maxSoundSpeed = (sqrt(gamma*middlePressure[0]/middleDensity[0]) + abs(middleVelocity[0]));
+	maxSoundSpeed = (sqrt(_gamma*middlePressure[0]/middleDensity[0]) + abs(middleVelocity[0]));
 	double cs = maxSoundSpeed;
 	for(int i = 1; i < rgridNumber - 1; ++i){
-		cs = (sqrt(gamma*middlePressure[i]/middleDensity[i]) + abs(middleVelocity[i]));
+		cs = (sqrt(_gamma*middlePressure[i]/middleDensity[i]) + abs(middleVelocity[i]));
 		if(cs > maxSoundSpeed){
 			maxSoundSpeed = cs;
 		}
 	}
-	cs = (sqrt(gamma*middlePressure[rgridNumber - 1]/middleDensity[rgridNumber - 1]) + abs(middleVelocity[rgridNumber - 1]));
+	cs = (sqrt(_gamma*middlePressure[rgridNumber - 1]/middleDensity[rgridNumber - 1]) + abs(middleVelocity[rgridNumber - 1]));
 	if(cs > maxSoundSpeed){
 		maxSoundSpeed = cs;
 	}
@@ -1066,7 +1058,7 @@ void Simulation::updateParameters(){
 		totalMagneticEnergy -= deltaT*(magneticField[0][k]*middleVelocity[0] - magneticField[rgridNumber-1][k]*middleVelocity[rgridNumber-1])*kgrid[k]*deltaLogK;
 	}
 	totalKineticEnergy -= deltaT*(middleDensity[0]*cube(middleVelocity[0]) - middleDensity[rgridNumber-1]*cube(middleVelocity[rgridNumber-1]))/2;
-	totalTermalEnergy -= deltaT*(middlePressure[0]*middleVelocity[0] - middlePressure[rgridNumber-1]*middleVelocity[rgridNumber-1])*gamma/(gamma-1);
+	totalTermalEnergy -= deltaT*(middlePressure[0]*middleVelocity[0] - middlePressure[rgridNumber-1]*middleVelocity[rgridNumber-1])*_gamma/(_gamma-1);
 	totalEnergy = totalTermalEnergy + totalKineticEnergy + totalParticleEnergy + totalMagneticEnergy;
 }
 
@@ -1086,7 +1078,7 @@ void Simulation::updateAll(){
 		alertNaNOrInfinity(middleEnergy, "energy = NaN");
 		middleVelocity[i] = middleMomentum/middleDensity[i];
 
-		middlePressure[i] = (middleEnergy - middleDensity[i]*middleVelocity[i]*middleVelocity[i]/2)*(gamma - 1);
+		middlePressure[i] = (middleEnergy - middleDensity[i]*middleVelocity[i]*middleVelocity[i]/2)*(_gamma - 1);
 		if(middleDensity[i] <= epsilon*density0){
 			middleDensity[i] = epsilon*density0;
 			middleVelocity[i] = 0;

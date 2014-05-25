@@ -8,15 +8,13 @@
 #include "complex.h"
 
 void Simulation::evaluateField(){
-	printf("evaluating magnetic field\n");
+	//printf("evaluating magnetic field\n");
 
 	//growthRate();
 
 	double fullMaxRate = 0;
 	int i;
-	#pragma omp parallel private(i) shared(fullMaxRate)
-	{
-	#pragma omp for
+#pragma omp parallel for private(i)
 		for(i = 1; i < rgridNumber; ++i){
 			double delta = 5.0/21;
 			int maxRateK = 0;
@@ -42,27 +40,22 @@ void Simulation::evaluateField(){
 				fullMaxRate = maxRate[i];
 			}
 		}
-	}
+	
 }
 
 void Simulation::evaluateCRFlux(){
 	int i;
-	#pragma omp parallel private(i)
-	{
 	#pragma omp for
 		for(i = 0; i < rgridNumber; ++i){
 			for(int j = 1; j < pgridNumber; ++j){
 				crflux[i][j] = - electron_charge*(diffusionCoef[i][j]*(distributionFunction[i+1][j] - distributionFunction[i][j])/deltaR[i])*deltaLogP;
 			}
 		}
-	}
 }
 
 void Simulation::growthRate(){
 	int i;
-	#pragma omp parallel private(i)
-	{
-	#pragma omp for
+    #pragma omp parallel for private(i)
 		for(i = 0; i < rgridNumber; ++i){
 			if(i > shockWavePoint+1){
 				for(int k = 0; k < kgridNumber; ++k){
@@ -87,7 +80,7 @@ void Simulation::growthRate(){
 			for(int k = 0; k < kgridNumber; ++k){
 				Bls = sqrt(4*pi*magneticField[i][k]*kgrid[k]*deltaLogK + Bls*Bls);
 				alertNaNOrInfinity(Bls, "Bls = NaN");
-				double kc = abs(4*pi*J/(speed_of_light*Bls));
+                double kc = abs2(4*pi*J/(speed_of_light*Bls));
 				double Va = Bls/sqrt(4*pi*middleDensity[i]);
 				Complex A1;
 				Complex A2;
@@ -96,12 +89,12 @@ void Simulation::growthRate(){
 					alertNaNOrInfinity(z, "z = NaN");
 					Complex sigma1;
 					Complex sigma2;
-					if( abs(z - 1) < 0.00001){
+                    if( abs2(z - 1) < 0.00001){
 						sigma1 = 3/2;
 					} else if(z > 1) {
-						sigma1 = (1.5/sqr(z)) + 0.75*(1 - 1/(sqr(z)))*log(abs((z+1)/(z-1)))/z;
+                        sigma1 = (1.5/sqr(z)) + 0.75*(1 - 1/(sqr(z)))*log(abs2((z+1)/(z-1)))/z;
 					} else if(0.01 < z) {
-						sigma1 = (1.5/sqr(z)) + 0.75*(1 - 1/(sqr(z)))*log(abs((z+1)/(z-1)))/z;
+                        sigma1 = (1.5/sqr(z)) + 0.75*(1 - 1/(sqr(z)))*log(abs2((z+1)/(z-1)))/z;
 					} else {
 						sigma1 = 1 + 0.2*sqr(z);
 					}
@@ -148,5 +141,5 @@ void Simulation::growthRate(){
 				alertNaNOrInfinity(growth_rate[i][k], "growth_rate[i][k] = NaN");
 			}
 		}
-	}
+	
 }

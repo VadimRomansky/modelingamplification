@@ -11,9 +11,7 @@
 
 void Simulation::updateDiffusionCoef(){
 	int i;
-	#pragma omp parallel private(i)
-	{
-	#pragma omp for
+//#pragma omp parallel for private(i)
 		for(i = 0; i < rgridNumber; ++i){
 			for(int j = 0; j < pgridNumber; ++j){
 				double p = pgrid[j];
@@ -24,12 +22,12 @@ void Simulation::updateDiffusionCoef(){
 						break;
 					}
 				}
-				double coef = 0.1*p*speed_of_light*speed_of_light/(electron_charge*B);
+				double coef = 0.01*p*speed_of_light*speed_of_light/(electron_charge*B);
 				double dx = deltaR[i];
 				double lambda = coef/speed_of_light;
 				diffusionCoef[i][j] = coef;
 			}
-		}
+		
 	}
 }
 
@@ -40,23 +38,21 @@ double Simulation::injection(int i){
 	//double xi = 5;
 	double xi = pgrid[injectionMomentum]*speed_of_light/(kBoltzman*temperatureIn(i+1));
 	double eta = cube(xi)*exp(-xi);
-	return (1E-7)*middleDensity[i]*abs(middleVelocity[i]*middleVelocity[i]/speed_of_light)*pf/(massProton*dp*volume(i));
+    return (1E-7)*middleDensity[i]*abs2(middleVelocity[i]*middleVelocity[i]/speed_of_light)*pf/(massProton*dp*volume(i));
 }
 
 
 //расчет космических лучей
 
 void Simulation::evaluateCR(){
-	printf("solve CR\n");
+	//printf("solve CR\n");
 	/*if(shockWavePoint > 0 && shockWavePoint < rgridNumber){
 		distributionFunction[shockWavePoint][injectionMomentum] += injection()*deltaT;
 	}*/
 	
 
 	int k;
-	#pragma omp parallel private(k)
-	{
-	#pragma omp for
+#pragma omp parallel for private(k)
 		for(k = 0; k < pgridNumber; ++k){
 
 			double* upper = new double[rgridNumber+1];
@@ -135,7 +131,7 @@ void Simulation::evaluateCR(){
 					if(gkpp - gkp > 0)
 						f[i] += (deltaT/3)*((xp*xp*middleVelocity[i] - xm*xm*middleVelocity[i-1])/dV)*((gkpp - gkp)/deltaLogP);
 				}
-				if(abs(i - shockWavePoint)<1 && abs(k - injectionMomentum) < 1){
+                if(abs2(i - shockWavePoint)<1 && abs2(k - injectionMomentum) < 1){
 					double inj = injection(i);
 					f[i] += deltaT*inj;
 					//todo shift volume to 1/2
@@ -180,7 +176,7 @@ void Simulation::evaluateCR(){
 				tempDistributionFunction[i][k]= x[i];
 				if(x[i] < 0){
 					tempDistributionFunction[i][k] = 0;
-					/*if(abs(x[i]) > 1E-50){
+                    /*if(abs2(x[i]) > 1E-50){
 						printf("distribution[i] < 0\n");
 					}*/
 				}
@@ -195,19 +191,9 @@ void Simulation::evaluateCR(){
 			delete[] x;
 			delete[] alpha;
 			delete[] beta;
-		}
+		
 	}
-
-	int i;
-	#pragma omp parallel private(i)
-	{
-	#pragma omp for
-		for(i = 0; i <= rgridNumber; ++i){
-			for(int j = 0; j < pgridNumber; ++j){
-				distributionFunction[i][j] = tempDistributionFunction[i][j];
-			}
-		}
-	}
+	
 }
 
 //решение трёх диагональной матрицы
@@ -244,9 +230,7 @@ void Simulation::evaluateCosmicRayPressure(){
 	}
 
 	int i;
-	#pragma omp parallel private(i)
-	{
-	#pragma omp for
+#pragma omp parallel for private(i)
 		for(i = 0; i < rgridNumber; ++i){
 			double pressure = 0;
 			for(int j = 0; j < pgridNumber; ++j){
@@ -255,7 +239,7 @@ void Simulation::evaluateCosmicRayPressure(){
 			pressure *= 4*pi;
 			cosmicRayPressure[i] = pressure;
 		}
-	}
+	
 
 	delete[] partPressure;
 }
