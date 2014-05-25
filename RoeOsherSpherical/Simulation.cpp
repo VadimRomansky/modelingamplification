@@ -455,8 +455,6 @@ void Simulation::simulate(){
 	fprintf(outShockWave, "%d %lf %d %lf %lf %lf\n", 0, myTime, shockWavePoint, shockWaveR, shockWaveSpeed, gasSpeed);
 	fclose(outShockWave);
 	deltaT = min2(minT, deltaT);
-	//deltaT = 5000;
-	//deltaT = 0.001;
 
 	clock_t currentTime = clock();
 	clock_t prevTime = currentTime;
@@ -467,7 +465,6 @@ void Simulation::simulate(){
 		++currentIteration;
 		printf("iteration %d\n", currentIteration);
 		printf("time = %lf\n", myTime);
-		printf("solving\n");
 
 		//if(currentIteration < startCRevaluation){
 			evaluateHydrodynamic();
@@ -554,7 +551,7 @@ void Simulation::simulate(){
 
 //расчет гидродинамики
 void Simulation::evaluateHydrodynamic() {
-	printf("evaluating hydrodynamic\n");
+	//printf("evaluating hydrodynamic\n");
 
 	solveDiscontinious();
 	CheckNegativeDensity();
@@ -572,7 +569,7 @@ void Simulation::evaluateHydrodynamic() {
 	evaluateFluxes();
 
 	//for Einfeldt
-	//updateFluxes();
+	updateFluxes();
 
 	TracPenRadial(tempDensity, dFlux);
 
@@ -591,9 +588,8 @@ void Simulation::evaluateHydrodynamic() {
 	}
 	TracPenRadial(tempEnergy, eFlux);
 
-	#pragma omp parallel private(i)
-	{
-	#pragma omp for
+
+    //#pragma omp for
 		for(i = 1; i < rgridNumber-1; ++i){
 			double deltaE = 0;
 			for(int k = 0; k < kgridNumber; ++k){
@@ -603,11 +599,10 @@ void Simulation::evaluateHydrodynamic() {
 				//alertNaNOrInfinity(tempEnergy[i], "energy = NaN");
 				//alertNegative(tempEnergy[i], "energy < 0");
 			}
-			if(abs(cosmicRayPressure[i+1] - cosmicRayPressure[i]) > 1E-100){
-				vscattering[i] = abs(deltaE*deltaR[i]/(cosmicRayPressure[i+1] - cosmicRayPressure[i]));
+            if(abs2(cosmicRayPressure[i+1] - cosmicRayPressure[i]) > 1E-100){
+                vscattering[i] = abs2(deltaE*deltaR[i]/(cosmicRayPressure[i+1] - cosmicRayPressure[i]));
 			}
 		}
-	}
 
 }
 
@@ -615,11 +610,12 @@ void Simulation::evaluateHydrodynamic() {
 //расчет разрывов, задача Римана
 
 void Simulation::solveDiscontinious(){
-	int ompi = 0;
-	#pragma omp parallel for private(ompi)
-	for(ompi = 0; ompi < numThreads; ++ ompi){
+    //double t1 = omp_get_wtime();
+    //#pragma omp parallel for schedule(static, 1)
+	for(int ompi = 0; ompi < numThreads; ++ ompi){
 		for(int i = ompi+1; i < rgridNumber; i = i + numThreads){
-			printf("%d\n",i);
+            //int n = omp_get_thread_num();
+			//printf("thread %d\n",n);
 			double rho1, rho2, u1, u2, c1, c2;
 			rho1 = middleDensity[i-1];
 			rho2 = middleDensity[i];
@@ -635,6 +631,8 @@ void Simulation::solveDiscontinious(){
 			pointSoundSpeed[i] = sqrt((sqrt(rho1)*c1*c1 + sqrt(rho2)*c2*c2)/(sqrt(rho1) + sqrt(rho2)) + 0.5*(_gamma - 1)*(sqrt(rho1*rho2)/sqr(sqrt(rho1)+ sqrt(rho2)))*sqr(u1 - u2));
 		}
 	}
+    //double t2 = omp_get_wtime();
+    //printf("parllel %lf\n",t2-t1);
 	pointEnthalpy[0] = (middlePressure[0] + energy(0))/middleDensity[0];
 	pointDensity[0] = middleDensity[0];
 	pointVelocity[0] = 0;
@@ -663,7 +661,7 @@ void Simulation::TracPenRadial(double* u, double* flux){
 
 	tempU[0] = u[0] - deltaT*(gridsquare[1]*flux[1] - gridsquare[0]*flux[0])/(middleGrid[0]*middleGrid[0]*deltaR[0]);
 	int i;
-	#pragma omp parallel for private(i)
+    //#pragma omp parallel for private(i)
 		for(i = 1; i < rgridNumber - 1; ++i){
 			tempU[i] = u[i] - deltaT*((gridsquare[i+1]*flux[i+1] - gridsquare[i]*flux[i])/(middleGrid[i]*middleGrid[i]*deltaR[i]));
 			/*if(tempU[i] < 0){
@@ -689,7 +687,6 @@ double Simulation::densityFlux(int i){
 	}
 	return 0;
 }
-
 
 double Simulation::momentum(int i){
 	if(i < 0){
@@ -766,9 +763,9 @@ void Simulation::evaluateFluxes(){
 	eFlux[0] = 0;
 
 	int ompi = 0;
-	#pragma omp parallel for private(ompi)
+    //#pragma omp parallel for private(ompi)
 	for(ompi = 0; ompi < numThreads; ++ ompi){
-		for(int i = ompi; i < rgridNumber; i = i + numThreads){
+		for(int i = ompi+1; i < rgridNumber; i = i + numThreads){
 			double** vectors = new double*[3];
 			double* deltaS = new double[3];
 			double* lambdaPlus = new double[3];
@@ -821,19 +818,19 @@ void Simulation::evaluateFluxes(){
 
 			//for density
 			for(int j = 0; j < 3; ++j){
-				dFlux[i] -= 0.5*abs(lambdaMod[j])*deltaS[j]*vectors[0][j];
+                dFlux[i] -= 0.5*abs2(lambdaMod[j])*deltaS[j]*vectors[0][j];
 				dFluxPlus[i][j] = lambdaPlus[j]*deltaS[j]*vectors[0][j];
 				dFluxMinus[i][j] = lambdaMinus[j]*deltaS[j]*vectors[0][j];
 			}
 			//for momentum
 			for(int j = 0; j < 3; ++j){
-				mFlux[i] -= 0.5*abs(lambdaMod[j])*deltaS[j]*vectors[1][j];
+                mFlux[i] -= 0.5*abs2(lambdaMod[j])*deltaS[j]*vectors[1][j];
 				mFluxPlus[i][j] = lambdaPlus[j]*deltaS[j]*vectors[1][j];
 				mFluxMinus[i][j] = lambdaMinus[j]*deltaS[j]*vectors[1][j];
 			}
 			//for energy
 			for(int j = 0; j < 3; ++j){
-				eFlux[i] -= 0.5*abs(lambdaMod[j])*deltaS[j]*vectors[2][j];
+                eFlux[i] -= 0.5*abs2(lambdaMod[j])*deltaS[j]*vectors[2][j];
 				eFluxPlus[i][j] = lambdaPlus[j]*deltaS[j]*vectors[2][j];
 				eFluxMinus[i][j] = lambdaMinus[j]*deltaS[j]*vectors[2][j];
 			}
@@ -859,7 +856,7 @@ void Simulation::updateFluxes(){
 
 void Simulation::updateFluxes(double* flux, double** fluxPlus, double** fluxMinus){
 	double beta = 0.5;
-	double phi = 0.5;
+	double phi = 1.0/3;
 
 	for(int i = 1; i < rgridNumber-1; ++i){
 		for(int j = 0; j < 3; ++j){
@@ -885,7 +882,7 @@ double Simulation::volume(int i){
 
 double Simulation::minmod(double a, double b){
 	if(a*b > 0){
-		if(abs(a) < abs(b)){
+        if(abs2(a) < abs2(b)){
 			return a;
 		} else {
 			return b;
@@ -896,7 +893,7 @@ double Simulation::minmod(double a, double b){
 }
 
 double Simulation::superbee(double a, double b){
-	if(abs(a) >= abs(b)){
+    if(abs2(a) >= abs2(b)){
 		return minmod(a, 2*b);
 	} else {
 		return minmod(2*a, b);
@@ -906,15 +903,15 @@ double Simulation::superbee(double a, double b){
 //пересчет шага по времени и максимальной скорости звука
 
 void Simulation::updateMaxSoundSpeed(){
-	maxSoundSpeed = (sqrt(_gamma*middlePressure[0]/middleDensity[0]) + abs(middleVelocity[0]));
+    maxSoundSpeed = (sqrt(_gamma*middlePressure[0]/middleDensity[0]) + abs2(middleVelocity[0]));
 	double cs = maxSoundSpeed;
 	for(int i = 1; i < rgridNumber - 1; ++i){
-		cs = (sqrt(_gamma*middlePressure[i]/middleDensity[i]) + abs(middleVelocity[i]));
+        cs = (sqrt(_gamma*middlePressure[i]/middleDensity[i]) + abs2(middleVelocity[i]));
 		if(cs > maxSoundSpeed){
 			maxSoundSpeed = cs;
 		}
 	}
-	cs = (sqrt(_gamma*middlePressure[rgridNumber - 1]/middleDensity[rgridNumber - 1]) + abs(middleVelocity[rgridNumber - 1]));
+    cs = (sqrt(_gamma*middlePressure[rgridNumber - 1]/middleDensity[rgridNumber - 1]) + abs2(middleVelocity[rgridNumber - 1]));
 	if(cs > maxSoundSpeed){
 		maxSoundSpeed = cs;
 	}
@@ -940,14 +937,12 @@ void Simulation::updateTimeStep(){
 	if(deltaR[rgridNumber - 2]/maxSoundSpeed < tempdt){
 		tempdt = deltaR[rgridNumber - 2]/maxSoundSpeed;
 	}
-
 	//by dp
 	for(int i = 1; i < rgridNumber; ++i){
-		if(abs(middleGrid[i]*middleGrid[i]*middleVelocity[i] - middleGrid[i]*middleGrid[i]*middleVelocity[i-1])*tempdt > 0.5*abs(3*deltaLogP*middleDeltaR[i]*gridsquare[i])){
-			tempdt = 0.5*abs(3*deltaLogP*gridsquare[i]*middleDeltaR[i]/(middleGrid[i]*middleGrid[i]*middleVelocity[i] - middleGrid[i]*middleGrid[i]*middleVelocity[i-1]));
+        if(abs2(middleGrid[i]*middleGrid[i]*middleVelocity[i] - middleGrid[i-1]*middleGrid[i-1]*middleVelocity[i-1])*tempdt > abs2(3.0*deltaLogP*middleDeltaR[i]*gridsquare[i])){
+            tempdt = 0.5*abs2(3.0*deltaLogP*gridsquare[i]*middleDeltaR[i]/(middleGrid[i]*middleGrid[i]*middleVelocity[i] - middleGrid[i-1]*middleGrid[i-1]*middleVelocity[i-1]));
 		}
 	}
-
 
 	double maxDiffusion = 0;
 	for(int i = 0; i < rgridNumber; ++i){
@@ -964,10 +959,9 @@ void Simulation::updateTimeStep(){
 		double dxm=grid[i]-grid[i-1];
 		double a = ((sqr(middleGrid[i-1])*diffusionCoef[i-1][kgridNumber-1]/dxm + sqr(middleGrid[i])*diffusionCoef[i][kgridNumber-1]/dxp) - (sqr(middleGrid[i-1])*diffusionCoef[i-1][kgridNumber-1]/dxm) -sqr(middleGrid[i])*(diffusionCoef[i][kgridNumber-1]/dxp))/(2*dx);
 		if(gridsquare[i] + tempdt*a < 0){
-			tempdt = 0.5*gridsquare[i]/abs(a);
+            tempdt = 0.5*gridsquare[i]/abs2(a);
 		}
 	}
-
 
 	for(int i = 1; i < rgridNumber-1; ++i){
 		double dx = (grid[i+1] - grid[i-1])/2;
@@ -983,7 +977,7 @@ void Simulation::updateTimeStep(){
 							- xm*xm*diffusionCoef[i-1][j]*(distributionFunction[i][j] - distributionFunction[i-1][j])/dxm)
 							- (1/dV)*(xp*xp*middleVelocity[i]*distributionFunction[i][j] - xm*xm*middleVelocity[i-1]*distributionFunction[i-1][j]);
 			if((distributionFunction[i][j] > 0) && (distributionFunction[i][j] + der*tempdt < 0)){
-				//tempdt = 0.5*abs(distributionFunction[i][j]/der);
+                //tempdt = 0.5*abs2(distributionFunction[i][j]/der);
 				if(tempdt < 0.1){
 					//printf("ooo\n");
 				}
@@ -994,7 +988,7 @@ void Simulation::updateTimeStep(){
 	for(int i = 1; i < rgridNumber; ++i){
 		for(int k = 0; k < kgridNumber; ++k){
 			if(tempdt*growth_rate[i][k] > 2){
-				tempdt = 0.5*abs(1/growth_rate[i][k]);
+                tempdt = 0.5*abs2(1/growth_rate[i][k]);
 			}
 		}
 	}
@@ -1009,7 +1003,7 @@ void Simulation::updateShockWavePoint(){
 	//double maxGrad = density0;
 	double maxGrad = U0/upstreamR;
 	for(int i = 10; i < 9*rgridNumber/10 - 1; ++i){
-		//double grad = abs((middleDensity[i] - middleDensity[i + 1])/middleDeltaR[i+1]);
+        //double grad = abs2((middleDensity[i] - middleDensity[i + 1])/middleDeltaR[i+1]);
 		double grad = (middleVelocity[i] - middleVelocity[i + 1])/middleDeltaR[i+1];
 
 		//double grad = (middleDensity[i]);
@@ -1085,7 +1079,7 @@ void Simulation::updateAll(){
 	}
 
 	int ompi = 0;
-	#pragma omp parallel for private(ompi)
+    //#pragma omp parallel for private(ompi)
 	for(ompi = 0; ompi < numThreads; ++ ompi){
 		for(int i = ompi; i < rgridNumber; i = i + numThreads){
 			//if(i != 0 || tempDensity[i] < middleDensity[i]){
@@ -1112,7 +1106,7 @@ void Simulation::updateAll(){
 
 	//cosmic rays
 	if(currentIteration > startCRevaluation){
-		#pragma omp parallel for private(ompi)
+    //	#pragma omp parallel for private(ompi)
 		for(ompi = 0; ompi < numThreads; ++ ompi){
 			for(int i = ompi; i < rgridNumber; i = i + numThreads){
 				for(int j = 0; j < pgridNumber; ++j){
@@ -1129,7 +1123,7 @@ void Simulation::updateAll(){
 	//field
 
 	if(currentIteration > startFieldEvaluation){
-		#pragma omp parallel for private(ompi)
+    //	#pragma omp parallel for private(ompi)
 		for(ompi = 0; ompi < numThreads; ++ ompi){
 			for(int i = ompi; i < rgridNumber; i = i + numThreads){
 				for(int k = 0; k < kgridNumber; ++k){
@@ -1139,7 +1133,7 @@ void Simulation::updateAll(){
 		}
 		
 
-		#pragma omp parallel for private(ompi)
+        //#pragma omp parallel for private(ompi)
 		for(ompi = 0; ompi < numThreads; ++ ompi){
 			for(int i = ompi; i < rgridNumber; i = i + numThreads){
 				double magneticEnergy = 0;

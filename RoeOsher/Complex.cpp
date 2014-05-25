@@ -1,6 +1,9 @@
-#include "complex.h"
 #include <math.h>
+#include "math.h"
+#include "stdio.h"
+#include "stdlib.h"
 #include "constants.h"
+#include "complex.h"
 
 
 Complex::Complex(){

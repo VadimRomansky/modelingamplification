@@ -1,4 +1,8 @@
 #include <time.h>
+#include "omp.h"
+#include "math.h"
+#include "stdio.h"
+#include "stdlib.h"
 #include "simulation.h"
 #include "util.h"
 #include "constants.h"
@@ -52,6 +56,10 @@ void Simulation::evaluateCR(){
 	/*if(shockWavePoint > 0 && shockWavePoint < rgridNumber){
 		distributionFunction[shockWavePoint][injectionMomentum] += injection()*deltaT;
 	}*/
+	double t1 = omp_get_wtime();
+#pragma omp parallel for
+	for(int k = 0; k < pgridNumber; k = k + 1){
+
 	double* upper = new double[rgridNumber+1];
 	double* middle = new double[rgridNumber+1];
 	double* lower = new double[rgridNumber+1];
@@ -62,7 +70,6 @@ void Simulation::evaluateCR(){
 	double* alpha = new double[rgridNumber];
 	double* beta = new double[rgridNumber];
 
-	for(int k = 0; k < pgridNumber; ++k){
 		double y = logPgrid[k];
 		double p = pgrid[k];
 		double gkp = distributionFunction[0][k];
@@ -177,14 +184,7 @@ void Simulation::evaluateCR(){
 			tempDistributionFunction[i][k]= x[i];
 		}
 		tempDistributionFunction[rgridNumber][k] =x[rgridNumber-1];
-	}
-
-	//if(currentIteration == 1000){
-	/*if(shockWavePoint > 1 && shockWavePoint < rgridNumber && currentIteration > 1000){
-		for(int j = 0; j < pgridNumber; ++j){
-			tempDistributionFunction[shockWavePoint+1][j] = tempDistributionFunction[shockWavePoint+2][j];
-		}
-	}*/
+		
 
 	delete[] upper;
 	delete[] middle;
@@ -193,6 +193,16 @@ void Simulation::evaluateCR(){
 	delete[] x;
 	delete[] alpha;
 	delete[] beta;
+	}
+	double t2 = omp_get_wtime();
+	//printf("parllel %lf\n",t2-t1);
+
+	//if(currentIteration == 1000){
+	/*if(shockWavePoint > 1 && shockWavePoint < rgridNumber && currentIteration > 1000){
+		for(int j = 0; j < pgridNumber; ++j){
+			tempDistributionFunction[shockWavePoint+1][j] = tempDistributionFunction[shockWavePoint+2][j];
+		}
+	}*/
 }
 
 //решение трёх диагональной матрицы

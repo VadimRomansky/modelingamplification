@@ -436,13 +436,16 @@ void Simulation::evaluateFluxes(){
 		double leftEflux = leftDflux*middleVelocity[i-1]*middleVelocity[i-1]/2 + middleVelocity[i-1]*middlePressure[i-1]*gamma/(gamma-1);
 		double rightEflux = rightDflux*middleVelocity[i]*middleVelocity[i]/2 + middleVelocity[i]*middlePressure[i]*gamma/(gamma-1);
 
-		lambdaMod[0] = min2(middleVelocity[i-1] - sqrt(gamma*middlePressure[i-1]/middleDensity[i-1]), pointVelocity[i] - pointSoundSpeed[i]);
-		lambdaMod[1] = pointVelocity[i];
-		lambdaMod[2] = max2(middleVelocity[i] + sqrt(gamma*middlePressure[i]/middleDensity[i]), pointVelocity[i] + pointSoundSpeed[i]);
-
 		double lambda1 = pointVelocity[i] - pointSoundSpeed[i];
 		double lambda2 = pointVelocity[i];
 		double lambda3 = pointVelocity[i] + pointSoundSpeed[i];
+
+		//lambdaMod[0] = min2(middleVelocity[i-1] - sqrt(gamma*middlePressure[i-1]/middleDensity[i-1]), pointVelocity[i] - pointSoundSpeed[i]);
+		lambdaMod[0] = lambda1;
+		lambdaMod[1] = lambda2;
+		lambdaMod[2] = lambda3;
+		//lambdaMod[2] = max2(middleVelocity[i] + sqrt(gamma*middlePressure[i]/middleDensity[i]), pointVelocity[i] + pointSoundSpeed[i]);
+
 
 		lambdaPlus[0] = lambda1*(lambda1 > 0);
 		lambdaPlus[1] = lambda2*(lambda2 > 0);
@@ -508,7 +511,7 @@ void Simulation::updateFluxes(){
 
 void Simulation::updateFluxes(double* flux, double** fluxPlus, double** fluxMinus){
 	double beta = 0.5;
-	double phi = 0.5;
+	double phi = 1.0/3;
 
 	for(int i = 2; i < rgridNumber-1; ++i){
 		for(int j = 0; j < 3; ++j){
