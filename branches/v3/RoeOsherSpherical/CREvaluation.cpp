@@ -38,7 +38,7 @@ double Simulation::injection(int i){
 	//double xi = 5;
 	double xi = pgrid[injectionMomentum]*speed_of_light/(kBoltzman*temperatureIn(i+1));
 	double eta = cube(xi)*exp(-xi);
-    return (1E-7)*middleDensity[i]*abs2(middleVelocity[i]*middleVelocity[i]/speed_of_light)*pf/(massProton*dp*volume(i));
+    return (1E-5)*middleDensity[i]*abs2(middleVelocity[i]*middleVelocity[i]/speed_of_light)*pf/(massProton*dp*deltaR[i]);
 }
 
 
@@ -225,21 +225,21 @@ void Simulation::evaluateCosmicRayPressure(){
 	double* partPressure = new double[pgridNumber];
 	double deltaLogP = logPgrid[1] - logPgrid[0];
 	for(int j = 0; j < pgridNumber; ++j){
-		double momentum = pgrid[j];
-		partPressure[j] = momentum*momentum*momentum*momentum*(momentum/sqrt(massProton*massProton + momentum*momentum/(speed_of_light*speed_of_light)))*deltaLogP;
+		double p = pgrid[j];
+		double v = p/sqrt(massProton*massProton + p*p/(speed_of_light*speed_of_light));
+		partPressure[j] = p*v*deltaLogP;
 	}
-
-	int i;
-#pragma omp parallel for private(i)
-		for(i = 0; i < rgridNumber; ++i){
-			double pressure = 0;
-			for(int j = 0; j < pgridNumber; ++j){
-				pressure += distributionFunction[i][j]*partPressure[j];
-			}
-			pressure *= 4*pi;
-			cosmicRayPressure[i] = pressure;
+	for(int i = 0; i < rgridNumber; ++i){
+		double pressure = 0;
+		double concentration = 0;
+		for(int j = 0; j < pgridNumber; ++j){
+			pressure += distributionFunction[i][j]*partPressure[j];
+			concentration += distributionFunction[i][j]*deltaLogP;
 		}
-	
+		//4pi?
+		cosmicRayPressure[i] = pressure;
+		cosmicRayConcentration[i] = concentration;
+	}
 
 	delete[] partPressure;
 }

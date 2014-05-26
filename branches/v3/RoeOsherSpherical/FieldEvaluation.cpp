@@ -57,7 +57,7 @@ void Simulation::growthRate(){
 	int i;
     #pragma omp parallel for private(i)
 		for(i = 0; i < rgridNumber; ++i){
-			if(i > shockWavePoint+1){
+			if(i < shockWavePoint+1){
 				for(int k = 0; k < kgridNumber; ++k){
 					growth_rate[i][k] = 0;
 				}
