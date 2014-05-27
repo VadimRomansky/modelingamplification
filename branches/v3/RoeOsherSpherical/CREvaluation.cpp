@@ -38,14 +38,14 @@ double Simulation::injection(int i){
 	//double xi = 5;
 	double xi = pgrid[injectionMomentum]*speed_of_light/(kBoltzman*temperatureIn(i+1));
 	double eta = cube(xi)*exp(-xi);
-    return (1E-5)*middleDensity[i]*abs2(middleVelocity[i]*middleVelocity[i]/speed_of_light)*pf/(massProton*dp*deltaR[i]);
+    return (1E-5)*middleDensity[i]*abs2(middleVelocity[i-1]*middleVelocity[i-1]/speed_of_light)*pf/(massProton*dp*deltaR[i]);
 }
 
 
 //расчет космических лучей
 
 void Simulation::evaluateCR(){
-	//printf("solve CR\n");
+	printf("solve CR\n");
 	/*if(shockWavePoint > 0 && shockWavePoint < rgridNumber){
 		distributionFunction[shockWavePoint][injectionMomentum] += injection()*deltaT;
 	}*/

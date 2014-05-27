@@ -83,6 +83,7 @@ Simulation::~Simulation(){
 		delete[] growth_rate[i];
 		delete[] diffusionCoef[i];
 	}
+	delete[] magneticEnergy;
 
 	delete[] integratedFlux;
 	delete[] magneticInductionSum;
@@ -196,7 +197,9 @@ void Simulation::initializeProfile(){
 	growth_rate = new double*[rgridNumber];
 	magneticInductionSum = new double[rgridNumber];
 	maxRate = new double[rgridNumber];
+	magneticEnergy = new double[rgridNumber];
 	for(int i = 0; i < rgridNumber; ++i){
+		magneticEnergy[i] = 0;
 		maxRate[i] = 0;
 		magneticField[i] = new double[kgridNumber];
 		tempMagneticField[i] = new double[kgridNumber];
@@ -458,14 +461,16 @@ void Simulation::simulate(){
 	currentIteration = 0;
 	updateDiffusionCoef();
 	//основной цикл
+	fakeMoveShockWave();
 	while(myTime < maxTime && currentIteration < iterationNumber){
 		++currentIteration;
 		printf("iteration %d\n", currentIteration);
 		printf("time = %lf\n", myTime);
 
 		//if(currentIteration < startCRevaluation){
-			evaluateHydrodynamic();
+			//evaluateHydrodynamic();
 		//}
+		fakeMoveShockWave();
 		
 		if(currentIteration > startCRevaluation){
 			evaluateCR();
@@ -998,10 +1003,11 @@ void Simulation::updateShockWavePoint(){
 	int tempShockWavePoint = -1;
 	shockWaveT += deltaT;
 	//double maxGrad = density0;
-	double maxGrad = U0/upstreamR;
-	for(int i = 10; i < 9*rgridNumber/10 - 1; ++i){
+	//double maxGrad = 0.001*U0/upstreamR;
+	double maxGrad = 0;
+	for(int i = 10; i < rgridNumber - 10; ++i){
         //double grad = abs2((middleDensity[i] - middleDensity[i + 1])/middleDeltaR[i+1]);
-		double grad = (middleVelocity[i] - middleVelocity[i + 1])/middleDeltaR[i+1];
+		double grad = (middleVelocity[i] - middleVelocity[i + 1])/middleDeltaR[i];
 
 		//double grad = (middleDensity[i]);
 		if(grad > maxGrad){
@@ -1077,7 +1083,7 @@ void Simulation::updateAll(){
 
 	int ompi = 0;
     //#pragma omp parallel for private(ompi)
-	for(ompi = 0; ompi < numThreads; ++ ompi){
+	/*for(ompi = 0; ompi < numThreads; ++ ompi){
 		for(int i = ompi; i < rgridNumber; i = i + numThreads){
 			//if(i != 0 || tempDensity[i] < middleDensity[i]){
 				middleDensity[i] = tempDensity[i];
@@ -1099,7 +1105,7 @@ void Simulation::updateAll(){
 				middlePressure[i] = epsilon*middleDensity[i]*kBoltzman*temperature/massProton;
 			}
 		}
-	}
+	}*/
 
 	//cosmic rays
 	if(currentIteration > startCRevaluation){
@@ -1120,30 +1126,39 @@ void Simulation::updateAll(){
 	//field
 
 	if(currentIteration > startFieldEvaluation){
-    //	#pragma omp parallel for private(ompi)
-		for(ompi = 0; ompi < numThreads; ++ ompi){
-			for(int i = ompi; i < rgridNumber; i = i + numThreads){
+			for(int i = 0; i < rgridNumber; i = i + 1){
 				for(int k = 0; k < kgridNumber; ++k){
 					magneticField[i][k] = tempMagneticField[i][k];
 				}
 			}
-		}
 		
 
-        //#pragma omp parallel for private(ompi)
-		for(ompi = 0; ompi < numThreads; ++ ompi){
-			for(int i = ompi; i < rgridNumber; i = i + numThreads){
-				double magneticEnergy = 0;
-				for(int k = 0; k < kgridNumber; ++k){
-					magneticEnergy += magneticField[i][k]*kgrid[k]*deltaLogK;
-					largeScaleField[i][k] = sqrt(4*pi*magneticEnergy + B0*B0);
-				}
-				magneticInductionSum[i] = sqrt(4*pi*magneticEnergy + B0*B0);
+
+		for(int i = 0; i < rgridNumber; ++i){
+			magneticEnergy[i] = 0;
+			for(int k = 0; k < kgridNumber; ++k){
+				magneticEnergy[i] += magneticField[i][k]*kgrid[k]*deltaLogK;
+				largeScaleField[i][k] = sqrt(4*pi*magneticEnergy[i] + B0*B0);
 			}
+			magneticInductionSum[i] = sqrt(4*pi*magneticEnergy[i] + B0*B0);
 		}
 		
 
 		updateDiffusionCoef();
 		growthRate();
+	}
+}
+
+void Simulation::fakeMoveShockWave(){
+	double a = 1E15;
+	double t0 = 1E7;
+	double r = a*power(myTime + t0, 2.0/5);
+	double u = 0.75*0.4*a*power(myTime + t0, -3.0/5);
+	for(int i = 0; i < rgridNumber; ++i){
+		if(middleGrid[i] < r){
+			middleVelocity[i] = u;
+		} else {
+			middleVelocity[i] = 0;
+		}
 	}
 }

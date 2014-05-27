@@ -13,40 +13,16 @@ public:
 	double upstreamR;
 	double downstreamR;
 	double temperature;
-	double maxTime;
-	double epsilonR;
-	double deltaT;
-	double deltaR0;
 	double initialEnergy;
-	int A;
-	int Z;
 	int currentIteration;
-
-	int simulationType;
-	bool tracPen;
 
 	int rgridNumber;
 	int shockWavePoint;
 	int prevShockWavePoint;
-	bool shockWaveMoved;
-	double shockWaveSpeed;
-
-	double shockWaveT;
 
 	double R0;
-	double myTime;
 
 	double maxSoundSpeed;
-
-	double mass;
-	double totalMomentum;
-	double totalEnergy;
-	double totalKineticEnergy;
-	double totalTermalEnergy;
-	double totalMagneticEnergy;
-	double totalParticleEnergy;
-	double totalParticles;
-	double injectedParticles;
 
 	double minP;
 	double maxP;
@@ -58,7 +34,6 @@ public:
 	double deltaLogK;
 
 	double* grid;
-	double* gridsquare;
 	double* middleGrid;
 	double* deltaR;
 	double* middleDeltaR;
@@ -97,11 +72,12 @@ public:
 	double** magneticField;
 	double** tempMagneticField;
 	double** largeScaleField;
+	double* magneticEnergy;
+	double* tempMagneticEnergy;
 	double** growth_rate;
 	double** crflux;
 	double* integratedFlux;
 	double* maxRate;
-	double* magneticEnergy[i];
 
 	double* magneticInductionSum;
 
@@ -125,11 +101,6 @@ public:
 	void initializeProfile();
 	void simulate();
 	void evaluateHydrodynamic();
-	void solveDiscontinious();
-	void CheckNegativeDensity();
-	void TracPenRadial(double* u, double* flux);
-	void fakeMoveShockWave();
-
 
 	void evaluateCR();
 	void solveThreeDiagonal(double* middle, double* upper, double* lower, double* f, double* x, double* alpha, double* beta);
@@ -142,20 +113,8 @@ public:
 
 	double minmod(double a, double b);
 	double superbee(double a, double b);
-	void updateMaxSoundSpeed();
-	void updateShockWavePoint();
-	void updateParameters();
-	void updateTimeStep();
 
 	void updateAll();
-
-	void updateGrid();
-	//std::list<GridZone*> createZones(int* type, double* gradientU, int& smallGradientZoneCount, int& bigGradientZoneCount);
-    //void putPointsIntoZones(std::list<GridZone*>& zones, int pointsCount, int smallGradientZoneCount, int bigGradientZoneCount);
-	//void convertZonesToGrid(std::list<GridZone*>& zones);
-	//void addPoints(GridZone* zone, int& i);
-	void redistributeValues();
-	
 };
 
 #endif
