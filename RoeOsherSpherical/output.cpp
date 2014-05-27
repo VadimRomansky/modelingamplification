@@ -8,7 +8,7 @@ void output(FILE* outFile, Simulation* simulation){
 	for(int i = 0; i < simulation->rgridNumber; ++i){
 		double t = simulation->temperatureIn(i);
         double tau = abs2(simulation->middleGrid[i]*simulation->maxRate[i]/simulation->middleGrid[i]);
-		fprintf(outFile, "%g %g %g %g %g %g %g %g %g", simulation->grid[i], simulation->middleVelocity[i], simulation->middleDensity[i], simulation->middlePressure[i], simulation->cosmicRayPressure[i], t, simulation->magneticInductionSum[i]-simulation->B0, tau, simulation->cosmicRayConcentration[i]);
+		fprintf(outFile, "%g %g %g %g %g %g %g %g %g %g", simulation->grid[i], simulation->middleVelocity[i], simulation->middleDensity[i], simulation->middlePressure[i], simulation->cosmicRayPressure[i], t, simulation->magneticInductionSum[i]-simulation->B0, simulation->magneticEnergy[i], tau, simulation->cosmicRayConcentration[i]);
 		fprintf(outFile, "\n");
 	}
 }

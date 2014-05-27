@@ -35,6 +35,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RoeOsherTest", "RoeOsherTes
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestOMP", "TestOMP\TestOMP.vcxproj", "{0073E778-965D-4D4A-827B-B1AD696C3D72}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Stationar", "Stationar\Stationar.vcxproj", "{F2146629-0E66-4CD4-9EE7-5BD45C03AFA9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -109,6 +111,10 @@ Global
 		{0073E778-965D-4D4A-827B-B1AD696C3D72}.Debug|Win32.Build.0 = Debug|Win32
 		{0073E778-965D-4D4A-827B-B1AD696C3D72}.Release|Win32.ActiveCfg = Release|Win32
 		{0073E778-965D-4D4A-827B-B1AD696C3D72}.Release|Win32.Build.0 = Release|Win32
+		{F2146629-0E66-4CD4-9EE7-5BD45C03AFA9}.Debug|Win32.ActiveCfg = Debug|Win32
+		{F2146629-0E66-4CD4-9EE7-5BD45C03AFA9}.Debug|Win32.Build.0 = Debug|Win32
+		{F2146629-0E66-4CD4-9EE7-5BD45C03AFA9}.Release|Win32.ActiveCfg = Release|Win32
+		{F2146629-0E66-4CD4-9EE7-5BD45C03AFA9}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

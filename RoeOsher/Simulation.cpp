@@ -473,15 +473,15 @@ void Simulation::simulate(){
 	//основной цикл
 	while(myTime < maxTime && currentIteration < iterationNumber){
 		++currentIteration;
-		//printf("iteration № %d\n", currentIteration);
-		//printf("time = %lf\n", myTime);
+		printf("iteration № %d\n", currentIteration);
+		printf("time = %lf\n", myTime);
 		//printf("solving\n");
 
-		evaluateHydrodynamic();
+		//evaluateHydrodynamic();
 		
-		if(currentIteration > startCRevaluation){
-			evaluateCR();
-		}
+		//if(currentIteration > startCRevaluation){
+			//evaluateCR();
+		//}
 
 		if(currentIteration > startFieldEvaluation){
 			evaluateField();
@@ -1109,16 +1109,15 @@ void Simulation::updateAll(){
 			for(int k = 0; k < kgridNumber; ++k){
 				magneticField[i][k] = tempMagneticField[i][k];
 			}
-			magneticEnergy[i] = tempMagneticEnergy[i];
 		}
 
 		for(int i = 0; i < rgridNumber; ++i){
-			double magneticEnergy = 0;
+			magneticEnergy[i] = 0;
 			for(int k = 0; k < kgridNumber; ++k){
-				magneticEnergy += magneticField[i][k]*kgrid[k]*deltaLogK;
-				largeScaleField[i][k] = sqrt(4*pi*magneticEnergy + B0*B0);
+				magneticEnergy[i] += magneticField[i][k]*kgrid[k]*deltaLogK;
+				largeScaleField[i][k] = sqrt(4*pi*magneticEnergy[i] + B0*B0);
 			}
-			magneticInductionSum[i] = sqrt(4*pi*magneticEnergy + B0*B0);
+			magneticInductionSum[i] = sqrt(4*pi*magneticEnergy[i] + B0*B0);
 		}
 
 		updateDiffusionCoef();
