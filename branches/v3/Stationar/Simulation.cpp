@@ -458,7 +458,7 @@ void Simulation::evaluateHydrodynamic() {
 			tempDensity[i] = epsilon*density0;
 		}
 		tempMomentum[i] = tempDensity[i]*u2;
-		tempEnergy[i] = tempDensity[i]*u2*u2*(0.5 - 1/(_gamma-1)) + a/(_gamma - 1);
+		tempEnergy[i] = tempDensity[i]*u2*u2*(0.5 - 1/(_gamma-1)) + momentumF/(_gamma - 1);
 		if(tempEnergy[i] < 0){
 			printf("energy < 0\n");
 			tempEnergy[i] = tempDensity[i]*u2*u2/2;
