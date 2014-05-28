@@ -41,7 +41,7 @@ double Simulation::injection(int i){
 	double dp = (pgrid[injectionMomentum + 1] - pgrid[injectionMomentum - 1])/2;
 	double xi = pgrid[injectionMomentum]*speed_of_light/(kBoltzman*temperatureIn(i+1));
 	double eta = cube(xi)*exp(-xi);
-	return (3E-5)*middleDensity[i-1]*abs(middleVelocity[i-1]*middleVelocity[i-1]/speed_of_light)*pf/(massProton*dp*middleDeltaR[i]);
+	return (3E-6)*middleDensity[i-1]*abs(middleVelocity[i-1]*middleVelocity[i-1]/speed_of_light)*pf/(massProton*dp*middleDeltaR[i]);
 }
 
 //расчет космических лучей
