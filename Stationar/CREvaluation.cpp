@@ -22,7 +22,7 @@ void Simulation::updateDiffusionCoef(){
 				}
 			}*/
 			double v = p/sqrt(massProton*massProton + p*p/(speed_of_light*speed_of_light));
-			double coef = p*v*speed_of_light/(electron_charge*B);
+			double coef = 0.1*p*v*speed_of_light/(electron_charge*B);
 			double dx = deltaR[i];
 			double lambda = coef/speed_of_light;
 			if(abs(i - shockWavePoint) < 10 && j >= injectionMomentum){
@@ -41,7 +41,7 @@ double Simulation::injection(int i){
 	double dp = (pgrid[injectionMomentum + 1] - pgrid[injectionMomentum - 1])/2;
 	double xi = pgrid[injectionMomentum]*speed_of_light/(kBoltzman*temperatureIn(i+1));
 	double eta = cube(xi)*exp(-xi);
-	return (3E-6)*middleDensity[i-1]*abs(middleVelocity[i-1]*middleVelocity[i-1]/speed_of_light)*pf/(massProton*dp*middleDeltaR[i]);
+	return (1.5E-4)*middleDensity[i-1]*abs(middleVelocity[i-1]*middleVelocity[i-1]/speed_of_light)*pf/(massProton*dp*middleDeltaR[i]);
 }
 
 //расчет космических лучей

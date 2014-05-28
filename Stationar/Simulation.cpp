@@ -126,6 +126,7 @@ void Simulation::evaluateHydrodynamic() {
 		double D = b*b - 4*a*c;
 		if(D < 0){
 			printf("discriminant < 0 i = %d\n",i);
+			D = 0;
 		}
 		double u2 = (-b - sqrt(D))/(2*a);
 		double u1 = (-b + sqrt(D))/(2*a);
@@ -145,7 +146,7 @@ void Simulation::evaluateHydrodynamic() {
 	double Rtot = middleDensity[shockWavePoint]/tempDensity[shockWavePoint-1];
 	double m = tempMomentum[shockWavePoint-1];
 	double prevP = (tempEnergy[shockWavePoint-1] - 0.5*sqr(m)/tempDensity[shockWavePoint-1])/(_gamma-1);
-	double p = prevP - m*m*((1/middleDensity[shockWavePoint]) - (1/tempDensity[shockWavePoint-1]));
+	double p = prevP - m*m*((1/middleDensity[shockWavePoint]) - (1/tempDensity[shockWavePoint-1])) - (magneticEnergy[shockWavePoint] - magneticEnergy[shockWavePoint-1])/2 - (cosmicRayPressure[shockWavePoint] - cosmicRayPressure[shockWavePoint-1]);
 	for(int i = shockWavePoint; i < rgridNumber; ++i){
 		tempMomentum[i] = m;
 		tempEnergy[i] = (m*m/middleDensity[i]) + p/(_gamma-1);
