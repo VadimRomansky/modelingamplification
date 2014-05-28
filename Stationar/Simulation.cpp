@@ -212,7 +212,7 @@ void Simulation::initializeProfile(){
 		growth_rate[i] = new double[kgridNumber];
 		magneticEnergy[i] = 0;
 		for(int k = 0; k < kgridNumber; ++k){
-			magneticField[i][k] = (1E-5)*B0*B0*power(1/kgrid[k], 5/3)*power(kgrid[0],2/3);
+			magneticField[i][k] = (1E-3)*B0*B0*power(1/kgrid[k], 5/3)*power(kgrid[0],2/3);
 			if(i >= rgridNumber/2-1){
 				magneticField[i][k] *= 8;
 			}
