@@ -41,7 +41,7 @@ double Simulation::injection(int i){
 	double dp = (pgrid[injectionMomentum + 1] - pgrid[injectionMomentum - 1])/2;
 	double xi = pgrid[injectionMomentum]*speed_of_light/(kBoltzman*temperatureIn(i+1));
 	double eta = cube(xi)*exp(-xi);
-	return (1E-4)*middleDensity[i-1]*abs(middleVelocity[i-1]*middleVelocity[i-1]/speed_of_light)*pf/(massProton*dp*middleDeltaR[i]);
+	return (3E-5)*middleDensity[i-1]*abs(middleVelocity[i-1]*middleVelocity[i-1]/speed_of_light)*pf/(massProton*dp*middleDeltaR[i]);
 }
 
 //расчет космических лучей
@@ -101,7 +101,7 @@ void Simulation::evaluateCR(){
 			xm=(grid[i]+grid[i-1])/2;
 			lower[i-1] = -(1/(dx))*(diffusionCoef[i-1][k]/dxm) - 0.5*middleVelocity[i-1]/dx;
 			middle[i] = (1/(dx))*(diffusionCoef[i-1][k]/dxp + diffusionCoef[i][k]/dxm) - (1.0/3)*0.5*((middleVelocity[i+1] - middleVelocity[i-1])/dx)/deltaLogP;
-			upper[i] = -(1/(dx))*(diffusionCoef[i][k]/dxp)  + 0.5*middleVelocity[i]/dx;
+			upper[i] = -(1/(dx))*(diffusionCoef[i][k]/dxp)  + 0.5*middleVelocity[i+1]/dx;
 
 			f[i] = -(1.0/3)*0.5*((middleVelocity[i+1] - middleVelocity[i-1])/dx)*gkm/deltaLogP;
 
