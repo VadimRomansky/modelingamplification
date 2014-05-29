@@ -112,45 +112,135 @@ void Simulation::simulate(){
 
 //расчет гидродинамики
 void Simulation::evaluateHydrodynamic() {
+	double C = middlePressure[0]/power(middleDensity[0], _gamma);
 	for(int i = 1; i < shockWavePoint; ++i){
 		double momentumF = middleDensity[0]*middleVelocity[0]*middleVelocity[0] + middlePressure[0] - (cosmicRayPressure[i] - cosmicRayPressure[0]) - (magneticEnergy[i] - magneticEnergy[0])/2;
-		double energyF = (energy(i-1) + middlePressure[i-1])*middleVelocity[i-1] - 0.5*magneticEnergy[i]*(middleVelocity[i] - middleVelocity[i-1]);
-		for(int k = 0; k < kgridNumber; ++k){
-			energyF += growth_rate[i][k]*magneticField[i][k]*kgrid[k]*deltaLogK*middleDeltaR[i];
+
+		double u = newton(i, momentumF);
+		if(u < 0){
+			printf("u < 0\n");
 		}
 
-		double a = middleDensity[0]*middleVelocity[0]*(0.5 - _gamma/(_gamma-1));
-		double b = _gamma*momentumF/(_gamma - 1);
-		double c = - energyF;
-
-		double D = b*b - 4*a*c;
-		if(D < 0){
-			printf("discriminant < 0 i = %d\n",i);
-			D = 0;
-		}
-		double u2 = (-b - sqrt(D))/(2*a);
-		double u1 = (-b + sqrt(D))/(2*a);
-
-		tempDensity[i] = middleDensity[0]*middleVelocity[0]/u2;
+		tempDensity[i] = middleDensity[0]*middleVelocity[0]/u;
 		if(tempDensity[i] < 0){
 			printf("density < 0\n");
 			tempDensity[i] = epsilon*density0;
 		}
-		tempMomentum[i] = tempDensity[i]*u2;
-		tempEnergy[i] = tempDensity[i]*u2*u2*(0.5 - 1/(_gamma-1)) + momentumF/(_gamma - 1);
+		tempMomentum[i] = tempDensity[i]*u;
+		tempEnergy[i] = tempDensity[i]*u*u*0.5 + C*power(tempDensity[i], _gamma)/(_gamma-1);
 		if(tempEnergy[i] < 0){
 			printf("energy < 0\n");
-			tempEnergy[i] = tempDensity[i]*u2*u2/2;
+			tempEnergy[i] = tempDensity[i]*u*u/2;
+		}
+
+		alertNaNOrInfinity(tempDensity[i], "density = NaN");
+		alertNaNOrInfinity(tempMomentum[i], "momentum = NaN");
+		alertNaNOrInfinity(tempEnergy[i], "energy = NaN");
+	}
+
+	double p1 = middlePressure[shockWavePoint-1]/(middleDensity[0]*middleVelocity[0]*middleVelocity[0]);
+	double pw1 = 0.5*magneticEnergy[shockWavePoint-1]/(middleDensity[0]*middleVelocity[0]*middleVelocity[0]);
+	double u1 = tempMomentum[shockWavePoint-1]/(middleVelocity[0]*middleDensity[shockWavePoint-1]);
+	double lambda = 2*_gamma*(p1 + pw1) + u1*(_gamma - 1);
+	double Rtot = (lambda - sqrt2(lambda*lambda - 8*pw1*u1*(_gamma+1)*(_gamma-2)))/(4*u1*pw1*(_gamma-2));
+	if(pw1 < 1E-10){
+		Rtot = (_gamma + 1)/lambda;
+	}
+	double Rsub = Rtot*middleDensity[0]/middleDensity[shockWavePoint-1];
+
+	if(Rsub < 1){
+		printf("Rsub < 1\n");
+	}
+
+	double delta = sqr(Rsub - 1)*pw1/p1;
+		
+	double p2 = p1*((_gamma+1)*Rsub - (_gamma-1) + (_gamma-1)*(Rsub-1)*delta)/((_gamma+1) - (_gamma-1)*Rsub);
+
+	if(abs(Rsub - (_gamma+1)/(_gamma-1)) < 1E-12){
+		p2 = (middleDensity[shockWavePoint-1]*middleVelocity[shockWavePoint-1]*middleVelocity[shockWavePoint-1])*(Rsub-1)/Rsub;
+	}
+
+	alertNaNOrInfinity(p2, "p2 = NaN");
+
+	if(p2 < 0){
+		printf("p < 0\n");
+	}
+
+	/*double momentumF = middleDensity[0]*middleVelocity[0]*middleVelocity[0] + middlePressure[0] - (magneticEnergy[shockWavePoint] - magneticEnergy[0])/2;
+	double energyF = (energy(shockWavePoint-1) + middlePressure[shockWavePoint-1])*middleVelocity[shockWavePoint-1] - 0.5*magneticEnergy[shockWavePoint]*(middleVelocity[shockWavePoint] - middleVelocity[shockWavePoint-1]);
+	for(int k = 0; k < kgridNumber; ++k){
+		energyF += growth_rate[shockWavePoint][k]*magneticField[shockWavePoint][k]*kgrid[k]*deltaLogK*middleDeltaR[shockWavePoint];
+	}
+
+	double a = middleDensity[0]*middleVelocity[0]*(0.5 - _gamma/(_gamma-1));
+	double b = _gamma*momentumF/(_gamma - 1);
+	double c = - energyF;
+
+	double D = b*b - 4*a*c;
+	if(D < 0){
+		printf("discriminant < 0 i = %d\n",shockWavePoint);
+		D = 0;
+	}
+	double u2 = (-b - sqrt(D))/(2*a);
+	double u1 = (-b + sqrt(D))/(2*a);
+
+	double d = tempMomentum[shockWavePoint-1]/u1;
+	if(d < 0){
+		printf("density < 0\n");
+		d = epsilon*density0;
+	}
+	double m = tempMomentum[shockWavePoint-1];
+	double e = d*u1*u1*(0.5 - 1/(_gamma-1)) + momentumF/(_gamma - 1);
+	if(e < 0){
+		printf("energy < 0\n");
+		e = d*u1*u1/2;
+	}*/
+
+	double d = middleDensity[0]*Rtot;
+	double m = middleDensity[0]*middleVelocity[0];
+	double u = m/d;
+	double e = d*u*u/2 + p2/(_gamma-1);
+
+
+	for(int i = shockWavePoint; i < rgridNumber; ++i){
+		tempDensity[i] = d;
+		tempMomentum[i] = m;
+		tempEnergy[i] = e;
+
+		alertNaNOrInfinity(tempDensity[i], "density = NaN");
+		alertNaNOrInfinity(tempMomentum[i], "momentum = NaN");
+		alertNaNOrInfinity(tempEnergy[i], "energy = NaN");
+	}
+}
+
+double Simulation::newton(int i, double momentumF){
+	double u = middleVelocity[i];
+	double startU = 0.8*u;
+	double endU = 1.2*u;
+	double C = middlePressure[0]/power(middleDensity[0], _gamma);
+	double rho0 = middleDensity[0];
+	double u0 = middleVelocity[0];
+	for(int i = 0; i < 30; ++i){
+		double phi = u - (momentumF/(rho0*u0)) + C*power(rho0*u0, _gamma-1)/power(u, _gamma);
+		if(phi < 0){
+			startU = u;
+		} else {
+			endU = u;
+		}
+		u = (startU + endU)/2;
+		if(u < 0){
+			printf("u < 0 in newton\n");
 		}
 	}
-	double Rtot = middleDensity[shockWavePoint]/tempDensity[shockWavePoint-1];
-	double m = tempMomentum[shockWavePoint-1];
-	double prevP = (tempEnergy[shockWavePoint-1] - 0.5*sqr(m)/tempDensity[shockWavePoint-1])/(_gamma-1);
-	double p = prevP - m*m*((1/middleDensity[shockWavePoint]) - (1/tempDensity[shockWavePoint-1])) - (magneticEnergy[shockWavePoint] - magneticEnergy[shockWavePoint-1])/2 - (cosmicRayPressure[shockWavePoint] - cosmicRayPressure[shockWavePoint-1]);
-	for(int i = shockWavePoint; i < rgridNumber; ++i){
-		tempMomentum[i] = m;
-		tempEnergy[i] = (m*m/middleDensity[i]) + p/(_gamma-1);
-	}
+	/*for(int i = 0; i < 10; ++i){
+		double phi = (momentumF/(rho0*u0)) - C*power(rho0*u0, _gamma-1)/power(u, _gamma);
+		double dphi = C*_gamma*power(rho0*u0, _gamma-1)/power(u, _gamma+1);
+		u = u - phi/dphi;
+		if(u < 0){
+			printf("u < 0 in newton\n");
+		}
+	}*/
+	return u;
 }
 
 
@@ -289,10 +379,12 @@ double Simulation::superbee(double a, double b){
 
 void Simulation::updateAll(){
 	//hydrodinamic
-	if(tempDensity[rgridNumber - 1] < middleDensity[rgridNumber - 1]){
-		printf("aaa\n");
-	}
 	for(int i = 0; i < rgridNumber; ++i){
+		double x = 0.97;
+		tempDensity[i] = x*middleDensity[i] + (1 - x)*tempDensity[i];
+		tempMomentum[i] = x*momentum(i) + (1 - x)*tempMomentum[i];
+		tempEnergy[i] = x*energy(i) + (1 - x)*tempEnergy[i];
+
 		//if(i != 0 || tempDensity[i] < middleDensity[i]){
 			middleDensity[i] = tempDensity[i];
 		//}

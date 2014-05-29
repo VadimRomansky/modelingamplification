@@ -22,7 +22,7 @@ void Simulation::updateDiffusionCoef(){
 				}
 			}*/
 			double v = p/sqrt(massProton*massProton + p*p/(speed_of_light*speed_of_light));
-			double coef = 0.1*p*v*speed_of_light/(electron_charge*B);
+			double coef = p*v*speed_of_light/(electron_charge*B);
 			double dx = deltaR[i];
 			double lambda = coef/speed_of_light;
 			if(abs(i - shockWavePoint) < 10 && j >= injectionMomentum){
@@ -41,7 +41,7 @@ double Simulation::injection(int i){
 	double dp = (pgrid[injectionMomentum + 1] - pgrid[injectionMomentum - 1])/2;
 	double xi = pgrid[injectionMomentum]*speed_of_light/(kBoltzman*temperatureIn(i+1));
 	double eta = cube(xi)*exp(-xi);
-	return (1.5E-4)*middleDensity[i-1]*abs(middleVelocity[i-1]*middleVelocity[i-1]/speed_of_light)*pf/(massProton*dp*middleDeltaR[i]);
+	return (5E-5)*middleDensity[i-1]*abs(middleVelocity[i-1]*middleVelocity[i-1]/speed_of_light)*pf/(massProton*dp*middleDeltaR[i]);
 }
 
 //расчет космических лучей
@@ -115,15 +115,15 @@ void Simulation::evaluateCR(){
 				//tempDensity[i] -= inj*massProton*deltaLogP;
 				//tempMomentum[i] -= inj*massProton*deltaLogP*middleVelocity[i];
 				//tempEnergy[i] -= inj*pgrid[k]*speed_of_light*deltaLogP;
-				if(tempDensity[i] < 0){
-					printf("tempDensity[i] < 0 by CR\n");
-				}
-				if(tempEnergy[i] < 0){
-					printf("tempEnergy[i] < 0 by CR\n");
-				}
-				alertNaNOrInfinity(tempDensity[i], "density = NaN");
-				alertNaNOrInfinity(tempMomentum[i], "momentum = NaN");
-				alertNaNOrInfinity(tempEnergy[i], "energy = NaN");
+				//if(tempDensity[i] < 0){
+					//printf("tempDensity[i] < 0 by CR\n");
+				//}
+				//if(tempEnergy[i] < 0){
+					//printf("tempEnergy[i] < 0 by CR\n");
+				//}
+				//alertNaNOrInfinity(tempDensity[i], "density = NaN");
+				//alertNaNOrInfinity(tempMomentum[i], "momentum = NaN");
+				//alertNaNOrInfinity(tempEnergy[i], "energy = NaN");
 			}
 		}
 		gkp = distributionFunction[rgridNumber-1][k];
@@ -147,9 +147,10 @@ void Simulation::evaluateCR(){
 		for(int i = 0; i < rgridNumber; ++i){
 			//alertNegative(x[i],"tempDistribution < 0");
 			alertNaNOrInfinity(x[i],"tempDistribution = NaN");
+			tempDistributionFunction[i][k]= x[i];
 			if(x[i] < 0){
 				tempDistributionFunction[i][k] = 0;
-				if(abs(x[i]) > 1E-10){
+				if(abs(x[i]) > 1E-5){
 					printf("tenpDistribution < 0\n");
 				}
 			}
@@ -158,7 +159,6 @@ void Simulation::evaluateCR(){
 					printf("aaaa\n");
 				}
 			}
-			tempDistributionFunction[i][k]= x[i];
 		}
 		tempDistributionFunction[rgridNumber][k] =x[rgridNumber-1];
 		
@@ -210,8 +210,10 @@ void Simulation::evaluateCosmicRayPressure(){
 		double pressure = 0;
 		double concentration = 0;
 		for(int j = 0; j < pgridNumber; ++j){
-			pressure += distributionFunction[i][j]*partPressure[j];
-			concentration += distributionFunction[i][j]*deltaLogP;
+			if(distributionFunction[i][j] > 0){
+				pressure += distributionFunction[i][j]*partPressure[j];
+				concentration += distributionFunction[i][j]*deltaLogP;
+			}
 		}
 		//4pi?
 		cosmicRayPressure[i] = pressure;

@@ -83,7 +83,7 @@ void Simulation::initializeProfile(){
 	//upstreamR = 20000;
 
 	prevShockWavePoint = -1;
-	shockWavePoint = -1;
+	shockWavePoint = 0.9*rgridNumber;
 
 	pgrid = new double[pgridNumber];
 	logPgrid = new double[pgridNumber];
@@ -138,6 +138,7 @@ void Simulation::initializeProfile(){
 
 	for(int i = 0; i <= rgridNumber; i ++){
 		cosmicRayPressure[i] = 0;
+		cosmicRayConcentration[i] = 0;
 		distributionFunction[i] = new double[pgridNumber];
 		tempDistributionFunction[i] = new double[pgridNumber];
 		for(int j = 0; j < pgridNumber; ++j){
@@ -155,18 +156,19 @@ void Simulation::initializeProfile(){
 		}
 	}
 
-	double R0 = upstreamR;
+	double R1 = 0.75*upstreamR;
+	double R2 = upstreamR/4;
 	double a = 10000;
 	double b = 10000;
-	double h1 = 0.5*rgridNumber/log(1.0+a/4);
-	double h2 = 0.5*rgridNumber/log(1.0+b/4);
-	for(int i = 0; i < rgridNumber/2; ++i){ 
-		grid[i] = (2*R0/a)*(1 - exp(-(1.0*(i+1)-0.5*rgridNumber)/h1));
+	double h1 = shockWavePoint/log(1.0+a);
+	double h2 = (rgridNumber - shockWavePoint)/log(1.0+b);
+	for(int i = 0; i < shockWavePoint; ++i){ 
+		grid[i] = (R1/a)*(1 - exp(-(1.0*(i+1)-shockWavePoint)/h1));
 	}
-	for(int i=rgridNumber/2; i < rgridNumber; ++i){
-		grid[i] = (2*R0/b)*(exp((1.0*(i+1)-0.5*rgridNumber)/h2)-1.0);
+	for(int i=shockWavePoint; i < rgridNumber; ++i){
+		grid[i] = (R2/b)*(exp((1.0*(i+1) - shockWavePoint)/h2)-1.0);
 	}
-	grid[rgridNumber] = upstreamR/2*(1 + 1.0/(rgridNumber));
+	grid[rgridNumber] = R2*(1 + 1.0/(rgridNumber));
 	for(int i = 1; i <= rgridNumber; ++i){
 		if(grid[i] < grid[i-1]){
 			printf("grid[i] < grid[i-1]\n");
@@ -212,8 +214,8 @@ void Simulation::initializeProfile(){
 		growth_rate[i] = new double[kgridNumber];
 		magneticEnergy[i] = 0;
 		for(int k = 0; k < kgridNumber; ++k){
-			magneticField[i][k] = (2E-4)*B0*B0*power(1/kgrid[k], 5/3)*power(kgrid[0],2/3);
-			if(i >= rgridNumber/2-1){
+			magneticField[i][k] = (1E-6)*B0*B0*power(1/kgrid[k], 5/3)*power(kgrid[0],2/3);
+			if(i >= shockWavePoint){
 				magneticField[i][k] *= 8;
 			}
 			tempMagneticField[i][k] = magneticField[i][k];
@@ -245,24 +247,12 @@ void Simulation::initializeProfile(){
 		}
 	}
 
-	double r = downstreamR;
 	double pressure0 = density0*kBoltzman*temperature/massProton;
-
-	//minP = massProton*speed_of_light/10;
-
-
-	//deltaR0 = (upstreamR - downstreamR)/rgridNumber;
-	//grid[0] = -upstreamR/2 + deltaR0;
-	//for(int i = 1; i <= rgridNumber; ++i){
-		//grid[i] = grid[i-1] + deltaR0;
-	//}
 	
 	for(int i = 0; i < rgridNumber; ++i){
 		double sigma = 4.0;
 		double pressure = density0*U0*U0/sigma;
-		int count = rgridNumber/2 - 1;
-		int intCount = count/10;
-		if(i < count){
+		if(i < shockWavePoint){
 			middleDensity[i] = density0/sigma;
 			middleVelocity[i] = U0;
 			middlePressure[i] = pressure*1E-20;
@@ -271,7 +261,6 @@ void Simulation::initializeProfile(){
 			middleVelocity[i] = U0/sigma;
 			middlePressure[i] = pressure*0.75;
 		}
-		shockWavePoint = count;
 	}
 
 	double pstep = exp(log(maxP/minP)/pgridNumber);
@@ -326,6 +315,5 @@ void Simulation::initializeProfile(){
 	pointDensity[rgridNumber] = pointDensity[rgridNumber - 1];
 	pointVelocity[rgridNumber] = pointVelocity[rgridNumber - 1];
 	pointEnthalpy[rgridNumber] = (energy(rgridNumber-1) + middlePressure[rgridNumber-1])/middleDensity[rgridNumber-1];
-	//grid[rgridNumber] = upstreamR;
 
 }

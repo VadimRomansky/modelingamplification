@@ -101,6 +101,8 @@ public:
 	void initializeProfile();
 	void simulate();
 	void evaluateHydrodynamic();
+	double newton(int i,double momentumF);
+
 
 	void evaluateCR();
 	void solveThreeDiagonal(double* middle, double* upper, double* lower, double* f, double* x, double* alpha, double* beta);
