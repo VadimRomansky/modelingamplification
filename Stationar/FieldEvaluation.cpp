@@ -23,7 +23,7 @@ void Simulation::evaluateField(){
 			double prevZ = tempMagneticField[i-1][k]*prevUalpha;
 			//z = prevZ + growth_rate[i][k]*magneticField[i][k]*sqrt(middleVelocity[i])*middleDeltaR[i];
 			double a = growth_rate[i][k]*sqrt(middleVelocity[i])*middleDeltaR[i];
-			tempMagneticField[i][k] = prevZ/(Ualpha - a);
+			tempMagneticField[i][k] = (prevZ + a*tempMagneticField[i-1][k])/(Ualpha);
 
 			if(growth_rate[i][k] > maxRate[i]){
 				maxRateK = k;

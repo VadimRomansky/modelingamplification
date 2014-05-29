@@ -32,6 +32,13 @@ double min2(double a, double b){
 	}
 }
 
+double sqrt2(double a){
+	if(a < 0){
+		printf("sqrt < 0\n");
+	}
+	return sqrt(a);
+}
+
 void alertNaNOrInfinity(double value, const char* s){
 	if(value != value || 0*value != 0*value){
 		printf(s);
