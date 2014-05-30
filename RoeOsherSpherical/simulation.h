@@ -101,7 +101,7 @@ public:
 	double** crflux;
 	double* integratedFlux;
 	double* maxRate;
-	double* magneticEnergy[i];
+	double* magneticEnergy;
 
 	double* magneticInductionSum;
 

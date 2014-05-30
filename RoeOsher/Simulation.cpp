@@ -316,7 +316,7 @@ void Simulation::initializeProfile(){
 			break;
 		case 5 :
 			{
-				double shiftU = 0;
+				double shiftU = -U0;
 				double sigma = 4;
 				double pressure = density0*U0*U0/sigma;
 				int count = rgridNumber/2 - 1;
@@ -382,7 +382,7 @@ void Simulation::initializeProfile(){
 
 	updateDiffusionCoef();
 	//test distribution
-	/*double Q = (3E-4)*middleDensity[rgridNumber/2-1]*abs(middleVelocity[rgridNumber/2-1]*middleVelocity[rgridNumber/2-1]/speed_of_light)*pgrid[injectionMomentum]/massProton;
+	/*double Q = (3E-4)*middleDensity[rgridNumber/2-1]*abs2(middleVelocity[rgridNumber/2-1]*middleVelocity[rgridNumber/2-1]/speed_of_light)*pgrid[injectionMomentum]/massProton;
 	for(int i = 0; i < rgridNumber; ++i){
 		double p0 = pgrid[injectionMomentum];
 		for(int j = injectionMomentum; j < pgridNumber; ++j){
@@ -477,11 +477,11 @@ void Simulation::simulate(){
 		printf("time = %lf\n", myTime);
 		//printf("solving\n");
 
-		//evaluateHydrodynamic();
+		evaluateHydrodynamic();
 		
-		//if(currentIteration > startCRevaluation){
-			//evaluateCR();
-		//}
+		if(currentIteration > startCRevaluation){
+			evaluateCR();
+		}
 
 		if(currentIteration > startFieldEvaluation){
 			evaluateField();
@@ -601,8 +601,8 @@ void Simulation::evaluateHydrodynamic() {
 			alertNaNOrInfinity(tempEnergy[i], "energy = NaN");
 			alertNegative(tempEnergy[i], "energy < 0");
 		}
-		if(abs(cosmicRayPressure[i+1] - cosmicRayPressure[i]) > 1E-100){
-			vscattering[i] = abs(deltaE*deltaR[i]/(cosmicRayPressure[i+1] - cosmicRayPressure[i]));
+		if(abs2(cosmicRayPressure[i+1] - cosmicRayPressure[i]) > 1E-100){
+			vscattering[i] = abs2(deltaE*deltaR[i]/(cosmicRayPressure[i+1] - cosmicRayPressure[i]));
 		}
 	}
 }
@@ -647,7 +647,7 @@ void Simulation::CheckNegativeDensity(){
 	if(shockWavePoint > 1 && shockWavePoint < rgridNumber){
 		double deltaE = injection(shockWavePoint)*pgrid[injectionMomentum]*speed_of_light*4*pi*deltaLogP;
 		if(0.5*energy(shockWavePoint) - dt*deltaE < 0){
-			dt = 0.5*0.5*abs(energy(shockWavePoint)/deltaE);
+			dt = 0.5*0.5*abs2(energy(shockWavePoint)/deltaE);
 		}
 	}
 	deltaT = dt;
@@ -809,19 +809,19 @@ void Simulation::evaluateFluxes(){
 
 		//for density
 		for(int j = 0; j < 3; ++j){
-			dFlux[i] -= 0.5*abs(lambdaMod[j])*deltaS[j]*vectors[0][j];
+			dFlux[i] -= 0.5*abs2(lambdaMod[j])*deltaS[j]*vectors[0][j];
 			dFluxPlus[i][j] = lambdaPlus[j]*deltaS[j]*vectors[0][j];
 			dFluxMinus[i][j] = lambdaMinus[j]*deltaS[j]*vectors[0][j];
 		}
 		//for momentum
 		for(int j = 0; j < 3; ++j){
-			mFlux[i] -= 0.5*abs(lambdaMod[j])*deltaS[j]*vectors[1][j];
+			mFlux[i] -= 0.5*abs2(lambdaMod[j])*deltaS[j]*vectors[1][j];
 			mFluxPlus[i][j] = lambdaPlus[j]*deltaS[j]*vectors[1][j];
 			mFluxMinus[i][j] = lambdaMinus[j]*deltaS[j]*vectors[1][j];
 		}
 		//for energy
 		for(int j = 0; j < 3; ++j){
-			eFlux[i] -= 0.5*abs(lambdaMod[j])*deltaS[j]*vectors[2][j];
+			eFlux[i] -= 0.5*abs2(lambdaMod[j])*deltaS[j]*vectors[2][j];
 			eFluxPlus[i][j] = lambdaPlus[j]*deltaS[j]*vectors[2][j];
 			eFluxMinus[i][j] = lambdaMinus[j]*deltaS[j]*vectors[2][j];
 		}
@@ -871,7 +871,7 @@ double Simulation::volume(int i){
 
 double Simulation::minmod(double a, double b){
 	if(a*b > 0){
-		if(abs(a) < abs(b)){
+		if(abs2(a) < abs2(b)){
 			return a;
 		} else {
 			return b;
@@ -882,7 +882,7 @@ double Simulation::minmod(double a, double b){
 }
 
 double Simulation::superbee(double a, double b){
-	if(abs(a) >= abs(b)){
+	if(abs2(a) >= abs2(b)){
 		return minmod(a, 2*b);
 	} else {
 		return minmod(2*a, b);
@@ -892,15 +892,15 @@ double Simulation::superbee(double a, double b){
 //пересчет шага по времени и максимальной скорости звука
 
 void Simulation::updateMaxSoundSpeed(){
-	maxSoundSpeed = (sqrt(_gamma*middlePressure[0]/middleDensity[0]) + abs(middleVelocity[0]));
+	maxSoundSpeed = (sqrt(_gamma*middlePressure[0]/middleDensity[0]) + abs2(middleVelocity[0]));
 	double cs = maxSoundSpeed;
 	for(int i = 1; i < rgridNumber - 1; ++i){
-		cs = (sqrt(_gamma*middlePressure[i]/middleDensity[i]) + abs(middleVelocity[i]));
+		cs = (sqrt(_gamma*middlePressure[i]/middleDensity[i]) + abs2(middleVelocity[i]));
 		if(cs > maxSoundSpeed){
 			maxSoundSpeed = cs;
 		}
 	}
-	cs = (sqrt(_gamma*middlePressure[rgridNumber - 1]/middleDensity[rgridNumber - 1]) + abs(middleVelocity[rgridNumber - 1]));
+	cs = (sqrt(_gamma*middlePressure[rgridNumber - 1]/middleDensity[rgridNumber - 1]) + abs2(middleVelocity[rgridNumber - 1]));
 	if(cs > maxSoundSpeed){
 		maxSoundSpeed = cs;
 	}
@@ -929,8 +929,8 @@ void Simulation::updateTimeStep(){
 
 	//by dp
 	for(int i = 1; i < rgridNumber; ++i){
-		if(abs(middleVelocity[i] - middleVelocity[i-1])*tempdt > 0.5*abs(3*deltaLogP*middleDeltaR[i])){
-			tempdt = 0.5*abs(3*deltaLogP*middleDeltaR[i]/(middleVelocity[i] - middleVelocity[i-1]));
+		if(abs2(middleVelocity[i] - middleVelocity[i-1])*tempdt > 0.5*abs2(3*deltaLogP*middleDeltaR[i])){
+			tempdt = 0.5*abs2(3*deltaLogP*middleDeltaR[i]/(middleVelocity[i] - middleVelocity[i-1]));
 		}
 	}
 
@@ -950,7 +950,7 @@ void Simulation::updateTimeStep(){
 		double dxm=grid[i]-grid[i-1];
 		double a = ((diffusionCoef[i-1][kgridNumber-1]/dxp + diffusionCoef[i][kgridNumber-1]/dxm) - (diffusionCoef[i-1][kgridNumber-1]/dxm) -(diffusionCoef[i][kgridNumber-1]/dxp))/(2*dx);
 		if(1 + tempdt*a < 0){
-			tempdt = 0.5/abs(a);
+			tempdt = 0.5/abs2(a);
 		}
 	}
 
@@ -964,7 +964,7 @@ void Simulation::updateTimeStep(){
 			double gkm = distributionFunction[i][j-1];
 			double der = (1/(2*dx))*(diffusionCoef[i][j]*(distributionFunction[i+1][j] - distributionFunction[i][j])/dxp - diffusionCoef[i-1][j]*(distributionFunction[i][j] - distributionFunction[i-1][j])/dxm) - (1/dx)*(middleVelocity[i]*distributionFunction[i][j] - middleVelocity[i-1]*distributionFunction[i-1][j]) + (1.0/3)*((middleVelocity[i] - middleVelocity[i-1])/dx)*((gkp - gkm)/deltaLogP);
 			if((distributionFunction[i][j] > 0) && (distributionFunction[i][j] + der*tempdt < 0)){
-				tempdt = 0.5*abs(distributionFunction[i][j]/der);
+				tempdt = 0.5*abs2(distributionFunction[i][j]/der);
 				if(tempdt < 0.1){
 					//printf("ooo\n");
 				}
@@ -976,7 +976,7 @@ void Simulation::updateTimeStep(){
 	for(int i = 1; i < rgridNumber; ++i){
 		for(int k = 0; k < kgridNumber; ++k){
 			if(tempdt*growth_rate[i][k] > 2){
-				tempdt = 0.5*abs(1/growth_rate[i][k]);
+				tempdt = 0.5*abs2(1/growth_rate[i][k]);
 			}
 		}
 	}
@@ -991,7 +991,7 @@ void Simulation::updateShockWavePoint(){
 	//double maxGrad = density0;
 	double maxGrad = U0/upstreamR;
 	for(int i = 10; i < 9*rgridNumber/10 - 1; ++i){
-		//double grad = abs((middleDensity[i] - middleDensity[i + 1])/middleDeltaR[i+1]);
+		//double grad = abs2((middleDensity[i] - middleDensity[i + 1])/middleDeltaR[i+1]);
 		double grad = (middleVelocity[i] - middleVelocity[i + 1])/middleDeltaR[i+1];
 
 		//double grad = (middleDensity[i]);

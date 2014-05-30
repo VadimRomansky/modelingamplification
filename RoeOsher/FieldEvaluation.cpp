@@ -96,7 +96,7 @@ void Simulation::growthRate(){
 		for(int k = 0; k < kgridNumber; ++k){
 			Bls = sqrt(4*pi*magneticField[i][k]*kgrid[k]*deltaLogK + Bls*Bls);
 			alertNaNOrInfinity(Bls, "Bls = NaN");
-			double kc = abs(4*pi*J/(speed_of_light*Bls));
+			double kc = abs2(4*pi*J/(speed_of_light*Bls));
 			double Va = Bls/sqrt(4*pi*middleDensity[i]);
 			Complex A1;
 			Complex A2;
@@ -105,12 +105,12 @@ void Simulation::growthRate(){
 				alertNaNOrInfinity(z, "z = NaN");
 				Complex sigma1;
 				Complex sigma2;
-				if( abs(z - 1) < 0.00001){
+				if( abs2(z - 1) < 0.00001){
 					sigma1 = 3/2;
 				} else if(z > 1) {
-					sigma1 = (1.5/sqr(z)) + 0.75*(1 - 1/(sqr(z)))*log(abs((z+1)/(z-1)))/z;
+					sigma1 = (1.5/sqr(z)) + 0.75*(1 - 1/(sqr(z)))*log(abs2((z+1)/(z-1)))/z;
 				} else if(0.01 < z) {
-					sigma1 = (1.5/sqr(z)) + 0.75*(1 - 1/(sqr(z)))*log(abs((z+1)/(z-1)))/z;
+					sigma1 = (1.5/sqr(z)) + 0.75*(1 - 1/(sqr(z)))*log(abs2((z+1)/(z-1)))/z;
 				} else {
 					sigma1 = 1 + 0.2*sqr(z);
 				}
