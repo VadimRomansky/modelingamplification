@@ -8,7 +8,7 @@
 void output(FILE* outFile, Simulation* simulation){
 	for(int i = 0; i < simulation->rgridNumber; ++i){
 		double t = simulation->temperatureIn(i);
-		double tau = abs(simulation->middleGrid[i]*simulation->maxRate[i]/simulation->middleGrid[i]);
+		double tau = abs2(simulation->middleGrid[i]*simulation->maxRate[i]/simulation->middleGrid[i]);
 		fprintf(outFile, "%g %g %g %g %g %g %g %g %g %g", simulation->grid[i], simulation->middleVelocity[i], simulation->middleDensity[i], simulation->middlePressure[i], simulation->cosmicRayPressure[i], t, simulation->magneticInductionSum[i]-simulation->B0, simulation->magneticEnergy[i], tau, simulation->cosmicRayConcentration[i]);
 		fprintf(outFile, "\n");
 	}
@@ -98,12 +98,12 @@ void outputField(FILE* outFile, FILE* coordinateFile, FILE* outFull, FILE* coefF
 	for(int i = 0; i < simulation->rgridNumber; ++i){
 		fprintf(xfile, "%g\n", simulation->grid[i]);
 		fprintf(coordinateFile, "%g %g\n", simulation->grid[i],simulation->magneticField[i][35]);
-		if(abs(i-simulation->shockWavePoint) < 20){
+		if(abs2(i-simulation->shockWavePoint) < 20){
 			volume += simulation->volume(i);
 		}
 		for(int k = 0; k < kgridNumber; ++k){
 			fprintf(outFull, "%g ", simulation->magneticField[i][k]);
-			if(abs(i-simulation->shockWavePoint) < 20){
+			if(abs2(i-simulation->shockWavePoint) < 20){
 				integralField[k] += simulation->magneticField[i][k]*simulation->volume(i);
 			}
 		}
@@ -118,7 +118,7 @@ void outputField(FILE* outFile, FILE* coordinateFile, FILE* outFull, FILE* coefF
 		int shockWavePoint = simulation->shockWavePoint;
 		for(int k = 0; k < kgridNumber; ++k){
 			fprintf(kfile, "%g\n", simulation->kgrid[k]);
-			fprintf(outFile, "%g %g %g %g %g\n", simulation->kgrid[k], simulation->magneticField[shockWavePoint][k], simulation->growth_rate[shockWavePoint][k], integralField[k], abs(simulation->middleGrid[shockWavePoint]/simulation->middleVelocity[shockWavePoint])*simulation->growth_rate[shockWavePoint][k]);
+			fprintf(outFile, "%g %g %g %g %g\n", simulation->kgrid[k], simulation->magneticField[shockWavePoint][k], simulation->growth_rate[shockWavePoint][k], integralField[k], abs2(simulation->middleGrid[shockWavePoint]/simulation->middleVelocity[shockWavePoint])*simulation->growth_rate[shockWavePoint][k]);
 		}
 
 		for(int j = 0; j < pgridNumber; ++j){

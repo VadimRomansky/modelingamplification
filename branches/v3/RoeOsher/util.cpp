@@ -32,6 +32,14 @@ double min2(double a, double b){
 	}
 }
 
+double abs2(double a){
+	if(a >= 0){
+		return a;
+	} else {
+		return -a;
+	}
+}
+
 void alertNaNOrInfinity(double value, const char* s){
 	if(value != value || 0*value != 0*value){
 		printf(s);

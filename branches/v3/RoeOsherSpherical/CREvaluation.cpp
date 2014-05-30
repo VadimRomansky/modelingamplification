@@ -99,7 +99,7 @@ void Simulation::evaluateCR(){
 				if (k == 0) {
 					gkm=0;
 				} else {
-					gkm=distributionFunction[i][k-1];
+					gkm=tempDistributionFunction[i][k-1];
 				}
 				if(k < pgridNumber-1){
 					gkpp = distributionFunction[i][k+1];
@@ -111,34 +111,44 @@ void Simulation::evaluateCR(){
 				dxm=grid[i]-grid[i-1];
 				xp=(grid[i+1]+grid[i])/2;
 				xm=(grid[i]+grid[i-1])/2;
+				double x = grid[i];
 				dV = (xp*xp*xp - xm*xm*xm)/3;
 				gip=(distributionFunction[i+1][k] + distributionFunction[i][k])/2;
 				gim=(distributionFunction[i][k] + distributionFunction[i-1][k])/2;
 				lower[i-1] = -(deltaT/(2*dV))*(xm*xm*diffusionCoef[i-1][k]/dxm);
 				middle[i] = 1 + (deltaT/(2*dV))*(xp*xp*diffusionCoef[i-1][k]/dxp + xm*xm*diffusionCoef[i][k]/dxm);
 				upper[i] = -(deltaT/(2*dV))*(xp*xp*diffusionCoef[i][k]/dxp);
-				f[i] = distributionFunction[i][k] + (deltaT/(2*dV))*(xp*xp*diffusionCoef[i][k]*(distributionFunction[i+1][k] - distributionFunction[i][k])/dxp
-								- xm*xm*diffusionCoef[i-1][k]*(distributionFunction[i][k] - distributionFunction[i-1][k])/dxm)
-								- (deltaT/dV)*(xp*xp*middleVelocity[i]*distributionFunction[i][k] - xm*xm*middleVelocity[i-1]*distributionFunction[i-1][k]);
+				//f[i] = distributionFunction[i][k] + (deltaT/(2*dV))*(xp*xp*diffusionCoef[i][k]*(distributionFunction[i+1][k] - distributionFunction[i][k])/dxp
+								//- xm*xm*diffusionCoef[i-1][k]*(distributionFunction[i][k] - distributionFunction[i-1][k])/dxm)
+								//- (deltaT/dV)*(xp*xp*middleVelocity[i]*distributionFunction[i][k] - xm*xm*middleVelocity[i-1]*distributionFunction[i-1][k]);
+				if(i == shockWavePoint){
+					f[i] = distributionFunction[i][k]  + deltaT*((1/(2*dV))*(xp*xp*diffusionCoef[i][k]*(distributionFunction[i+1][k] - distributionFunction[i][k])/dxp - xm*xm*diffusionCoef[i-1][k]*(distributionFunction[i][k] - distributionFunction[i-1][k])/dxm) - (1/dV)*x*x*distributionFunction[i][k]*(middleVelocity[i+1] - middleVelocity[i]));
+				} else if(i == shockWavePoint-1){
+					f[i] = distributionFunction[i][k]  + deltaT*((1/(2*dV))*(xp*xp*diffusionCoef[i][k]*(distributionFunction[i+1][k] - distributionFunction[i][k])/dxp - xm*xm*diffusionCoef[i-1][k]*(distributionFunction[i][k] - distributionFunction[i-1][k])/dxm) - (1/dV)*(xp*xp*middleVelocity[i+1]*distributionFunction[i+1][k] - xm*xm*middleVelocity[i]*distributionFunction[i-1][k]));
+				} else {
+					f[i] = distributionFunction[i][k]  + deltaT*((1/(2*dV))*(xp*xp*diffusionCoef[i][k]*(distributionFunction[i+1][k] - distributionFunction[i][k])/dxp - xm*xm*diffusionCoef[i-1][k]*(distributionFunction[i][k] - distributionFunction[i-1][k])/dxm) - (1/dV)*0.5*(gridsquare[i+1]*middleVelocity[i+1]*distributionFunction[i+1][k] - gridsquare[i-1]*middleVelocity[i-1]*distributionFunction[i-1][k]));
+				}
 				if(f[i] < 0){
 					//printf("f[i] < 0\n");
 					f[i] = 0;
 				}
-				if((xp*xp*middleVelocity[i] - xm*xm*middleVelocity[i-1]) < 0){
+				if((xp*xp*middleVelocity[i+1] - xm*xm*middleVelocity[i]) < 0){
 					if(gkp - gkm < 0)
-						f[i] += (deltaT/3)*((xp*xp*middleVelocity[i] - xm*xm*middleVelocity[i-1])/dV)*((gkp - gkm)/deltaLogP);
+						//f[i] += (deltaT/3)*((xp*xp*middleVelocity[i] - xm*xm*middleVelocity[i-1])/dV)*((gkp - gkm)/deltaLogP);
+						f[i] += -(deltaT/3)*((xp*xp*middleVelocity[i+1] - xm*xm*middleVelocity[i])/dV)*((gkm)/deltaLogP);
+						middle[i] += -(deltaT/3)*((xp*xp*middleVelocity[i+1] - xm*xm*middleVelocity[i])/dV)/deltaLogP;
 				} else {
 					if(gkpp - gkp > 0)
-						f[i] += (deltaT/3)*((xp*xp*middleVelocity[i] - xm*xm*middleVelocity[i-1])/dV)*((gkpp - gkp)/deltaLogP);
+						f[i] += (deltaT/3)*((xp*xp*middleVelocity[i+1] - xm*xm*middleVelocity[i])/dV)*((gkpp - gkp)/deltaLogP);
 				}
                 if(abs2(i - shockWavePoint)<1 && abs2(k - injectionMomentum) < 1){
 					double inj = injection(i);
 					f[i] += deltaT*inj;
 					//todo shift volume to 1/2
 					injectedParticles += inj*deltaT*4*pi*volume(i)*deltaLogP;
-					tempDensity[i] -= deltaT*inj*massProton*4*pi*deltaLogP;
-					tempMomentum[i] -= deltaT*inj*massProton*4*pi*deltaLogP*middleVelocity[i];
-					tempEnergy[i] -= deltaT*inj*pgrid[k]*speed_of_light*4*pi*deltaLogP;
+					//tempDensity[i] -= deltaT*inj*massProton*4*pi*deltaLogP;
+					//tempMomentum[i] -= deltaT*inj*massProton*4*pi*deltaLogP*middleVelocity[i];
+					//tempEnergy[i] -= deltaT*inj*pgrid[k]*speed_of_light*4*pi*deltaLogP;
 					if(tempDensity[i] < 0){
 						printf("tempDensity[i] < 0 by CR\n");
 					}

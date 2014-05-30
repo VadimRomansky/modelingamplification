@@ -81,6 +81,7 @@
     <ClCompile Include="CREvaluation.cpp" />
     <ClCompile Include="FieldEvaluation.cpp" />
     <ClCompile Include="GridUpdating.cpp" />
+    <ClCompile Include="Initialization.cpp" />
     <ClCompile Include="input.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="output.cpp" />
