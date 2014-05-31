@@ -1,6 +1,3 @@
-#include "math.h"
-#include "stdio.h"
-#include "stdlib.h"
 #include "output.h"
 #include "constants.h"
 #include "util.h"
@@ -8,9 +5,9 @@
 void output(FILE* outFile, Simulation* simulation){
 	for(int i = 0; i < simulation->rgridNumber; ++i){
 		double t = simulation->temperatureIn(i);
-		double tau = abs2(simulation->middleGrid[i]*simulation->maxRate[i]/simulation->middleGrid[i]);
-		fprintf(outFile, "%g %g %g %g %g %g %g %g %g %g", simulation->grid[i], simulation->middleVelocity[i], simulation->middleDensity[i], simulation->middlePressure[i], simulation->cosmicRayPressure[i], t, simulation->magneticInductionSum[i]-simulation->B0, simulation->magneticEnergy[i], tau, simulation->cosmicRayConcentration[i]);
-		fprintf(outFile, "\n");
+		//fprintf(outFile,"%lf %lf %lf %lf %lf\n", simulation->grid[i], simulation->middleVelocity[i], simulation->middleDensity[i], simulation->middlePressure[i], t);
+		fprintf(outFile,"%17.12lf %17.12lf %38.30lf %28.20lf %28.20lf %17.12lf  %17.12lf %g %g %g %g\n", simulation->grid[i], simulation->middleVelocity[i], simulation->middleDensity[i], simulation->middlePressure[i], simulation->cosmicRayPressure[i], t, simulation->magneticInductionSum[i]-simulation->B0, abs(simulation->middleGrid[i]*simulation->maxRate[i]/simulation->middleGrid[i]), simulation->cosmicRayConcentration[i], simulation->vscattering[i], simulation->magneticEnergy[i]);
+		//fprintf(outFile,"%lf %lf %lf %lf %lf\n", simulation->grid[i], simulation->middleVelocity[i], simulation->middleDensity[i], simulation->middlePressure[i], simulation->temperatureIn(i));
 	}
 }
 
@@ -26,7 +23,7 @@ void outputDistribution(FILE* distributionFile, FILE* fullDistributionFile, FILE
 			double p = simulation->pgrid[j];
 			fullDistribution[j] += simulation->volume(i)*simulation->distributionFunction[i][j];
 		}
-		fprintf(coordinateDistributionFile, "%20.10lf %g %g %g %g %g\n", simulation->grid[i], simulation->distributionFunction[i][outP], simulation->distributionFunction[i][pgridNumber-1], simulation->crflux[i][outP], simulation->crflux[i][pgridNumber-1], simulation->integratedFlux[i]);
+		fprintf(coordinateDistributionFile, "%20.10lf %g %g %g %g %g %g %g\n", simulation->grid[i], simulation->distributionFunction[i][outP], simulation->distributionFunction[i][pgridNumber-1], simulation->crflux[i][outP], simulation->crflux[i][pgridNumber-1], simulation->integratedFlux[i], simulation->distributionFunction[i][outP+5], simulation->distributionFunction[i][outP+1]);
 	}
 
 	if(simulation->shockWavePoint > 0 && simulation->shockWavePoint < simulation->rgridNumber){
@@ -98,12 +95,12 @@ void outputField(FILE* outFile, FILE* coordinateFile, FILE* outFull, FILE* coefF
 	for(int i = 0; i < simulation->rgridNumber; ++i){
 		fprintf(xfile, "%g\n", simulation->grid[i]);
 		fprintf(coordinateFile, "%g %g\n", simulation->grid[i],simulation->magneticField[i][35]);
-		if(abs2(i-simulation->shockWavePoint) < 20){
+		if(abs(i-simulation->shockWavePoint) < 20){
 			volume += simulation->volume(i);
 		}
 		for(int k = 0; k < kgridNumber; ++k){
 			fprintf(outFull, "%g ", simulation->magneticField[i][k]);
-			if(abs2(i-simulation->shockWavePoint) < 20){
+			if(abs(i-simulation->shockWavePoint) < 20){
 				integralField[k] += simulation->magneticField[i][k]*simulation->volume(i);
 			}
 		}
@@ -118,7 +115,7 @@ void outputField(FILE* outFile, FILE* coordinateFile, FILE* outFull, FILE* coefF
 		int shockWavePoint = simulation->shockWavePoint;
 		for(int k = 0; k < kgridNumber; ++k){
 			fprintf(kfile, "%g\n", simulation->kgrid[k]);
-			fprintf(outFile, "%g %g %g %g %g\n", simulation->kgrid[k], simulation->magneticField[shockWavePoint][k], simulation->growth_rate[shockWavePoint][k], integralField[k], abs2(simulation->middleGrid[shockWavePoint]/simulation->middleVelocity[shockWavePoint])*simulation->growth_rate[shockWavePoint][k]);
+			fprintf(outFile, "%g %g %g %g %g\n", simulation->kgrid[k], simulation->magneticField[shockWavePoint][k], simulation->growth_rate[shockWavePoint][k], integralField[k], abs(simulation->middleGrid[shockWavePoint]/simulation->middleVelocity[shockWavePoint])*simulation->growth_rate[shockWavePoint][k]);
 		}
 
 		for(int j = 0; j < pgridNumber; ++j){

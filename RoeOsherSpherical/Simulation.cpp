@@ -638,6 +638,12 @@ void Simulation::updateShockWavePoint(){
 		prevShockWavePoint = shockWavePoint;
 		shockWaveSpeed = (grid[tempShockWavePoint] - grid[prevShockWavePoint])/(shockWaveT);
 		shockWaveT = 0;
+		for(int i = rgridNumber-1; i > 1; --i){
+			for(int j = 0; j < pgridNumber; ++j){
+				distributionFunction[i][j] = (distributionFunction[i-1][j]*volume(i-1) + distributionFunction[i][j]*volume(i))/(2*volume(i));
+				//distributionFunction[i][j] = distributionFunction[i+1][j]*middleDeltaR[i+1]/middleDeltaR[i];
+			}
+		}
 	}
 	shockWavePoint = tempShockWavePoint;
 }
@@ -679,7 +685,7 @@ void Simulation::updateParameters(){
 			} else {
 				dr = middleGrid[i] - middleGrid[i-1];
 			}
-			totalParticles += 4*pi*distributionFunction[i][j]*dr*dp/pgrid[j];
+			totalParticles += distributionFunction[i][j]*4*pi*volume(i)*deltaLogP;
 			totalParticleEnergy += 4*pi*speed_of_light*distributionFunction[i][j]*dr*dp;
 		}
 	}

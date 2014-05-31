@@ -1,6 +1,3 @@
-#include "math.h"
-#include "stdio.h"
-#include "stdlib.h"
 #include "simulation.h"
 #include "constants.h"
 #include "util.h"
@@ -18,6 +15,16 @@ void Simulation::evaluateField(){
 		double delta = 5.0/21;
 		int maxRateK = 0;
 		maxRate[i] = 0;
+
+
+		tempMagneticEnergy[i] = magneticEnergy[i];
+		double y = magneticEnergy[i]*Ualpha;
+		double prevY = magneticEnergy[i-1]*prevUalpha;
+		tempMagneticEnergy[i] -= deltaT*(y - prevY)/(sqrt(middleVelocity[i])*deltaR[i]);
+		double Va = sqrt((magneticEnergy[i]+B0*B0/(4*pi))/middleDensity[i]);
+		if(i <= shockWavePoint){
+			tempMagneticEnergy[i] += deltaT*Va*(cosmicRayPressure[i+1] - cosmicRayPressure[i])/deltaR[i];
+		}
 
 		for(int k = 0; k < kgridNumber; ++k){
 			if(middleVelocity[i] > 0 && middleVelocity[i-1] > 0){
@@ -71,7 +78,6 @@ void Simulation::evaluateCRFlux(){
 }
 
 void Simulation::growthRate(){
-	#pragma omp parallel for
 	for(int i = 0; i < rgridNumber; ++i){
 		if(i > shockWavePoint+1){
 			for(int k = 0; k < kgridNumber; ++k){
@@ -96,7 +102,7 @@ void Simulation::growthRate(){
 		for(int k = 0; k < kgridNumber; ++k){
 			Bls = sqrt(4*pi*magneticField[i][k]*kgrid[k]*deltaLogK + Bls*Bls);
 			alertNaNOrInfinity(Bls, "Bls = NaN");
-			double kc = abs2(4*pi*J/(speed_of_light*Bls));
+			double kc = abs(4*pi*J/(speed_of_light*Bls));
 			double Va = Bls/sqrt(4*pi*middleDensity[i]);
 			Complex A1;
 			Complex A2;
@@ -105,12 +111,12 @@ void Simulation::growthRate(){
 				alertNaNOrInfinity(z, "z = NaN");
 				Complex sigma1;
 				Complex sigma2;
-				if( abs2(z - 1) < 0.00001){
+				if( abs(z - 1) < 0.00001){
 					sigma1 = 3/2;
 				} else if(z > 1) {
-					sigma1 = (1.5/sqr(z)) + 0.75*(1 - 1/(sqr(z)))*log(abs2((z+1)/(z-1)))/z;
+					sigma1 = (1.5/sqr(z)) + 0.75*(1 - 1/(sqr(z)))*log(abs((z+1)/(z-1)))/z;
 				} else if(0.01 < z) {
-					sigma1 = (1.5/sqr(z)) + 0.75*(1 - 1/(sqr(z)))*log(abs2((z+1)/(z-1)))/z;
+					sigma1 = (1.5/sqr(z)) + 0.75*(1 - 1/(sqr(z)))*log(abs((z+1)/(z-1)))/z;
 				} else {
 					sigma1 = 1 + 0.2*sqr(z);
 				}

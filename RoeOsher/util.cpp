@@ -1,6 +1,6 @@
-#include "math.h"
-#include "stdio.h"
-#include "stdlib.h"
+#include <windows.h>
+#include <stdio.h>
+#include <math.h>
 #include "util.h"
 #include "constants.h"
 
@@ -32,17 +32,9 @@ double min2(double a, double b){
 	}
 }
 
-double abs2(double a){
-	if(a >= 0){
-		return a;
-	} else {
-		return -a;
-	}
-}
-
 void alertNaNOrInfinity(double value, const char* s){
 	if(value != value || 0*value != 0*value){
-		printf(s);
+        printf("%s",s);
 		printf("\n");
 		//Sleep(1000);
 	}
@@ -50,14 +42,14 @@ void alertNaNOrInfinity(double value, const char* s){
 
 void alertNotPositive(double value, const char* s){
 	if(value <= 0){
-		printf(s);
+        printf("%s",s);
 		printf("\n");
 	}
 }
 
 void alertNegative(double value, const char* s){
 	if(value < 0){
-		printf(s);
+        printf("%s",s);
 		printf("\n");
 	}
 }
