@@ -1,7 +1,4 @@
 #include <time.h>
-#include "math.h"
-#include "stdio.h"
-#include "stdlib.h"
 #include "simulation.h"
 #include "util.h"
 #include "constants.h"
@@ -175,7 +172,7 @@ void Simulation::redistributeValues(){
 		} else {
 			middleVelocity[i] = newMomentum[i]/newDensity[i];
 		}
-		double tempPressure = (newEnergy[i] - middleDensity[i]*middleVelocity[i]*middleVelocity[i]/2)*(_gamma - 1);
+		double tempPressure = (newEnergy[i] - middleDensity[i]*middleVelocity[i]*middleVelocity[i]/2)*(gamma - 1);
 		
 		if(tempPressure < 0){
 			middlePressure[i] = 0.01*min2(middlePressure[i+1],middlePressure[i]);

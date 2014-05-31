@@ -1,8 +1,4 @@
 #include <time.h>
-#include "omp.h"
-#include "math.h"
-#include "stdio.h"
-#include "stdlib.h"
 #include "simulation.h"
 #include "util.h"
 #include "constants.h"
@@ -25,7 +21,7 @@ void Simulation::updateDiffusionCoef(){
 			double coef = p*v*speed_of_light/(electron_charge*B);
 			double dx = deltaR[i];
 			double lambda = coef/speed_of_light;
-			if(abs2(i - shockWavePoint) < 10 && j >= injectionMomentum){
+			if(abs(i - shockWavePoint) < 10 && j >= injectionMomentum){
 				if(lambda < dx){
 					//printf("lambda < deltaR i = %d j = %d\n",i,j);
 				}
@@ -42,8 +38,8 @@ double Simulation::injection(int i){
 	//double xi = 5;
 	double xi = pgrid[injectionMomentum]*speed_of_light/(kBoltzman*temperatureIn(i+1));
 	double eta = cube(xi)*exp(-xi);
-	return (3E-5)*middleDensity[i]*abs2(middleVelocity[i]*middleVelocity[i]/speed_of_light)*pf/(massProton*dp*middleDeltaR[i]);
-	//return abs2(pf*middleDensity[i]*((middleVelocity[i+1] - middleVelocity[i])/middleDeltaR[shockWavePoint])/(3*massProton));
+	return (3E-20)*middleDensity[i]*abs(middleVelocity[i]*middleVelocity[i]/speed_of_light)*pf/(massProton*dp*middleDeltaR[i]);
+	//return abs(pf*middleDensity[i]*((middleVelocity[i+1] - middleVelocity[i])/middleDeltaR[shockWavePoint])/(3*massProton));
 	//return 1/(pf*deltaLogP*middleDeltaR[i]);
 	//return sqr(pf)/(deltaLogP*middleDeltaR[i]);
 }
@@ -56,10 +52,6 @@ void Simulation::evaluateCR(){
 	/*if(shockWavePoint > 0 && shockWavePoint < rgridNumber){
 		distributionFunction[shockWavePoint][injectionMomentum] += injection()*deltaT;
 	}*/
-	double t1 = omp_get_wtime();
-#pragma omp parallel for
-	for(int k = 0; k < pgridNumber; k = k + 1){
-
 	double* upper = new double[rgridNumber+1];
 	double* middle = new double[rgridNumber+1];
 	double* lower = new double[rgridNumber+1];
@@ -70,6 +62,7 @@ void Simulation::evaluateCR(){
 	double* alpha = new double[rgridNumber];
 	double* beta = new double[rgridNumber];
 
+	for(int k = 0; k < pgridNumber; ++k){
 		double y = logPgrid[k];
 		double p = pgrid[k];
 		double gkp = distributionFunction[0][k];
@@ -118,22 +111,28 @@ void Simulation::evaluateCR(){
 			if(i == shockWavePoint){
 				f[i] = distributionFunction[i][k]  + deltaT*((1/(2*dx))*(diffusionCoef[i][k]*(distributionFunction[i+1][k] - distributionFunction[i][k])/dxp - diffusionCoef[i-1][k]*(distributionFunction[i][k] - distributionFunction[i-1][k])/dxm) - (1/dx)*distributionFunction[i][k]*(middleVelocity[i] - middleVelocity[i-1]) + (1.0/3)*((middleVelocity[i] - middleVelocity[i-1])/dx)*((gkp - gkm)/deltaLogP));
 			} else if(i == shockWavePoint-1){
-				f[i] = distributionFunction[i][k]  + deltaT*((1/(2*dx))*(diffusionCoef[i][k]*(distributionFunction[i+1][k] - distributionFunction[i][k])/dxp - diffusionCoef[i-1][k]*(distributionFunction[i][k] - distributionFunction[i-1][k])/dxm) - (1/dx)*(middleVelocity[i]*distributionFunction[i+1][k] - middleVelocity[i-1]*distributionFunction[i-1][k]) + (1.0/3)*((middleVelocity[i] - middleVelocity[i-1])/dx)*((gkp - gkm)/deltaLogP));
+				f[i] = distributionFunction[i][k]  + deltaT*((1/(2*dx))*(diffusionCoef[i][k]*(distributionFunction[i+1][k] - distributionFunction[i][k])/dxp - diffusionCoef[i-1][k]*(distributionFunction[i][k] - distributionFunction[i-1][k])/dxm) - (1/dx)*((middleVelocity[i])*distributionFunction[i+1][k] - (middleVelocity[i-1])*distributionFunction[i-1][k]) + (1.0/3)*((middleVelocity[i] - middleVelocity[i-1])/dx)*((gkp - gkm)/deltaLogP));
 			} else {
-			    f[i] = distributionFunction[i][k]  + deltaT*((1/(2*dx))*(diffusionCoef[i][k]*(distributionFunction[i+1][k] - distributionFunction[i][k])/dxp - diffusionCoef[i-1][k]*(distributionFunction[i][k] - distributionFunction[i-1][k])/dxm) - (1/dx)*0.5*(middleVelocity[i+1]*distributionFunction[i+1][k] - middleVelocity[i-1]*distributionFunction[i-1][k]) + (1.0/3)*0.5*((middleVelocity[i+1] - middleVelocity[i-1])/dx)*((gkp - gkm)/deltaLogP));
+			    f[i] = distributionFunction[i][k]  + deltaT*((1/(2*dx))*(diffusionCoef[i][k]*(distributionFunction[i+1][k] - distributionFunction[i][k])/dxp - diffusionCoef[i-1][k]*(distributionFunction[i][k] - distributionFunction[i-1][k])/dxm) - (1/dx)*0.5*((middleVelocity[i+1])*distributionFunction[i+1][k] - (middleVelocity[i-1])*distributionFunction[i-1][k]) + (1.0/3)*0.5*((middleVelocity[i+1] - middleVelocity[i-1])/dx)*((gkp - gkm)/deltaLogP));
 			}
+
+			/*if(i == shockWavePoint){
+				f[i] = distributionFunction[i][k]  + deltaT*((1/(2*dx))*(diffusionCoef[i][k]*(distributionFunction[i+1][k] - distributionFunction[i][k])/dxp - diffusionCoef[i-1][k]*(distributionFunction[i][k] - distributionFunction[i-1][k])/dxm) + (1.0/3)*((middleVelocity[i] - middleVelocity[i-1])/dx)*((gkp - gkm)/deltaLogP));
+			} else {
+				f[i] = distributionFunction[i][k]  + deltaT*((1/(2*dx))*(diffusionCoef[i][k]*(distributionFunction[i+1][k] - distributionFunction[i][k])/dxp - diffusionCoef[i-1][k]*(distributionFunction[i][k] - distributionFunction[i-1][k])/dxm) - (1/dx)*0.5*(middleVelocity[i] + middleVelocity[i-1])*(distributionFunction[i+1][k] - distributionFunction[i-1][k]) + (1.0/3)*((middleVelocity[i] - middleVelocity[i-1])/dx)*((gkp - gkm)/deltaLogP));
+			} */
 
 			if(f[i] < 0 ){
 				//printf("f[i] < 0\n");
 				f[i] = 0;
 			}
-			if(abs2(i-shockWavePoint) < 1 && abs2(k - injectionMomentum) < 1){
+			if(abs(i-shockWavePoint) < 1 && abs(k - injectionMomentum) < 1){
 				double inj = injection(i);
 				f[i] += deltaT*inj;
-				injectedParticles += inj*deltaT*(middleGrid[i] - middleGrid[i-1])*deltaLogP;
-				tempDensity[i] -= deltaT*inj*massProton*deltaLogP;
-				tempMomentum[i] -= deltaT*inj*massProton*deltaLogP*middleVelocity[i];
-				tempEnergy[i] -= deltaT*inj*pgrid[k]*speed_of_light*deltaLogP;
+				injectedParticles += 4*pi*inj*deltaT*(middleGrid[i] - middleGrid[i-1])*deltaLogP;
+				//tempDensity[i] -= deltaT*inj*massProton*deltaLogP;
+				//tempMomentum[i] -= deltaT*inj*massProton*deltaLogP*middleVelocity[i];
+				//tempEnergy[i] -= deltaT*inj*pgrid[k]*speed_of_light*deltaLogP;
 				if(tempDensity[i] < 0){
 					printf("tempDensity[i] < 0 by CR\n");
 				}
@@ -172,7 +171,7 @@ void Simulation::evaluateCR(){
 			alertNaNOrInfinity(x[i],"tempDistribution = NaN");
 			if(x[i] < 0){
 				tempDistributionFunction[i][k] = 0;
-				if(abs2(x[i]) > 1E-10){
+				if(abs(x[i]) > 1E-10){
 					printf("tenpDistribution < 0\n");
 				}
 			}
@@ -184,7 +183,14 @@ void Simulation::evaluateCR(){
 			tempDistributionFunction[i][k]= x[i];
 		}
 		tempDistributionFunction[rgridNumber][k] =x[rgridNumber-1];
-		
+	}
+
+	//if(currentIteration == 1000){
+	/*if(shockWavePoint > 1 && shockWavePoint < rgridNumber && currentIteration > 1000){
+		for(int j = 0; j < pgridNumber; ++j){
+			tempDistributionFunction[shockWavePoint+1][j] = tempDistributionFunction[shockWavePoint+2][j];
+		}
+	}*/
 
 	delete[] upper;
 	delete[] middle;
@@ -193,16 +199,6 @@ void Simulation::evaluateCR(){
 	delete[] x;
 	delete[] alpha;
 	delete[] beta;
-	}
-	double t2 = omp_get_wtime();
-	//printf("parllel %lf\n",t2-t1);
-
-	//if(currentIteration == 1000){
-	/*if(shockWavePoint > 1 && shockWavePoint < rgridNumber && currentIteration > 1000){
-		for(int j = 0; j < pgridNumber; ++j){
-			tempDistributionFunction[shockWavePoint+1][j] = tempDistributionFunction[shockWavePoint+2][j];
-		}
-	}*/
 }
 
 //решение трёх диагональной матрицы
