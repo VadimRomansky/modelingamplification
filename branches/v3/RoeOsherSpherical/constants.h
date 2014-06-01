@@ -14,12 +14,13 @@ const int kgridNumber = 50;
 const double momentumParameter =5.0;
 const int writeParameter = 1000;
 const int injectionMomentum = 5;
+const int goodMomentum = 15;
 const double gradientLevel = 0.2;
 const double gridExpLevel = 0.9;
 const double minDeltaR = 5.0E14;
 const double minT = 10000.0;
 const int startCRevaluation = 20000;
-const int startFieldEvaluation = 300000000;
+const int startFieldEvaluation = 50000;
 const int numThreads = 1;
 
 #endif

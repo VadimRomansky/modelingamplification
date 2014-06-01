@@ -84,7 +84,7 @@ void Simulation::growthRate(){
 				double Va = Bls/sqrt(4*pi*middleDensity[i]);
 				Complex A1;
 				Complex A2;
-				for(int j = 0; j < pgridNumber; ++j){
+				for(int j = goodMomentum; j < pgridNumber; ++j){
 					double z = kgrid[k]*speed_of_light*pgrid[j]/(electron_charge*Bls);
 					alertNaNOrInfinity(z, "z = NaN");
 					Complex sigma1;
