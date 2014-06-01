@@ -11,7 +11,7 @@
 
 //конструктор
 Simulation::Simulation(){
-	initialEnergy = 10E47;
+	initialEnergy = 10E46;
 	myTime = 0;
 	tracPen = true;
 	shockWavePoint = -1;

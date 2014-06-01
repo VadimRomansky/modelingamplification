@@ -197,13 +197,13 @@ void Simulation::evaluateHydrodynamic() {
 	for(int i = 0; i < rgridNumber - 1; ++i){
 		tempMomentum[i] += deltaT*2*middlePressure[i]/middleGrid[i];
 
-		//tempMomentum[i] -= deltaT*(cosmicRayPressure[i+1] - cosmicRayPressure[i])/(deltaR[i]);
+		tempMomentum[i] -= deltaT*(cosmicRayPressure[i+1] - cosmicRayPressure[i])/(deltaR[i]);
 		
-		/*if(i > 0 && i < rgridNumber-1){
+		if(i > 0 && i < rgridNumber-1){
 			for(int k = 0; k < kgridNumber; ++k){
 				tempMomentum[i] -= deltaT*0.5*(magneticField[i][k] - magneticField[i-1][k])*kgrid[k]*deltaLogK/deltaR[i];
 			}
-		}*/
+		}
 		
 	}
 	TracPenRadial(tempEnergy, eFlux);
@@ -214,8 +214,8 @@ void Simulation::evaluateHydrodynamic() {
 			double deltaE = 0;
 			for(int k = 0; k < kgridNumber; ++k){
 				deltaE += deltaT*growth_rate[i][k]*magneticField[i][k]*kgrid[k]*deltaLogK;
-				//tempEnergy[i] -= deltaT*0.5*middleVelocity[i]*(magneticField[i][k] - magneticField[i-1][k])*kgrid[k]*deltaLogK/deltaR[i];
-				//tempEnergy[i] -= deltaT*growth_rate[i][k]*magneticField[i][k]*kgrid[k]*deltaLogK;
+				tempEnergy[i] -= deltaT*0.5*middleVelocity[i]*(magneticField[i][k] - magneticField[i-1][k])*kgrid[k]*deltaLogK/deltaR[i];
+				tempEnergy[i] -= deltaT*growth_rate[i][k]*magneticField[i][k]*kgrid[k]*deltaLogK;
 				//alertNaNOrInfinity(tempEnergy[i], "energy = NaN");
 				//alertNegative(tempEnergy[i], "energy < 0");
 			}
@@ -640,7 +640,8 @@ void Simulation::updateShockWavePoint(){
 		shockWaveT = 0;
 		for(int i = rgridNumber-1; i > 1; --i){
 			for(int j = 0; j < pgridNumber; ++j){
-				distributionFunction[i][j] = (distributionFunction[i-1][j]*volume(i-1) + distributionFunction[i][j]*volume(i))/(2*volume(i));
+				double sigma = 0.9;
+				distributionFunction[i][j] = ((1-sigma)*distributionFunction[i-1][j]*volume(i-1) + sigma*distributionFunction[i][j]*volume(i))/(volume(i));
 				//distributionFunction[i][j] = distributionFunction[i+1][j]*middleDeltaR[i+1]/middleDeltaR[i];
 			}
 		}
@@ -709,13 +710,19 @@ void Simulation::updateAll(){
     //#pragma omp parallel for private(ompi)
 	for(ompi = 0; ompi < numThreads; ++ ompi){
 		for(int i = ompi; i < rgridNumber; i = i + numThreads){
-			//if(i != 0 || tempDensity[i] < middleDensity[i]){
+			if(tempDensity[i] < 0){
+				printf("density < 0\n");
+				middleDensity[i] *= epsilon;
+			} else {
 				middleDensity[i] = tempDensity[i];
-			//}
+			}
 			alertNaNOrInfinity(middleDensity[i], "density = NaN");
 			double middleMomentum = tempMomentum[i];
 			alertNaNOrInfinity(middleMomentum, "momentum = NaN");
 			double middleEnergy = tempEnergy[i];
+			if(tempEnergy[i] < 0){
+				printf("energy < 0\n");
+			}
 			alertNaNOrInfinity(middleEnergy, "energy = NaN");
 			middleVelocity[i] = middleMomentum/middleDensity[i];
 
