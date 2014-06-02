@@ -38,7 +38,7 @@ void deserialize(FILE* hydroFile, FILE* distributionFile, FILE* fieldFile, FILE*
 	fscanf(infoFile, "%lf", &simulation->myTime);
 	fscanf(infoFile, "%d", &simulation->currentIteration);
 	fscanf(infoFile, "%lf", &simulation->injectedParticles);
-	fscanf(infoFile, "%d", simulation->shockWavePoint);
+	fscanf(infoFile, "%d", &simulation->shockWavePoint);
 
 	int a;
 	fscanf(infoFile, "%d", &a);
@@ -50,31 +50,38 @@ void deserialize(FILE* hydroFile, FILE* distributionFile, FILE* fieldFile, FILE*
 
 	fscanf(infoFile, "%lf", &simulation->minP);
 	fscanf(infoFile, "%lf", &simulation->maxP);
+	fscanf(infoFile, "%lf", &simulation->minK);
+	fscanf(infoFile, "%lf", &simulation->maxK);
 
 	simulation->initializeArrays();
 
-	for(int j = 0; j < pgridNumber; ++j){
-		fprintf(pgridFile, "%lf", &simulation->pgrid[j]);
+	/*for(int j = 0; j < pgridNumber; ++j){
+		double p;
+		fprintf(pgridFile, "%60.50lf", &p);
+		printf("%lf\n",p);
 	}
 
 	for(int j = 0; j < kgridNumber; ++j){
-		fprintf(kgridFile, "%lf", &simulation->kgrid[j]);
-	}
+		int k;
+		fprintf(kgridFile, "%60.50lf",&simulation->kgrid[j]);
+	}*/
 
 	for(int i = 0; i <= simulation->rgridNumber; ++i){
-		fscanf(gridFile,"%lf", simulation->grid[i]);
+		fscanf(gridFile,"%lf", &simulation->grid[i]);
 		for(int j = 0; j < pgridNumber; ++j){
 			fscanf(distributionFile, "%lf", &simulation->distributionFunction[i][j]);
 		}
 	}
 
 	for(int i = 0; i < simulation->rgridNumber; ++i){
-		fscanf(hydroFile, "%g %g %g", &simulation->middleDensity[i], &simulation->middleVelocity[i], &simulation->middlePressure[i]);
+		fscanf(hydroFile, "%lf %lf %lf", &simulation->middleDensity[i], &simulation->middleVelocity[i], &simulation->middlePressure[i]);
 		for(int k = 0; k < kgridNumber; ++k){
-			fscanf(fieldFile, "%g", &simulation->magneticField[i][k]);
+			fscanf(fieldFile, "%lf", &simulation->magneticField[i][k]);
 		}
 	}
 
 	simulation->updateAfterSerialization();
+
+	simulation->serialized= true;
 }
 	
