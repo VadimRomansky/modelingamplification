@@ -20,45 +20,47 @@ void output(FILE* outFile, Simulation* simulation){
 void serialize(FILE* hydroFile, FILE* distributionFile, FILE* fieldFile, FILE* gridFile, FILE* pgridFile, FILE* kgridFile, FILE* infoFile, Simulation* simulation){
 	fprintf(infoFile,"%d\n", simulation->iterationNumber);
     fprintf(infoFile,"%d\n", simulation->particlesNumber);
-	fprintf(infoFile,"%lf\n", simulation->U0);
-	fprintf(infoFile,"%lf\n", simulation->density0);
-    fprintf(infoFile,"%lf\n", simulation->B0);
-    fprintf(infoFile,"%lf\n", simulation->temperature);
-	fprintf(infoFile,"%lf\n", simulation->upstreamR);
+	fprintf(infoFile,"%60.50lf\n", simulation->U0);
+	fprintf(infoFile,"%60.50lf\n", simulation->density0);
+    fprintf(infoFile,"%60.50lf\n", simulation->B0);
+    fprintf(infoFile,"%60.50lf\n", simulation->temperature);
+	fprintf(infoFile,"%60.50lf\n", simulation->upstreamR);
 	fprintf(infoFile,"%d\n", simulation->rgridNumber);
 	fprintf(infoFile,"%d\n", simulation->simulationType);
-	fprintf(infoFile,"%lf\n", simulation->maxTime);
-	fprintf(infoFile, "%lf\n", simulation->myTime);
+	fprintf(infoFile,"%60.50lf\n", simulation->maxTime);
+	fprintf(infoFile, "%60.50lf\n", simulation->myTime);
 	fprintf(infoFile, "%d\n", simulation->currentIteration);
-	fprintf(infoFile, "%lf\n", simulation->injectedParticles);
+	fprintf(infoFile, "%60.50lf\n", simulation->injectedParticles);
 	fprintf(infoFile, "%d\n", simulation->shockWavePoint);
 	fprintf(infoFile, "%d\n", simulation->shockWaveMoved);
 	fprintf(infoFile, "%d\n", simulation->prevShockWavePoint);
-	fprintf(infoFile, "%lf\n", simulation->shockWaveSpeed);
-	fprintf(infoFile, "%lf\n", simulation->shockWaveT);
-	fprintf(infoFile, "%lf\n", simulation->minP);
-	fprintf(infoFile, "%lf\n", simulation->maxP);
+	fprintf(infoFile, "%60.50lf\n", simulation->shockWaveSpeed);
+	fprintf(infoFile, "%60.50lf\n", simulation->shockWaveT);
+	fprintf(infoFile, "%60.50lf\n", simulation->minP);
+	fprintf(infoFile, "%60.50lf\n", simulation->maxP);
+	fprintf(infoFile, "%60.50lf\n", simulation->minK);
+	fprintf(infoFile, "%60.50lf\n", simulation->maxK);
 
 	for(int j = 0; j < pgridNumber; ++j){
-		fprintf(pgridFile, "%lf\n", simulation->pgrid[j]);
+		fprintf(pgridFile, "%60.50lf\n",simulation->pgrid[j]);
 	}
 
 	for(int j = 0; j < kgridNumber; ++j){
-		fprintf(kgridFile, "%lf\n", simulation->kgrid[j]);
+		fprintf(kgridFile, "%60.50lf\n",simulation->kgrid[j]);
 	}
 
 	for(int i = 0; i <= simulation->rgridNumber; ++i){
-		fprintf(gridFile,"%lf\n", simulation->grid[i]);
+		fprintf(gridFile,"%60.50lf\n", simulation->grid[i]);
 		for(int j = 0; j < pgridNumber; ++j){
-			fprintf(distributionFile, "%lf ", simulation->distributionFunction[i][j]);
+			fprintf(distributionFile, "%60.50lf ", simulation->distributionFunction[i][j]);
 		}
 		fprintf(distributionFile, "\n");
 	}
 
 	for(int i = 0; i < simulation->rgridNumber; ++i){
-		fprintf(hydroFile, "%g %g %g\n", simulation->middleDensity[i], simulation->middleVelocity[i], simulation->middlePressure[i]);
+		fprintf(hydroFile, "%60.50lf %60.50lf %60.50lf\n", simulation->middleDensity[i], simulation->middleVelocity[i], simulation->middlePressure[i]);
 		for(int k = 0; k < kgridNumber; ++k){
-			fprintf(fieldFile, "%g ", simulation->magneticField[i][k]);
+			fprintf(fieldFile, "%60.50lf ", simulation->magneticField[i][k]);
 		}
 		fprintf(fieldFile, "\n");
 	}

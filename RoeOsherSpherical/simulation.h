@@ -5,6 +5,8 @@
 
 class Simulation{
 public:
+	bool serialized;
+
 	int iterationNumber;
 	int particlesNumber;
 	double U0;
@@ -52,6 +54,8 @@ public:
 	double maxP;
 	double* pgrid;
 	double* logPgrid;
+	double minK;
+	double maxK;
 	double* kgrid;
 	double* logKgrid;
 	double deltaLogP;

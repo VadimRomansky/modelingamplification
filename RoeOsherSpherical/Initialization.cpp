@@ -11,6 +11,7 @@
 
 //конструктор
 Simulation::Simulation(){
+	serialized = false;
 	initialEnergy = 10E46;
 	myTime = 0;
 	tracPen = true;
@@ -24,6 +25,7 @@ Simulation::Simulation(){
 	totalParticleEnergy = 0;
 	totalMomentum = 0;
 	totalParticles = 0;
+	currentIteration = 0;
 }
 
 //деструктор
@@ -111,11 +113,11 @@ void Simulation::initializeProfile(){
 	minP = 0.05*massProton*speed_of_light;
 	maxP = minP*10000000;
 
-	double kmin = (1E-9)*electron_charge*B0/(speed_of_light*maxP);
-	double kmax = (1E6)*electron_charge*B0/(speed_of_light*minP);
-	deltaLogK = (log(kmax) - log(kmin))/(kgridNumber - 1);
+	minK = (1E-9)*electron_charge*B0/(speed_of_light*maxP);
+	maxK = (1E6)*electron_charge*B0/(speed_of_light*minP);
+	deltaLogK = (log(maxK) - log(minK))/(kgridNumber - 1);
 	for(int i = 0; i < kgridNumber; ++i){
-		logKgrid[i] = log(kmin) + i*deltaLogK;
+		logKgrid[i] = log(minK) + i*deltaLogK;
 		kgrid[i] = exp(logKgrid[i]);
 	}
 
@@ -427,17 +429,31 @@ void Simulation::updateAfterSerialization(){
 	}
 	tempGrid[rgridNumber] = grid[rgridNumber];
 
-	for(int i = 0; i < pgridNumber; ++i){
+	double pstep = exp(log(maxP/minP)/pgridNumber);
+	logPgrid[0] = log(minP);
+	deltaLogP = (log(maxP) - logPgrid[0])/(pgridNumber);
+	pgrid[0] = minP;
+	for(int i = 1; i < pgridNumber; ++i){
+		logPgrid[i] = logPgrid[i-1] + deltaLogP;
+		pgrid[i] = exp(logPgrid[i]);
+	}
+	pgrid[pgridNumber-1] = maxP;
+	/*for(int i = 0; i < pgridNumber; ++i){
 		logPgrid[i] = log(pgrid[i]);
 	}
 
-	deltaLogP = logPgrid[1] - logPgrid[0];
+	deltaLogP = logPgrid[1] - logPgrid[0];*/
 
+	deltaLogK = (log(maxK) - log(minK))/(kgridNumber - 1);
 	for(int i = 0; i < kgridNumber; ++i){
+		logKgrid[i] = log(minK) + i*deltaLogK;
+		kgrid[i] = exp(logKgrid[i]);
+	}
+	/*for(int i = 0; i < kgridNumber; ++i){
 		logKgrid[i] = log(kgrid[i]);
 	}
 
-	deltaLogK = logKgrid[1] - logKgrid[0];
+	deltaLogK = logKgrid[1] - logKgrid[0];*/
 
 	for(int i = 0; i < rgridNumber; ++i){
 		if(i == 0){

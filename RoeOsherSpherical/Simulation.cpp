@@ -12,7 +12,13 @@
 //главная функция
 void Simulation::simulate(){
 	printf("initialization\n");
-	initializeProfile();
+	const char* suffix;
+	if(!serialized) {
+		suffix = "w";
+		initializeProfile();
+	} else {
+		suffix = "a";
+	}
 	//updateShockWavePoint();
 	//shockWavePoint = rgridNumber/100;
 	//updateGrid();
@@ -22,41 +28,41 @@ void Simulation::simulate(){
 	updateTimeStep();
 
 	printf("creating files\n");
-	FILE* outIteration = fopen("./output/iterations.dat","w");
+	FILE* outIteration = fopen("./output/iterations.dat",suffix);
 	fclose(outIteration);
-	FILE* outExtraIteration = fopen("./output/extra_iterations.dat","w");
+	FILE* outExtraIteration = fopen("./output/extra_iterations.dat",suffix);
 	fclose(outExtraIteration);
-	FILE* outTempGrid = fopen("./output/temp_grid.dat","w");
+	FILE* outTempGrid = fopen("./output/temp_grid.dat",suffix);
 	fclose(outTempGrid);
-	FILE* outShockWave = fopen("./output/shock_wave.dat","w");
+	FILE* outShockWave = fopen("./output/shock_wave.dat",suffix);
 	fclose(outShockWave);
-	FILE* outFile = fopen("./output/tamc_radial_profile.dat","w");
+	FILE* outFile = fopen("./output/tamc_radial_profile.dat",suffix);
 	output(outFile,this);
 	fclose(outFile);
 	FILE* outDistribution;
 	FILE* outFullDistribution;
 	FILE* outCoordinateDistribution;
-	outDistribution  = fopen("./output/distribution.dat","w");
-	outFullDistribution  = fopen("./output/fullDistribution.dat","w");
-	outCoordinateDistribution  = fopen("./output/coordinateDistribution.dat","w");
+	outDistribution  = fopen("./output/distribution.dat",suffix);
+	outFullDistribution  = fopen("./output/fullDistribution.dat",suffix);
+	outCoordinateDistribution  = fopen("./output/coordinateDistribution.dat",suffix);
 	outputDistributionP3(outDistribution, outFullDistribution, outCoordinateDistribution, this);
 	fclose(outCoordinateDistribution);
 	fclose(outFullDistribution);
 	fclose(outDistribution);
-	FILE* outField = fopen("./output/field.dat","w");
+	FILE* outField = fopen("./output/field.dat",suffix);
 	fclose(outField);
-	FILE* coordinateField = fopen("./output/coordinate_field.dat","w");
+	FILE* coordinateField = fopen("./output/coordinate_field.dat",suffix);
 	fclose(coordinateField);
-	FILE* outFullField = fopen("./output/full_field.dat","w");
+	FILE* outFullField = fopen("./output/full_field.dat",suffix);
 	fclose(outFullField);
-	FILE* outCoef = fopen("./output/diff_coef.dat","w");
+	FILE* outCoef = fopen("./output/diff_coef.dat",suffix);
 	fclose(outCoef);
-	FILE* xFile = fopen("./output/xfile.dat","w");
+	FILE* xFile = fopen("./output/xfile.dat",suffix);
 	fclose(xFile);
-	FILE* kFile = fopen("./output/kfile.dat","w");
+	FILE* kFile = fopen("./output/kfile.dat",suffix);
 	fclose(kFile);
 	updateShockWavePoint();
-	outShockWave = fopen("./output/shock_wave.dat","w");
+	outShockWave = fopen("./output/shock_wave.dat",suffix);
 	double shockWaveR = 0;
 	double gasSpeed = 0;
 	if(shockWavePoint >= 0 && shockWavePoint <= rgridNumber){
@@ -68,9 +74,6 @@ void Simulation::simulate(){
 	fclose(outShockWave);
 	deltaT = min2(minT, deltaT);
 
-	clock_t currentTime = clock();
-	clock_t prevTime = currentTime;
-	currentIteration = 0;
 	updateDiffusionCoef();
 	//основной цикл
 	//fakeMoveShockWave();
