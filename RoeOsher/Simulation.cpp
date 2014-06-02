@@ -178,6 +178,7 @@ void Simulation::initializeProfile(){
 	for(int i = 1; i <= rgridNumber; ++i){
 		if(grid[i] < grid[i-1]){
 			printf("grid[i] < grid[i-1]\n");
+			exit(0);
 		}
 	}
 
@@ -481,9 +482,9 @@ void Simulation::simulate(){
 	//основной цикл
 	while(myTime < maxTime && currentIteration < iterationNumber){
 		++currentIteration;
-		printf("iteration № %d\n", currentIteration);
-		printf("time = %lf\n", myTime);
-		printf("solving\n");
+		//printf("iteration № %d\n", currentIteration);
+		//printf("time = %lf\n", myTime);
+		//printf("solving\n");
 
 		evaluateHydrodynamic();
 		
@@ -507,7 +508,7 @@ void Simulation::simulate(){
 		deltaT = min2(minT, deltaT);
 		if(currentIteration % writeParameter == 0){
 			//вывод на некоторых итерациях
-			printf("outputing\n");
+			//printf("outputing\n");
 			fopen_s(&outFile, "./output/tamc_radial_profile.dat","a");
 			output(outFile, this);
 			fclose(outFile);
@@ -569,7 +570,7 @@ void Simulation::simulate(){
 
 //расчет гидродинамики
 void Simulation::evaluateHydrodynamic() {
-	printf("evaluating hydrodynamic\n");
+	//printf("evaluating hydrodynamic\n");
 
 	solveDiscontinious();
 	CheckNegativeDensity();
