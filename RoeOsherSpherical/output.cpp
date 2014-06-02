@@ -17,6 +17,46 @@ void output(FILE* outFile, Simulation* simulation){
 	}
 }
 
+void serialize(FILE* hydroFile, FILE* distributionFile, FILE* fieldFile, FILE* gridFile, FILE* pgridFile, FILE* kgridFile, FILE* infoFile, Simulation* simulation){
+	fprintf(infoFile,"%d\n", simulation->iterationNumber);
+    fprintf(infoFile,"%d\n", simulation->particlesNumber);
+	fprintf(infoFile,"%lf\n", simulation->U0);
+	fprintf(infoFile,"%lf\n", simulation->density0);
+    fprintf(infoFile,"%lf\n", simulation->B0);
+    fprintf(infoFile,"%lf\n", simulation->temperature);
+	fprintf(infoFile,"%lf\n", simulation->upstreamR);
+	fprintf(infoFile,"%d\n", simulation->rgridNumber);
+	fprintf(infoFile,"%d\n", simulation->simulationType);
+	fprintf(infoFile,"%lf\n", simulation->maxTime);
+	fprintf(infoFile, "%lf\n", simulation->myTime);
+	fprintf(infoFile, "%d\n", simulation->currentIteration);
+	fprintf(infoFile, "%lf\n", simulation->injectedParticles);
+
+	for(int j = 0; j < pgridNumber; ++j){
+		fprintf(pgridFile, "%lf\n", simulation->pgrid[j]);
+	}
+
+	for(int j = 0; j < kgridNumber; ++j){
+		fprintf(kgridFile, "%lf\n", simulation->kgrid[j]);
+	}
+
+	for(int i = 0; i <= simulation->rgridNumber; ++i){
+		fprintf(gridFile,"%lf\n", simulation->grid[i]);
+		for(int j = 0; j < pgridNumber; ++j){
+			fprintf(distributionFile, "%lf ", simulation->distributionFunction[i][j]);
+		}
+		fprintf(distributionFile, "\n");
+	}
+
+	for(int i = 0; i < simulation->rgridNumber; ++i){
+		fprintf(hydroFile, "%g %g %g\n", simulation->middleDensity[i], simulation->middleVelocity[i], simulation->middlePressure[i]);
+		for(int k = 0; k < kgridNumber; ++k){
+			fprintf(fieldFile, "%g ", simulation->magneticField[i][k]);
+		}
+		fprintf(fieldFile, "\n");
+	}
+}
+
 void outputDistribution(FILE* distributionFile, FILE* fullDistributionFile, FILE* coordinateDistributionFile, Simulation* simulation){
 	double* fullDistribution = new double[pgridNumber];
 	double volume = simulation->upstreamR;
