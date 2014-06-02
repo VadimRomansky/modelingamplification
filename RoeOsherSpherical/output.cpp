@@ -31,6 +31,13 @@ void serialize(FILE* hydroFile, FILE* distributionFile, FILE* fieldFile, FILE* g
 	fprintf(infoFile, "%lf\n", simulation->myTime);
 	fprintf(infoFile, "%d\n", simulation->currentIteration);
 	fprintf(infoFile, "%lf\n", simulation->injectedParticles);
+	fprintf(infoFile, "%d\n", simulation->shockWavePoint);
+	fprintf(infoFile, "%d\n", simulation->shockWaveMoved);
+	fprintf(infoFile, "%d\n", simulation->prevShockWavePoint);
+	fprintf(infoFile, "%lf\n", simulation->shockWaveSpeed);
+	fprintf(infoFile, "%lf\n", simulation->shockWaveT);
+	fprintf(infoFile, "%lf\n", simulation->minP);
+	fprintf(infoFile, "%lf\n", simulation->maxP);
 
 	for(int j = 0; j < pgridNumber; ++j){
 		fprintf(pgridFile, "%lf\n", simulation->pgrid[j]);

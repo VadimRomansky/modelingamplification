@@ -38,6 +38,20 @@ void deserialize(FILE* hydroFile, FILE* distributionFile, FILE* fieldFile, FILE*
 	fscanf(infoFile, "%lf", &simulation->myTime);
 	fscanf(infoFile, "%d", &simulation->currentIteration);
 	fscanf(infoFile, "%lf", &simulation->injectedParticles);
+	fscanf(infoFile, "%d", simulation->shockWavePoint);
+
+	int a;
+	fscanf(infoFile, "%d", &a);
+	simulation->shockWaveMoved = (a==1);
+
+	fscanf(infoFile, "%d", &simulation->prevShockWavePoint);
+	fscanf(infoFile, "%lf", &simulation->shockWaveSpeed);
+	fscanf(infoFile, "%lf", &simulation->shockWaveT);
+
+	fscanf(infoFile, "%lf", &simulation->minP);
+	fscanf(infoFile, "%lf", &simulation->maxP);
+
+	simulation->initializeArrays();
 
 	for(int j = 0; j < pgridNumber; ++j){
 		fprintf(pgridFile, "%lf", &simulation->pgrid[j]);
@@ -60,5 +74,7 @@ void deserialize(FILE* hydroFile, FILE* distributionFile, FILE* fieldFile, FILE*
 			fscanf(fieldFile, "%g", &simulation->magneticField[i][k]);
 		}
 	}
+
+	simulation->updateAfterSerialization();
 }
 	

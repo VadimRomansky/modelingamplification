@@ -123,6 +123,8 @@ public:
 	~Simulation();
 
 	void initializeProfile();
+	void initializeArrays();
+	void updateAfterSerialization();
 	void simulate();
 	void evaluateHydrodynamic();
 	void solveDiscontinious();

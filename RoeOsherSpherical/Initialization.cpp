@@ -106,80 +106,7 @@ void Simulation::initializeProfile(){
 	prevShockWavePoint = -1;
 	shockWavePoint = -1;
 
-	pgrid = new double[pgridNumber];
-	logPgrid = new double[pgridNumber];
-	grid = new double[rgridNumber + 1];
-	gridsquare = new double[rgridNumber+ 1];
-	middleGrid = new double[rgridNumber];
-	deltaR = new double[rgridNumber];
-	middleDeltaR = new double[rgridNumber];
-	tempGrid = new double[rgridNumber];
-
-	pointDensity = new double[rgridNumber + 1];
-	pointVelocity = new double[rgridNumber + 1];
-	pointEnthalpy = new double[rgridNumber + 1];
-	pointSoundSpeed = new double[rgridNumber + 1];
-	middleDensity = new double[rgridNumber];
-	middleVelocity = new double[rgridNumber];
-	middlePressure = new double[rgridNumber];
-
-	tempDensity = new double[rgridNumber];
-	tempMomentum = new double[rgridNumber];
-	tempEnergy = new double[rgridNumber];
-
-	vscattering = new double[rgridNumber];
-
-	dFlux = new double[rgridNumber];
-	dFluxPlus = new double*[rgridNumber];
-	dFluxMinus = new double*[rgridNumber];
-
-	mFlux = new double[rgridNumber];
-	mFluxPlus = new double*[rgridNumber];
-	mFluxMinus = new double*[rgridNumber];
-
-	eFlux = new double[rgridNumber];
-	eFluxPlus = new double*[rgridNumber];
-	eFluxMinus = new double*[rgridNumber];
-
-	for(int i = 0; i < rgridNumber; ++i){
-		vscattering[i] = 0;
-		dFluxPlus[i] = new double[3];
-		dFluxMinus[i] = new double[3];
-		mFluxPlus[i] = new double[3];
-		mFluxMinus[i] = new double[3];
-		eFluxPlus[i] = new double[3];
-		eFluxMinus[i] = new double[3];
-	}
-
-	cosmicRayPressure = new double[rgridNumber+1];
-	cosmicRayConcentration = new double[rgridNumber+1];
-	tempU = new double[rgridNumber];
-	integratedFlux = new double[rgridNumber];
-
-	distributionFunction = new double*[rgridNumber+1];
-	tempDistributionFunction = new double*[rgridNumber+1];
-
-	for(int i = 0; i <= rgridNumber; i ++){
-		cosmicRayPressure[i] = 0;
-		distributionFunction[i] = new double[pgridNumber];
-		tempDistributionFunction[i] = new double[pgridNumber];
-		for(int j = 0; j < pgridNumber; ++j){
-			distributionFunction[i][j] = 0;
-			tempDistributionFunction[i][j] = 0;
-		}
-	}
-
-	diffusionCoef = new double*[rgridNumber];
-	for(int i = 0; i < rgridNumber; ++i){
-		diffusionCoef[i] = new double[pgridNumber];
-		integratedFlux[i] = 0;
-		for(int j =0; j< pgridNumber; ++j){
-			diffusionCoef[i][j] = pgrid[j]*speed_of_light*speed_of_light/(electron_charge*B0);
-		}
-	}
-
-	kgrid = new double[kgridNumber];
-	logKgrid = new double[kgridNumber];
+	initializeArrays();
 
 	minP = 0.05*massProton*speed_of_light;
 	maxP = minP*10000000;
@@ -191,20 +118,10 @@ void Simulation::initializeProfile(){
 		logKgrid[i] = log(kmin) + i*deltaLogK;
 		kgrid[i] = exp(logKgrid[i]);
 	}
-	magneticField = new double*[rgridNumber];
-	tempMagneticField = new double*[rgridNumber];
-	largeScaleField = new double*[rgridNumber];
-	growth_rate = new double*[rgridNumber];
-	magneticInductionSum = new double[rgridNumber];
-	maxRate = new double[rgridNumber];
-	magneticEnergy = new double[rgridNumber];
+
 	for(int i = 0; i < rgridNumber; ++i){
 		magneticEnergy[i] = 0;
 		maxRate[i] = 0;
-		magneticField[i] = new double[kgridNumber];
-		tempMagneticField[i] = new double[kgridNumber];
-		largeScaleField[i] = new double[kgridNumber];
-		growth_rate[i] = new double[kgridNumber];
 		for(int k = 0; k < kgridNumber; ++k){
 			magneticField[i][k] = (1E-8)*B0*B0*power(1/kgrid[k], 5/3)*power(kgrid[0],2/3);
 			tempMagneticField[i][k] = magneticField[i][k];
@@ -224,14 +141,6 @@ void Simulation::initializeProfile(){
 			magneticEnergy += magneticField[i][k]*kgrid[k]*deltaLogK;
 		}
 		magneticInductionSum[i] = sqrt(4*pi*magneticEnergy + B0*B0);
-	}
-
-	crflux = new double*[rgridNumber];
-	for(int i = 0; i < rgridNumber; ++i){
-		crflux[i] = new double[pgridNumber];
-		for(int j = 0;j < pgridNumber; ++j){
-			crflux[i][j] = 0;
-		}
 	}
 
 	double r = downstreamR;
@@ -399,4 +308,153 @@ void Simulation::initializeProfile(){
 
 	shockWaveT = 0;
 	shockWaveSpeed = 0;
+}
+
+void Simulation::initializeArrays(){
+	pgrid = new double[pgridNumber];
+	logPgrid = new double[pgridNumber];
+	grid = new double[rgridNumber + 1];
+	gridsquare = new double[rgridNumber+ 1];
+	middleGrid = new double[rgridNumber];
+	deltaR = new double[rgridNumber];
+	middleDeltaR = new double[rgridNumber];
+	tempGrid = new double[rgridNumber];
+
+	pointDensity = new double[rgridNumber + 1];
+	pointVelocity = new double[rgridNumber + 1];
+	pointEnthalpy = new double[rgridNumber + 1];
+	pointSoundSpeed = new double[rgridNumber + 1];
+	middleDensity = new double[rgridNumber];
+	middleVelocity = new double[rgridNumber];
+	middlePressure = new double[rgridNumber];
+
+	tempDensity = new double[rgridNumber];
+	tempMomentum = new double[rgridNumber];
+	tempEnergy = new double[rgridNumber];
+
+	vscattering = new double[rgridNumber];
+
+	dFlux = new double[rgridNumber];
+	dFluxPlus = new double*[rgridNumber];
+	dFluxMinus = new double*[rgridNumber];
+
+	mFlux = new double[rgridNumber];
+	mFluxPlus = new double*[rgridNumber];
+	mFluxMinus = new double*[rgridNumber];
+
+	eFlux = new double[rgridNumber];
+	eFluxPlus = new double*[rgridNumber];
+	eFluxMinus = new double*[rgridNumber];
+
+	for(int i = 0; i < rgridNumber; ++i){
+		vscattering[i] = 0;
+		dFluxPlus[i] = new double[3];
+		dFluxMinus[i] = new double[3];
+		mFluxPlus[i] = new double[3];
+		mFluxMinus[i] = new double[3];
+		eFluxPlus[i] = new double[3];
+		eFluxMinus[i] = new double[3];
+	}
+
+	cosmicRayPressure = new double[rgridNumber+1];
+	cosmicRayConcentration = new double[rgridNumber+1];
+	tempU = new double[rgridNumber];
+	integratedFlux = new double[rgridNumber];
+
+	distributionFunction = new double*[rgridNumber+1];
+	tempDistributionFunction = new double*[rgridNumber+1];
+
+	for(int i = 0; i <= rgridNumber; i ++){
+		cosmicRayPressure[i] = 0;
+		distributionFunction[i] = new double[pgridNumber];
+		tempDistributionFunction[i] = new double[pgridNumber];
+		for(int j = 0; j < pgridNumber; ++j){
+			distributionFunction[i][j] = 0;
+			tempDistributionFunction[i][j] = 0;
+		}
+	}
+
+	diffusionCoef = new double*[rgridNumber];
+	for(int i = 0; i < rgridNumber; ++i){
+		diffusionCoef[i] = new double[pgridNumber];
+		integratedFlux[i] = 0;
+	}
+
+	kgrid = new double[kgridNumber];
+	logKgrid = new double[kgridNumber];
+
+	magneticField = new double*[rgridNumber];
+	tempMagneticField = new double*[rgridNumber];
+	largeScaleField = new double*[rgridNumber];
+	growth_rate = new double*[rgridNumber];
+	magneticInductionSum = new double[rgridNumber];
+	maxRate = new double[rgridNumber];
+	magneticEnergy = new double[rgridNumber];
+
+	for(int i = 0; i < rgridNumber; ++i){
+		magneticEnergy[i] = 0;
+		maxRate[i] = 0;
+		magneticField[i] = new double[kgridNumber];
+		tempMagneticField[i] = new double[kgridNumber];
+		largeScaleField[i] = new double[kgridNumber];
+		growth_rate[i] = new double[kgridNumber];
+		for(int k = 0; k < kgridNumber; ++k){
+			growth_rate[i][k] = 0;
+		}
+	}
+
+	crflux = new double*[rgridNumber];
+	for(int i = 0; i < rgridNumber; ++i){
+		crflux[i] = new double[pgridNumber];
+		for(int j = 0;j < pgridNumber; ++j){
+			crflux[i][j] = 0;
+		}
+	}
+}
+
+void Simulation::updateAfterSerialization(){
+	for(int i = 1; i <= rgridNumber; ++i){
+		if(grid[i] <= grid[i-1]){
+			printf("grid[i] <= grid[i-1]\n");
+		}
+	}
+
+	for(int i = 0; i < rgridNumber; ++i){
+		middleGrid[i] = (grid[i] + grid[i+1])/2;
+		tempGrid[i] = grid[i];
+		deltaR[i] = grid[i+1] - grid[i];
+		gridsquare[i] = sqr(grid[i]);
+	}
+	tempGrid[rgridNumber] = grid[rgridNumber];
+
+	for(int i = 0; i < pgridNumber; ++i){
+		logPgrid[i] = log(pgrid[i]);
+	}
+
+	deltaLogP = logPgrid[1] - logPgrid[0];
+
+	for(int i = 0; i < kgridNumber; ++i){
+		logKgrid[i] = log(kgrid[i]);
+	}
+
+	deltaLogK = logKgrid[1] - logKgrid[0];
+
+	for(int i = 0; i < rgridNumber; ++i){
+		if(i == 0){
+			middleDeltaR[i] = middleGrid[i];
+		} else {
+			middleDeltaR[i] = middleGrid[i] - middleGrid[i-1];
+		}
+
+		pointDensity[i] = middleDensity[i];
+		pointVelocity[i] = middleVelocity[i];
+		pointEnthalpy[i] = (energy(i) + middlePressure[i])/middleDensity[i];
+		tempDensity[i] = middleDensity[i];
+		tempMomentum[i] = momentum(i);
+		tempEnergy[i] = energy(i);
+	}
+
+	pointDensity[rgridNumber] = pointDensity[rgridNumber - 1];
+	pointVelocity[rgridNumber] = pointVelocity[rgridNumber - 1];
+	pointEnthalpy[rgridNumber] = (energy(rgridNumber-1) + middlePressure[rgridNumber-1])/middleDensity[rgridNumber-1];
 }
