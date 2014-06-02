@@ -473,4 +473,19 @@ void Simulation::updateAfterSerialization(){
 	pointDensity[rgridNumber] = pointDensity[rgridNumber - 1];
 	pointVelocity[rgridNumber] = pointVelocity[rgridNumber - 1];
 	pointEnthalpy[rgridNumber] = (energy(rgridNumber-1) + middlePressure[rgridNumber-1])/middleDensity[rgridNumber-1];
+
+	for(int i = 0; i < rgridNumber; ++i){
+		magneticEnergy[i] = 0;
+		maxRate[i] = 0;
+		for(int k = 0; k < kgridNumber; ++k){
+			tempMagneticField[i][k] = magneticField[i][k];
+			if(k == 0){
+				largeScaleField[i][k] = sqrt(4*pi*magneticField[i][k]*kgrid[k]*deltaLogK + B0*B0);
+			} else {
+				largeScaleField[i][k] = sqrt(4*pi*magneticField[i][k]*kgrid[k]*deltaLogK + sqr(largeScaleField[i][k-1]));
+			}
+			growth_rate[i][k] = 0;
+			alertNaNOrInfinity(magneticField[i][k], "magnetic field = NaN");
+		}
+	}
 }
