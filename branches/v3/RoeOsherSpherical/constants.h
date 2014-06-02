@@ -13,6 +13,7 @@ const int pgridNumber = 100;
 const int kgridNumber = 50;
 const double momentumParameter =5.0;
 const int writeParameter = 1000;
+const int serializeParameter = 49999;
 const int injectionMomentum = 5;
 const int goodMomentum = 15;
 const double gradientLevel = 0.2;

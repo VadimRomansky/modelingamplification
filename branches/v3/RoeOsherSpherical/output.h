@@ -9,5 +9,6 @@ void outputDistributionP3(FILE* distributionFile, FILE* fullDistributionFile, FI
 void outputNewGrid(FILE* outFile, Simulation* simulation);
 void outMatrix(double* a, double* c, double* b, int N, double* f, double* x);
 void outputField(FILE* outFile, FILE* coordinateFile, FILE* outFull, FILE* coefFile, FILE* xfile, FILE* kfile, Simulation* simulation);
+void serialize(FILE* hydroFile, FILE* distributionFile, FILE* fieldFile, FILE* gridFile, FILE* pgridFile, FILE* kgridFile, FILE* infoFile, Simulation* simulation);
 
 #endif
