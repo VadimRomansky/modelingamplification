@@ -4,7 +4,7 @@
 #include "complex.h"
 
 void Simulation::evaluateField(){
-	printf("evaluating magnetic field\n");
+	//printf("evaluating magnetic field\n");
 
 	//growthRate();
 
@@ -12,7 +12,6 @@ void Simulation::evaluateField(){
 	for(int i = 1; i < rgridNumber; ++i){
 		double Ualpha = power(middleVelocity[i],1.5);
 		double prevUalpha = power(middleVelocity[i-1],1.5);
-		double delta = 5.0/21;
 		int maxRateK = 0;
 		maxRate[i] = 0;
 
@@ -33,7 +32,7 @@ void Simulation::evaluateField(){
 				double prevZ = magneticField[i-1][k]*prevUalpha;
 				double nextZ = z;
 				if(i < rgridNumber-1) {
-					magneticField[i+1][k]*power(middleVelocity[i+1],1.5);
+					nextZ = magneticField[i+1][k]*power(middleVelocity[i+1],1.5);
 				}
 				//double tempZ = z + deltaT*((-1.5*(0.5*(middleVelocity[i]+middleVelocity[i-1]))*(z - prevZ)/middleDeltaR[i]));
 				//tempMagneticField[i][k] = tempZ/Ualpha;
@@ -60,6 +59,7 @@ void Simulation::evaluateField(){
 			alertNaNOrInfinity(tempMagneticField[i][k], "magnetic field = NaN");
 			if(tempMagneticField[i][k] < 0){
 				printf("magneticField < 0\n");
+				exit(0);
 				tempMagneticField[i][k] = 0;
 			}
 		}
@@ -166,6 +166,7 @@ void Simulation::growthRate(){
 
 			if((rate != rate) || (0*rate != 0*rate)){
 				printf("rate = NaN\n");
+				exit(0);
 			}
 
 			growth_rate[i][k] = rate;

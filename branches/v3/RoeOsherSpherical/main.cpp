@@ -13,8 +13,8 @@ int main()
     //omp_set_dynamic(0);      // запретить библиотеке openmp менять число потоков во время исполнения
     //omp_set_num_threads(numThreads); // установить число потоков
 	Simulation* simulation;
-	//bool deserializeParameter = true;
-	bool deserializeParameter = false;
+	bool deserializeParameter = true;
+	//bool deserializeParameter = false;
 	if(deserializeParameter){
 		simulation = new Simulation();
 
