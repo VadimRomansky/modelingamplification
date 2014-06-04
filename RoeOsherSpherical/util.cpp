@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <math.h>
 #include "util.h"
 #include "constants.h"
@@ -43,6 +44,7 @@ void alertNaNOrInfinity(double value, const char* s){
 	if(value != value || 0*value != 0*value){
 		printf("%s", s);
 		printf("\n");
+		exit(0);
 		//Sleep(1000);
 	}
 }
@@ -51,6 +53,7 @@ void alertNotPositive(double value, const char* s){
 	if(value <= 0){
 		printf("%s", s);
 		printf("\n");
+		exit(0);
 	}
 }
 
@@ -58,6 +61,7 @@ void alertNegative(double value, const char* s){
 	if(value < 0){
 		printf("%s", s);
 		printf("\n");
+		exit(0);
 	}
 }
 

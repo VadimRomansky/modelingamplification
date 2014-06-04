@@ -1,7 +1,8 @@
 clear;
 load tamc_radial_profile.dat;
+load xfile.dat
 N1=1;
-N2=1000;
+N2=size(xfile,1);
 N3=6;
 e = size(tamc_radial_profile,1)/N2 - 1;
 %d = e -1;
@@ -81,9 +82,9 @@ for j=1:N2,
     field_pressure(j,2)=tamc_radial_profile(j,8);
     field_pressure(j,3)=tamc_radial_profile(a*N2 + j,8);
     field_pressure(j,4)=tamc_radial_profile(b*N2 + j,8);
-    field_pressure(j,5)=tamc_radial_profile(b*N2 + j,8);
-    field_pressure(j,6)=tamc_radial_profile(b*N2 + j,8);
-    field_pressure(j,7)=tamc_radial_profile(b*N2 + j,8);
+    field_pressure(j,5)=tamc_radial_profile(c*N2 + j,8);
+    field_pressure(j,6)=tamc_radial_profile(d*N2 + j,8);
+    field_pressure(j,7)=tamc_radial_profile(e*N2 + j,8);
     tau(j,1)=tamc_radial_profile(j,1);
     tau(j,2)=tamc_radial_profile(j,9);
     tau(j,3)=tamc_radial_profile(a*N2 + j,9);
