@@ -6,8 +6,8 @@ load kfile.dat;
 load xfile.dat;
 
 N1=1;
-N2=1000;
-N3=50;
+N2=size(xfile,1);
+N3=size(kfile,1);
 Nmomentum = 100;
 
 

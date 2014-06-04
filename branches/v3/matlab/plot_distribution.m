@@ -2,8 +2,9 @@ clear;
 load distribution.dat;
 load fullDistribution.dat;
 load coordinateDistribution.dat;
+load xfile.dat
 N1=1;
-N2=1000;
+N2=size(xfile,1);
 N3=100;
 
 m = 1.67*10^-24;

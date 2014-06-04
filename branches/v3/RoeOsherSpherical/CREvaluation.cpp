@@ -38,7 +38,7 @@ double Simulation::injection(int i){
 	//double xi = 5;
 	double xi = pgrid[injectionMomentum]*speed_of_light/(kBoltzman*temperatureIn(i+1));
 	double eta = cube(xi)*exp(-xi);
-    return (5E-3)*middleDensity[i]*abs2(middleVelocity[i-1]*middleVelocity[i-1]/speed_of_light)*pf/(massProton*dp*deltaR[i]);
+    return (1E-3)*middleDensity[i]*abs2(middleVelocity[i-1]*middleVelocity[i-1]/speed_of_light)*pf/(massProton*dp*deltaR[i]);
 }
 
 
