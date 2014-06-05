@@ -1,0 +1,15 @@
+size 20 20
+set font texcmr hei 0.6
+
+begin graph
+xtitle 
+ytitle 
+size 20 20
+data "distribution.dat"
+yaxis log min 1e26 max 1e36
+xaxis log min 0.1 max 1000
+set lwidth 0.1
+d1  line color red
+d2  line color blue
+d3  line color green
+end graph

@@ -52,6 +52,7 @@ void Simulation::evaluateField(){
 				alertNaNOrInfinity(tempMagneticField[i][k], "magnetic field = NaN");
 				if(tempMagneticField[i][k] < 0){
 					printf("magneticField < 0\n");
+					exit(0);
 					tempMagneticField[i][k] = 0;
 				}
 			}
@@ -59,6 +60,7 @@ void Simulation::evaluateField(){
 				fullMaxRate = maxRate[i];
 			}
 		}
+	}
 	
 }
 
