@@ -13,12 +13,14 @@ void Simulation::updateDiffusionCoef(){
 	int i;
 //#pragma omp parallel for private(i)
 		for(i = 0; i < rgridNumber; ++i){
+			int prevK = 0;
 			for(int j = 0; j < pgridNumber; ++j){
 				double p = pgrid[j];
 				double B = B0;
-				for(int k = 0; k < kgridNumber; ++k){
+				for(int k = prevK; k < kgridNumber; ++k){
 					if(kgrid[k] > electron_charge*largeScaleField[i][k]/(speed_of_light*p) ){
 						B = largeScaleField[i][k];
+						prevK = k;
 						break;
 					}
 				}
@@ -38,14 +40,14 @@ double Simulation::injection(int i){
 	//double xi = 5;
 	double xi = pgrid[injectionMomentum]*speed_of_light/(kBoltzman*temperatureIn(i+1));
 	double eta = cube(xi)*exp(-xi);
-    return (1E-3)*middleDensity[i]*abs2(middleVelocity[i-1]*middleVelocity[i-1]/speed_of_light)*pf/(massProton*dp*deltaR[i]);
+    return (3E-5)*middleDensity[i]*abs2(middleVelocity[i-1]*middleVelocity[i-1]/speed_of_light)*pf/(massProton*dp*deltaR[i]);
 }
 
 
 //расчет космических лучей
 
 void Simulation::evaluateCR(){
-	printf("solve CR\n");
+	//printf("solve CR\n");
 	/*if(shockWavePoint > 0 && shockWavePoint < rgridNumber){
 		distributionFunction[shockWavePoint][injectionMomentum] += injection()*deltaT;
 	}*/
@@ -151,9 +153,11 @@ void Simulation::evaluateCR(){
 					//tempEnergy[i] -= deltaT*inj*pgrid[k]*speed_of_light*4*pi*deltaLogP;
 					if(tempDensity[i] < 0){
 						printf("tempDensity[i] < 0 by CR\n");
+						exit(0);
 					}
 					if(tempEnergy[i] < 0){
 						printf("tempEnergy[i] < 0 by CR\n");
+						exit(0);
 					}
 					alertNaNOrInfinity(tempDensity[i], "density = NaN");
 					alertNaNOrInfinity(tempMomentum[i], "momentum = NaN");

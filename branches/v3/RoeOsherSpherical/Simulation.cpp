@@ -81,8 +81,8 @@ void Simulation::simulate(){
 
 	while(myTime < maxTime && currentIteration < iterationNumber){
 		++currentIteration;
-		printf("iteration %d\n", currentIteration);
-		printf("time = %lf\n", myTime);
+		//printf("iteration %d\n", currentIteration);
+		//printf("time = %lf\n", myTime);
 
 		//if(currentIteration < startCRevaluation){
 			evaluateHydrodynamic();
@@ -97,7 +97,7 @@ void Simulation::simulate(){
 			//deltaT *= 10;
 		}
 
-		if(currentIteration > startFieldEvaluation){
+		if(currentIteration > startCRevaluation){
 			evaluateField();
 		}
 
@@ -114,6 +114,7 @@ void Simulation::simulate(){
 		if(currentIteration % writeParameter == 0){
 			//вывод на некоторых итерациях
 			printf("outputing\n");
+			printf("iteration %d\n", currentIteration);
 			outFile = fopen("./output/tamc_radial_profile.dat","a");
 			output(outFile, this);
 			fclose(outFile);
@@ -321,12 +322,14 @@ void Simulation::TracPenRadial(double* u, double* flux){
 double Simulation::densityFlux(int i){
 	if(i < 0){
 		printf("i < 0");
+		exit(0);
 	} else if(i >= 0 && i <= rgridNumber) {
 		if(i == 0) return middleVelocity[0]*middleDensity[0];
 		return pointDensity[i]*pointVelocity[i];
 		//return middleDensity[i-1]*middleVelocity[i-1];
 	} else {
 		printf("i > rgridNumber");
+		exit(0);
 	}
 	return 0;
 }
@@ -334,10 +337,12 @@ double Simulation::densityFlux(int i){
 double Simulation::momentum(int i){
 	if(i < 0){
 		printf("i < 0");
+		exit(0);
 	} else if(i >= 0 && i < rgridNumber) {
 		return middleDensity[i]*middleVelocity[i];
 	} else {
 		printf("i >= rgridNumber");
+		exit(0);
 	}
 	return 0;
 }
@@ -345,10 +350,12 @@ double Simulation::momentum(int i){
 double Simulation::energy(int i){
 	if(i < 0){
 		printf("i < 0");
+		exit(0);
 	} else if(i >= 0 && i < rgridNumber) {
 		return middlePressure[i]/(_gamma - 1) + middleDensity[i]*middleVelocity[i]*middleVelocity[i]/2;
 	} else {
 		printf("i >= rgridNumber");
+		exit(0);
 	}
 	return 0;
 }
@@ -356,10 +363,12 @@ double Simulation::energy(int i){
 double Simulation::kineticEnergy(int i){
 	if(i < 0){
 		printf("i < 0");
+		exit(0);
 	} else if(i >= 0 && i < rgridNumber) {
 		return middleDensity[i]*middleVelocity[i]*middleVelocity[i]/2;
 	} else {
 		printf("i >= rgridNumber");
+		exit(0);
 	}
 	return 0;
 }
@@ -367,10 +376,12 @@ double Simulation::kineticEnergy(int i){
 double Simulation::termalEnergy(int i){
 	if(i < 0){
 		printf("i < 0");
+		exit(0);
 	} else if(i >= 0 && i < rgridNumber) {
 		return middlePressure[i]/(_gamma - 1);
 	} else {
 		printf("i >= rgridNumber");
+		exit(0);
 	}
 	return 0;
 }
@@ -378,10 +389,12 @@ double Simulation::termalEnergy(int i){
 double Simulation::temperatureIn(int i){
 	if(i < 0){
 		printf("i < 0");
+		exit(0);
 	} else if(i >= 0 && i < rgridNumber) {
 		return middlePressure[i]*massProton/(kBoltzman*middleDensity[i]);
 	} else {
 		printf("i >= rgridNumber");
+		exit(0);
 	}
 	return 0;
 }
@@ -389,10 +402,12 @@ double Simulation::temperatureIn(int i){
 double Simulation::soundSpeed(int i){
 	if(i < 0){
 		printf("i < 0");
+		exit(0);
 	} else if(i >= 0 && i < rgridNumber) {
 		return sqrt(_gamma*middlePressure[i]/middleDensity[i]);
 	} else {
 		printf("i >= rgridNumber");
+		exit(0);
 	}
 	return 0;
 }
@@ -515,10 +530,12 @@ void Simulation::updateFluxes(double* flux, double** fluxPlus, double** fluxMinu
 double Simulation::volume(int i){
 	if(i < 0){
 		printf("i < 0");
+		exit(0);
 	} else if(i >= 0 && i <= rgridNumber) {
 		return 4*pi*(cube(grid[i+1]) - cube(grid[i]))/3;
 	} else {
 		printf("i > rgridNumber");
+		exit(0);
 	}
 	return 0;
 }
@@ -725,16 +742,13 @@ void Simulation::updateParameters(){
 
 void Simulation::updateAll(){
 	//hydrodinamic
-	if(tempDensity[rgridNumber - 1] < middleDensity[rgridNumber - 1]){
-		printf("aaa\n");
-	}
 
 	int ompi = 0;
     //#pragma omp parallel for private(ompi)
 	for(ompi = 0; ompi < numThreads; ++ ompi){
 		for(int i = ompi; i < rgridNumber; i = i + numThreads){
 			if(tempDensity[i] < 0){
-				printf("density < 0\n");
+				//printf("density < 0\n");
 				middleDensity[i] *= epsilon;
 			} else {
 				middleDensity[i] = tempDensity[i];
@@ -745,6 +759,7 @@ void Simulation::updateAll(){
 			double middleEnergy = tempEnergy[i];
 			if(tempEnergy[i] < 0){
 				printf("energy < 0\n");
+				exit(0);
 			}
 			alertNaNOrInfinity(middleEnergy, "energy = NaN");
 			middleVelocity[i] = middleMomentum/middleDensity[i];
@@ -779,7 +794,7 @@ void Simulation::updateAll(){
 
 	//field
 
-	if(currentIteration > startFieldEvaluation){
+	if(currentIteration > startCRevaluation){
 			for(int i = 0; i < rgridNumber; i = i + 1){
 				for(int k = 0; k < kgridNumber; ++k){
 					magneticField[i][k] = tempMagneticField[i][k];
@@ -797,9 +812,10 @@ void Simulation::updateAll(){
 			magneticInductionSum[i] = sqrt(4*pi*magneticEnergy[i] + B0*B0);
 		}
 		
-
 		updateDiffusionCoef();
-		growthRate();
+		if(currentIteration > startFieldEvaluation){
+			growthRate();
+		}
 	}
 }
 
