@@ -29,8 +29,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RoeOsher", "RoeOsher\RoeOsh
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RoeOsherSpherical", "RoeOsherSpherical\RoeOsherSpherical.vcxproj", "{FB9DF301-C6E0-4523-BA28-FD8547F6CF4A}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RoeOsherSpherical2", "RoeOsherSpherical2\RoeOsherSpherical2.vcxproj", "{6D2FB62D-6C9F-4EF9-82F0-48450ADB6496}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RoeOsherTest", "RoeOsherTest\RoeOsherTest.vcxproj", "{16B7EA0F-5840-4F8D-A125-AA313AA2F008}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestOMP", "TestOMP\TestOMP.vcxproj", "{0073E778-965D-4D4A-827B-B1AD696C3D72}"
@@ -101,10 +99,6 @@ Global
 		{FB9DF301-C6E0-4523-BA28-FD8547F6CF4A}.Debug|Win32.Build.0 = Debug|Win32
 		{FB9DF301-C6E0-4523-BA28-FD8547F6CF4A}.Release|Win32.ActiveCfg = Release|Win32
 		{FB9DF301-C6E0-4523-BA28-FD8547F6CF4A}.Release|Win32.Build.0 = Release|Win32
-		{6D2FB62D-6C9F-4EF9-82F0-48450ADB6496}.Debug|Win32.ActiveCfg = Debug|Win32
-		{6D2FB62D-6C9F-4EF9-82F0-48450ADB6496}.Debug|Win32.Build.0 = Debug|Win32
-		{6D2FB62D-6C9F-4EF9-82F0-48450ADB6496}.Release|Win32.ActiveCfg = Release|Win32
-		{6D2FB62D-6C9F-4EF9-82F0-48450ADB6496}.Release|Win32.Build.0 = Release|Win32
 		{16B7EA0F-5840-4F8D-A125-AA313AA2F008}.Debug|Win32.ActiveCfg = Debug|Win32
 		{16B7EA0F-5840-4F8D-A125-AA313AA2F008}.Debug|Win32.Build.0 = Debug|Win32
 		{16B7EA0F-5840-4F8D-A125-AA313AA2F008}.Release|Win32.ActiveCfg = Release|Win32

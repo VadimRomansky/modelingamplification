@@ -14,13 +14,19 @@ void Simulation::evaluateField(){
 
 	double fullMaxRate = 0;
 	int i;
+	for(int k = 0; k < kgridNumber; ++k){
+		tempMagneticField[0][k] += -deltaT*((middleVelocity[i]*magneticField[i][k])/deltaR[i]) - deltaT*0.5*magneticField[i][k]*(middleVelocity[i])/deltaR[i];
+		if(tempMagneticField[0][k] < 0){
+			tempMagneticField[0][k] = 0;
+		}
+	}
 	#pragma omp parallel for private(i)
 	for(i = 1; i < rgridNumber; ++i){
 		int maxRateK = 0;
 		maxRate[i] = 0;
 		for(int k = 0; k < kgridNumber; ++k){
-			if(middleVelocity[i] > 0 && middleVelocity[i-1] > 0){
-				if(middleVelocity[i] > 0 && middleVelocity[i-1] > 0){
+			//if(middleVelocity[i] > 0 && middleVelocity[i-1] > 0){
+				/*if(middleVelocity[i] > 0 && middleVelocity[i-1] > 0){
 					double Ualpha = power(middleVelocity[i], 1.5);
 					double prevUalpha = power(middleVelocity[i-1], 1.5);
 					tempMagneticField[i][k] = magneticField[i][k];
@@ -35,15 +41,15 @@ void Simulation::evaluateField(){
 					//tempMagneticField[i][k] += (-(middleVelocity[i]*magneticField[i][k] - middleVelocity[i-1]*magneticField[i][k]) + 0.5*(z + prevZ)*((1/sqrt(middleVelocity[i])) - (1/sqrt(middleVelocity[i-1]))))*deltaT/deltaR[i]; 
 					//tempMagneticField[i][k] += -deltaT*1.5*((middleVelocity[i]*magneticField[i][k] - middleVelocity[i-1]*magneticField[i-1][k])/deltaR[i]) + deltaT*0.5*0.5*(middleVelocity[i]+middleVelocity[i-1])*(magneticField[i][k] - magneticField[i-1][k])/deltaR[i];
 					tempMagneticField[i][k] -= deltaT*(z - prevZ)/(sqrt(middleVelocity[i])*sqr(middleGrid[i])*deltaR[i]);
-				} else if(middleVelocity[i] < 0 && middleVelocity[i-1] < 0){
-					double Ualpha = power(-middleVelocity[i],1.5);
-					double z = magneticField[i][k]*Ualpha*middleGrid[i]*middleGrid[i];
-					double prevZ = magneticField[i-1][k]*power(-middleVelocity[i-1],1.5)*middleGrid[i-1]*middleGrid[i-1];
-					tempMagneticField[i][k] += deltaT*(z - prevZ)/(sqrt(-middleVelocity[i])*sqr(middleGrid[i])*deltaR[i]);
-				} else {
-					tempMagneticField[i][k] += -deltaT*((middleVelocity[i]*magneticField[i][k] - middleVelocity[i-1]*magneticField[i-1][k])/deltaR[i]) - deltaT*0.5*magneticField[i][k]*(middleVelocity[i] - middleVelocity[i-1])/deltaR[i];
-				}
-				tempMagneticField[i][k] +=  deltaT*growth_rate[i][k]*magneticField[i][k];
+				//} else if(middleVelocity[i] < 0 && middleVelocity[i-1] < 0){
+				//	double Ualpha = power(-middleVelocity[i],1.5);
+					//double z = magneticField[i][k]*Ualpha*middleGrid[i]*middleGrid[i];
+					//double prevZ = magneticField[i-1][k]*power(-middleVelocity[i-1],1.5)*middleGrid[i-1]*middleGrid[i-1];
+					//tempMagneticField[i][k] += deltaT*(z - prevZ)/(sqrt(-middleVelocity[i])*sqr(middleGrid[i])*deltaR[i]);
+				} else {*/
+					tempMagneticField[i][k] += -deltaT*((sqr(middleGrid[i])*middleVelocity[i]*magneticField[i][k] - sqr(middleGrid[i-1])*middleVelocity[i-1]*magneticField[i-1][k])/(sqr(middleGrid[i])*deltaR[i])) - deltaT*0.5*magneticField[i][k]*(middleVelocity[i] - middleVelocity[i-1])/deltaR[i];
+				//}
+				//tempMagneticField[i][k] +=  deltaT*growth_rate[i][k]*magneticField[i][k];
 				if(growth_rate[i][k] > maxRate[i]){
 					maxRateK = k;
 					maxRate[i] = growth_rate[i][k];
@@ -51,11 +57,11 @@ void Simulation::evaluateField(){
 				//tempMagneticField[i][k] = magneticField[i][k] + deltaT*(- 1.5*(magneticField[i][k]*middleVelocity[i] - magneticField[i-1][k]*middleVelocity[i-1])/middleDeltaR[i] + 0.5*(delta*middleVelocity[i]+(1-delta)*middleVelocity[i-1])*(magneticField[i][k] - magneticField[i-1][k])/middleDeltaR[i] + growth_rate[i][k]);
 				alertNaNOrInfinity(tempMagneticField[i][k], "magnetic field = NaN");
 				if(tempMagneticField[i][k] < 0){
-					printf("magneticField < 0\n");
-					exit(0);
+					//printf("magneticField < 0\n");
+					//exit(0);
 					tempMagneticField[i][k] = 0;
 				}
-			}
+			
 			if(maxRate[i] > fullMaxRate){
 				fullMaxRate = maxRate[i];
 			}
@@ -156,6 +162,7 @@ void Simulation::growthRate(){
 
 				if((rate != rate) || (0*rate != 0*rate)){
 					printf("rate = NaN\n");
+					exit(0);
 				}
 
 				growth_rate[i][k] = rate;

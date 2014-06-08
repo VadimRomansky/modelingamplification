@@ -111,7 +111,7 @@ void Simulation::initializeProfile(){
 	initializeArrays();
 
 	minP = 0.05*massProton*speed_of_light;
-	maxP = minP*10000000;
+	maxP = minP*1E7;
 
 	minK = (1E-9)*electron_charge*B0/(speed_of_light*maxP);
 	maxK = (1E6)*electron_charge*B0/(speed_of_light*minP);
@@ -157,7 +157,7 @@ void Simulation::initializeProfile(){
 		//grid[i] = grid[i-1] + deltaR0;
 	//}
 
-	int leftNumber = 200;
+	int leftNumber = rgridNumber/5;
 	double shockWaveR = upstreamR/20;
 	double a = shockWaveR;
 	double b = upstreamR - shockWaveR;
@@ -177,6 +177,7 @@ void Simulation::initializeProfile(){
 	for(int i = 1; i <= rgridNumber; ++i){
 		if(grid[i] <= grid[i-1]){
 			printf("grid[i] <= grid[i-1]\n");
+			exit(0);
 		}
 	}
 
@@ -274,6 +275,7 @@ void Simulation::initializeProfile(){
 	for(int i = 1; i < pgridNumber; ++i){
 		logPgrid[i] = logPgrid[i-1] + deltaLogP;
 		pgrid[i] = exp(logPgrid[i]);
+		printf("%lf\n", pgrid[i]);
 	}
 	pgrid[pgridNumber-1] = maxP;
 
