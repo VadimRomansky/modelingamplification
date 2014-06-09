@@ -59,6 +59,8 @@ void Simulation::simulate(){
 	fclose(outCoef);
 	FILE* xFile = fopen("./output/xfile.dat",suffix);
 	fclose(xFile);
+	FILE* pFile = fopen("./output/pfile.dat",suffix);
+	fclose(pFile);
 	FILE* kFile = fopen("./output/kfile.dat",suffix);
 	fclose(kFile);
 	updateShockWavePoint();
@@ -81,8 +83,8 @@ void Simulation::simulate(){
 
 	while(myTime < maxTime && currentIteration < iterationNumber){
 		++currentIteration;
-		//printf("iteration %d\n", currentIteration);
-		//printf("time = %lf\n", myTime);
+		printf("iteration %d\n", currentIteration);
+		printf("time = %lf\n", myTime);
 
 		//if(currentIteration < startCRevaluation){
 			evaluateHydrodynamic();
@@ -162,13 +164,15 @@ void Simulation::simulate(){
 			outCoef = fopen("./output/diff_coef.dat","a");
 			xFile = fopen("./output/xfile.dat","w");
 			kFile = fopen("./output/kfile.dat","w");
-			outputField(outField, coordinateField, outFullField, outCoef, xFile, kFile, this);
+			pFile = fopen("./output/pfile.dat","w");
+			outputField(outField, coordinateField, outFullField, outCoef, xFile, kFile, pFile, this);
 			fclose(outField);
 			fclose(coordinateField);
 			fclose(outFullField);
 			fclose(outCoef);
 			fclose(xFile);
 			fclose(kFile);
+			fclose(pFile);
 		}
 
 		if(currentIteration % serializeParameter == 0){
@@ -191,6 +195,8 @@ void Simulation::simulate(){
 			fclose(infoFile);
 		}
 	}
+
+	printf("end\n");
 }
 
 //расчет гидродинамики
@@ -200,16 +206,13 @@ void Simulation::evaluateHydrodynamic() {
 	solveDiscontinious();
 	CheckNegativeDensity();
 
-	int i;
-	#pragma omp parallel private(i)
-	{
-	#pragma omp for
-		for(i = 0; i < rgridNumber; ++i){
-			tempDensity[i] = middleDensity[i];
-			tempMomentum[i] = momentum(i);
-			tempEnergy[i] = energy(i);
-		}
+	#pragma omp parallel for
+	for(int i = 0; i < rgridNumber; ++i){
+		tempDensity[i] = middleDensity[i];
+		tempMomentum[i] = momentum(i);
+		tempEnergy[i] = energy(i);
 	}
+
 	evaluateFluxes();
 
 	//for Einfeldt
@@ -234,19 +237,20 @@ void Simulation::evaluateHydrodynamic() {
 
 
     //#pragma omp for
-		for(i = 1; i < rgridNumber-1; ++i){
-			double deltaE = 0;
-			for(int k = 0; k < kgridNumber; ++k){
-				deltaE += deltaT*growth_rate[i][k]*magneticField[i][k]*kgrid[k]*deltaLogK;
-				tempEnergy[i] -= deltaT*0.5*middleVelocity[i]*(magneticField[i][k] - magneticField[i-1][k])*kgrid[k]*deltaLogK/deltaR[i];
-				tempEnergy[i] -= deltaT*growth_rate[i][k]*magneticField[i][k]*kgrid[k]*deltaLogK;
-				//alertNaNOrInfinity(tempEnergy[i], "energy = NaN");
-				//alertNegative(tempEnergy[i], "energy < 0");
-			}
-            if(abs2(cosmicRayPressure[i+1] - cosmicRayPressure[i]) > 1E-100){
-                vscattering[i] = abs2(deltaE*deltaR[i]/(cosmicRayPressure[i+1] - cosmicRayPressure[i]));
-			}
+	for(int i = 1; i < rgridNumber-2; ++i){
+		double deltaE = 0;
+		for(int k = 0; k < kgridNumber; ++k){
+			deltaE += deltaT*growth_rate[i][k]*magneticField[i][k]*kgrid[k]*deltaLogK;
+			tempEnergy[i] -= deltaT*0.5*middleVelocity[i]*(magneticField[i][k] - magneticField[i-1][k])*kgrid[k]*deltaLogK/deltaR[i];
+			//tempEnergy[i] += deltaT*0.5*magneticField[i][k]*(middleVelocity[i] - middleVelocity[i-1])*kgrid[k]*deltaLogK/deltaR[i];
+			tempEnergy[i] -= deltaT*growth_rate[i][k]*magneticField[i][k]*kgrid[k]*deltaLogK;
+			//alertNaNOrInfinity(tempEnergy[i], "energy = NaN");
+			alertNegative(tempEnergy[i], "energy < 0");
 		}
+        if(abs2(cosmicRayPressure[i+1] - cosmicRayPressure[i]) > 1E-100){
+            vscattering[i] = abs2(deltaE*deltaR[i]/(cosmicRayPressure[i+1] - cosmicRayPressure[i]));
+		}
+	}
 
 }
 
@@ -812,8 +816,8 @@ void Simulation::updateAll(){
 			magneticInductionSum[i] = sqrt(4*pi*magneticEnergy[i] + B0*B0);
 		}
 		
-		updateDiffusionCoef();
 		if(currentIteration > startFieldEvaluation){
+			updateDiffusionCoef();
 			growthRate();
 		}
 	}

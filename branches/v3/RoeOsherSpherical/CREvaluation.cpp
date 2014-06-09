@@ -14,10 +14,10 @@ void Simulation::updateDiffusionCoef(){
 //#pragma omp parallel for private(i)
 		for(i = 0; i < rgridNumber; ++i){
 			int prevK = 0;
-			for(int j = 0; j < pgridNumber; ++j){
+			for(int j = pgridNumber-1; j >= 0; --j){
 				double p = pgrid[j];
 				double B = B0;
-				for(int k = prevK; k < kgridNumber; ++k){
+				for(int k = 0; k < kgridNumber; ++k){
 					if(kgrid[k] > electron_charge*largeScaleField[i][k]/(speed_of_light*p) ){
 						B = largeScaleField[i][k];
 						prevK = k;
@@ -40,7 +40,7 @@ double Simulation::injection(int i){
 	//double xi = 5;
 	double xi = pgrid[injectionMomentum]*speed_of_light/(kBoltzman*temperatureIn(i+1));
 	double eta = cube(xi)*exp(-xi);
-    return (3E-5)*middleDensity[i]*abs2(middleVelocity[i-1]*middleVelocity[i-1]/speed_of_light)*pf/(massProton*dp*deltaR[i]);
+    return (3E-20)*middleDensity[i]*abs2(middleVelocity[i-1]*middleVelocity[i-1]/speed_of_light)*pf/(massProton*dp*deltaR[i]);
 }
 
 

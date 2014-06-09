@@ -110,7 +110,7 @@ void Simulation::initializeProfile(){
 
 	initializeArrays();
 
-	minP = 0.05*massProton*speed_of_light;
+	minP = 0.5*massProton*speed_of_light;
 	maxP = minP*1E7;
 
 	minK = (1E-9)*electron_charge*B0/(speed_of_light*maxP);
@@ -236,12 +236,7 @@ void Simulation::initializeProfile(){
 				double sigma = 4;
 				double pressure = density0*U0*U0/sigma;
 				int count = rgridNumber/2 - 1;
-				int intCount = count/10;
-				if(i < intCount){
-					middleDensity[i] = density0/sigma;
-					middleVelocity[i] = (U0*(grid[i] -grid[0])/(grid[intCount] -grid[0]));
-					middlePressure[i] = pressure*0.0000000000001;
-				} else if(i < count){
+				if(i < count){
 					middleDensity[i] = density0/sigma;//*sqr(middleGrid[i]/middleGrid[count-1]);
 					middleVelocity[i] = U0;
 					//middleVelocity[i] = 1;

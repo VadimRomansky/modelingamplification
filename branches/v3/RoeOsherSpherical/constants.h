@@ -12,16 +12,16 @@ const double relativistic_gamma = 1.3333333333;
 const int pgridNumber = 100;
 const int kgridNumber = 50;
 const double momentumParameter =5.0;
-const int writeParameter = 1000;
-const int serializeParameter = 49999;
+const int writeParameter = 2000;
+const int serializeParameter = 50000;
 const int injectionMomentum = 5;
 const int goodMomentum = 15;
 const double gradientLevel = 0.2;
 const double gridExpLevel = 0.9;
 const double minDeltaR = 5.0E14;
 const double minT = 1000000.0;
-const int startCRevaluation = 20000;
-const int startFieldEvaluation = 50000;
-const int numThreads = 1;
+const int startCRevaluation = 50000;
+const int startFieldEvaluation = 70000;
+const int numThreads = 12;
 
 #endif
