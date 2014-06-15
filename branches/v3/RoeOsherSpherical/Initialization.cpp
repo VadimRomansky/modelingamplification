@@ -12,7 +12,7 @@
 //конструктор
 Simulation::Simulation(){
 	serialized = false;
-	initialEnergy = 10E46;
+	initialEnergy = 10E50;
 	myTime = 0;
 	tracPen = true;
 	shockWavePoint = -1;
@@ -111,39 +111,7 @@ void Simulation::initializeProfile(){
 	initializeArrays();
 
 	minP = 0.5*massProton*speed_of_light;
-	maxP = minP*1E7;
-
-	minK = (1E-9)*electron_charge*B0/(speed_of_light*maxP);
-	maxK = (1E6)*electron_charge*B0/(speed_of_light*minP);
-	deltaLogK = (log(maxK) - log(minK))/(kgridNumber - 1);
-	for(int i = 0; i < kgridNumber; ++i){
-		logKgrid[i] = log(minK) + i*deltaLogK;
-		kgrid[i] = exp(logKgrid[i]);
-	}
-
-	for(int i = 0; i < rgridNumber; ++i){
-		magneticEnergy[i] = 0;
-		maxRate[i] = 0;
-		for(int k = 0; k < kgridNumber; ++k){
-			magneticField[i][k] = (1E-8)*B0*B0*power(1/kgrid[k], 5.0/3.0)*power(kgrid[0],2.0/3.0);
-			tempMagneticField[i][k] = magneticField[i][k];
-			if(k == 0){
-				largeScaleField[i][k] = sqrt(4*pi*magneticField[i][k]*kgrid[k]*deltaLogK + B0*B0);
-			} else {
-				largeScaleField[i][k] = sqrt(4*pi*magneticField[i][k]*kgrid[k]*deltaLogK + sqr(largeScaleField[i][k-1]));
-			}
-			growth_rate[i][k] = 0;
-			alertNaNOrInfinity(magneticField[i][k], "magnetic field = NaN");
-		}
-	}
-
-	for(int i = 0; i < rgridNumber; ++i){
-		double magneticEnergy = 0;
-		for(int k = 0; k < kgridNumber; ++k){
-			magneticEnergy += magneticField[i][k]*kgrid[k]*deltaLogK;
-		}
-		magneticInductionSum[i] = sqrt(4*pi*magneticEnergy + B0*B0);
-	}
+	maxP = minP*1E8;
 
 	double r = downstreamR;
 	double pressure0 = density0*kBoltzman*temperature/massProton;
@@ -181,13 +149,50 @@ void Simulation::initializeProfile(){
 		}
 	}
 
+	double mindR = upstreamR;
 	for(int i = 0; i < rgridNumber; ++i){
 		middleGrid[i] = (grid[i] + grid[i+1])/2;
 		tempGrid[i] = grid[i];
 		deltaR[i] = grid[i+1] - grid[i];
+		if(deltaR[i] < mindR){
+			mindR = deltaR[i];
+		}
 		gridsquare[i] = sqr(grid[i]);
 	}
 	tempGrid[rgridNumber] = grid[rgridNumber];
+
+	minK = (1E-6)*electron_charge*B0/(speed_of_light*maxP);
+	minK = max2(minK, 0.0001/mindR);
+	maxK = (1E5)*electron_charge*B0/(speed_of_light*minP);
+	deltaLogK = (log(maxK) - log(minK))/(kgridNumber - 1);
+	for(int i = 0; i < kgridNumber; ++i){
+		logKgrid[i] = log(minK) + i*deltaLogK;
+		kgrid[i] = exp(logKgrid[i]);
+	}
+
+	for(int i = 0; i < rgridNumber; ++i){
+		magneticEnergy[i] = 0;
+		maxRate[i] = 0;
+		for(int k = 0; k < kgridNumber; ++k){
+			magneticField[i][k] = (1E-8)*B0*B0*power(1/kgrid[k], 5.0/3.0)*power(kgrid[0],2.0/3.0);
+			tempMagneticField[i][k] = magneticField[i][k];
+			if(k == 0){
+				largeScaleField[i][k] = sqrt(4*pi*magneticField[i][k]*kgrid[k]*deltaLogK + B0*B0);
+			} else {
+				largeScaleField[i][k] = sqrt(4*pi*magneticField[i][k]*kgrid[k]*deltaLogK + sqr(largeScaleField[i][k-1]));
+			}
+			growth_rate[i][k] = 0;
+			alertNaNOrInfinity(magneticField[i][k], "magnetic field = NaN");
+		}
+	}
+
+	for(int i = 0; i < rgridNumber; ++i){
+		double magneticEnergy = 0;
+		for(int k = 0; k < kgridNumber; ++k){
+			magneticEnergy += magneticField[i][k]*kgrid[k]*deltaLogK;
+		}
+		magneticInductionSum[i] = sqrt(4*pi*magneticEnergy + B0*B0);
+	}
 
 	for(int i = 0; i < rgridNumber; ++i){
 		switch(simulationType){

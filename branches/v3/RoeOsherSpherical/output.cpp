@@ -8,7 +8,11 @@ void output(FILE* outFile, Simulation* simulation){
 	for(int i = 0; i < simulation->rgridNumber; ++i){
 		double t = simulation->temperatureIn(i);
 		double v = simulation->middleVelocity[i]-simulation->shockWaveSpeed;
-		double tau = abs2(simulation->middleGrid[i]*simulation->maxRate[i]/v);
+		double shockWaveR = 0;
+		if(simulation->shockWavePoint > 0){
+			shockWaveR = simulation->middleGrid[simulation->shockWavePoint];
+		}
+		double tau = abs2((simulation->middleGrid[i]-shockWaveR)*simulation->maxRate[i]/v);
 		if(abs(v)< 1){
 			tau = 0;
 		}
@@ -110,7 +114,7 @@ void outputDistributionP3(FILE* distributionFile, FILE* fullDistributionFile, FI
 
 	if(simulation->shockWavePoint > 0 && simulation->shockWavePoint < simulation->rgridNumber){
 		for(int j = 0; j < pgridNumber; ++j){
-			fprintf(distributionFile, "%g %g %g\n", simulation->pgrid[j], simulation->distributionFunction[simulation->shockWavePoint][j]/cube(simulation->pgrid[j]), simulation->crflux[simulation->shockWavePoint][j]);
+			fprintf(distributionFile, "%g %g %g\n", simulation->pgrid[j], simulation->distributionFunction[simulation->shockWavePoint][j]/cube(simulation->pgrid[j]), simulation->crflux[simulation->shockWavePoint][j]/(cube(simulation->pgrid[j])*simulation->deltaLogP));
 		}
 	}
 

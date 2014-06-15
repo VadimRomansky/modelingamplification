@@ -24,7 +24,7 @@ void Simulation::updateDiffusionCoef(){
 						break;
 					}
 				}
-				double coef = p*speed_of_light*speed_of_light/(electron_charge*B);
+				double coef = p*speed_of_light*speed_of_light/(3*electron_charge*B);
 				double dx = deltaR[i];
 				double lambda = coef/speed_of_light;
 				diffusionCoef[i][j] = coef;
@@ -40,7 +40,7 @@ double Simulation::injection(int i){
 	//double xi = 5;
 	double xi = pgrid[injectionMomentum]*speed_of_light/(kBoltzman*temperatureIn(i+1));
 	double eta = cube(xi)*exp(-xi);
-    return (3E-20)*middleDensity[i]*abs2(middleVelocity[i-1]*middleVelocity[i-1]/speed_of_light)*pf/(massProton*dp*deltaR[i]);
+    return (3E-3)*middleDensity[i]*abs2(middleVelocity[i-1])*pf/(massProton*dp*deltaR[i]);
 }
 
 
