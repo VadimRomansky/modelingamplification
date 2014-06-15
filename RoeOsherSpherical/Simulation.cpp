@@ -731,7 +731,7 @@ void Simulation::updateParameters(){
 				dr = middleGrid[i] - middleGrid[i-1];
 			}
 			totalParticles += distributionFunction[i][j]*4*pi*volume(i)*deltaLogP;
-			totalParticleEnergy += 4*pi*speed_of_light*distributionFunction[i][j]*dr*dp;
+			totalParticleEnergy += 4*pi*speed_of_light*distributionFunction[i][j]*volume(i)*dp;
 		}
 	}
 	mass -= myTime*(0 - middleDensity[rgridNumber-1]*middleVelocity[rgridNumber-1]);

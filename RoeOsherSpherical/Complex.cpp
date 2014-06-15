@@ -47,8 +47,8 @@ Complex Complex::operator*(Complex a){
 }
 
 Complex Complex::operator/(Complex a){
-	double module = sqrt(a.real*a.real + a.im*a.im);
-	Complex result = Complex((real*a.real + im*a.im)/module, (-real*a.im + im*a.real)/module);
+	double module2 = a.real*a.real + a.im*a.im;
+	Complex result = Complex((real*a.real + im*a.im)/module2, (-real*a.im + im*a.real)/module2);
 	return result;
 }
 

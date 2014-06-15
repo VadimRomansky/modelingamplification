@@ -25,48 +25,21 @@ void Simulation::evaluateField(){
 		int maxRateK = 0;
 		maxRate[i] = 0;
 		for(int k = 0; k < kgridNumber; ++k){
-			if(middleVelocity[i] > 0 && middleVelocity[i-1] > 0){
-				/*if(middleVelocity[i] > 0 && middleVelocity[i-1] > 0){
-					double Ualpha = power(middleGrid[i]*middleGrid[i]*middleVelocity[i], 1.5);
-					double prevUalpha = power(middleGrid[i-1]*middleGrid[i-1]*middleVelocity[i-1], 1.5);
-					tempMagneticField[i][k] = magneticField[i][k];
-					double z = magneticField[i][k]*Ualpha;
-					double prevZ = magneticField[i-1][k]*prevUalpha;
-					double nextZ = z;
-					if(i < rgridNumber-1) {
-						nextZ = magneticField[i+1][k]*power(middleGrid[i+1]*middleGrid[i+1]*middleVelocity[i+1],1.5);
-					}
-					//double tempZ = z + deltaT*((-1.5*(0.5*(middleVelocity[i]+middleVelocity[i-1]))*(z - prevZ)/middleDeltaR[i]));
-					//tempMagneticField[i][k] = tempZ/Ualpha;
-					//tempMagneticField[i][k] += (-(middleVelocity[i]*magneticField[i][k] - middleVelocity[i-1]*magneticField[i][k]) + 0.5*(z + prevZ)*((1/sqrt(middleVelocity[i])) - (1/sqrt(middleVelocity[i-1]))))*deltaT/deltaR[i]; 
-					//tempMagneticField[i][k] += -deltaT*1.5*((middleVelocity[i]*magneticField[i][k] - middleVelocity[i-1]*magneticField[i-1][k])/deltaR[i]) + deltaT*0.5*0.5*(middleVelocity[i]+middleVelocity[i-1])*(magneticField[i][k] - magneticField[i-1][k])/deltaR[i];
-					tempMagneticField[i][k] -= deltaT*(z - prevZ)/(middleGrid[i]*sqrt(middleVelocity[i])*sqr(middleGrid[i])*deltaR[i]);
-					double dissipative = deltaT*maxSoundSpeed*(magneticField[i+1][k] - 2*magneticField[i][k] + magneticField[i-1][k])/deltaR[i];
-					//tempMagneticField[i][k] += dissipative;
-				} else if(middleVelocity[i] < 0 && middleVelocity[i-1] < 0){
-					double Ualpha = power(-middleVelocity[i],1.5);
-					double z = magneticField[i][k]*Ualpha*middleGrid[i]*middleGrid[i];
-					double nextZ = magneticField[i-1][k]*power(-middleVelocity[i+1],1.5)*middleGrid[i+1]*middleGrid[i+1];
-					tempMagneticField[i][k] += deltaT*(nextZ - z)/(sqrt(-middleVelocity[i])*sqr(middleGrid[i])*deltaR[i]);
-				} else {*/
-					tempMagneticField[i][k] += -deltaT*((sqr(middleGrid[i])*middleVelocity[i]*magneticField[i][k] - sqr(middleGrid[i-1])*middleVelocity[i-1]*magneticField[i-1][k])/(sqr(middleGrid[i])*deltaR[i])) - deltaT*0.5*magneticField[i][k]*(middleVelocity[i]*middleGrid[i]*middleGrid[i] - middleVelocity[i-1]*middleGrid[i-1]*middleGrid[i-1])/(middleGrid[i]*middleGrid[i]*deltaR[i]);
-				//}
-				tempMagneticField[i][k] +=  deltaT*growth_rate[i][k]*magneticField[i][k];
-				if(growth_rate[i][k] > maxRate[i]){
-					maxRateK = k;
-					maxRate[i] = growth_rate[i][k];
-				}
-				//tempMagneticField[i][k] = magneticField[i][k] + deltaT*(- 1.5*(magneticField[i][k]*middleVelocity[i] - magneticField[i-1][k]*middleVelocity[i-1])/middleDeltaR[i] + 0.5*(delta*middleVelocity[i]+(1-delta)*middleVelocity[i-1])*(magneticField[i][k] - magneticField[i-1][k])/middleDeltaR[i] + growth_rate[i][k]);
-				alertNaNOrInfinity(tempMagneticField[i][k], "magnetic field = NaN");
-				if(tempMagneticField[i][k] < 0){
-					//printf("magneticField < 0\n");
-					//exit(0);
-					tempMagneticField[i][k] = 0;
-				}
+			tempMagneticField[i][k] += -deltaT*((sqr(middleGrid[i])*middleVelocity[i]*magneticField[i][k] - sqr(middleGrid[i-1])*middleVelocity[i-1]*magneticField[i-1][k])/(sqr(middleGrid[i])*deltaR[i])) - deltaT*0.5*magneticField[i][k]*(middleVelocity[i]*middleGrid[i]*middleGrid[i] - middleVelocity[i-1]*middleGrid[i-1]*middleGrid[i-1])/(middleGrid[i]*middleGrid[i]*deltaR[i]);
+			tempMagneticField[i][k] +=  deltaT*growth_rate[i][k]*magneticField[i][k];
+			if(growth_rate[i][k] > maxRate[i]){
+				maxRateK = k;
+				maxRate[i] = growth_rate[i][k];
 			}
-			if(maxRate[i] > fullMaxRate){
-				fullMaxRate = maxRate[i];
+			alertNaNOrInfinity(tempMagneticField[i][k], "magnetic field = NaN");
+			if(tempMagneticField[i][k] < 0){
+				//printf("magneticField < 0\n");
+				//exit(0);
+				tempMagneticField[i][k] = 0;
 			}
+		}
+		if(maxRate[i] > fullMaxRate){
+			fullMaxRate = maxRate[i];
 		}
 	}
 	
@@ -119,7 +92,7 @@ void Simulation::growthRate(){
 					Complex sigma1;
 					Complex sigma2;
                     if( abs2(z - 1) < 0.00001){
-						sigma1 = 3/2;
+						sigma1 = 3.0/2.0;
 					} else if(z > 1) {
                         sigma1 = (1.5/sqr(z)) + 0.75*(1 - 1/(sqr(z)))*log(abs2((z+1)/(z-1)))/z;
 					} else if(0.01 < z) {
