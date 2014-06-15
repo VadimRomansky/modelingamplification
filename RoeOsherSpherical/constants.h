@@ -20,7 +20,7 @@ const double gradientLevel = 0.2;
 const double gridExpLevel = 0.9;
 const double minDeltaR = 5.0E14;
 const double minT = 100000.0;
-const int startCRevaluation = 50000;
+const int startCRevaluation = 100000;
 const int startFieldEvaluation = 350000;
 const int numThreads = 12;
 

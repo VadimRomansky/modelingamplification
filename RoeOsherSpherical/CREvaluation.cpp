@@ -40,7 +40,7 @@ double Simulation::injection(int i){
 	//double xi = 5;
 	double xi = pgrid[injectionMomentum]*speed_of_light/(kBoltzman*temperatureIn(i+1));
 	double eta = cube(xi)*exp(-xi);
-    return (3E-3)*middleDensity[i]*abs2(middleVelocity[i-1])*pf/(massProton*dp*deltaR[i]);
+    return (3E-6)*middleDensity[i]*abs2(middleVelocity[i-1])*pf/(massProton*dp*deltaR[i]);
 }
 
 
@@ -148,9 +148,9 @@ void Simulation::evaluateCR(){
 					f[i] += deltaT*inj;
 					//todo shift volume to 1/2
 					injectedParticles += inj*deltaT*4*pi*volume(i)*deltaLogP;
-					//tempDensity[i] -= deltaT*inj*massProton*4*pi*deltaLogP;
-					//tempMomentum[i] -= deltaT*inj*massProton*4*pi*deltaLogP*middleVelocity[i];
-					//tempEnergy[i] -= deltaT*inj*pgrid[k]*speed_of_light*4*pi*deltaLogP;
+					tempDensity[i] -= deltaT*inj*massProton*4*pi*deltaLogP;
+					tempMomentum[i] -= deltaT*inj*massProton*4*pi*deltaLogP*middleVelocity[i];
+					tempEnergy[i] -= deltaT*inj*pgrid[k]*speed_of_light*4*pi*deltaLogP;
 					if(tempDensity[i] < 0){
 						printf("tempDensity[i] < 0 by CR\n");
 						exit(0);
