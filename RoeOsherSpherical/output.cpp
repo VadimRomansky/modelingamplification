@@ -16,7 +16,7 @@ void output(FILE* outFile, Simulation* simulation){
 		if(abs(v)< 1){
 			tau = 0;
 		}
-		fprintf(outFile, "%g %g %g %g %g %g %g %g %g %g", simulation->grid[i], simulation->middleVelocity[i], simulation->middleDensity[i], simulation->middlePressure[i], simulation->cosmicRayPressure[i], t, simulation->magneticInductionSum[i]-simulation->B0, simulation->magneticEnergy[i], tau, simulation->cosmicRayConcentration[i]);
+		fprintf(outFile, "%g %g %g %g %g %g %g %g %g %g %g", simulation->grid[i], simulation->middleVelocity[i], simulation->middleDensity[i], simulation->middlePressure[i], simulation->cosmicRayPressure[i], t, simulation->magneticInductionSum[i]-simulation->B0, simulation->magneticEnergy[i], tau, simulation->cosmicRayConcentration[i], simulation->vscattering[i]);
 		fprintf(outFile, "\n");
 	}
 }

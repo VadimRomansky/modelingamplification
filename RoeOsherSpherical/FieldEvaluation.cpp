@@ -146,3 +146,30 @@ void Simulation::growthRate(){
 		}
 	
 }
+
+void Simulation::updateVScattering(){
+	for(int i = 0; i < rgridNumber; ++i){
+		if(i <shockWavePoint){
+			vscattering[i] = 0;
+			continue;
+		}
+
+		double dE = 0;
+		for(int k = 0; k < kgridNumber; ++k){
+			dE += magneticField[i][k]*growth_rate[i][k]*kgrid[k]*deltaLogK;
+		}
+
+		double pressureDer = (cosmicRayPressure[i+1] - cosmicRayPressure[i])/deltaR[i];
+
+		if(abs(pressureDer) < 1E-100){
+			vscattering[i] = 0;
+		} else {
+			vscattering[i]= dE/pressureDer;
+		}
+
+		if(vscattering[i] != vscattering[i] || 0*vscattering[i] != 0*vscattering[i]){
+			printf("vscattering[i] = NaN\n");
+			vscattering[i] = 0;
+		}
+	}
+}

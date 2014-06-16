@@ -82,6 +82,6 @@ void deserialize(FILE* hydroFile, FILE* distributionFile, FILE* fieldFile, FILE*
 
 	simulation->updateAfterSerialization();
 
-	simulation->serialized= true;
+	simulation->serialized = true;
 }
 	
