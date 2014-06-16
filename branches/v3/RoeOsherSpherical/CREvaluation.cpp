@@ -24,7 +24,8 @@ void Simulation::updateDiffusionCoef(){
 						break;
 					}
 				}
-				double coef = p*speed_of_light*speed_of_light/(3*electron_charge*B);
+				double v = p/sqrt(massProton*massProton + p*p/(speed_of_light*speed_of_light));
+				double coef = p*v*speed_of_light/(3*electron_charge*B);
 				double dx = deltaR[i];
 				double lambda = coef/speed_of_light;
 				diffusionCoef[i][j] = coef;
@@ -40,7 +41,7 @@ double Simulation::injection(int i){
 	//double xi = 5;
 	double xi = pgrid[injectionMomentum]*speed_of_light/(kBoltzman*temperatureIn(i+1));
 	double eta = cube(xi)*exp(-xi);
-    return (3E-6)*middleDensity[i]*abs2(middleVelocity[i-1])*pf/(massProton*dp*deltaR[i]);
+    return (1E-6)*middleDensity[i+1]*abs2(middleVelocity[i-1])*pf/(massProton*dp*deltaR[i]);
 }
 
 
@@ -52,7 +53,7 @@ void Simulation::evaluateCR(){
 		distributionFunction[shockWavePoint][injectionMomentum] += injection()*deltaT;
 	}*/
 	
-
+	double mc2 = massProton*speed_of_light*speed_of_light;
 	int k;
 #pragma omp parallel for private(k)
 		for(k = 0; k < pgridNumber; ++k){
@@ -145,12 +146,18 @@ void Simulation::evaluateCR(){
 				}
                 if(abs2(i - shockWavePoint)<2 && abs2(k - injectionMomentum) < 1){
 					double inj = injection(i);
+					double E = sqrt(sqr(mc2) + sqr(pgrid[injectionMomentum])*speed_of_light) - mc2;
+					double dE = deltaT*inj*E*4*pi*deltaLogP;
+					if(dE > tempEnergy[i]){
+						printf("dE < tempEnergy[i]\n");
+						inj *= 0.5*tempEnergy[i]/dE;
+					}
 					f[i] += deltaT*inj;
 					//todo shift volume to 1/2
 					injectedParticles += inj*deltaT*4*pi*volume(i)*deltaLogP;
 					tempDensity[i] -= deltaT*inj*massProton*4*pi*deltaLogP;
 					tempMomentum[i] -= deltaT*inj*massProton*4*pi*deltaLogP*middleVelocity[i];
-					tempEnergy[i] -= deltaT*inj*pgrid[k]*speed_of_light*4*pi*deltaLogP;
+					tempEnergy[i] -= deltaT*inj*E*4*pi*deltaLogP;
 					if(tempDensity[i] < 0){
 						printf("tempDensity[i] < 0 by CR\n");
 						exit(0);
