@@ -25,6 +25,7 @@ b3 = fix(N5/N2) - 1;
 fun(1:N3,1:4) = 0;
 funLocal(1:N3,1:4) = 0;
 hzfun(1:N3,1:4) = 0;
+J(1:N3,1:4) = 0;
 
 for i = 1: N3,
     fun(i,1) = fullDistribution(i,1)/(m*c);
@@ -41,6 +42,11 @@ for i = 1: N3,
     hzfun(i,2) = fullDistribution(a1*N3 + i,2)*(fullDistribution(i,1)^7);
     hzfun(i,3) = fullDistribution(a2*N3 + i,2)*(fullDistribution(i,1)^7);
     hzfun(i,4) = fullDistribution(a3*N3 + i,2)*(fullDistribution(i,1)^7); 
+    
+    J(i,1) = distribution(i,1)/(m*c);
+    J(i,2) = distribution(a1*N3 + i,3);
+    J(i,3) = distribution(a2*N3 + i,3);
+    J(i,4) = distribution((a3-1)*N3 + i,3);
 end
 
 figure(1);
@@ -100,9 +106,16 @@ xlabel ('r');
 ylabel ('J');
 grid ;
 
-figure(8);
+figure(9);
 plot (coordinateDistribution(b1*N2 + (1:N2),1), coordinateDistribution(b1*N2 + (1:N2),4),'blue', coordinateDistribution(b2*N2 + (1:N2),1), coordinateDistribution(b2*N2 + (1:N2),4),'green', coordinateDistribution(b3*N2 + (1:N2),1), coordinateDistribution(b3*N2 + (1:N2),4),'red');
 title ('full J(r)');
 xlabel ('r');
+ylabel ('J');
+grid ;
+
+figure(10);
+plot (J(1:N3,1), J(1:N3,2),'blue', J(1:N3,1), J(1:N3,3),'green', J(1:N3,1), J(1:N3,4),'red');
+title ('J(p)');
+xlabel ('p/mc');
 ylabel ('J');
 grid ;
