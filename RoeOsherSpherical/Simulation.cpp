@@ -238,6 +238,8 @@ void Simulation::evaluateHydrodynamic() {
 
     //#pragma omp for
 	for(int i = 1; i < rgridNumber-2; ++i){
+		tempEnergy[i] -=  deltaT*middleVelocity[i]*(cosmicRayPressure[i+1] - cosmicRayPressure[i])/(deltaR[i]);
+		alertNegative(tempEnergy[i], "energy < 0");
 		double deltaE = 0;
 		for(int k = 0; k < kgridNumber; ++k){
 			deltaE += deltaT*growth_rate[i][k]*magneticField[i][k]*kgrid[k]*deltaLogK;
@@ -705,6 +707,7 @@ void Simulation::updateParameters(){
 	totalParticles = 0;
 	totalMagneticEnergy = 0;
 	totalParticleEnergy = 0;
+	double mc2 = massProton*sqr(speed_of_light);
 	for(int i = 0; i < rgridNumber; ++i){
 		mass += middleDensity[i]*volume(i);
 		totalMomentum += momentum(i)*volume(i);
@@ -730,8 +733,9 @@ void Simulation::updateParameters(){
 			} else {
 				dr = middleGrid[i] - middleGrid[i-1];
 			}
+			double E = sqrt(sqr(mc2) + sqr(pgrid[j]*speed_of_light)) - mc2;
 			totalParticles += distributionFunction[i][j]*4*pi*volume(i)*deltaLogP;
-			totalParticleEnergy += 4*pi*speed_of_light*distributionFunction[i][j]*volume(i)*dp;
+			totalParticleEnergy += 4*pi*E*distributionFunction[i][j]*volume(i)*deltaLogP;
 		}
 	}
 	mass -= myTime*(0 - middleDensity[rgridNumber-1]*middleVelocity[rgridNumber-1]);
