@@ -736,9 +736,9 @@ void Simulation::updateParameters(){
 	}
 	mass -= myTime*(0 - middleDensity[rgridNumber-1]*middleVelocity[rgridNumber-1]);
 	totalMomentum -=  myTime*(middlePressure[0] - middleDensity[rgridNumber-1]*sqr(middleVelocity[rgridNumber-1]) - middlePressure[rgridNumber-1]);
-	for(int k = 0; k < kgridNumber; ++k){
+	/*for(int k = 0; k < kgridNumber; ++k){
 		totalMagneticEnergy -=  myTime*(0 - magneticField[rgridNumber-1][k]*middleVelocity[rgridNumber-1])*kgrid[k]*deltaLogK;
-	}
+	}*/
 	totalKineticEnergy -=  myTime*(0 - middleDensity[rgridNumber-1]*cube(middleVelocity[rgridNumber-1]))/2;
 	totalTermalEnergy -=  myTime*(0 - middlePressure[rgridNumber-1]*middleVelocity[rgridNumber-1])*_gamma/(_gamma-1);
 	totalEnergy = totalTermalEnergy + totalKineticEnergy + totalParticleEnergy + totalMagneticEnergy;
