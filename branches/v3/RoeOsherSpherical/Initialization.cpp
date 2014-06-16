@@ -297,6 +297,7 @@ void Simulation::initializeProfile(){
 			//distributionFunction[i][j] = exp(x);
 			//distributionFunction[i][j] = epsilon;
 		}
+		vscattering[i] = 0;
 		pointDensity[i] = middleDensity[i];
 		pointVelocity[i] = middleVelocity[i];
 		pointEnthalpy[i] = (energy(i) + middlePressure[i])/middleDensity[i];
@@ -479,6 +480,7 @@ void Simulation::updateAfterSerialization(){
 	for(int i = 0; i < rgridNumber; ++i){
 		magneticEnergy[i] = 0;
 		maxRate[i] = 0;
+		vscattering[i] = 0;
 		for(int k = 0; k < kgridNumber; ++k){
 			tempMagneticField[i][k] = magneticField[i][k];
 			if(k == 0){
@@ -490,4 +492,10 @@ void Simulation::updateAfterSerialization(){
 			alertNaNOrInfinity(magneticField[i][k], "magnetic field = NaN");
 		}
 	}
+
+	evaluateCosmicRayPressure();
+	updateDiffusionCoef();
+	evaluateCRFlux();
+	growthRate();
+	updateVScattering();
 }

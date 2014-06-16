@@ -216,7 +216,7 @@ void Simulation::evaluateHydrodynamic() {
 	evaluateFluxes();
 
 	//for Einfeldt
-	updateFluxes();
+	//updateFluxes();
 
 	TracPenRadial(tempDensity, dFlux);
 
@@ -238,20 +238,20 @@ void Simulation::evaluateHydrodynamic() {
 
     //#pragma omp for
 	for(int i = 1; i < rgridNumber-2; ++i){
-		tempEnergy[i] -=  deltaT*middleVelocity[i]*(cosmicRayPressure[i+1] - cosmicRayPressure[i])/(deltaR[i]);
+		tempEnergy[i] = -deltaT*middleVelocity[i]*(cosmicRayPressure[i+1] - cosmicRayPressure[i])/(deltaR[i]);
 		alertNegative(tempEnergy[i], "energy < 0");
 		double deltaE = 0;
 		for(int k = 0; k < kgridNumber; ++k){
 			deltaE += deltaT*growth_rate[i][k]*magneticField[i][k]*kgrid[k]*deltaLogK;
 			tempEnergy[i] -= deltaT*0.5*middleVelocity[i]*(magneticField[i][k] - magneticField[i-1][k])*kgrid[k]*deltaLogK/deltaR[i];
-			//tempEnergy[i] += deltaT*0.5*magneticField[i][k]*(middleVelocity[i] - middleVelocity[i-1])*kgrid[k]*deltaLogK/deltaR[i];
-			tempEnergy[i] -= deltaT*growth_rate[i][k]*magneticField[i][k]*kgrid[k]*deltaLogK;
+		
+			//tempEnergy[i] -= deltaT*growth_rate[i][k]*magneticField[i][k]*kgrid[k]*deltaLogK;
 			//alertNaNOrInfinity(tempEnergy[i], "energy = NaN");
 			alertNegative(tempEnergy[i], "energy < 0");
 		}
-        if(abs2(cosmicRayPressure[i+1] - cosmicRayPressure[i]) > 1E-100){
+        /*if(abs2(cosmicRayPressure[i+1] - cosmicRayPressure[i]) > 1E-100){
             vscattering[i] = abs2(deltaE*deltaR[i]/(cosmicRayPressure[i+1] - cosmicRayPressure[i]));
-		}
+		}*/
 	}
 
 }
@@ -734,8 +734,8 @@ void Simulation::updateParameters(){
 				dr = middleGrid[i] - middleGrid[i-1];
 			}
 			double E = sqrt(sqr(mc2) + sqr(pgrid[j]*speed_of_light)) - mc2;
-			totalParticles += distributionFunction[i][j]*4*pi*volume(i)*deltaLogP;
-			totalParticleEnergy += 4*pi*E*distributionFunction[i][j]*volume(i)*deltaLogP;
+			totalParticles += distributionFunction[i][j]*volume(i)*deltaLogP;
+			totalParticleEnergy += E*distributionFunction[i][j]*volume(i)*deltaLogP;
 		}
 	}
 	mass -= myTime*(0 - middleDensity[rgridNumber-1]*middleVelocity[rgridNumber-1]);
@@ -823,6 +823,7 @@ void Simulation::updateAll(){
 		if(currentIteration > startFieldEvaluation){
 			updateDiffusionCoef();
 			growthRate();
+			updateVScattering();
 		}
 	}
 }

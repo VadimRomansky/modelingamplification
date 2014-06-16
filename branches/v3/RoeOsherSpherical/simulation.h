@@ -145,6 +145,7 @@ public:
 	void evaluateField();
 	void evaluateCRFlux();
 	void growthRate();
+	void updateVScattering();
 
 	double minmod(double a, double b);
 	double superbee(double a, double b);
