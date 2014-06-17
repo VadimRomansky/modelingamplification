@@ -112,7 +112,7 @@ void Simulation::initializeProfile(){
 
 	initializeArrays();
 
-	minP = 0.5*massProton*speed_of_light;
+	minP = massProton*speed_of_light;
 	maxP = minP*1E8;
 
 	double r = downstreamR;

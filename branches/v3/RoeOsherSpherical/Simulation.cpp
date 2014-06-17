@@ -45,6 +45,7 @@ void Simulation::simulate(){
 	outDistribution  = fopen("./output/distribution.dat",suffix);
 	outFullDistribution  = fopen("./output/fullDistribution.dat",suffix);
 	outCoordinateDistribution  = fopen("./output/coordinateDistribution.dat",suffix);
+	//outputDistributionP3(outDistribution, outFullDistribution, outCoordinateDistribution, this);
 	outputDistributionP3(outDistribution, outFullDistribution, outCoordinateDistribution, this);
 	fclose(outCoordinateDistribution);
 	fclose(outFullDistribution);
@@ -136,15 +137,12 @@ void Simulation::simulate(){
 			outFullDistribution = fopen("./output/fullDistribution.dat","a");
 			outCoordinateDistribution = fopen("./output/coordinateDistribution.dat","a");
 
-			outputDistributionP3(outDistribution, outFullDistribution, outCoordinateDistribution, this);
+			//outputDistributionP3(outDistribution, outFullDistribution, outCoordinateDistribution, this);
+			outputDistribution(outDistribution, outFullDistribution, outCoordinateDistribution, this);
 
 			fclose(outCoordinateDistribution);
 			fclose(outFullDistribution);
 			fclose(outDistribution);
-
-			/*fopen_s(&outDistributionDerivative, "./output/distributionDerivative.dat","a");
-			outputDerivativeForDebug(outDistributionDerivative, this);
-			fclose(outDistributionDerivative);*/
 
 			outIteration = fopen("./output/iterations.dat","a");
 			fprintf(outIteration, "%d %g %g %g %g %g %g\n", currentIteration, myTime, mass, totalMomentum, totalEnergy, injectedParticles, totalParticles);
@@ -240,7 +238,7 @@ void Simulation::evaluateHydrodynamic() {
 	for(int i = 1; i < rgridNumber-2; ++i){
 		double deltaE = 0;
 		tempEnergy[i] -= deltaT*middleVelocity[i]*(cosmicRayPressure[i+1] - cosmicRayPressure[i])/deltaR[i];
-		uGradPEnergy += deltaT*middleVelocity[i]*(cosmicRayPressure[i+1] - cosmicRayPressure[i])/deltaR[i];
+		uGradPEnergy += deltaT*middleVelocity[i]*((cosmicRayPressure[i+1] - cosmicRayPressure[i])/deltaR[i])*volume(i);
 		for(int k = 0; k < kgridNumber; ++k){
 			deltaE += deltaT*growth_rate[i][k]*magneticField[i][k]*kgrid[k]*deltaLogK;
 			tempEnergy[i] -= deltaT*0.5*middleVelocity[i]*(magneticField[i][k] - magneticField[i-1][k])*kgrid[k]*deltaLogK/deltaR[i];
@@ -688,7 +686,7 @@ void Simulation::updateShockWavePoint(){
 		shockWaveT = 0;
 		for(int i = rgridNumber-1; i > 1; --i){
 			for(int j = 0; j < pgridNumber; ++j){
-				double sigma = 0.9;
+				double sigma = 1;
 				distributionFunction[i][j] = ((1-sigma)*distributionFunction[i-1][j]*volume(i-1) + sigma*distributionFunction[i][j]*volume(i))/(volume(i));
 				//distributionFunction[i][j] = distributionFunction[i+1][j]*middleDeltaR[i+1]/middleDeltaR[i];
 			}
@@ -734,8 +732,11 @@ void Simulation::updateParameters(){
 			} else {
 				dr = middleGrid[i] - middleGrid[i-1];
 			}
-			totalParticles += distributionFunction[i][j]*volume(i)*deltaLogP;
-			totalParticleEnergy += speed_of_light*distributionFunction[i][j]*volume(i)*dp;
+			//totalParticles += distributionFunction[i][j]*volume(i)*deltaLogP;
+			//totalParticleEnergy += speed_of_light*distributionFunction[i][j]*volume(i)*dp;
+
+			totalParticles += distributionFunction[i][j]*volume(i)*deltaLogP*cube(pgrid[j]);
+			totalParticleEnergy += speed_of_light*distributionFunction[i][j]*volume(i)*dp*cube(pgrid[j]);
 		}
 	}
 	mass -= myTime*(0 - middleDensity[rgridNumber-1]*middleVelocity[rgridNumber-1]);
