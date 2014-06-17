@@ -238,20 +238,19 @@ void Simulation::evaluateHydrodynamic() {
 
     //#pragma omp for
 	for(int i = 1; i < rgridNumber-2; ++i){
-		tempEnergy[i] = -deltaT*middleVelocity[i]*(cosmicRayPressure[i+1] - cosmicRayPressure[i])/(deltaR[i]);
-		alertNegative(tempEnergy[i], "energy < 0");
 		double deltaE = 0;
+		tempEnergy[i] -= deltaT*middleVelocity[i]*(cosmicRayPressure[i+1] - cosmicRayPressure[i])/deltaR[i];
 		for(int k = 0; k < kgridNumber; ++k){
 			deltaE += deltaT*growth_rate[i][k]*magneticField[i][k]*kgrid[k]*deltaLogK;
 			tempEnergy[i] -= deltaT*0.5*middleVelocity[i]*(magneticField[i][k] - magneticField[i-1][k])*kgrid[k]*deltaLogK/deltaR[i];
-		
+			//tempEnergy[i] += deltaT*0.5*magneticField[i][k]*(middleVelocity[i] - middleVelocity[i-1])*kgrid[k]*deltaLogK/deltaR[i];
 			//tempEnergy[i] -= deltaT*growth_rate[i][k]*magneticField[i][k]*kgrid[k]*deltaLogK;
 			//alertNaNOrInfinity(tempEnergy[i], "energy = NaN");
 			alertNegative(tempEnergy[i], "energy < 0");
 		}
-        /*if(abs2(cosmicRayPressure[i+1] - cosmicRayPressure[i]) > 1E-100){
+        if(abs2(cosmicRayPressure[i+1] - cosmicRayPressure[i]) > 1E-100){
             vscattering[i] = abs2(deltaE*deltaR[i]/(cosmicRayPressure[i+1] - cosmicRayPressure[i]));
-		}*/
+		}
 	}
 
 }
@@ -707,7 +706,6 @@ void Simulation::updateParameters(){
 	totalParticles = 0;
 	totalMagneticEnergy = 0;
 	totalParticleEnergy = 0;
-	double mc2 = massProton*sqr(speed_of_light);
 	for(int i = 0; i < rgridNumber; ++i){
 		mass += middleDensity[i]*volume(i);
 		totalMomentum += momentum(i)*volume(i);
@@ -733,16 +731,15 @@ void Simulation::updateParameters(){
 			} else {
 				dr = middleGrid[i] - middleGrid[i-1];
 			}
-			double E = sqrt(sqr(mc2) + sqr(pgrid[j]*speed_of_light)) - mc2;
-			totalParticles += distributionFunction[i][j]*volume(i)*deltaLogP;
-			totalParticleEnergy += E*distributionFunction[i][j]*volume(i)*deltaLogP;
+			totalParticles += distributionFunction[i][j]*4*pi*volume(i)*deltaLogP;
+			totalParticleEnergy += 4*pi*speed_of_light*distributionFunction[i][j]*volume(i)*dp;
 		}
 	}
 	mass -= myTime*(0 - middleDensity[rgridNumber-1]*middleVelocity[rgridNumber-1]);
 	totalMomentum -=  myTime*(middlePressure[0] - middleDensity[rgridNumber-1]*sqr(middleVelocity[rgridNumber-1]) - middlePressure[rgridNumber-1]);
-	/*for(int k = 0; k < kgridNumber; ++k){
+	for(int k = 0; k < kgridNumber; ++k){
 		totalMagneticEnergy -=  myTime*(0 - magneticField[rgridNumber-1][k]*middleVelocity[rgridNumber-1])*kgrid[k]*deltaLogK;
-	}*/
+	}
 	totalKineticEnergy -=  myTime*(0 - middleDensity[rgridNumber-1]*cube(middleVelocity[rgridNumber-1]))/2;
 	totalTermalEnergy -=  myTime*(0 - middlePressure[rgridNumber-1]*middleVelocity[rgridNumber-1])*_gamma/(_gamma-1);
 	totalEnergy = totalTermalEnergy + totalKineticEnergy + totalParticleEnergy + totalMagneticEnergy;
@@ -823,7 +820,6 @@ void Simulation::updateAll(){
 		if(currentIteration > startFieldEvaluation){
 			updateDiffusionCoef();
 			growthRate();
-			//updateVScattering();
 		}
 	}
 }

@@ -18,5 +18,5 @@ plot (extra_iterations(1:N,1),extra_iterations(1:N,5),'red', extra_iterations(1:
 title ('energy');
 xlabel ('ieration');
 ylabel ('e erg');
-legend('full energy', 'kinetic', 'temal', 'particles', 'magnetic',2);
+legend('full energy', 'kinetic', 'temal', 'particles', 'magnetic',4);
 grid ;
