@@ -123,7 +123,7 @@ void Simulation::evaluateCR(){
 				//f[i] = distributionFunction[i][k] + (deltaT/(2*dV))*(xp*xp*diffusionCoef[i][k]*(distributionFunction[i+1][k] - distributionFunction[i][k])/dxp
 								//- xm*xm*diffusionCoef[i-1][k]*(distributionFunction[i][k] - distributionFunction[i-1][k])/dxm)
 								//- (deltaT/dV)*(xp*xp*middleVelocity[i]*distributionFunction[i][k] - xm*xm*middleVelocity[i-1]*distributionFunction[i-1][k]);
-				/*if(i == shockWavePoint){
+				if(i == shockWavePoint){
 					double v2 = middleVelocity[i+1] + vscattering[i+1];
 					double v1 = middleVelocity[i] + vscattering[i];
 					f[i] = distributionFunction[i][k]  + deltaT*((1/(2*dV))*(xp*xp*diffusionCoef[i][k]*(distributionFunction[i+1][k] - distributionFunction[i][k])/dxp - xm*xm*diffusionCoef[i-1][k]*(distributionFunction[i][k] - distributionFunction[i-1][k])/dxm) - (1/dV)*x*x*distributionFunction[i][k]*(v2 - v1));
@@ -135,8 +135,8 @@ void Simulation::evaluateCR(){
 					double v2 = middleVelocity[i+1] + vscattering[i+1];
 					double v1 = middleVelocity[i-1] + vscattering[i-1];
 					f[i] = distributionFunction[i][k]  + deltaT*((1/(2*dV))*(xp*xp*diffusionCoef[i][k]*(distributionFunction[i+1][k] - distributionFunction[i][k])/dxp - xm*xm*diffusionCoef[i-1][k]*(distributionFunction[i][k] - distributionFunction[i-1][k])/dxm) - (1/dV)*0.5*(gridsquare[i+1]*v2*distributionFunction[i+1][k] - gridsquare[i-1]*v1*distributionFunction[i-1][k]));
-				}*/
-				f[i] = distributionFunction[i][k]  + deltaT*((1/(2*dV))*(xp*xp*diffusionCoef[i][k]*(distributionFunction[i+1][k] - distributionFunction[i][k])/dxp - xm*xm*diffusionCoef[i-1][k]*(distributionFunction[i][k] - distributionFunction[i-1][k])/dxm) - (1/dV)*(middleVelocity[i-1]+vscattering[i-1])*0.5*(distributionFunction[i+1][k] - distributionFunction[i-1][k]));
+				}
+				//f[i] = distributionFunction[i][k]  + deltaT*((1/(2*dV))*(xp*xp*diffusionCoef[i][k]*(distributionFunction[i+1][k] - distributionFunction[i][k])/dxp - xm*xm*diffusionCoef[i-1][k]*(distributionFunction[i][k] - distributionFunction[i-1][k])/dxm) - (1/dV)*(middleVelocity[i-1]+vscattering[i-1])*0.5*(distributionFunction[i+1][k] - distributionFunction[i-1][k]));
 				if(f[i] < 0){
 					//printf("f[i] < 0\n");
 					f[i] = 0;
@@ -155,7 +155,7 @@ void Simulation::evaluateCR(){
 						f[i] += (deltaT/3)*((xp*xp*v2 - xm*xm*v1)/dV)*((gkpp - gkp)/deltaLogP);
 				}
                 if(abs2(i - shockWavePoint)<2 && abs2(k - injectionMomentum) < 1){
-					/*double inj = injection(i);
+					double inj = injection(i);
 					double E = sqrt(sqr(mc2) + sqr(pgrid[injectionMomentum])*speed_of_light) - mc2;
 					double dE = deltaT*inj*E*deltaLogP;
 					if(dE > tempEnergy[i]){
@@ -168,9 +168,9 @@ void Simulation::evaluateCR(){
 					tempDensity[i] -= deltaT*inj*massProton*deltaLogP;
 					tempMomentum[i] -= deltaT*inj*massProton*deltaLogP*middleVelocity[i];
 					tempEnergy[i] -= deltaT*inj*E*deltaLogP;
-					injectedEnergy += deltaT*inj*E*deltaLogP*volume(i);*/
+					injectedEnergy += deltaT*inj*E*deltaLogP*volume(i);
 
-					double inj = injection(i);
+					/*double inj = injection(i);
 					double E = sqrt(sqr(mc2) + sqr(pgrid[injectionMomentum])*speed_of_light) - mc2;
 					double dE = deltaT*inj*E*deltaLogP;
 					if(dE > tempEnergy[i]){
@@ -185,7 +185,7 @@ void Simulation::evaluateCR(){
 					tempDensity[i] -= deltaT*inj*massProton*deltaLogP;
 					tempMomentum[i] -= deltaT*inj*massProton*deltaLogP*middleVelocity[i];
 					tempEnergy[i] -= deltaT*inj*E*deltaLogP;
-					injectedEnergy += deltaT*inj*E*deltaLogP*volume(i);
+					injectedEnergy += deltaT*inj*E*deltaLogP*volume(i);*/
 					if(tempDensity[i] < 0){
 						printf("tempDensity[i] < 0 by CR\n");
 						exit(0);
@@ -276,8 +276,8 @@ void Simulation::evaluateCosmicRayPressure(){
 	for(int j = 0; j < pgridNumber; ++j){
 		double p = pgrid[j];
 		double v = p/sqrt(massProton*massProton + p*p/(speed_of_light*speed_of_light));
-		//partPressure[j] = p*v*deltaLogP;
-		partPressure[j] = p*v*deltaLogP*cube(p);
+		partPressure[j] = p*v*deltaLogP/3;
+		//partPressure[j] = p*v*deltaLogP*cube(p);
 	}
 	for(int i = 0; i < rgridNumber; ++i){
 		double pressure = 0;
@@ -286,8 +286,8 @@ void Simulation::evaluateCosmicRayPressure(){
 			if(j >= goodMomentum){
 				pressure += distributionFunction[i][j]*partPressure[j];
 			}
-			//concentration += distributionFunction[i][j]*deltaLogP;
-			concentration += distributionFunction[i][j]*deltaLogP*cube(pgrid[i]);
+			concentration += distributionFunction[i][j]*deltaLogP;
+			//concentration += distributionFunction[i][j]*deltaLogP*cube(pgrid[i]);
 		}
 		//4pi?
 		cosmicRayPressure[i] = pressure;
