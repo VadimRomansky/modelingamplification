@@ -49,6 +49,8 @@ public:
 	double totalParticleEnergy;
 	double totalParticles;
 	double injectedParticles;
+	double injectedEnergy;
+	double uGradPEnergy;
 
 	double minP;
 	double maxP;

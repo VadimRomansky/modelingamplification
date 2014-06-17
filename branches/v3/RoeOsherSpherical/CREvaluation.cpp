@@ -156,17 +156,18 @@ void Simulation::evaluateCR(){
                 if(abs2(i - shockWavePoint)<2 && abs2(k - injectionMomentum) < 1){
 					double inj = injection(i);
 					double E = sqrt(sqr(mc2) + sqr(pgrid[injectionMomentum])*speed_of_light) - mc2;
-					double dE = deltaT*inj*E*4*pi*deltaLogP;
+					double dE = deltaT*inj*E*deltaLogP;
 					if(dE > tempEnergy[i]){
 						printf("dE < tempEnergy[i]\n");
 						inj *= 0.5*tempEnergy[i]/dE;
 					}
 					f[i] += deltaT*inj;
 					//todo shift volume to 1/2
-					injectedParticles += inj*deltaT*4*pi*volume(i)*deltaLogP;
-					tempDensity[i] -= deltaT*inj*massProton*4*pi*deltaLogP;
-					tempMomentum[i] -= deltaT*inj*massProton*4*pi*deltaLogP*middleVelocity[i];
-					tempEnergy[i] -= deltaT*inj*E*4*pi*deltaLogP;
+					injectedParticles += inj*deltaT*volume(i)*deltaLogP;
+					tempDensity[i] -= deltaT*inj*massProton*deltaLogP;
+					tempMomentum[i] -= deltaT*inj*massProton*deltaLogP*middleVelocity[i];
+					tempEnergy[i] -= deltaT*inj*E*deltaLogP;
+					injectedEnergy += deltaT*inj*E*deltaLogP;
 					if(tempDensity[i] < 0){
 						printf("tempDensity[i] < 0 by CR\n");
 						exit(0);
