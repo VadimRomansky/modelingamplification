@@ -26,6 +26,8 @@ Simulation::Simulation(){
 	totalMomentum = 0;
 	totalParticles = 0;
 	currentIteration = 0;
+	injectedEnergy = 0;
+	uGradPEnergy = 0;
 }
 
 //деструктор
