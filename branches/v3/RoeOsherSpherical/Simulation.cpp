@@ -216,7 +216,7 @@ void Simulation::evaluateHydrodynamic() {
 	evaluateFluxes();
 
 	//for Einfeldt
-	//updateFluxes();
+	updateFluxes();
 
 	TracPenRadial(tempDensity, dFlux);
 
@@ -823,7 +823,7 @@ void Simulation::updateAll(){
 		if(currentIteration > startFieldEvaluation){
 			updateDiffusionCoef();
 			growthRate();
-			updateVScattering();
+			//updateVScattering();
 		}
 	}
 }
