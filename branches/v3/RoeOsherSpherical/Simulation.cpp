@@ -45,8 +45,8 @@ void Simulation::simulate(){
 	outDistribution  = fopen("./output/distribution.dat",suffix);
 	outFullDistribution  = fopen("./output/fullDistribution.dat",suffix);
 	outCoordinateDistribution  = fopen("./output/coordinateDistribution.dat",suffix);
-	//outputDistributionP3(outDistribution, outFullDistribution, outCoordinateDistribution, this);
 	outputDistributionP3(outDistribution, outFullDistribution, outCoordinateDistribution, this);
+	//outputDistributionP3(outDistribution, outFullDistribution, outCoordinateDistribution, this);
 	fclose(outCoordinateDistribution);
 	fclose(outFullDistribution);
 	fclose(outDistribution);
@@ -137,8 +137,8 @@ void Simulation::simulate(){
 			outFullDistribution = fopen("./output/fullDistribution.dat","a");
 			outCoordinateDistribution = fopen("./output/coordinateDistribution.dat","a");
 
-			//outputDistributionP3(outDistribution, outFullDistribution, outCoordinateDistribution, this);
-			outputDistribution(outDistribution, outFullDistribution, outCoordinateDistribution, this);
+			outputDistributionP3(outDistribution, outFullDistribution, outCoordinateDistribution, this);
+			//outputDistribution(outDistribution, outFullDistribution, outCoordinateDistribution, this);
 
 			fclose(outCoordinateDistribution);
 			fclose(outFullDistribution);
@@ -732,11 +732,11 @@ void Simulation::updateParameters(){
 			} else {
 				dr = middleGrid[i] - middleGrid[i-1];
 			}
-			//totalParticles += distributionFunction[i][j]*volume(i)*deltaLogP;
-			//totalParticleEnergy += speed_of_light*distributionFunction[i][j]*volume(i)*dp;
+			totalParticles += distributionFunction[i][j]*volume(i)*deltaLogP;
+			totalParticleEnergy += speed_of_light*distributionFunction[i][j]*volume(i)*dp;
 
-			totalParticles += distributionFunction[i][j]*volume(i)*deltaLogP*cube(pgrid[j]);
-			totalParticleEnergy += speed_of_light*distributionFunction[i][j]*volume(i)*dp*cube(pgrid[j]);
+			//totalParticles += distributionFunction[i][j]*volume(i)*deltaLogP*cube(pgrid[j]);
+			//totalParticleEnergy += speed_of_light*distributionFunction[i][j]*volume(i)*dp*cube(pgrid[j]);
 		}
 	}
 	mass -= myTime*(0 - middleDensity[rgridNumber-1]*middleVelocity[rgridNumber-1]);
