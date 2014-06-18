@@ -37,6 +37,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Stationar", "Stationar\Stat
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Rewrite", "Rewrite\Rewrite.vcxproj", "{F0CAA764-6FE5-46DE-8F6B-00D6EE33CCB4}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Rewrite2", "Rewrite2\Rewrite2.vcxproj", "{1F69B9D4-8198-4A6C-8B7F-F2B26E75ACF2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -115,6 +117,10 @@ Global
 		{F0CAA764-6FE5-46DE-8F6B-00D6EE33CCB4}.Debug|Win32.Build.0 = Debug|Win32
 		{F0CAA764-6FE5-46DE-8F6B-00D6EE33CCB4}.Release|Win32.ActiveCfg = Release|Win32
 		{F0CAA764-6FE5-46DE-8F6B-00D6EE33CCB4}.Release|Win32.Build.0 = Release|Win32
+		{1F69B9D4-8198-4A6C-8B7F-F2B26E75ACF2}.Debug|Win32.ActiveCfg = Debug|Win32
+		{1F69B9D4-8198-4A6C-8B7F-F2B26E75ACF2}.Debug|Win32.Build.0 = Debug|Win32
+		{1F69B9D4-8198-4A6C-8B7F-F2B26E75ACF2}.Release|Win32.ActiveCfg = Release|Win32
+		{1F69B9D4-8198-4A6C-8B7F-F2B26E75ACF2}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
