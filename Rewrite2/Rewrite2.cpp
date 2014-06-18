@@ -14,7 +14,7 @@ int main()
 	int rgridNumber = 1000;
 	int pgridNumber = 150;
 	int kgridNumber = 100;
-	int iterations = 50;
+	int iterations = 33;
 
 	FILE* distributionIn1 = fopen("./input1/distribution.dat","r");
 	FILE* distributionIn2 = fopen("./input2/distribution.dat","r");
@@ -56,7 +56,7 @@ int main()
 	FILE* distributionOut = fopen("./output/distribution2.dat","w");
 
 	for(int i = 0; i < pgridNumber; ++i){
-		fprintf(distributionOut, "%g %g %gn", distribution[i][0], distribution[i][1], distribution[i][2]);
+		fprintf(distributionOut, "%g %g %g\n", distribution[i][0], distribution[i][1], distribution[i][2]);
 	}
 
 	fclose(distributionOut);
