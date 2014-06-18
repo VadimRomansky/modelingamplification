@@ -254,6 +254,12 @@ void Simulation::evaluateHydrodynamic() {
 		}
 	}
 
+	if(shockWavePoint > 0){
+		for(int i = min2(shockWavePoint + 20, rgridNumber-1); i >= shockWavePoint; --i){
+			vscattering[i] = vscattering[i+1];
+		}
+	}
+
 }
 
 
@@ -569,15 +575,15 @@ double Simulation::superbee(double a, double b){
 //пересчет шага по времени и максимальной скорости звука
 
 void Simulation::updateMaxSoundSpeed(){
-    maxSoundSpeed = (sqrt(_gamma*middlePressure[0]/middleDensity[0]) + abs2(middleVelocity[0]));
+	maxSoundSpeed = (sqrt(_gamma*(middlePressure[0]+cosmicRayPressure[0] + 0.5*magneticEnergy[0])/middleDensity[0]) + abs2(middleVelocity[0]));
 	double cs = maxSoundSpeed;
 	for(int i = 1; i < rgridNumber - 1; ++i){
-        cs = (sqrt(_gamma*middlePressure[i]/middleDensity[i]) + abs2(middleVelocity[i]));
+        cs = (sqrt(_gamma*(middlePressure[i]+max2(cosmicRayPressure[i],cosmicRayPressure[i+1]) + 0.5*magneticEnergy[i])/middleDensity[i]) + abs2(middleVelocity[i]));
 		if(cs > maxSoundSpeed){
 			maxSoundSpeed = cs;
 		}
 	}
-    cs = (sqrt(_gamma*middlePressure[rgridNumber - 1]/middleDensity[rgridNumber - 1]) + abs2(middleVelocity[rgridNumber - 1]));
+    cs = (sqrt(_gamma*(middlePressure[rgridNumber-1]+cosmicRayPressure[rgridNumber-1] + 0.5*magneticEnergy[rgridNumber-1])/middleDensity[rgridNumber - 1]) + abs2(middleVelocity[rgridNumber - 1]));
 	if(cs > maxSoundSpeed){
 		maxSoundSpeed = cs;
 	}
