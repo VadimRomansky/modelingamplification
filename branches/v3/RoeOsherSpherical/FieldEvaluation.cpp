@@ -50,8 +50,8 @@ void Simulation::evaluateCRFlux(){
 	#pragma omp for
 		for(i = 0; i < rgridNumber; ++i){
 			for(int j = 1; j < pgridNumber; ++j){
-				//crflux[i][j] = - electron_charge*(diffusionCoef[i][j]*(distributionFunction[i+1][j] - distributionFunction[i][j])/deltaR[i])*deltaLogP;
-				crflux[i][j] = - electron_charge*(diffusionCoef[i][j]*(distributionFunction[i+1][j] - distributionFunction[i][j])/deltaR[i])*cube(pgrid[j])*deltaLogP;
+				crflux[i][j] = - electron_charge*(diffusionCoef[i][j]*(distributionFunction[i+1][j] - distributionFunction[i][j])/deltaR[i])*deltaLogP;
+				//crflux[i][j] = - electron_charge*(diffusionCoef[i][j]*(distributionFunction[i+1][j] - distributionFunction[i][j])/deltaR[i])*cube(pgrid[j])*deltaLogP;
 			}
 		}
 }
