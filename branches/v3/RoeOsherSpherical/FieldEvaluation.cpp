@@ -99,10 +99,11 @@ void Simulation::growthRate(){
 					} else if(z > 1) {
                         sigma1 = (1.5/sqr(z)) + 0.75*(1 - 1/(sqr(z)))*log(abs2((z+1)/(z-1)))/z;
 					} else if(0.01 < z) {
-                        sigma1 = (1.5/sqr(z)) + 0.75*(1 - 1/(sqr(z)))*log(abs2((z+1)/(z-1)))/z;
-					} else {
+                       sigma1 = (1.5/sqr(z)) + 0.75*(1 - 1/(sqr(z)))*log(abs2((z+1)/(z-1)))/z;
+					}  else {
 						sigma1 = 1 + 0.2*sqr(z);
 					}
+					//sigma1 = 1;
 
 					if(z > 1){
 						sigma1 = sigma1 + Complex(0,-(3*pi/(4*z))*(1 - 1/sqr(z)));
