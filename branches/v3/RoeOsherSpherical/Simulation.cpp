@@ -686,7 +686,7 @@ void Simulation::updateShockWavePoint(){
 		shockWaveT = 0;
 		for(int i = rgridNumber-1; i > 1; --i){
 			for(int j = 0; j < pgridNumber; ++j){
-				double sigma = 1;
+				double sigma = 0.9;
 				distributionFunction[i][j] = ((1-sigma)*distributionFunction[i-1][j]*volume(i-1) + sigma*distributionFunction[i][j]*volume(i))/(volume(i));
 				//distributionFunction[i][j] = distributionFunction[i+1][j]*middleDeltaR[i+1]/middleDeltaR[i];
 			}
