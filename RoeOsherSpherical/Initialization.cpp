@@ -176,7 +176,7 @@ void Simulation::initializeProfile(){
 		magneticEnergy[i] = 0;
 		maxRate[i] = 0;
 		for(int k = 0; k < kgridNumber; ++k){
-			magneticField[i][k] = (1E-8)*B0*B0*power(1/kgrid[k], 5.0/3.0)*power(kgrid[0],2.0/3.0);
+			magneticField[i][k] = (1E-7)*B0*B0*power(1/kgrid[k], 5.0/3.0)*power(kgrid[0],2.0/3.0);
 			tempMagneticField[i][k] = magneticField[i][k];
 			if(k == 0){
 				largeScaleField[i][k] = sqrt(4*pi*magneticField[i][k]*kgrid[k]*deltaLogK + B0*B0);

@@ -827,7 +827,7 @@ void Simulation::updateAll(){
 			magneticInductionSum[i] = sqrt(4*pi*magneticEnergy[i] + B0*B0);
 		}
 		
-		if(currentIteration > startFieldEvaluation){
+		if(currentIteration > startFieldEvaluation && currentIteration < startFieldEvaluation + 100000){
 			updateDiffusionCoef();
 			growthRate();
 		}
