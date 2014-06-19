@@ -100,7 +100,7 @@ void Simulation::simulate(){
 			//deltaT *= 10;
 		}
 
-		if(currentIteration > startCRevaluation){
+		if(currentIteration > startCRevaluation && (!stopAmplification)){
 			evaluateField();
 		}
 
@@ -247,18 +247,19 @@ void Simulation::evaluateHydrodynamic() {
 			//alertNaNOrInfinity(tempEnergy[i], "energy = NaN");
 			alertNegative(tempEnergy[i], "energy < 0");
 		}
-        if(abs2(cosmicRayPressure[i+1] - cosmicRayPressure[i]) > 1E-100){
+        /*if(abs2(cosmicRayPressure[i+1] - cosmicRayPressure[i]) > 1E-100){
             vscattering[i] = -deltaE*deltaR[i]/(cosmicRayPressure[i+1] - cosmicRayPressure[i]);
 		} else {
 			vscattering[i] = 0;
-		}
+		}*/
+		
 	}
 
-	if(shockWavePoint > 0){
+	/*if(shockWavePoint > 0){
 		for(int i = min2(shockWavePoint + 20, rgridNumber-1); i >= shockWavePoint; --i){
 			vscattering[i] = vscattering[i+1];
 		}
-	}
+	}*/
 
 }
 
@@ -810,13 +811,12 @@ void Simulation::updateAll(){
 	//field
 
 	if(currentIteration > startCRevaluation){
-			for(int i = 0; i < rgridNumber; i = i + 1){
-				for(int k = 0; k < kgridNumber; ++k){
-					magneticField[i][k] = tempMagneticField[i][k];
-				}
+		for(int i = 0; i < rgridNumber; i = i + 1){
+			for(int k = 0; k < kgridNumber; ++k){
+				magneticField[i][k] = tempMagneticField[i][k];
 			}
+		}
 		
-
 
 		for(int i = 0; i < rgridNumber; ++i){
 			magneticEnergy[i] = 0;
@@ -825,11 +825,19 @@ void Simulation::updateAll(){
 				largeScaleField[i][k] = sqrt(4*pi*magneticEnergy[i] + B0*B0);
 			}
 			magneticInductionSum[i] = sqrt(4*pi*magneticEnergy[i] + B0*B0);
+			if(!stopAmplification){
+				if(magneticInductionSum[i] > 5E-4){
+					stopAmplification = true;
+					setGrowthRateToZero();
+				}
+			}
 		}
 		
-		if(currentIteration > startFieldEvaluation && currentIteration < startFieldEvaluation + 100000){
+		if(currentIteration > startFieldEvaluation){
 			updateDiffusionCoef();
-			growthRate();
+			if(!stopAmplification){
+				growthRate();
+			}
 		}
 	}
 }
@@ -844,6 +852,14 @@ void Simulation::fakeMoveShockWave(){
 			middleVelocity[i] = u;
 		} else {
 			middleVelocity[i] = 0;
+		}
+	}
+}
+
+void Simulation::setGrowthRateToZero(){
+	for(int i = 0; i < rgridNumber; ++i){
+		for(int k = 0; k < kgridNumber; ++k){
+			growth_rate[i][k] = 0;
 		}
 	}
 }

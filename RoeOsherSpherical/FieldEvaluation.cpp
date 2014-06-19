@@ -26,7 +26,7 @@ void Simulation::evaluateField(){
 		maxRate[i] = 0;
 		for(int k = 0; k < kgridNumber; ++k){
 			tempMagneticField[i][k] += -deltaT*((sqr(middleGrid[i])*middleVelocity[i]*magneticField[i][k] - sqr(middleGrid[i-1])*middleVelocity[i-1]*magneticField[i-1][k])/(sqr(middleGrid[i])*deltaR[i])) - deltaT*0.5*magneticField[i][k]*(middleVelocity[i]*middleGrid[i]*middleGrid[i] - middleVelocity[i-1]*middleGrid[i-1]*middleGrid[i-1])/(middleGrid[i]*middleGrid[i]*deltaR[i]);
-			if(currentIteration > startFieldEvaluation && currentIteration < startFieldEvaluation + 100000){
+			if(currentIteration > startFieldEvaluation && (!stopAmplification)){
 				tempMagneticField[i][k] +=  deltaT*growth_rate[i][k]*magneticField[i][k];
 				if(growth_rate[i][k] > maxRate[i]){
 					maxRateK = k;

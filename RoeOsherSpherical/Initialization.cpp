@@ -28,6 +28,7 @@ Simulation::Simulation(){
 	currentIteration = 0;
 	injectedEnergy = 0;
 	uGradPEnergy = 0;
+	stopAmplification = false;
 }
 
 //деструктор
