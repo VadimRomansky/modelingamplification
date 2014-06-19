@@ -6,6 +6,7 @@
 class Simulation{
 public:
 	bool serialized;
+	bool stopAmplification;
 
 	int iterationNumber;
 	int particlesNumber;
@@ -147,6 +148,7 @@ public:
 	void evaluateField();
 	void evaluateCRFlux();
 	void growthRate();
+	void setGrowthRateToZero();
 
 	double minmod(double a, double b);
 	double superbee(double a, double b);
