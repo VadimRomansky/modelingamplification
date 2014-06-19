@@ -17,13 +17,14 @@ void Simulation::updateDiffusionCoef(){
 			for(int j = pgridNumber-1; j >= 0; --j){
 				double p = pgrid[j];
 				double B = B0;
-				for(int k = 0; k < kgridNumber; ++k){
+				/*for(int k = 0; k < kgridNumber; ++k){
 					if(kgrid[k] > electron_charge*largeScaleField[i][k]/(speed_of_light*p) ){
 						B = largeScaleField[i][k];
 						prevK = k;
 						break;
 					}
-				}
+				}*/
+				B = largeScaleField[i][kgridNumber-1];
 				double coef = p*speed_of_light*speed_of_light/(3*electron_charge*B);
 				double dx = deltaR[i];
 				double lambda = coef/speed_of_light;
