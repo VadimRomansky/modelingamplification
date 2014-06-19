@@ -14,7 +14,7 @@ int main()
 	int rgridNumber = 1000;
 	int pgridNumber = 150;
 	int kgridNumber = 100;
-	int iterations = 21;
+	int iterations = 24;
 
 	FILE* distributionIn1 = fopen("./input1/distribution.dat","r");
 	FILE* distributionIn2 = fopen("./input2/distribution.dat","r");
@@ -43,7 +43,7 @@ int main()
 	for(int i = 0; i < pgridNumber; ++i){
 		distribution[i][0] = distributionAll1[a*pgridNumber + i][0]/(massProton*speed_of_light);
 		double p4 = distribution[i][0]*distribution[i][0]*distribution[i][0]*distribution[i][0];
-		distribution[i][1] = distributionAll1[(a-3)*pgridNumber + i][1]*p4;
+		distribution[i][1] = distributionAll1[(a-0)*pgridNumber + i][1]*p4;
 		distribution[i][2] = distributionAll2[a*pgridNumber + i][1]*p4;
 	}
 	for(int i = 0; i < pgridNumber*iterations; ++i){
