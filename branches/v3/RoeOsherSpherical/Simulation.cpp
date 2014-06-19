@@ -100,7 +100,7 @@ void Simulation::simulate(){
 			//deltaT *= 10;
 		}
 
-		if(currentIteration > startCRevaluation && (!stopAmplification)){
+		if(currentIteration > startCRevaluation){
 			evaluateField();
 		}
 
@@ -825,12 +825,12 @@ void Simulation::updateAll(){
 				largeScaleField[i][k] = sqrt(4*pi*magneticEnergy[i] + B0*B0);
 			}
 			magneticInductionSum[i] = sqrt(4*pi*magneticEnergy[i] + B0*B0);
-			if(!stopAmplification){
+			/*if(!stopAmplification){
 				if(magneticInductionSum[i] > 5E-4){
 					stopAmplification = true;
 					setGrowthRateToZero();
 				}
-			}
+			}*/
 		}
 		
 		if(currentIteration > startFieldEvaluation){
