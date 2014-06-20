@@ -114,7 +114,7 @@ void outputDistributionP3(FILE* distributionFile, FILE* fullDistributionFile, FI
 
 	if(simulation->shockWavePoint > 0 && simulation->shockWavePoint < simulation->rgridNumber){
 		for(int j = 0; j < pgridNumber; ++j){
-			fprintf(distributionFile, "%g %g %g\n", simulation->pgrid[j], simulation->distributionFunction[simulation->shockWavePoint][j]/cube(simulation->pgrid[j]), simulation->crflux[simulation->shockWavePoint][j]/(cube(simulation->pgrid[j])*simulation->deltaLogP));
+			fprintf(distributionFile, "%g %g %g %g\n", simulation->pgrid[j], simulation->distributionFunction[simulation->shockWavePoint][j]/cube(simulation->pgrid[j]), simulation->crflux[simulation->shockWavePoint][j]/(cube(simulation->pgrid[j])*simulation->deltaLogP), simulation->distributionFunction[simulation->rgridNumber-10][j]/cube(simulation->pgrid[j]));
 		}
 	}
 

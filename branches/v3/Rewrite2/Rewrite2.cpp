@@ -11,10 +11,9 @@ const double pi = 3.1415926535897932384626433832795028841971693993751;
 
 int main()
 {
-	int rgridNumber = 1000;
 	int pgridNumber = 150;
 	int kgridNumber = 100;
-	int iterations = 24;
+	int iterations = 45;
 
 	FILE* distributionIn1 = fopen("./input1/distribution.dat","r");
 	FILE* distributionIn2 = fopen("./input2/distribution.dat","r");
