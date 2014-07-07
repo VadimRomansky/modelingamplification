@@ -13,7 +13,7 @@ int main()
 {
 	int pgridNumber = 150;
 	int kgridNumber = 100;
-	int iterations = 45;
+	int iterations = 72;
 
 	FILE* distributionIn1 = fopen("./input1/distribution.dat","r");
 	FILE* distributionIn2 = fopen("./input2/distribution.dat","r");

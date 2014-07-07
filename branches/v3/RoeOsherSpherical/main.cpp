@@ -4,6 +4,7 @@
 #include "constants.h"
 #include "input.h"
 #include "simulation.h"
+#include "complex.h"
 
 
 
@@ -17,7 +18,6 @@ int main()
 	bool deserializeParameter = false;
 	if(deserializeParameter){
 		simulation = new Simulation();
-
 		FILE* hydroFile = fopen("./save/hydro.dat", "r");
 		FILE* distributionFile = fopen("./save/distribution.dat", "r");
 		FILE* fieldFile = fopen("./save/field.dat", "r");

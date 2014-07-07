@@ -52,7 +52,7 @@ void Simulation::evaluateCRFlux(){
 	int i;
 	#pragma omp for
 		for(i = 0; i < rgridNumber; ++i){
-			for(int j = 1; j < pgridNumber; ++j){
+			for(int j = goodMomentum; j < pgridNumber; ++j){
 				crflux[i][j] = - electron_charge*(diffusionCoef[i][j]*(distributionFunction[i+1][j] - distributionFunction[i][j])/deltaR[i])*deltaLogP;
 				//crflux[i][j] = - electron_charge*(diffusionCoef[i][j]*(distributionFunction[i+1][j] - distributionFunction[i][j])/deltaR[i])*cube(pgrid[j])*deltaLogP;
 			}
@@ -104,7 +104,7 @@ void Simulation::growthRate(){
 					} else if(z > 1) {
                         sigma1 = (1.5/sqr(z)) + 0.75*(1 - 1/(sqr(z)))*log(abs2((z+1)/(z-1)))/z;
 					} else if(0.01 < z) {
-                       sigma1 = (1.5/sqr(z)) + 0.75*(1 - 1/(sqr(z)))*log(abs2((z+1)/(z-1)))/z;
+                        sigma1 = (1.5/sqr(z)) + 0.75*(1 - 1/(sqr(z)))*log(abs2((z+1)/(z-1)))/z;
 					}  else {
 						sigma1 = 1 + 0.2*sqr(z);
 					}
@@ -127,6 +127,9 @@ void Simulation::growthRate(){
 				Complex complex1 = Complex(1);
 				Complex b1 = (complex1 - (A1/J - 1)*(k_critical[i]/kgrid[k]))*sqr(kgrid[k]*Va);
 				Complex b2 = (complex1 + (A2/J - 1)*(k_critical[i]/kgrid[k]))*sqr(kgrid[k]*Va);
+				Complex delta = complex1 - (A1/J - 1)*(kc/kgrid[k]);
+				Complex b1 = (complex1 - (A1/J - 1)*(kc/kgrid[k]))*sqr(kgrid[k]*Va);
+				Complex b2 = (complex1 + (A2/J - 1)*(kc/kgrid[k]))*sqr(kgrid[k]*Va);
 				//double alpha = 1.5;
 				double alpha = 0;
 				Complex d1 = Complex(0, -1)*((A1*0.5/J) + 1.5)*(kgrid[k]*k_critical[i])*alpha/(4*pi*middleDensity[i]);
