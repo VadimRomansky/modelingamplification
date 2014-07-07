@@ -8,7 +8,7 @@ size 20 10
 data "velocity.dat"
 yaxis 
 xaxis  
-xaxis min 0 max 1e18 dticks 0.25e18
+xaxis min 0 max 1e19 dticks 0.25e19
 yaxis nolast
 set lwidth 0.1
 d1  line color red
@@ -26,7 +26,7 @@ data "density.dat"
 yaxis 
 xaxis  
 xlabels off
-xaxis min 0 max 1e18
+xaxis min 0 max 1e19
 yaxis nolast
 set lwidth 0.1
 d1  line color red
@@ -44,7 +44,7 @@ data "pressure.dat"
 yaxis 
 xaxis  
 xlabels off
-xaxis min 0 max 1e18
+xaxis min 0 max 1e19
 set lwidth 0.1
 d1  line color red
 d2  line color blue

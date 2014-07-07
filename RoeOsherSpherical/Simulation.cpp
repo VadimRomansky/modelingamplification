@@ -740,7 +740,9 @@ void Simulation::updateParameters(){
 				dr = middleGrid[i] - middleGrid[i-1];
 			}
 			totalParticles += distributionFunction[i][j]*volume(i)*deltaLogP;
-			totalParticleEnergy += speed_of_light*distributionFunction[i][j]*volume(i)*dp;
+			if(j > goodMomentum){
+				totalParticleEnergy += speed_of_light*distributionFunction[i][j]*volume(i)*dp;
+			}
 
 			//totalParticles += distributionFunction[i][j]*volume(i)*deltaLogP*cube(pgrid[j]);
 			//totalParticleEnergy += speed_of_light*distributionFunction[i][j]*volume(i)*dp*cube(pgrid[j]);

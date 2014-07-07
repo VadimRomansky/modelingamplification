@@ -13,10 +13,10 @@ const double pi = 3.1415926535897932384626433832795028841971693993751;
 int main()
 {
 	int rgridNumber = 1000;
-	int pgridNumber = 100;
-	int kgridNumber = 50;
-	int iterations = 50;
-	int count = 10;
+	int pgridNumber = 150;
+	int kgridNumber = 100;
+	int iterations = 11;
+	int count = 11;
 
 	FILE* profile = fopen("./input/tamc_radial_profile.dat","r");
 	double** all = new double*[iterations*rgridNumber];
