@@ -5,6 +5,9 @@
 
 class Simulation{
 public:
+	bool serialized;
+	bool stopAmplification;
+
 	int iterationNumber;
 	int particlesNumber;
 	double U0;
@@ -47,11 +50,15 @@ public:
 	double totalParticleEnergy;
 	double totalParticles;
 	double injectedParticles;
+	double injectedEnergy;
+	double uGradPEnergy;
 
 	double minP;
 	double maxP;
 	double* pgrid;
 	double* logPgrid;
+	double minK;
+	double maxK;
 	double* kgrid;
 	double* logKgrid;
 	double deltaLogP;
@@ -96,12 +103,12 @@ public:
 	double** magneticField;
 	double** tempMagneticField;
 	double** largeScaleField;
-	double* magneticEnergy;
-	double* tempMagneticEnergy;
 	double** growth_rate;
 	double** crflux;
 	double* integratedFlux;
 	double* maxRate;
+	double* magneticEnergy;
+	double* k_critical;
 
 	double* magneticInductionSum;
 
@@ -123,13 +130,15 @@ public:
 	~Simulation();
 
 	void initializeProfile();
+	void initializeArrays();
+	void updateAfterSerialization();
 	void simulate();
 	void evaluateHydrodynamic();
 	void solveDiscontinious();
 	void CheckNegativeDensity();
-	void TracPen(double* u, double* flux, double cs);
-	void updateFlux(double* flux);
-	bool CheckShockWave(double& u, double p1, double p2,double u1, double u2, double rho1, double rho2);
+	void TracPen(double* u, double* flux);
+	void fakeMoveShockWave();
+
 
 	void evaluateCR();
 	void solveThreeDiagonal(double* middle, double* upper, double* lower, double* f, double* x, double* alpha, double* beta);
@@ -139,6 +148,7 @@ public:
 	void evaluateField();
 	void evaluateCRFlux();
 	void growthRate();
+	void setGrowthRateToZero();
 
 	double minmod(double a, double b);
 	double superbee(double a, double b);

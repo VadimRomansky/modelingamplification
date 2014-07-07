@@ -56,6 +56,14 @@ void Simulation::evaluateCRFlux(){
 				crflux[i][j] = - electron_charge*(diffusionCoef[i][j]*(distributionFunction[i+1][j] - distributionFunction[i][j])/deltaR[i])*deltaLogP;
 				//crflux[i][j] = - electron_charge*(diffusionCoef[i][j]*(distributionFunction[i+1][j] - distributionFunction[i][j])/deltaR[i])*cube(pgrid[j])*deltaLogP;
 			}
+
+			double J = 0;
+			for(int j = 0; j < pgridNumber; ++j){
+				J += crflux[i][j];
+			}
+			integratedFlux[i] = J;
+
+			k_critical[i] = abs2(4*pi*J/(speed_of_light*B0));
 		}
 }
 
@@ -69,11 +77,7 @@ void Simulation::growthRate(){
 				}
 				continue;
 			}
-			double J = 0;
-			for(int j = 0; j < pgridNumber; ++j){
-				J += crflux[i][j];
-			}
-			integratedFlux[i] = J;
+			double J = integratedFlux[i];
 
 			if(J == 0){
 				for(int k = 0; k < kgridNumber; ++k){
@@ -86,7 +90,7 @@ void Simulation::growthRate(){
 			for(int k = 0; k < kgridNumber; ++k){
 				Bls = sqrt(4*pi*magneticField[i][k]*kgrid[k]*deltaLogK + Bls*Bls);
 				alertNaNOrInfinity(Bls, "Bls = NaN");
-                double kc = abs2(4*pi*J/(speed_of_light*Bls));
+                //double kc = abs2(4*pi*J/(speed_of_light*Bls));
 				double Va = Bls/sqrt(4*pi*middleDensity[i]);
 				Complex A1;
 				Complex A2;
@@ -121,12 +125,12 @@ void Simulation::growthRate(){
 				}	
 
 				Complex complex1 = Complex(1);
-				Complex b1 = (complex1 - (A1/J - 1)*(kc/kgrid[k]))*sqr(kgrid[k]*Va);
-				Complex b2 = (complex1 + (A2/J - 1)*(kc/kgrid[k]))*sqr(kgrid[k]*Va);
+				Complex b1 = (complex1 - (A1/J - 1)*(k_critical[i]/kgrid[k]))*sqr(kgrid[k]*Va);
+				Complex b2 = (complex1 + (A2/J - 1)*(k_critical[i]/kgrid[k]))*sqr(kgrid[k]*Va);
 				//double alpha = 1.5;
 				double alpha = 0;
-				Complex d1 = Complex(0, -1)*((A1*0.5/J) + 1.5)*(kgrid[k]*kc)*alpha/(4*pi*middleDensity[i]);
-				Complex d2 = Complex(0, 1)*((A2*0.5/J) + 1.5)*(kgrid[k]*kc)*alpha/(4*pi*middleDensity[i]);
+				Complex d1 = Complex(0, -1)*((A1*0.5/J) + 1.5)*(kgrid[k]*k_critical[i])*alpha/(4*pi*middleDensity[i]);
+				Complex d2 = Complex(0, 1)*((A2*0.5/J) + 1.5)*(kgrid[k]*k_critical[i])*alpha/(4*pi*middleDensity[i]);
 				Complex G1p = (csqrt(d1*d1 +b1*4) - d1)/2;
 				Complex G1m = (csqrt(d1*d1 +b1*4) + d1)/(-2);
 
