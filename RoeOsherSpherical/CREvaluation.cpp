@@ -125,12 +125,12 @@ void Simulation::evaluateCR(){
 								//- xm*xm*diffusionCoef[i-1][k]*(distributionFunction[i][k] - distributionFunction[i-1][k])/dxm)
 								//- (deltaT/dV)*(xp*xp*middleVelocity[i]*distributionFunction[i][k] - xm*xm*middleVelocity[i-1]*distributionFunction[i-1][k]);
 				if(i == shockWavePoint){
-					double v2 = middleVelocity[i+1] + vscattering[i+1];
-					double v1 = middleVelocity[i] + vscattering[i];
+					double v2 = middleVelocity[i] + vscattering[i];
+					double v1 = middleVelocity[i-1] + vscattering[i-1];
 					f[i] = distributionFunction[i][k]  + deltaT*((1/(2*dV))*(xp*xp*diffusionCoef[i][k]*(distributionFunction[i+1][k] - distributionFunction[i][k])/dxp - xm*xm*diffusionCoef[i-1][k]*(distributionFunction[i][k] - distributionFunction[i-1][k])/dxm) - (1/dV)*x*x*distributionFunction[i][k]*(v2 - v1));
 				} else if(i == shockWavePoint-1){
-					double v2 = middleVelocity[i+1] + vscattering[i+1];
-					double v1 = middleVelocity[i] + vscattering[i];
+					double v2 = middleVelocity[i] + vscattering[i];
+					double v1 = middleVelocity[i-1] + vscattering[i-1];
 					f[i] = distributionFunction[i][k]  + deltaT*((1/(2*dV))*(xp*xp*diffusionCoef[i][k]*(distributionFunction[i+1][k] - distributionFunction[i][k])/dxp - xm*xm*diffusionCoef[i-1][k]*(distributionFunction[i][k] - distributionFunction[i-1][k])/dxm) - (1/dV)*(xp*xp*v2*distributionFunction[i+1][k] - xm*xm*v1*distributionFunction[i-1][k]));
 				} else {
 					double v2 = middleVelocity[i+1] + vscattering[i+1];

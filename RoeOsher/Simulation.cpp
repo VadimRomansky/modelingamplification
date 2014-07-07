@@ -88,7 +88,7 @@ void Simulation::simulate(){
 		printf("time = %lf\n", myTime);
 
 		//if(currentIteration < startCRevaluation){
-			evaluateHydrodynamic();
+			//evaluateHydrodynamic();
 		//}
 		//fakeMoveShockWave();
 		
