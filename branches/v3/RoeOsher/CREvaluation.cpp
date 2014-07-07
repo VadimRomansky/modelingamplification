@@ -41,7 +41,7 @@ double Simulation::injection(int i){
 	//double xi = 5;
 	double xi = pgrid[injectionMomentum]*speed_of_light/(kBoltzman*temperatureIn(i+1));
 	double eta = cube(xi)*exp(-xi);
-    return (3E-7)*middleDensity[i+1]*abs2(middleVelocity[i-1])*pf/(massProton*dp*deltaR[i]);
+    return (3E-9)*middleDensity[i+1]*abs2(middleVelocity[i-1])*pf/(massProton*dp*deltaR[i]);
 }
 
 
@@ -85,16 +85,16 @@ void Simulation::evaluateCR(){
 			}
 			double dx = (grid[1] + upstreamR/2)/2;
 			double dxp = grid[1] - grid[0];
-			double dxm = grid[0] + upstreamR/2;
+			double dxm = dxp;
 			double xp = (grid[1] + grid[0])/2;
 			double xm = (grid[0] - upstreamR/2)/2;
 			double gip = (distributionFunction[1][k] + distributionFunction[0][k])/2;
 			double gim = distributionFunction[0][k]/2;
 			double dV;
-			middle[0] = 1 + (deltaT/(2*dx))*(diffusionCoef[0][j]/dxp + diffusionCoef[0][j]/dxm);
-			upper[0] = 0 - (deltaT/(2*dx))*(diffusionCoef[0][j]/dxp);
-			f[0]=distributionFunction[0][k] + (deltaT/(2*dx))*(diffusionCoef[0][j]*distributionFunction[1][k]/dxp)
-						  - (deltaT/(2*dx))*(diffusionCoef[0][j]/dxp+diffusionCoef[0][j]/dxm)*distributionFunction[0][k] 
+			middle[0] = 1 + (deltaT/(2*dx))*(diffusionCoef[0][k]/dxp + diffusionCoef[0][k]/dxm);
+			upper[0] = 0 - (deltaT/(2*dx))*(diffusionCoef[0][k]/dxp);
+			f[0]=distributionFunction[0][k] + (deltaT/(2*dx))*(diffusionCoef[0][k]*distributionFunction[1][k]/dxp)
+						  - (deltaT/(2*dx))*(diffusionCoef[0][k]/dxp+diffusionCoef[0][k]/dxm)*distributionFunction[0][k] 
 						  - (deltaT/dx)*(middleVelocity[1]*gip - middleVelocity[0]*gim)
 						  + (deltaT/3)*((middleVelocity[1] - middleVelocity[0])/dx)*((gkp-gkm)/deltaLogP);
 			for(int i = 1; i < rgridNumber-1; ++i){
@@ -125,12 +125,12 @@ void Simulation::evaluateCR(){
 								//- xm*xm*diffusionCoef[i-1][k]*(distributionFunction[i][k] - distributionFunction[i-1][k])/dxm)
 								//- (deltaT/dV)*(xp*xp*middleVelocity[i]*distributionFunction[i][k] - xm*xm*middleVelocity[i-1]*distributionFunction[i-1][k]);
 				if(i == shockWavePoint){
-					double v2 = middleVelocity[i+1] + vscattering[i+1];
-					double v1 = middleVelocity[i] + vscattering[i];
+					double v2 = middleVelocity[i] + vscattering[i];
+					double v1 = middleVelocity[i-1] + vscattering[i-1];
 					f[i] = distributionFunction[i][k]  + deltaT*((1/(2*dV))*(diffusionCoef[i][k]*(distributionFunction[i+1][k] - distributionFunction[i][k])/dxp - diffusionCoef[i-1][k]*(distributionFunction[i][k] - distributionFunction[i-1][k])/dxm) - (1/dV)*distributionFunction[i][k]*(v2 - v1));
 				} else if(i == shockWavePoint-1){
-					double v2 = middleVelocity[i+1] + vscattering[i+1];
-					double v1 = middleVelocity[i] + vscattering[i];
+					double v2 = middleVelocity[i] + vscattering[i];
+					double v1 = middleVelocity[i-1] + vscattering[i-1];
 					f[i] = distributionFunction[i][k]  + deltaT*((1/(2*dV))*(diffusionCoef[i][k]*(distributionFunction[i+1][k] - distributionFunction[i][k])/dxp - diffusionCoef[i-1][k]*(distributionFunction[i][k] - distributionFunction[i-1][k])/dxm) - (1/dV)*(v2*distributionFunction[i+1][k] - v1*distributionFunction[i-1][k]));
 				} else {
 					double v2 = middleVelocity[i+1] + vscattering[i+1];
@@ -155,7 +155,7 @@ void Simulation::evaluateCR(){
 					if(gkpp - gkp > 0)
 						f[i] += (deltaT/3)*((v2 - v1)/dV)*((gkpp - gkp)/deltaLogP);
 				}
-                if(abs2(i - shockWavePoint)<2 && abs2(k - injectionMomentum) < 1){
+                if(abs2(i - shockWavePoint)<1 && abs2(k - injectionMomentum) < 1){
 					double inj = injection(i);
 					double E = sqrt(sqr(mc2) + sqr(pgrid[injectionMomentum])*speed_of_light) - mc2;
 					double dE = deltaT*inj*E*deltaLogP;
