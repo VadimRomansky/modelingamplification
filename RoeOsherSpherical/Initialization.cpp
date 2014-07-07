@@ -89,6 +89,7 @@ Simulation::~Simulation(){
 		delete[] diffusionCoef[i];
 	}
 	delete[] magneticEnergy;
+	delete[] k_critical;
 
 	delete[] integratedFlux;
 	delete[] magneticInductionSum;
@@ -397,9 +398,11 @@ void Simulation::initializeArrays(){
 	magneticInductionSum = new double[rgridNumber];
 	maxRate = new double[rgridNumber];
 	magneticEnergy = new double[rgridNumber];
+	k_critical = new double[rgridNumber];
 
 	for(int i = 0; i < rgridNumber; ++i){
 		magneticEnergy[i] = 0;
+		k_critical[i] = 0;
 		maxRate[i] = 0;
 		magneticField[i] = new double[kgridNumber];
 		tempMagneticField[i] = new double[kgridNumber];

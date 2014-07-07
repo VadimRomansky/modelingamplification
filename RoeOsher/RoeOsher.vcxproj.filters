@@ -71,5 +71,8 @@
     <ClCompile Include="Complex.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Initialization.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

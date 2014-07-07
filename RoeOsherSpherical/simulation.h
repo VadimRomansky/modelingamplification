@@ -109,6 +109,7 @@ public:
 	double* integratedFlux;
 	double* maxRate;
 	double* magneticEnergy;
+	double* k_critical;
 
 	double* magneticInductionSum;
 
