@@ -24,6 +24,11 @@ public:
 	double shapeFunctionZ(const double& zvalue);
 
 	double shapeFunction(const double& xvalue, const double& yvalue, const double& zvalue);
+
+	double momentum();
+	double velocityX();
+	double velocityY();
+	double velocityZ();
 };
 
 #endif
