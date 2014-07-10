@@ -175,11 +175,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\matrix3d.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\particle.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\simulation.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\vector3d.cpp"
 				>
 			</File>
 		</Filter>
@@ -193,11 +201,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\matrix3d.h"
+				>
+			</File>
+			<File
 				RelativePath=".\particle.h"
 				>
 			</File>
 			<File
 				RelativePath=".\simulation.h"
+				>
+			</File>
+			<File
+				RelativePath=".\vector3d.h"
 				>
 			</File>
 		</Filter>

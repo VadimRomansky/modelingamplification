@@ -50,3 +50,27 @@ double Particle::shapeFunctionZ(const double& zvalue){
 double Particle::shapeFunction(const double& xvalue, const double& yvalue, const double& zvalue){
 	return shapeFunctionX(xvalue)*shapeFunctionY(yvalue)*shapeFunctionZ(zvalue);
 }
+
+double Particle::momentum(){
+	return sqrt(px*px + py*py + pz*pz);
+}
+
+double Particle::velocityX(){
+	double p2 = px*px + py*py + pz*pz;
+	double mc2 = mass*speed_of_light*speed_of_light;
+	double gamma_factor = sqrt(p2*speed_of_light*speed_of_light + mc2*mc2)/mc2;
+	return px/(mass*gamma);
+}
+
+double Particle::velocityY(){
+	double p2 = px*px + py*py + pz*pz;
+	double mc2 = mass*speed_of_light*speed_of_light;
+	double gamma_factor = sqrt(p2*speed_of_light*speed_of_light + mc2*mc2)/mc2;
+	return py/(mass*gamma);
+}
+double Particle::velocityZ(){
+	double p2 = px*px + py*py + pz*pz;
+	double mc2 = mass*speed_of_light*speed_of_light;
+	double gamma_factor = sqrt(p2*speed_of_light*speed_of_light + mc2*mc2)/mc2;
+	return pz/(mass*gamma);
+}
