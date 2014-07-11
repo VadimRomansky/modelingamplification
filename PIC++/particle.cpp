@@ -59,18 +59,18 @@ double Particle::velocityX(){
 	double p2 = px*px + py*py + pz*pz;
 	double mc2 = mass*speed_of_light*speed_of_light;
 	double gamma_factor = sqrt(p2*speed_of_light*speed_of_light + mc2*mc2)/mc2;
-	return px/(mass*gamma);
+	return px/(mass*gamma_factor);
 }
 
 double Particle::velocityY(){
 	double p2 = px*px + py*py + pz*pz;
 	double mc2 = mass*speed_of_light*speed_of_light;
 	double gamma_factor = sqrt(p2*speed_of_light*speed_of_light + mc2*mc2)/mc2;
-	return py/(mass*gamma);
+	return py/(mass*gamma_factor);
 }
 double Particle::velocityZ(){
 	double p2 = px*px + py*py + pz*pz;
 	double mc2 = mass*speed_of_light*speed_of_light;
 	double gamma_factor = sqrt(p2*speed_of_light*speed_of_light + mc2*mc2)/mc2;
-	return pz/(mass*gamma);
+	return pz/(mass*gamma_factor);
 }

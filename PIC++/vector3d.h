@@ -8,8 +8,9 @@ public:
 	double z;
 	Vector3d(double vx, double vy, double vz);
 	double getNorm();
-	Vector3d operator-(Vector3d vector);
-	Vector3d operator+(Vector3d vector);
+	Vector3d operator-(const Vector3d& vector);
+	Vector3d operator+(const Vector3d& vector);
+	double scalarMult(const Vector3d& vector);
 };
 
 #endif
