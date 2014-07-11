@@ -10,6 +10,7 @@ const double _gamma = 5.0/3.0;
 const double relativistic_gamma = 4.0/3.0;
 const int writeParameter = 10000;
 const int serializeParameter = 160000;
+const double epsilon = 1E-16;
 
 const int numThreads = 12;
 

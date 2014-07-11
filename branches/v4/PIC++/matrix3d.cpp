@@ -1,4 +1,6 @@
-#include "stdafx.h"
+#include "math.h"
+#include "stdio.h"
+
 #include "matrix3d.h"
 #include "vector3d.h"
 #include "constants.h"
@@ -14,6 +16,17 @@ Matrix3d::Matrix3d(){
 	  }else{
 	    matrix[i][j]=0;
 	  }
+	}
+  }
+}
+
+Matrix3d::Matrix3d(const Matrix3d& m){
+  int i,j;
+  matrix = new double* [3];
+  for(i=0;i<3;++i){
+    matrix[i]=new double [3];
+	for (j=0;j<3;++j){
+		matrix[i][j] = m.matrix[i][j];
 	}
   }
 }
@@ -45,7 +58,7 @@ Matrix3d* Matrix3d::Inverse(){
   Matrix3d* inv = new Matrix3d();
   double det;
   det=matrix[0][0]*(matrix[1][1]*matrix[2][2]-matrix[1][2]*matrix[2][1])-matrix[0][1]*(matrix[1][0]*matrix[2][2]-matrix[1][2]*matrix[2][0])+matrix[0][2]*(matrix[1][0]*matrix[2][1]-matrix[1][1]*matrix[2][0]);
-  if (abs(det > epsilon)){
+  if (fabs(det) > epsilon){
 	inv->matrix[0][0]=(1/det)*(matrix[1][1]*matrix[2][2]-matrix[1][2]*matrix[2][1]);
 	inv->matrix[0][1]=-(1/det)*(matrix[0][1]*matrix[2][2]-matrix[0][2]*matrix[2][1]);
 	inv->matrix[0][2]=(1/det)*(matrix[0][1]*matrix[1][2]-matrix[0][2]*matrix[1][1]);
@@ -56,7 +69,7 @@ Matrix3d* Matrix3d::Inverse(){
 	inv->matrix[2][1]=-(1/det)*(matrix[0][0]*matrix[2][1]-matrix[0][1]*matrix[2][0]);
 	inv->matrix[2][2]=(1/det)*(matrix[0][0]*matrix[1][1]-matrix[1][0]*matrix[0][1]);
   } else {
-	  printf("det = 0\n");
+	  printf("determinant = 0\n");
   }
   return inv;
 }
@@ -82,14 +95,48 @@ Matrix3d& Matrix3d::operator=(const Matrix3d& matr){
   return *this;
 }
 
-vector3d Matrix3d::operator*(const vector3d& v){
+Vector3d Matrix3d::operator*(const Vector3d& v){
 	double x = matrix[0][0]*v.x + matrix[0][1]*v.y + matrix[0][2]*v.z;
 	double y = matrix[1][0]*v.x + matrix[1][1]*v.y + matrix[1][2]*v.z;
 	double z = matrix[2][0]*v.x + matrix[2][1]*v.y + matrix[2][2]*v.z;
-	return vector3d(x,y,z);
+	return Vector3d(x,y,z);
 }
 
-Matrix3d* Matrix3d::createBasisByOneVector(const vector3d& v){
+Matrix3d Matrix3d::operator+(const Matrix3d& matr){
+	Matrix3d newMatrix;
+	int i;
+	int j;
+	for(i=0;i<3;++i){
+		for(j=0;j<3;++j){
+			newMatrix.matrix[i][j]=matr.matrix[i][j] + matrix[i][j];
+		}
+	}
+	return newMatrix;
+}
+
+Matrix3d& Matrix3d::operator+=(const Matrix3d& matr){
+	int i;
+	int j;
+	for(i=0;i<3;++i){
+		for(j=0;j<3;++j){
+			matrix[i][j] = matr.matrix[i][j] + matrix[i][j];
+		}
+	}
+	return *this;
+}
+
+Matrix3d& Matrix3d::operator-=(const Matrix3d& matr){
+	int i;
+	int j;
+	for(i=0;i<3;++i){
+		for(j=0;j<3;++j){
+			matrix[i][j] = matrix[i][j] - matr.matrix[i][j];
+		}
+	}
+	return *this;
+}
+
+Matrix3d* Matrix3d::createBasisByOneVector(const Vector3d& v){
 	if ((v.z*v.z + v.y*v.y + v.x*v.x) < epsilon){
 		return new Matrix3d(1,0,0,0,1,0,0,0,1);
 	}
@@ -97,3 +144,15 @@ Matrix3d* Matrix3d::createBasisByOneVector(const vector3d& v){
 	double phi = atan2(v.y,v.x);
 	return new Matrix3d(sin(phi),cos(theta)*cos(phi),sin(theta)*cos(phi),-cos(phi),cos(theta)*sin(phi),sin(theta)*sin(phi),0,-sin(theta),cos(theta));
 }
+
+/*Matrix3d operator+(const Matrix3d& m1, const Matrix3d& m2){
+	Matrix3d newMatrix;
+	int i;
+	int j;
+	for(i=0;i<3;++i){
+		for(j=0;j<3;++j){
+			newMatrix.matrix[i][j]=m1.matrix[i][j] + m2.matrix[i][j];
+		}
+	}
+	return newMatrix;
+}*/
