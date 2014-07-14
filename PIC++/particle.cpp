@@ -4,16 +4,17 @@
 #include "constants.h"
 #include "particle.h"
 
-Particle::Particle(double m, double x0, double y0, double z0, double px0, double py0, double pz0, double dx0, double dy0, double dz0){
+Particle::Particle(double m, double q, double x0, double y0, double z0, double px0, double py0, double pz0, double dx0, double dy0, double dz0){
 	mass = m;
+	charge = q;
 
-	x = x0;
-	y = y0;
-	z = z0;
+	coordinates.x = x0;
+	coordinates.y = y0;
+	coordinates.z = z0;
 
-	px = px0;
-	py = py0;
-	pz = pz0;
+	momentum.x = px0;
+	momentum.y = py0;
+	momentum.z = pz0;
 
 	dx = dx0;
 	dy = dy0;
@@ -21,7 +22,7 @@ Particle::Particle(double m, double x0, double y0, double z0, double px0, double
 }
 
 double Particle::shapeFunctionX(const double& xvalue){
-	double epsilon = fabs((x - xvalue)/dx);
+	double epsilon = fabs((coordinates.x - xvalue)/dx);
 	if(epsilon > 1.0){
 		return 0;
 	} else {
@@ -30,7 +31,7 @@ double Particle::shapeFunctionX(const double& xvalue){
 }
 
 double Particle::shapeFunctionY(const double& yvalue){
-	double epsilon = fabs((y - yvalue)/dy);
+	double epsilon = fabs((coordinates.y - yvalue)/dy);
 	if(epsilon > 1.0){
 		return 0;
 	} else {
@@ -39,7 +40,7 @@ double Particle::shapeFunctionY(const double& yvalue){
 }
 
 double Particle::shapeFunctionZ(const double& zvalue){
-	double epsilon = fabs((z - zvalue)/dz);
+	double epsilon = fabs((coordinates.z - zvalue)/dz);
 	if(epsilon > 1.0){
 		return 0;
 	} else {
@@ -51,26 +52,26 @@ double Particle::shapeFunction(const double& xvalue, const double& yvalue, const
 	return shapeFunctionX(xvalue)*shapeFunctionY(yvalue)*shapeFunctionZ(zvalue);
 }
 
-double Particle::momentum(){
-	return sqrt(px*px + py*py + pz*pz);
+double Particle::momentumAbs(){
+	return momentum.getNorm();
 }
 
 double Particle::velocityX(){
-	double p2 = px*px + py*py + pz*pz;
+	double p2 = momentum.x*momentum.x + momentum.y*momentum.y + momentum.z*momentum.z;
 	double mc2 = mass*speed_of_light*speed_of_light;
 	double gamma_factor = sqrt(p2*speed_of_light*speed_of_light + mc2*mc2)/mc2;
-	return px/(mass*gamma_factor);
+	return momentum.x/(mass*gamma_factor);
 }
 
 double Particle::velocityY(){
-	double p2 = px*px + py*py + pz*pz;
+	double p2 = momentum.x*momentum.x + momentum.y*momentum.y + momentum.z*momentum.z;
 	double mc2 = mass*speed_of_light*speed_of_light;
 	double gamma_factor = sqrt(p2*speed_of_light*speed_of_light + mc2*mc2)/mc2;
-	return py/(mass*gamma_factor);
+	return momentum.y/(mass*gamma_factor);
 }
 double Particle::velocityZ(){
-	double p2 = px*px + py*py + pz*pz;
+	double p2 = momentum.x*momentum.x + momentum.y*momentum.y + momentum.z*momentum.z;
 	double mc2 = mass*speed_of_light*speed_of_light;
 	double gamma_factor = sqrt(p2*speed_of_light*speed_of_light + mc2*mc2)/mc2;
-	return pz/(mass*gamma_factor);
+	return momentum.z/(mass*gamma_factor);
 }

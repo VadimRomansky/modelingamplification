@@ -16,6 +16,7 @@ public:
   void setvalue(int i,int j, double value);
   Matrix3d& operator=(const Matrix3d& matr);
   Vector3d operator*(const Vector3d& v);
+  Matrix3d operator*(const Matrix3d& m);
   Matrix3d operator+(const Matrix3d& m);
   Matrix3d& operator+=(const Matrix3d& matr);
   Matrix3d& operator-=(const Matrix3d& matr);

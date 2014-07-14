@@ -102,6 +102,21 @@ Vector3d Matrix3d::operator*(const Vector3d& v){
 	return Vector3d(x,y,z);
 }
 
+Matrix3d Matrix3d::operator*(const Matrix3d& matr){
+	Matrix3d newMatrix;
+	int i;
+	int j;
+	for(i=0;i<3;++i){
+		for(j=0;j<3;++j){
+			newMatrix.matrix[i][j] = 0;
+			for(int k = 0; k < 3; ++k){
+				newMatrix.matrix[i][j] += matrix[i][k]*matr.matrix[k][j];
+			}
+		}
+	}
+	return newMatrix;
+}
+
 Matrix3d Matrix3d::operator+(const Matrix3d& matr){
 	Matrix3d newMatrix;
 	int i;
@@ -144,15 +159,3 @@ Matrix3d* Matrix3d::createBasisByOneVector(const Vector3d& v){
 	double phi = atan2(v.y,v.x);
 	return new Matrix3d(sin(phi),cos(theta)*cos(phi),sin(theta)*cos(phi),-cos(phi),cos(theta)*sin(phi),sin(theta)*sin(phi),0,-sin(theta),cos(theta));
 }
-
-/*Matrix3d operator+(const Matrix3d& m1, const Matrix3d& m2){
-	Matrix3d newMatrix;
-	int i;
-	int j;
-	for(i=0;i<3;++i){
-		for(j=0;j<3;++j){
-			newMatrix.matrix[i][j]=m1.matrix[i][j] + m2.matrix[i][j];
-		}
-	}
-	return newMatrix;
-}*/
