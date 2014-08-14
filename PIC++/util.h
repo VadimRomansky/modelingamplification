@@ -10,6 +10,7 @@ void alertNaNOrInfinity(double value, const char* s);
 void alertNotPositive(double value, const char* s);
 void alertNegative(double value, const char* s);
 
-void solveSpecialMatrix(double** leftHalf, double* rightPart, double* output);
+double coordinateDifference(double* const a, double* const b, double dt);
+void solveSpecialMatrix(double** const leftHalf, double* const rightPart, double* const output);
 
 #endif

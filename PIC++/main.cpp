@@ -74,8 +74,6 @@
 
 int main()
 {	
-
-
 	Matrix3d A;
 	Matrix3d B;
 	Matrix3d C;

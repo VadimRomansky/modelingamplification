@@ -4,9 +4,10 @@
 #include "constants.h"
 #include "particle.h"
 
-Particle::Particle(double m, double q, double x0, double y0, double z0, double px0, double py0, double pz0, double dx0, double dy0, double dz0){
+Particle::Particle(double m, double q, double w, double x0, double y0, double z0, double px0, double py0, double pz0, double dx0, double dy0, double dz0){
 	mass = m;
 	charge = q;
+	weight = w;
 
 	coordinates.x = x0;
 	coordinates.y = y0;
@@ -24,6 +25,7 @@ Particle::Particle(double m, double q, double x0, double y0, double z0, double p
 Particle::Particle(const Particle& particle){
 	mass = particle.mass;
 	charge = particle.charge;
+	weight = particle.weight;
 
 	coordinates = particle.coordinates;
 	momentum = particle.momentum;

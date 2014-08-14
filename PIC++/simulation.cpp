@@ -8,6 +8,10 @@
 #include "matrix3d.h"
 
 Simulation::Simulation(){
+	currentIteration = 0;
+	time = 0;
+
+
 	Kronecker = Matrix3d(1.0,0,0,0,1.0,0,0,0,1.0);
 
 	for(int i = 0; i < 3; ++i){
@@ -59,12 +63,17 @@ Simulation::~Simulation(){
 }
 
 void Simulation::initialize(){
+	xnumber = 100;
+	ynumber = 100;
+	znumber = 100;
 
-	createArrays();
+	xsize = 100;
+	ysize = 100;
+	zsize = 100;
 
-	deltaX = 1;
-	deltaY = 1;
-	deltaZ = 1;
+	deltaX = xsize/(xnumber-1);
+	deltaY = ysize/(ynumber-1);
+	deltaZ = zsize/(znumber-1);
 
 	for(int i = 0; i <= xnumber; ++i){
 		xgrid[i] = i*deltaX;
@@ -88,6 +97,20 @@ void Simulation::initialize(){
 
 	for(int i = 0; i < znumber; ++i){
 		middleZgrid[i] = (zgrid[i] + zgrid[i+1])/2;
+	}
+
+	for(int i = 0; i < xnumber; ++i){
+		for(int j = 0; j < ynumber; ++i){
+			for(int k = 0; k < znumber; ++k){
+				Efield[i][j][k] = Vector3d();
+				newEfield[i][j][k] = Efield[i][j][k];
+				tempEfield[i][j][k] = Efield[i][j][k];
+				Bfield[i][j][k] = Vector3d(1,0,0);
+				newBfield[i][j][k] = Bfield[i][j][k];
+				tempBfield[i][j][k] = Bfield[i][j][k];
+
+			}
+		}
 	}
 }
 
@@ -121,17 +144,17 @@ void Simulation::createArrays(){
 			Bfield[i][j] = new Vector3d[znumber];
 			newBfield[i][j] = new Vector3d[znumber];
 			tempBfield[i][j] = new Vector3d[znumber];
-
-			for(int k = 0; k < znumber; ++k){
-				Efield[i][j][k] = Vector3d();
-				newEfield[i][j][k] = Efield[i][j][k];
-				tempEfield[i][j][k] = Efield[i][j][k];
-				Bfield[i][j][k] = Vector3d(1,0,0);
-				newBfield[i][j][k] = Bfield[i][j][k];
-				tempBfield[i][j][k] = Bfield[i][j][k];
-
-			}
 		}
+	}
+}
+
+void Simulation::simulate(){
+	createArrays();
+	initialize();
+	createParticles();
+
+	while(time < maxTime && currentIteration < maxIteration){
+		currentIteration++;
 	}
 }
 
@@ -142,11 +165,23 @@ Vector3d Simulation::correlationTempEfield(Particle* particle){
 Vector3d Simulation::correlationBfield(Particle* particle){
 	return correlationField(particle, Bfield);
 }
-	
+
+Vector3d Simulation::correlationTempEfield(Particle& particle){
+	return correlationField(particle, tempEfield);
+}
+
+Vector3d Simulation::correlationBfield(Particle& particle){
+	return correlationField(particle, Bfield);
+}
+
 Vector3d Simulation::correlationField(Particle* particle, Vector3d*** field){
-	int xcount = particle->coordinates.x/deltaX;
-	int ycount = particle->coordinates.y/deltaY;
-	int zcount = particle->coordinates.z/deltaZ;
+	return correlationField(*particle, field);
+}
+	
+Vector3d Simulation::correlationField(Particle& particle, Vector3d*** field){
+	int xcount = particle.coordinates.x/deltaX;
+	int ycount = particle.coordinates.y/deltaY;
+	int zcount = particle.coordinates.z/deltaZ;
 
 	if(xcount < 0){
 		printf("xcount < 0\n");
@@ -191,10 +226,10 @@ Vector3d Simulation::correlationField(Particle* particle, Vector3d*** field){
 	return result;
 }
 
-Vector3d Simulation::correlationFieldWithBin(Particle* particle, Vector3d*** field, int i, int j, int k){
-	double x = particle->coordinates.x;
-	double y = particle->coordinates.y;
-	double z = particle->coordinates.z;
+Vector3d Simulation::correlationFieldWithBin(Particle& particle, Vector3d*** field, int i, int j, int k){
+	double x = particle.coordinates.x;
+	double y = particle.coordinates.y;
+	double z = particle.coordinates.z;
 
 	double leftx = xgrid[i];
 	double rightx = xgrid[i+1];
@@ -205,9 +240,9 @@ Vector3d Simulation::correlationFieldWithBin(Particle* particle, Vector3d*** fie
 
 	double correlation = 1;
 
-	correlation *= correlationBspline(x, particle->dx, leftx, rightx);
-	correlation *= correlationBspline(y, particle->dy, lefty, righty);
-	correlation *= correlationBspline(z, particle->dz, leftz, rightz);
+	correlation *= correlationBspline(x, particle.dx, leftx, rightx);
+	correlation *= correlationBspline(y, particle.dy, lefty, righty);
+	correlation *= correlationBspline(z, particle.dz, leftz, rightz);
 
 	return field[i][j][k]*correlation;
 }

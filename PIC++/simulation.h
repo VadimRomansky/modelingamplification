@@ -13,6 +13,14 @@ class Simulation{
 	int znumber;
 	int particlesNumber;
 
+	double time;
+	double maxTime;
+	int currentIteration;
+	int maxIteration;
+	double xsize;
+	double ysize;
+	double zsize;
+
 	double deltaT;
 
 	double deltaX;
@@ -46,17 +54,24 @@ class Simulation{
 
 	void initialize();
 	void createArrays();
+	void simulate();
 	Vector3d correlationTempEfield(Particle* particle);
 	Vector3d correlationBfield(Particle* particle);
+	Vector3d correlationTempEfield(Particle& particle);
+	Vector3d correlationBfield(Particle& particle);
 	
 	Vector3d correlationField(Particle* particle, Vector3d*** field);
-	Vector3d correlationFieldWithBin(Particle* particle, Vector3d*** field, int i, int j, int k);
+	Vector3d correlationField(Particle& particle, Vector3d*** field);
+	Vector3d correlationFieldWithBin(Particle& particle, Vector3d*** field, int i, int j, int k);
 	double correlationBspline(const double& x, const double&  dx, const double& leftx, const double& rightx);
 
 	Matrix3d evaluateAlphaRotationTensor(double beta, Vector3d BField); //see Lapenta 2006
 
 	void moveParticles();
 	void moveParticle(Particle* particle);
+	void moveParticleNewtonIteration(Particle* particle, double* const oldCoordinates, double* const tempCoordinates, double* const newCoordinates);
+
+	void evaluateFields();
 };
 
 #endif

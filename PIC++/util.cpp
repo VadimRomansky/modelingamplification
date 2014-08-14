@@ -57,7 +57,7 @@ void alertNegative(double value, const char* s){
 	}
 }
 
-void solveSpecialMatrix(double** leftHalf, double* rightPart, double* output){
+void solveSpecialMatrix(double** const leftHalf, double* const rightPart, double* const output){
 	for(int j = 0; j < 2; ++j){
 		leftHalf[2][j] /= leftHalf[2][2];
 	}
@@ -91,4 +91,16 @@ void solveSpecialMatrix(double** leftHalf, double* rightPart, double* output){
 			output[i] -= leftHalf[i][j]*output[j];
 		}
 	}
+}
+
+double coordinateDifference(double* const a, double* const b, double dt){
+	double result = 0;
+	for(int i = 0; i < 3; ++i){
+		result += fabs(a[i] - b[i]);
+	}
+
+	for(int i = 3; i < 6; ++i){
+		result += fabs(a[i] - b[i])*dt;
+	}
+	return result;
 }

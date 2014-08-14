@@ -117,6 +117,36 @@ Matrix3d Matrix3d::operator*(const Matrix3d& matr){
 	return newMatrix;
 }
 
+Matrix3d Matrix3d::operator*(const double v){
+	Matrix3d newMatrix;
+	int i;
+	int j;
+	for(i=0;i<3;++i){
+		for(j=0;j<3;++j){
+			newMatrix.matrix[i][j] = 0;
+			for(int k = 0; k < 3; ++k){
+				newMatrix.matrix[i][j] += matrix[i][k]*v;
+			}
+		}
+	}
+	return newMatrix;
+}
+
+Matrix3d Matrix3d::operator/(const double v){
+	Matrix3d newMatrix;
+	int i;
+	int j;
+	for(i=0;i<3;++i){
+		for(j=0;j<3;++j){
+			newMatrix.matrix[i][j] = 0;
+			for(int k = 0; k < 3; ++k){
+				newMatrix.matrix[i][j] += matrix[i][k]/v;
+			}
+		}
+	}
+	return newMatrix;
+}
+
 Matrix3d Matrix3d::operator+(const Matrix3d& matr){
 	Matrix3d newMatrix;
 	int i;
@@ -124,6 +154,18 @@ Matrix3d Matrix3d::operator+(const Matrix3d& matr){
 	for(i=0;i<3;++i){
 		for(j=0;j<3;++j){
 			newMatrix.matrix[i][j]=matr.matrix[i][j] + matrix[i][j];
+		}
+	}
+	return newMatrix;
+}
+
+Matrix3d Matrix3d::operator-(const Matrix3d& matr){
+	Matrix3d newMatrix;
+	int i;
+	int j;
+	for(i=0;i<3;++i){
+		for(j=0;j<3;++j){
+			newMatrix.matrix[i][j]= matrix[i][j] - matr.matrix[i][j];
 		}
 	}
 	return newMatrix;
