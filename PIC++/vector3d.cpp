@@ -30,6 +30,10 @@ Vector3d Vector3d::operator*(const double& value){
 	return Vector3d(x*value, y*value, z*value);
 }
 
+Vector3d Vector3d::operator/(const double& value){
+	return Vector3d(x/value, y/value, z/value);
+}
+
 double Vector3d::scalarMult(const Vector3d& vector){
 	return x*vector.x + y*vector.y + z*vector.z;
 }
