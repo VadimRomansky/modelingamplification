@@ -3,6 +3,7 @@
 
 #include "stdlib.h"
 #include "vector"
+#include "matrix3d.h"
 
 #include "particle.h"
 
@@ -11,6 +12,8 @@ class Simulation{
 	int ynumber;
 	int znumber;
 	int particlesNumber;
+
+	double deltaT;
 
 	double deltaX;
 	double deltaY;
@@ -35,6 +38,9 @@ class Simulation{
 
 	std::vector<Particle*> particles;
 
+	Matrix3d Kronecker;
+	double LeviCivita[3][3][3];
+
 	Simulation();
 	~Simulation();
 
@@ -46,6 +52,11 @@ class Simulation{
 	Vector3d correlationField(Particle* particle, Vector3d*** field);
 	Vector3d correlationFieldWithBin(Particle* particle, Vector3d*** field, int i, int j, int k);
 	double correlationBspline(const double& x, const double&  dx, const double& leftx, const double& rightx);
+
+	Matrix3d evaluateAlphaRotationTensor(double beta, Vector3d BField); //see Lapenta 2006
+
+	void moveParticles();
+	void moveParticle(Particle* particle);
 };
 
 #endif

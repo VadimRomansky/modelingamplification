@@ -10,4 +10,6 @@ void alertNaNOrInfinity(double value, const char* s);
 void alertNotPositive(double value, const char* s);
 void alertNegative(double value, const char* s);
 
+void solveSpecialMatrix(double** leftHalf, double* rightPart, double* output);
+
 #endif

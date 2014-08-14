@@ -5,8 +5,24 @@
 #include "util.h"
 #include "particle.h"
 #include "constants.h"
+#include "matrix3d.h"
 
 Simulation::Simulation(){
+	Kronecker = Matrix3d(1.0,0,0,0,1.0,0,0,0,1.0);
+
+	for(int i = 0; i < 3; ++i){
+		for(int j = 0; j < 3; ++j){
+			for(int k = 0; k < 3; ++k){
+				LeviCivita[i][j][k] = 0;
+			}
+		}
+	}
+	LeviCivita[0][1][2] = 1.0;
+	LeviCivita[0][2][1] = -1.0;
+	LeviCivita[1][0][2] = -1.0;
+	LeviCivita[1][2][0] = 1.0;
+	LeviCivita[2][0][1] = 1.0;
+	LeviCivita[2][1][0] = -1.0;
 }
 
 Simulation::~Simulation(){
@@ -43,6 +59,7 @@ Simulation::~Simulation(){
 }
 
 void Simulation::initialize(){
+
 	createArrays();
 
 	deltaX = 1;
@@ -127,41 +144,51 @@ Vector3d Simulation::correlationBfield(Particle* particle){
 }
 	
 Vector3d Simulation::correlationField(Particle* particle, Vector3d*** field){
-	int i = particle->coordinates.x/deltaX;
-	int j = particle->coordinates.y/deltaY;
-	int k = particle->coordinates.z/deltaZ;
+	int xcount = particle->coordinates.x/deltaX;
+	int ycount = particle->coordinates.y/deltaY;
+	int zcount = particle->coordinates.z/deltaZ;
 
-	if(i < 0){
-		printf("i < 0\n");
+	if(xcount < 0){
+		printf("xcount < 0\n");
 		//exit(0);
 	}
 
-	if(i >= xnumber){
-		printf("i >= xnumber\n");
+	if(xcount >= xnumber){
+		printf("xcount >= xnumber\n");
 		//exit(0);
 	}
 
-	if(j < 0){
-		printf("j < 0\n");
+	if(ycount < 0){
+		printf("ycount < 0\n");
 		//exit(0);
 	}
 
-	if(j >= ynumber){
-		printf("j >= ynumber\n");
+	if(ycount >= ynumber){
+		printf("ycount >= ynumber\n");
 		//exit(0);
 	}
 
-	if(k < 0){
-		printf("k < 0\n");
+	if(zcount < 0){
+		printf("zcount < 0\n");
 		//exit(0);
 	}
 
-	if(k >= znumber){
-		printf("k >= znumber\n");
+	if(zcount >= znumber){
+		printf("zcount >= znumber\n");
 		//exit(0);
 	}
 
+	Vector3d result = Vector3d(0,0,0);
 
+	for(int i = max2(0,xcount-1); i <= min2(xnumber-1, xcount + 1); ++i){
+		for(int j = max2(0,ycount-1); j <= min2(ynumber-1, ycount + 1); ++j){
+			for(int k = max2(0,zcount-1); k <= min2(znumber-1, zcount + 1); ++j){
+				result = result + correlationFieldWithBin(particle, field, i, j, k);
+			}
+		}
+	}
+
+	return result;
 }
 
 Vector3d Simulation::correlationFieldWithBin(Particle* particle, Vector3d*** field, int i, int j, int k){
@@ -198,6 +225,11 @@ double Simulation::correlationBspline(const double& x, const double&  dx, const 
 
 	double correlation = 0;
 
+	if(x < leftx - 2*dx)
+		return 0;
+	if(x > rightx + 2*dx)
+		return 0;
+
 	if(x < leftx){
 		correlation = sqr(dx - (leftx - x))/2;
 	} else if ( x > rightx){
@@ -213,4 +245,29 @@ double Simulation::correlationBspline(const double& x, const double&  dx, const 
 	correlation /= dx*dx;
 
 	return correlation;
+}
+
+Matrix3d Simulation::evaluateAlphaRotationTensor(double beta, Vector3d BField){
+	Matrix3d result;
+
+	beta = beta/speed_of_light;
+
+	double B[3] = {BField.x, BField.y, BField.z};
+
+	double denominator = 1 + beta*beta*(B[0]*B[0] + B[1]*B[1] + B[2]*B[2]);
+	
+	for(int i = 0; i < 3; i++){
+		for(int j = 0; j < 3; j++){
+			result.matrix[i][j] = Kronecker.matrix[i][j] + beta*beta*B[i]*B[j];
+			for(int k = 0; k < 3; ++k){
+				for(int l = 0; l < 3; ++l){
+					result.matrix[i][j] -= beta*LeviCivita[j][k][l]*Kronecker.matrix[i][l]*B[k];
+				}
+			}
+
+			result.matrix[i][j] /= denominator;
+		}
+	}
+
+	return result;
 }

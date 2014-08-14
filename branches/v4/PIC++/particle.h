@@ -17,6 +17,7 @@ public:
 	double dz;
 
 	Particle(double m, double q, double x0, double y0, double z0, double px0, double py0, double pz0, double dx0, double dy0, double dz0);
+	Particle(const Particle& particle);
 
 	double shapeFunctionX(const double& xvalue);
 	double shapeFunctionY(const double& yvalue);
@@ -25,9 +26,12 @@ public:
 	double shapeFunction(const double& xvalue, const double& yvalue, const double& zvalue);
 
 	double momentumAbs();
+	Vector3d velocity();
 	double velocityX();
 	double velocityY();
 	double velocityZ();
+
+	void setMomentumByV(Vector3d v);
 };
 
 #endif
