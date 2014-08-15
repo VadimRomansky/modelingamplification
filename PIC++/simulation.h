@@ -55,12 +55,15 @@ public:
 	Matrix3d Kronecker;
 	double LeviCivita[3][3][3];
 
+	FILE* traectoryFile;
+	FILE* distributionFile;
+
 	Simulation();
 	~Simulation();
 
 	void initialize();
 	void createArrays();
-	void openFiles();
+	void createFiles();
 	void simulate();
 
 	void updateDeltaT();

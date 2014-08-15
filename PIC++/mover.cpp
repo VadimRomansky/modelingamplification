@@ -8,6 +8,7 @@
 #include "matrix3d.h"
 
 void Simulation::moveParticles(){
+	printf("moving particles\n");
 	//for(int i = 0; i < particles.size(); ++i){
 	for(int i = 0; i < 1; ++i){
 		moveParticle(particles[i]);
