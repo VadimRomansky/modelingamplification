@@ -2,6 +2,7 @@
 #define _SIMULATION_H_
 
 #include "stdlib.h"
+#include "stdio.h"
 #include "vector"
 #include "matrix3d.h"
 
@@ -59,6 +60,7 @@ public:
 
 	void initialize();
 	void createArrays();
+	void openFiles();
 	void simulate();
 
 	void updateDeltaT();
