@@ -161,6 +161,7 @@ void Simulation::createArrays(){
 void Simulation::simulate(){
 	createArrays();
 	initialize();
+	openFiles();
 	createParticles();
 
 	updateDeltaT();
@@ -169,7 +170,12 @@ void Simulation::simulate(){
 		moveParticles();
 		evaluateFields();
 
+		time += deltaT;
 		currentIteration++;
+
+		if(currentIteration % writeParameter == 0){
+
+		}
 	}
 }
 
