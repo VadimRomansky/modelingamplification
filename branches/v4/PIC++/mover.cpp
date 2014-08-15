@@ -19,17 +19,17 @@ void Simulation::moveParticle(Particle* particle){
 	Vector3d oldE = correlationTempEfield(particle);
 	Vector3d oldB = correlationBfield(particle);
 
-	Particle* newparticle = new Particle(*particle);
+	Particle newparticle = Particle(*particle);
 
 	double beta = particle->charge*deltaT/particle->mass;
 
-	newparticle->coordinates = newparticle->coordinates + (newparticle->momentum*(deltaT/newparticle->mass));
-	newparticle->setMomentumByV(newparticle->velocity() + (oldE + newparticle->velocity().vectorMult(oldB))*beta);
+	newparticle.coordinates = newparticle.coordinates + (newparticle.momentum*(deltaT/newparticle.mass));
+	newparticle.setMomentumByV(newparticle.velocity() + (oldE + newparticle.velocity().vectorMult(oldB))*beta);
 
 	Vector3d oldV = particle->velocity();
-	Vector3d tempV = newparticle->velocity();
+	Vector3d tempV = newparticle.velocity();
 	double oldCoordinates[6] = {particle->coordinates.x, particle->coordinates.y, particle->coordinates.z, oldV.x, oldV.y, oldV.z};
-	double tempCoordinates[6] = {newparticle->coordinates.x, newparticle->coordinates.y, newparticle->coordinates.z, tempV.x, tempV.y, tempV.z};
+	double tempCoordinates[6] = {newparticle.coordinates.x, newparticle.coordinates.y, newparticle.coordinates.z, tempV.x, tempV.y, tempV.z};
 	double newCoordinates[6];
 	for(int i = 0; i < 6; ++i){
 		newCoordinates[i] = oldCoordinates[i];
@@ -49,11 +49,11 @@ void Simulation::moveParticle(Particle* particle){
 
 	if(coordinateDifference(tempCoordinates, newCoordinates, deltaT) > error){
 		printf("ERROR newton method did not converge\n");
-		newparticle->coordinates = newparticle->coordinates + (newparticle->momentum*(deltaT/newparticle->mass));
-		newparticle->setMomentumByV(newparticle->velocity() + (oldE + newparticle->velocity().vectorMult(oldB))*beta);
+		newparticle.coordinates = newparticle.coordinates + (newparticle.momentum*(deltaT/newparticle.mass));
+		newparticle.setMomentumByV(newparticle.velocity() + (oldE + newparticle.velocity().vectorMult(oldB))*beta);
 	}
 
-	particle = newparticle;
+	*particle = newparticle;
 }
 
 void Simulation::moveParticleNewtonIteration(Particle* particle, double* const oldCoordinates, double* const tempCoordinates, double* const newCoordinates){

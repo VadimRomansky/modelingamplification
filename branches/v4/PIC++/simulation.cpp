@@ -163,7 +163,7 @@ void Simulation::createArrays(){
 void Simulation::createFiles(){
 	traectoryFile = fopen("./output/traectory.dat","w");
 	fclose(traectoryFile);
-	distributionFile = fopen("./output/distribution.dat","w");
+	distributionFile = fopen("./output/distribution_protons.dat","w");
 	fclose(distributionFile);
 }
 
@@ -174,9 +174,10 @@ void Simulation::simulate(){
 	createParticles();
 
 	updateDeltaT();
-	deltaT = 0;
+	//deltaT = 0;
 
 	while(time < maxTime && currentIteration < maxIteration){
+		printf("iteration number %d time = %lf\n", currentIteration, time);
 		moveParticles();
 		evaluateFields();
 
@@ -184,9 +185,12 @@ void Simulation::simulate(){
 		currentIteration++;
 
 		if(currentIteration % writeParameter == 0){
-			distributionFile = fopen("./output/distribution.dat", "a");
+			distributionFile = fopen("./output/distribution_protons.dat", "a");
 			outputDistribution(distributionFile, particles, ParticleTypes::PROTON);
 			fclose(distributionFile);
+			traectoryFile = fopen("./output/traectory.dat","a");
+			outputTraectory(traectoryFile, particles[0], time);
+			fclose(traectoryFile);
 		}
 	}
 }
