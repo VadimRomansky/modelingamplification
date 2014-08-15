@@ -4,26 +4,28 @@
 #include "simulation.h"
 #include "util.h"
 #include "particle.h"
+#include "output.h"
 #include "constants.h"
 #include "matrix3d.h"
 
 Simulation::Simulation(){
 	currentIteration = 0;
 	time = 0;
+	particlesNumber = 0;
 
 	//read input!
-	xnumber = 100;
-	ynumber = 100;
-	znumber = 100;
+	xnumber = 10;
+	ynumber = 10;
+	znumber = 10;
 
-	xsize = 100;
-	ysize = 100;
-	zsize = 100;
+	xsize = 1E9;
+	ysize = 1E9;
+	zsize = 1E9;
 
 	temperature = 1000;
 	density = 1.6E-24;
 
-	maxIteration = 10000;
+	maxIteration = 1E7;
 	maxTime = 1E7;
 
 	particlesPerBin = 10;
@@ -115,7 +117,7 @@ void Simulation::initialize(){
 				Efield[i][j][k] = Vector3d();
 				newEfield[i][j][k] = Efield[i][j][k];
 				tempEfield[i][j][k] = Efield[i][j][k];
-				Bfield[i][j][k] = Vector3d(1,0,0);
+				Bfield[i][j][k] = Vector3d(1E-6,0,0);
 				newBfield[i][j][k] = Bfield[i][j][k];
 				tempBfield[i][j][k] = Bfield[i][j][k];
 
@@ -158,13 +160,21 @@ void Simulation::createArrays(){
 	}
 }
 
+void Simulation::createFiles(){
+	traectoryFile = fopen("./output/traectory.dat","w");
+	fclose(traectoryFile);
+	distributionFile = fopen("./output/distribution.dat","w");
+	fclose(distributionFile);
+}
+
 void Simulation::simulate(){
 	createArrays();
 	initialize();
-	openFiles();
+	createFiles();
 	createParticles();
 
 	updateDeltaT();
+	deltaT = 0;
 
 	while(time < maxTime && currentIteration < maxIteration){
 		moveParticles();
@@ -174,7 +184,9 @@ void Simulation::simulate(){
 		currentIteration++;
 
 		if(currentIteration % writeParameter == 0){
-
+			distributionFile = fopen("./output/distribution.dat", "a");
+			outputDistribution(distributionFile, particles, ParticleTypes::PROTON);
+			fclose(distributionFile);
 		}
 	}
 }
@@ -238,7 +250,7 @@ Vector3d Simulation::correlationField(Particle& particle, Vector3d*** field){
 
 	for(int i = max2(0,xcount-1); i <= min2(xnumber-1, xcount + 1); ++i){
 		for(int j = max2(0,ycount-1); j <= min2(ynumber-1, ycount + 1); ++j){
-			for(int k = max2(0,zcount-1); k <= min2(znumber-1, zcount + 1); ++j){
+			for(int k = max2(0,zcount-1); k <= min2(znumber-1, zcount + 1); ++k){
 				result = result + correlationFieldWithBin(particle, field, i, j, k);
 			}
 		}
@@ -254,16 +266,18 @@ Vector3d Simulation::correlationFieldWithBin(Particle& particle, Vector3d*** fie
 
 	double leftx = xgrid[i];
 	double rightx = xgrid[i+1];
-	double lefty = ygrid[i];
-	double righty = ygrid[i+1];
-	double leftz = zgrid[i];
-	double rightz = zgrid[i+1];
+	double lefty = ygrid[j];
+	double righty = ygrid[j+1];
+	double leftz = zgrid[k];
+	double rightz = zgrid[k+1];
 
 	double correlation = 1;
 
-	correlation *= correlationBspline(x, particle.dx, leftx, rightx);
-	correlation *= correlationBspline(y, particle.dy, lefty, righty);
-	correlation *= correlationBspline(z, particle.dz, leftz, rightz);
+	double correlationx = correlationBspline(x, particle.dx, leftx, rightx);
+	double correlationy = correlationBspline(y, particle.dy, lefty, righty);
+	double correlationz = correlationBspline(z, particle.dz, leftz, rightz);
+
+	correlation = correlationx*correlationy*correlationz;
 
 	return field[i][j][k]*correlation;
 }
@@ -274,26 +288,26 @@ double Simulation::correlationBspline(const double& x, const double&  dx, const 
 		printf("rightx < leftx\n");
 		exit(0);
 	}
-	if(dx < rightx - leftx){
+	if(dx > rightx - leftx){
 		printf("dx < rightx - leftx\n");
 		exit(0);
 	}
 
 	double correlation = 0;
 
-	if(x < leftx - 2*dx)
+	if(x < leftx - dx)
 		return 0;
-	if(x > rightx + 2*dx)
+	if(x > rightx + dx)
 		return 0;
 
 	if(x < leftx){
-		correlation = sqr(dx - (leftx - x))/2;
+		correlation = sqr(x + dx - leftx)/2;
 	} else if ( x > rightx){
-		correlation = sqr(dx - (x - rightx))/2;
+		correlation = sqr(rightx - (x - dx))/2;
 	} else if ( x < leftx + dx){
-		correlation = (sqr(dx) - sqr(dx - (leftx - x)))/2;
+		correlation = sqr(dx) - sqr(leftx - (x - dx))/2;
 	} else if ( x > rightx - dx){
-		correlation = (sqr(dx) - sqr(dx - (x - rightx)))/2;
+		correlation = sqr(dx) - sqr(x + dx - rightx)/2;
 	} else {
 		correlation = dx*dx;
 	}
@@ -334,6 +348,7 @@ void Simulation::updateDeltaT(){
 }
 
 void Simulation::createParticles(){
+	printf("creating particles\n");
 	for(int i = 0; i < xnumber; ++i){
 		for(int j = 0; j < ynumber; ++j){
 			for(int k = 0; k < znumber; ++k){
@@ -348,6 +363,7 @@ void Simulation::createParticles(){
 					Particle* particle = createParticle(i, j, k, weight, type);
 					particles.push_back(particle);
 					particlesNumber++;
+					printf("%d\n", particlesNumber);
 				}
 			}
 		}
