@@ -166,6 +166,9 @@ void Simulation::simulate(){
 	updateDeltaT();
 
 	while(time < maxTime && currentIteration < maxIteration){
+		moveParticles();
+		evaluateFields();
+
 		currentIteration++;
 	}
 }
