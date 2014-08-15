@@ -24,11 +24,27 @@ double max2(double a, double b){
 	}
 }
 
+double max3(double a, double b, double c){
+	if(a > b){
+		return max2(a, c);
+	} else {
+		return max2(b, c);
+	}
+}
+
 double min2(double a, double b){
 	if(a >= b){
 		return b;
 	} else {
 		return a;
+	}
+}
+
+double min3(double a, double b, double c){
+	if(a > b){
+		return min2(b, c);
+	} else {
+		return min2(a, c);
 	}
 }
 
@@ -103,4 +119,8 @@ double coordinateDifference(double* const a, double* const b, double dt){
 		result += fabs(a[i] - b[i])*dt;
 	}
 	return result;
+}
+
+double uniformDistribution(){
+	return (rand()%randomSeed + 0.5)/randomSeed;
 }

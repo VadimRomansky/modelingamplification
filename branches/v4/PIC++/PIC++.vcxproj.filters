@@ -36,6 +36,9 @@
     <ClCompile Include="mover.cpp">
       <Filter>Source files</Filter>
     </ClCompile>
+    <ClCompile Include="fields.cpp">
+      <Filter>Source files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="constants.h">

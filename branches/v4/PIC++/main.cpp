@@ -1,8 +1,11 @@
 #include "stdio.h"
+#include <stdlib.h>
+#include <time.h>   
 
 #include "constants.h"
 #include "matrix3d.h"
 #include "util.h"
+#include "simulation.h"
 
 //test solving matrix
 
@@ -74,15 +77,11 @@
 
 int main()
 {	
-	Matrix3d A;
-	Matrix3d B;
-	Matrix3d C;
-	for(int i = 0; i < 10000000; ++i){
-		A = B+C;
-		if(i%1000 == 0){
-			printf("%d\n",i);
-		}
-	}
-	return 0;
+	srand (time(NULL));
+
+	Simulation simulation;
+
+	simulation.simulate();
+
 }
 

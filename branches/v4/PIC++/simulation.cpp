@@ -11,6 +11,23 @@ Simulation::Simulation(){
 	currentIteration = 0;
 	time = 0;
 
+	//read input!
+	xnumber = 100;
+	ynumber = 100;
+	znumber = 100;
+
+	xsize = 100;
+	ysize = 100;
+	zsize = 100;
+
+	temperature = 1000;
+	density = 1.6E-24;
+
+	maxIteration = 10000;
+	maxTime = 1E7;
+
+	particlesPerBin = 10;
+
 
 	Kronecker = Matrix3d(1.0,0,0,0,1.0,0,0,0,1.0);
 
@@ -63,13 +80,6 @@ Simulation::~Simulation(){
 }
 
 void Simulation::initialize(){
-	xnumber = 100;
-	ynumber = 100;
-	znumber = 100;
-
-	xsize = 100;
-	ysize = 100;
-	zsize = 100;
 
 	deltaX = xsize/(xnumber-1);
 	deltaY = ysize/(ynumber-1);
@@ -100,7 +110,7 @@ void Simulation::initialize(){
 	}
 
 	for(int i = 0; i < xnumber; ++i){
-		for(int j = 0; j < ynumber; ++i){
+		for(int j = 0; j < ynumber; ++j){
 			for(int k = 0; k < znumber; ++k){
 				Efield[i][j][k] = Vector3d();
 				newEfield[i][j][k] = Efield[i][j][k];
@@ -137,7 +147,7 @@ void Simulation::createArrays(){
 		newBfield[i] = new Vector3d*[ynumber];
 		tempBfield[i] = new Vector3d*[ynumber];
 
-		for(int j = 0; j < ynumber; ++i){
+		for(int j = 0; j < ynumber; ++j){
 			Efield[i][j] = new Vector3d[znumber];
 			newEfield[i][j] = new Vector3d[znumber];
 			tempEfield[i][j] = new Vector3d[znumber];
@@ -152,6 +162,8 @@ void Simulation::simulate(){
 	createArrays();
 	initialize();
 	createParticles();
+
+	updateDeltaT();
 
 	while(time < maxTime && currentIteration < maxIteration){
 		currentIteration++;
@@ -305,4 +317,78 @@ Matrix3d Simulation::evaluateAlphaRotationTensor(double beta, Vector3d BField){
 	}
 
 	return result;
+}
+
+void Simulation::updateDeltaT(){
+	double delta = min3(deltaX, deltaY, deltaZ);
+	deltaT = delta/speed_of_light;
+}
+
+void Simulation::createParticles(){
+	for(int i = 0; i < xnumber; ++i){
+		for(int j = 0; j < ynumber; ++j){
+			for(int k = 0; k < znumber; ++k){
+				for(int l = 0; l < particlesPerBin; ++l){
+					ParticleTypes type;
+					if(l % 2 == 0){
+						type = ParticleTypes::PROTON;
+					} else {
+						type = ParticleTypes::ELECTRON;
+					}
+					double weight = density*2/(massProton*particlesPerBin)*volume(i, j, k);
+					Particle* particle = createParticle(i, j, k, weight, type);
+					particles.push_back(particle);
+					particlesNumber++;
+				}
+			}
+		}
+	}
+}
+
+Particle* Simulation::createParticle(int i, int j, int k, double weight, ParticleTypes type){
+	double charge = 0;
+	double mass = 0;
+
+	switch(type){
+		case ParticleTypes::PROTON :
+			mass = massProton;
+			charge = electron_charge;
+			break;
+		case ParticleTypes::ELECTRON :
+			mass = massElectron;
+			charge = -electron_charge;
+			break;
+	}
+
+	double x = xgrid[i] + deltaX*uniformDistribution();
+	double y = ygrid[i] + deltaY*uniformDistribution();
+	double z = zgrid[i] + deltaZ*uniformDistribution();
+
+	double dx = deltaX/4;
+	double dy = deltaY/4;
+	double dz = deltaZ/4;
+
+	double energy = boltzmanEnergy(temperature, mass);
+
+	double p = sqrt(energy*energy - sqr(mass*speed_of_light_sqr))/speed_of_light;
+	
+	double pz = p*(2*uniformDistribution() - 1);
+	double phi = 2*pi*uniformDistribution();
+	double pnormal = sqrt(p*p - pz*pz);
+	double px = pnormal*cos(phi);
+	double py = pnormal*sin(phi);
+
+	Particle* particle = new Particle(mass, charge, weight, type, x, y, z, px, py, pz, dx, dy, dz);
+
+	return particle;
+}
+
+double Simulation::boltzmanEnergy(double temperature, double mass){
+	double x = uniformDistribution();
+	double result = - kBoltzman*temperature*log(1-x) + mass*speed_of_light_sqr;
+	return result;
+}
+
+double Simulation::volume(int i, int j, int k){
+	return deltaX*deltaY*deltaZ;
 }
