@@ -8,10 +8,15 @@
 #include "particle.h"
 
 class Simulation{
+public:
 	int xnumber;
 	int ynumber;
 	int znumber;
 	int particlesNumber;
+	int particlesPerBin;
+
+	double density;
+	double temperature;
 
 	double time;
 	double maxTime;
@@ -55,6 +60,12 @@ class Simulation{
 	void initialize();
 	void createArrays();
 	void simulate();
+
+	void updateDeltaT();
+	void createParticles();
+	double boltzmanEnergy(double temperature, double mass);
+	Particle* createParticle(int i, int j, int k, double weight, ParticleTypes type);
+
 	Vector3d correlationTempEfield(Particle* particle);
 	Vector3d correlationBfield(Particle* particle);
 	Vector3d correlationTempEfield(Particle& particle);
@@ -72,6 +83,8 @@ class Simulation{
 	void moveParticleNewtonIteration(Particle* particle, double* const oldCoordinates, double* const tempCoordinates, double* const newCoordinates);
 
 	void evaluateFields();
+
+	double volume(int i, int j, int k);
 };
 
 #endif
