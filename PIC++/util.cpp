@@ -124,3 +124,45 @@ double coordinateDifference(double* const a, double* const b, double dt){
 double uniformDistribution(){
 	return (rand()%randomSeed + 0.5)/randomSeed;
 }
+
+
+double McDonaldFunction(double x, double index){
+	//todo approximation with small x!!!
+	if(x < 0){
+		printf("x in McDonald < 0\n");
+		exit(0);
+	}
+	double dt;
+	double t;
+	double prevT = 0;
+	double result = 0;
+	double maxT;
+	double maxLevel = 10;
+
+	double discr = index*index - 2*x*x + 2*x*maxLevel;
+	if(discr < 0){
+		maxT = log(maxLevel*maxLevel + sqrt(maxLevel*maxLevel - 1));
+	} else {
+		maxT = (index + sqrt(discr))/(x);
+	}
+	dt = maxT/100;
+
+	while(x*cosh(maxT) - index*maxT < 10){
+		maxT = maxT + dt;
+	}
+	dt = maxT/10000;
+
+	t = dt;
+	int i = 0;
+	while(i < 10000){
+		double middleT = 0.5*(t + prevT);
+		double dresult = exp(-x*cosh(middleT))*cosh(index*middleT)*dt;
+		result += dresult;
+		if(dresult < result/1E10) break;
+		prevT = t;
+		t += dt;
+		++i;
+	}
+
+	return result;
+}

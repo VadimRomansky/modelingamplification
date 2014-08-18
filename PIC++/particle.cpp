@@ -77,7 +77,7 @@ Vector3d Particle::velocity(){
 	double mc2 = mass*speed_of_light*speed_of_light;
 	double gamma_factor = sqrt(p2*speed_of_light*speed_of_light + mc2*mc2)/mc2;
 
-	return momentum/gamma_factor;
+	return momentum/(mass*gamma_factor);
 }
 
 double Particle::velocityX(){
