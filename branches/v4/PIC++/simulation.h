@@ -68,7 +68,6 @@ public:
 
 	void updateDeltaT();
 	void createParticles();
-	double boltzmanEnergy(double temperature, double mass);
 	Particle* createParticle(int i, int j, int k, double weight, ParticleTypes type);
 
 	Vector3d correlationTempEfield(Particle* particle);

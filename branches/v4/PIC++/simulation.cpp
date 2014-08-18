@@ -397,7 +397,15 @@ Particle* Simulation::createParticle(int i, int j, int k, double weight, Particl
 	double dy = deltaY/4;
 	double dz = deltaZ/4;
 
-	double energy = boltzmanEnergy(temperature, mass);
+	double energy = mass*speed_of_light_sqr;
+
+	double theta = kBoltzman*temperature/(mass*speed_of_light_sqr);
+
+	if(theta < 0.01){
+		energy = mass*speed_of_light_sqr + maxwellDistribution(temperature);
+	} else {
+		energy = maxwellJuttnerDistribution(temperature);
+	}
 
 	double p = sqrt(energy*energy - sqr(mass*speed_of_light_sqr))/speed_of_light;
 	
@@ -410,12 +418,6 @@ Particle* Simulation::createParticle(int i, int j, int k, double weight, Particl
 	Particle* particle = new Particle(mass, charge, weight, type, x, y, z, px, py, pz, dx, dy, dz);
 
 	return particle;
-}
-
-double Simulation::boltzmanEnergy(double temperature, double mass){
-	double x = uniformDistribution();
-	double result = - kBoltzman*temperature*log(1-x) + mass*speed_of_light_sqr;
-	return result;
 }
 
 double Simulation::volume(int i, int j, int k){

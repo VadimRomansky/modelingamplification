@@ -17,5 +17,8 @@ double coordinateDifference(double* const a, double* const b, double dt);
 void solveSpecialMatrix(double** const leftHalf, double* const rightPart, double* const output);
 
 double McDonaldFunction(double x, double index);
+double normalDistribution();
+double maxwellDistribution(double temperature);
+double maxwellJuttnerDistribution(double temperature);
 
 #endif
