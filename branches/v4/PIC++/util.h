@@ -16,4 +16,6 @@ double uniformDistribution();
 double coordinateDifference(double* const a, double* const b, double dt);
 void solveSpecialMatrix(double** const leftHalf, double* const rightPart, double* const output);
 
+double McDonaldFunction(double x, double index);
+
 #endif

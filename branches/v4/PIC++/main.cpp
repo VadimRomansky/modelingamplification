@@ -75,7 +75,20 @@
 }*/
 
 
+//test McDonald
 int main()
+{
+	srand (time(NULL));
+	//double x = uniformDistribution()*10;
+	double x = 1;
+	double index = 2;
+
+	double result = McDonaldFunction(x, index);
+
+	printf("K(%lf, %lf) = %g\n", index, x, result);
+}
+
+/*int main()
 {	
 	srand (time(NULL));
 
@@ -83,5 +96,5 @@ int main()
 
 	simulation.simulate();
 
-}
+}*/
 
