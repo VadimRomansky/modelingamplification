@@ -19,6 +19,10 @@ void solveSpecialMatrix(double** const leftHalf, double* const rightPart, double
 double McDonaldFunction(double x, double index);
 double normalDistribution();
 double maxwellDistribution(double temperature);
-double maxwellJuttnerDistribution(double temperature);
+double maxwellJuttnerDistribution(double temperature, double mass);
+double solveInverceJuttnerFunction(double x, double theta, double besselK);
+double solveInverceJuttnerFunction(double x, double theta, double besselK, double left, double right);
+double maxwellJuttnerFunction(double gamma, double theta, double besselK);
+double maxwellJuttnerIntegral(double gamma, double theta, double besselK);
 
 #endif

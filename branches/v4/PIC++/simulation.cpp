@@ -22,7 +22,7 @@ Simulation::Simulation(){
 	ysize = 1E9;
 	zsize = 1E9;
 
-	temperature = 1000;
+	temperature = 1E14;
 	density = 1.6E-24;
 
 	maxIteration = 1E7;
@@ -404,7 +404,7 @@ Particle* Simulation::createParticle(int i, int j, int k, double weight, Particl
 	if(theta < 0.01){
 		energy = mass*speed_of_light_sqr + maxwellDistribution(temperature);
 	} else {
-		energy = maxwellJuttnerDistribution(temperature);
+		energy = maxwellJuttnerDistribution(temperature, mass);
 	}
 
 	double p = sqrt(energy*energy - sqr(mass*speed_of_light_sqr))/speed_of_light;
