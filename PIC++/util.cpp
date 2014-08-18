@@ -166,3 +166,18 @@ double McDonaldFunction(double x, double index){
 
 	return result;
 }
+
+double normalDistribution(){
+	double x = uniformDistribution();
+	double y = uniformDistribution();
+	return cos(2*pi*x)*sqrt(-2*log(y));
+}
+
+double maxwellDistribution(double temperature){
+	double normal = normalDistribution();
+	return kBoltzman*temperature*(0.5*normal*normal - log(uniformDistribution()));
+}
+
+double maxwellJuttnerDistribution(double temperature){
+	return 0;
+}

@@ -76,7 +76,7 @@
 
 
 //test McDonald
-int main()
+/*int main()
 {
 	srand (time(NULL));
 	//double x = uniformDistribution()*10;
@@ -86,7 +86,49 @@ int main()
 	double result = McDonaldFunction(x, index);
 
 	printf("K(%lf, %lf) = %g\n", index, x, result);
-}
+}*/
+
+//test normal distribution
+/*int main(){
+	srand (time(NULL));
+
+	const int binCount = 100;
+	double temperature = 100;
+	double distribution[binCount];
+	double xgrid[binCount];
+	xgrid[0] = 0;
+	double dx = 3*kBoltzman*temperature/binCount;
+	distribution[0] = 0;
+	int partCount = 10000;
+	for(int i = 1; i < binCount; ++i){
+		xgrid[i] = xgrid[i-1] + dx;
+		distribution[i] = 0;
+	}
+
+	double weight = 0;
+
+	for(int i = 0; i < partCount; ++i){
+		printf("%d\n", i);
+		//double x = normalDistribution();
+		double x = maxwellDistribution(temperature);
+		int j = (x - xgrid[0])/dx;
+		if(j > 0 && j < binCount){
+			distribution[j] += 1;
+		}
+	}
+
+	for(int i = 0; i < binCount; ++i){
+		distribution[i] /= partCount*dx;
+	}
+
+	FILE* file = fopen("./output/test.dat","w");
+	for(int i = 0; i < binCount; ++i){
+		double x = xgrid[i] + dx/2;
+		double maxwell = 2*sqrt(x/(pi*cube(kBoltzman*temperature)))*exp(-x/(kBoltzman*temperature));
+		fprintf(file, "%g %g %g\n", x, distribution[i], maxwell);
+	}
+	fclose(file);
+}*/
 
 /*int main()
 {	
