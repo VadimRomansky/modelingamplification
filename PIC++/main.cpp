@@ -89,15 +89,15 @@
 }*/
 
 //test normal distribution
-/*int main(){
+int main(){
 	srand (time(NULL));
 
 	const int binCount = 100;
-	double temperature = 100;
+	double temperature = 1E14;
 	double distribution[binCount];
 	double xgrid[binCount];
 	xgrid[0] = 0;
-	double dx = 3*kBoltzman*temperature/binCount;
+	double dx = 20*kBoltzman*temperature/binCount;
 	distribution[0] = 0;
 	int partCount = 10000;
 	for(int i = 1; i < binCount; ++i){
@@ -110,7 +110,8 @@
 	for(int i = 0; i < partCount; ++i){
 		printf("%d\n", i);
 		//double x = normalDistribution();
-		double x = maxwellDistribution(temperature);
+		//double x = maxwellDistribution(temperature);
+		double x = maxwellJuttnerDistribution(temperature, massProton);
 		int j = (x - xgrid[0])/dx;
 		if(j > 0 && j < binCount){
 			distribution[j] += 1;
@@ -125,10 +126,14 @@
 	for(int i = 0; i < binCount; ++i){
 		double x = xgrid[i] + dx/2;
 		double maxwell = 2*sqrt(x/(pi*cube(kBoltzman*temperature)))*exp(-x/(kBoltzman*temperature));
-		fprintf(file, "%g %g %g\n", x, distribution[i], maxwell);
+		double theta = kBoltzman*temperature/(massProton*speed_of_light_sqr);
+		double besselK = McDonaldFunction(1/theta, 2.0);
+		double gamma = x/(massProton*speed_of_light_sqr);
+		double juttner = maxwellJuttnerFunction(gamma, theta, besselK)/(massProton*speed_of_light_sqr);
+		fprintf(file, "%g %g %g\n", x/(massProton*speed_of_light_sqr), distribution[i], juttner);
 	}
 	fclose(file);
-}*/
+}
 
 /*int main()
 {	
