@@ -89,6 +89,7 @@
     <ClCompile Include="mover.cpp" />
     <ClCompile Include="output.cpp" />
     <ClCompile Include="particle.cpp" />
+    <ClCompile Include="random.cpp" />
     <ClCompile Include="simulation.cpp" />
     <ClCompile Include="util.cpp" />
     <ClCompile Include="vector3d.cpp" />
@@ -98,6 +99,7 @@
     <ClInclude Include="matrix3d.h" />
     <ClInclude Include="output.h" />
     <ClInclude Include="particle.h" />
+    <ClInclude Include="random.h" />
     <ClInclude Include="simulation.h" />
     <ClInclude Include="util.h" />
     <ClInclude Include="vector3d.h" />
