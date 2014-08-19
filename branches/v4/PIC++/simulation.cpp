@@ -7,6 +7,7 @@
 #include "output.h"
 #include "constants.h"
 #include "matrix3d.h"
+#include "random.h"
 
 Simulation::Simulation(){
 	currentIteration = 0;

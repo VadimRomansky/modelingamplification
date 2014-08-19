@@ -5,6 +5,7 @@
 #include "constants.h"
 #include "matrix3d.h"
 #include "util.h"
+#include "random.h"
 #include "simulation.h"
 
 //test solving matrix
@@ -88,8 +89,8 @@
 	printf("K(%lf, %lf) = %g\n", index, x, result);
 }*/
 
-//test normal distribution
-int main(){
+//test distribution
+/*int main(){
 	srand (time(NULL));
 
 	const int binCount = 100;
@@ -99,7 +100,7 @@ int main(){
 	xgrid[0] = 0;
 	double dx = 20*kBoltzman*temperature/binCount;
 	distribution[0] = 0;
-	int partCount = 10000;
+	int partCount = 100000;
 	for(int i = 1; i < binCount; ++i){
 		xgrid[i] = xgrid[i-1] + dx;
 		distribution[i] = 0;
@@ -133,9 +134,21 @@ int main(){
 		fprintf(file, "%g %g %g\n", x/(massProton*speed_of_light_sqr), distribution[i], juttner);
 	}
 	fclose(file);
-}
+}*/
 
-/*int main()
+//test solve inverce Juttner functiom
+/*int main(){
+	double x = 0.5;
+	double theta = 1;
+	double besselK = McDonaldFunction(1/theta, 2);
+	double gamma = solveInverceJuttnerFunction(x, theta, besselK);
+	double integral = maxwellJuttnerIntegral(3, theta, besselK);
+	printf("x = %lf, theta = %lf, gamma = %lf\n", x, theta, gamma);
+	printf("F(3) = %lf\n", integral);
+	return 0;
+}*/
+
+int main()
 {	
 	srand (time(NULL));
 
@@ -143,5 +156,5 @@ int main(){
 
 	simulation.simulate();
 
-}*/
+}
 
