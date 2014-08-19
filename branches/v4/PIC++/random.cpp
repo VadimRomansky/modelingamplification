@@ -55,7 +55,7 @@ double solveInverceJuttnerFunction(double x, double theta, double besselK, doubl
 		printf("right < left\n");
 		exit(0);
 	}
-	if( right - left < 0.000001){
+	if( right - left < 0.000001*left){
 		return (right + left)/2;
 	}
 	double gamma = (left + right)/2;

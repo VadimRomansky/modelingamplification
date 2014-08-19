@@ -33,6 +33,9 @@ public:
 	double deltaY;
 	double deltaZ;
 
+	Vector3d B0;
+	Vector3d E0;
+
 	double* xgrid;
 	double* ygrid;
 	double* zgrid;

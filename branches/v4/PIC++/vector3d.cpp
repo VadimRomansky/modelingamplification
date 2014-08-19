@@ -39,9 +39,9 @@ double Vector3d::scalarMult(const Vector3d& vector){
 }
 
 Vector3d Vector3d::vectorMult(const Vector3d& vector){
-	double x = y*vector.z - z*vector.y;
-	double y = -x*vector.z + z*vector.x;
-	double z = x*vector.y - y*vector.x;
+	double vx = y*vector.z - z*vector.y;
+	double vy = -x*vector.z + z*vector.x;
+	double vz = x*vector.y - y*vector.x;
 
-	return Vector3d(x, y, z);
+	return Vector3d(vx, vy, vz);
 }

@@ -1,4 +1,5 @@
 #include "stdlib.h"
+#include "stdio.h"
 #include "math.h"
 
 #include "constants.h"
@@ -101,6 +102,10 @@ double Particle::velocityZ(){
 }
 
 void Particle::setMomentumByV(Vector3d v){
+	if(v.getNorm() > speed_of_light){
+		printf("ERROR v > c\n");
+		exit(0);
+	}
 	double gamma_factor = 1/sqrt(1 - v.scalarMult(v)/speed_of_light_sqr);
 	momentum = v*(mass*gamma_factor);
 }
