@@ -25,7 +25,8 @@ void Simulation::moveParticle(Particle* particle){
 	Vector3d oldV = particle->velocity();
 
 	newparticle.coordinates = newparticle.coordinates + (newparticle.momentum*(deltaT/newparticle.mass));
-	newparticle.setMomentumByV(oldV + (oldE + oldV.vectorMult(oldB)/speed_of_light)*beta);
+	Vector3d newV = oldV + (oldE + (oldV.vectorMult(oldB))/speed_of_light)*beta;
+	newparticle.setMomentumByV(newV);
 
 	Vector3d tempV = newparticle.velocity();
 	double oldCoordinates[6] = {particle->coordinates.x, particle->coordinates.y, particle->coordinates.z, oldV.x, oldV.y, oldV.z};
@@ -51,7 +52,10 @@ void Simulation::moveParticle(Particle* particle){
 	//if(true){
 		printf("ERROR newton method did not converge\n");
 		newparticle.coordinates = newparticle.coordinates + (oldV*deltaT);
-		newparticle.setMomentumByV(oldV + (oldE + oldV.vectorMult(oldB)/speed_of_light)*beta);
+		Vector3d VcrossB = oldV.vectorMult(oldB);
+		Vector3d force = oldE + VcrossB/speed_of_light;
+		newV = oldV + (oldE + VcrossB/speed_of_light)*beta;
+		newparticle.setMomentumByV(newV);
 	}
 
 	*particle = newparticle;

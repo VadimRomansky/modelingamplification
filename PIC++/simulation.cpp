@@ -19,17 +19,20 @@ Simulation::Simulation(){
 	ynumber = 10;
 	znumber = 10;
 
-	xsize = 1E9;
-	ysize = 1E9;
-	zsize = 1E9;
+	xsize = 1E14;
+	ysize = 1E14;
+	zsize = 1E14;
 
-	temperature = 1E14;
+	temperature = 1E8;
 	density = 1.6E-24;
 
 	maxIteration = 1E7;
 	maxTime = 1E7;
 
 	particlesPerBin = 10;
+
+	B0 = Vector3d(1E-6, 0, 0);
+	E0 = Vector3d(0, 0, 0);
 
 
 	Kronecker = Matrix3d(1.0,0,0,0,1.0,0,0,0,1.0);
@@ -115,10 +118,10 @@ void Simulation::initialize(){
 	for(int i = 0; i < xnumber; ++i){
 		for(int j = 0; j < ynumber; ++j){
 			for(int k = 0; k < znumber; ++k){
-				Efield[i][j][k] = Vector3d();
+				Efield[i][j][k] = E0;
 				newEfield[i][j][k] = Efield[i][j][k];
 				tempEfield[i][j][k] = Efield[i][j][k];
-				Bfield[i][j][k] = Vector3d(1E-6,0,0);
+				Bfield[i][j][k] = B0;
 				newBfield[i][j][k] = Bfield[i][j][k];
 				tempBfield[i][j][k] = Bfield[i][j][k];
 
@@ -349,14 +352,18 @@ Matrix3d Simulation::evaluateAlphaRotationTensor(double beta, Vector3d BField){
 
 void Simulation::updateDeltaT(){
 	double delta = min3(deltaX, deltaY, deltaZ);
-	deltaT = delta/speed_of_light;
+	deltaT = 0.01*delta/speed_of_light;
+	deltaT = min2(deltaT, 0.1*massElectron*speed_of_light/(electron_charge*B0.getNorm()));
 }
 
 void Simulation::createParticles(){
 	printf("creating particles\n");
-	for(int i = 0; i < xnumber; ++i){
-		for(int j = 0; j < ynumber; ++j){
-			for(int k = 0; k < znumber; ++k){
+	//for(int i = 0; i < xnumber; ++i){
+		//for(int j = 0; j < ynumber; ++j){
+			//for(int k = 0; k < znumber; ++k){
+	for(int i = 0; i < 1; ++i){
+		for(int j = 0; j < 1; ++j){
+			for(int k = 0; k < 1; ++k){
 				for(int l = 0; l < particlesPerBin; ++l){
 					ParticleTypes type;
 					if(l % 2 == 0){
@@ -415,6 +422,9 @@ Particle* Simulation::createParticle(int i, int j, int k, double weight, Particl
 	double pnormal = sqrt(p*p - pz*pz);
 	double px = pnormal*cos(phi);
 	double py = pnormal*sin(phi);
+	pz = fabs(pz);
+	py = fabs(py);
+	px = fabs(px);
 
 	Particle* particle = new Particle(mass, charge, weight, type, x, y, z, px, py, pz, dx, dy, dz);
 

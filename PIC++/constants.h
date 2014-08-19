@@ -12,7 +12,7 @@ const double electron_charge = 4.8E-10;
 const double pi = 3.1415926535897932384626433832795028841971693993751;
 const double epsilon = 1E-16;
 const int pnumber = 100;
-const int writeParameter = 1;
+const int writeParameter = 100;
 
 const int numThreads = 12;
 
