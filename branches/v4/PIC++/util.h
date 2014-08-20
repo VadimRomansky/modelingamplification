@@ -11,8 +11,9 @@ double min3(double a, double b, double c);
 void alertNaNOrInfinity(double value, const char* s);
 void alertNotPositive(double value, const char* s);
 void alertNegative(double value, const char* s);
+int trunc(double value);
 
-double coordinateDifference(double* const a, double* const b, double dt);
+double coordinateDifference(double* const a, double* const b, double dt, double mass);
 void solveSpecialMatrix(double** const leftHalf, double* const rightPart, double* const output);
 
 double McDonaldFunction(double x, double index);

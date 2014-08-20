@@ -19,11 +19,11 @@ Simulation::Simulation(){
 	ynumber = 10;
 	znumber = 10;
 
-	xsize = 1E14;
-	ysize = 1E14;
-	zsize = 1E14;
+	xsize = 1E15;
+	ysize = 1E15;
+	zsize = 1E15;
 
-	temperature = 1E8;
+	temperature = 0.1E14;
 	density = 1.6E-24;
 
 	maxIteration = 1E7;
@@ -200,29 +200,29 @@ void Simulation::simulate(){
 }
 
 Vector3d Simulation::correlationTempEfield(Particle* particle){
-	return correlationField(particle, tempEfield);
+	return correlationField(particle, tempEfield, E0);
 }
 
 Vector3d Simulation::correlationBfield(Particle* particle){
-	return correlationField(particle, Bfield);
+	return correlationField(particle, Bfield, B0);
 }
 
 Vector3d Simulation::correlationTempEfield(Particle& particle){
-	return correlationField(particle, tempEfield);
+	return correlationField(particle, tempEfield, E0);
 }
 
 Vector3d Simulation::correlationBfield(Particle& particle){
-	return correlationField(particle, Bfield);
+	return correlationField(particle, Bfield, B0);
 }
 
-Vector3d Simulation::correlationField(Particle* particle, Vector3d*** field){
-	return correlationField(*particle, field);
+Vector3d Simulation::correlationField(Particle* particle, Vector3d*** field, Vector3d defaultField){
+	return correlationField(*particle, field, defaultField);
 }
 	
-Vector3d Simulation::correlationField(Particle& particle, Vector3d*** field){
-	int xcount = particle.coordinates.x/deltaX;
-	int ycount = particle.coordinates.y/deltaY;
-	int zcount = particle.coordinates.z/deltaZ;
+Vector3d Simulation::correlationField(Particle& particle, Vector3d*** field, Vector3d defaultField){
+	int xcount = trunc(particle.coordinates.x/deltaX);
+	int ycount = trunc(particle.coordinates.y/deltaY);
+	int zcount = trunc(particle.coordinates.z/deltaZ);
 
 	if(xcount < 0){
 		printf("xcount < 0\n");
@@ -256,10 +256,10 @@ Vector3d Simulation::correlationField(Particle& particle, Vector3d*** field){
 
 	Vector3d result = Vector3d(0,0,0);
 
-	for(int i = max2(0,xcount-1); i <= min2(xnumber-1, xcount + 1); ++i){
-		for(int j = max2(0,ycount-1); j <= min2(ynumber-1, ycount + 1); ++j){
-			for(int k = max2(0,zcount-1); k <= min2(znumber-1, zcount + 1); ++k){
-				result = result + correlationFieldWithBin(particle, field, i, j, k);
+	for(int i = xcount-1; i <= xcount + 1; ++i){
+		for(int j = ycount-1; j <= ycount + 1; ++j){
+			for(int k = zcount-1; k <= zcount + 1; ++k){
+				result = result + correlationFieldWithBin(particle, field, i, j, k, defaultField);
 			}
 		}
 	}
@@ -267,17 +267,61 @@ Vector3d Simulation::correlationField(Particle& particle, Vector3d*** field){
 	return result;
 }
 
-Vector3d Simulation::correlationFieldWithBin(Particle& particle, Vector3d*** field, int i, int j, int k){
+Vector3d Simulation::correlationFieldWithBin(Particle& particle, Vector3d*** field, int i, int j, int k, Vector3d defaultField){
 	double x = particle.coordinates.x;
 	double y = particle.coordinates.y;
 	double z = particle.coordinates.z;
 
-	double leftx = xgrid[i];
-	double rightx = xgrid[i+1];
-	double lefty = ygrid[j];
-	double righty = ygrid[j+1];
-	double leftz = zgrid[k];
-	double rightz = zgrid[k+1];
+	double leftx;
+	double rightx;
+	double lefty;
+	double righty;
+	double leftz;
+	double rightz;
+
+	Vector3d _field;
+
+	if((i < 0) || (i >= xnumber) || (j < 0) || (j >= ynumber) || (k < 0) || (k >= znumber)){
+		_field = defaultField;
+	} else {
+		_field = field[i][j][k];
+	}
+
+	if(i < 0){
+		leftx = particle.coordinates.x - 2*deltaX;
+		rightx = xgrid[0];
+	} else if(i >= xnumber){
+		leftx = xgrid[xnumber];
+		rightx = particle.coordinates.x + 2*deltaX;
+	} else {
+		leftx = xgrid[i];
+		rightx = xgrid[i+1];
+		
+	}
+
+
+	if(j < 0){
+		lefty = particle.coordinates.y -2*deltaY;
+		righty = ygrid[0];
+	} else if(j >= ynumber){
+		lefty = ygrid[ynumber];
+		righty = particle.coordinates.y + 2*deltaY;
+	} else {
+		lefty = ygrid[j];
+		righty = ygrid[j+1];
+	}
+
+	if(k < 0){
+		leftz = particle.coordinates.z - 2*deltaZ;
+		rightz = zgrid[0];
+	} else if(k >= znumber){
+		leftz = zgrid[znumber];
+		rightz = particle.coordinates.z + 2*deltaZ;
+	} else {
+		leftz = zgrid[k];
+		rightz = zgrid[k+1];
+	}
+
 
 	double correlation = 1;
 
@@ -287,7 +331,7 @@ Vector3d Simulation::correlationFieldWithBin(Particle& particle, Vector3d*** fie
 
 	correlation = correlationx*correlationy*correlationz;
 
-	return field[i][j][k]*correlation;
+	return _field*correlation;
 }
 
 double Simulation::correlationBspline(const double& x, const double&  dx, const double& leftx, const double& rightx){
@@ -325,14 +369,17 @@ double Simulation::correlationBspline(const double& x, const double&  dx, const 
 	return correlation;
 }
 
-Matrix3d Simulation::evaluateAlphaRotationTensor(double beta, Vector3d BField){
+Matrix3d Simulation::evaluateAlphaRotationTensor(double beta, Vector3d velocity, Vector3d EField, Vector3d BField){
 	Matrix3d result;
 
 	beta = beta/speed_of_light;
 
-	double B[3] = {BField.x, BField.y, BField.z};
+	double gamma_factor = 1/sqrt(1 - (velocity.x*velocity.x + velocity.y*velocity.y + velocity.z*velocity.z)/speed_of_light_sqr);
+	double G = (beta*(EField.scalarMult(velocity))/speed_of_light_sqr + gamma_factor);
+	beta = beta/G;
+	double denominator = G*(1 + beta*beta*BField.scalarMult(BField));
 
-	double denominator = 1 + beta*beta*(B[0]*B[0] + B[1]*B[1] + B[2]*B[2]);
+	double B[3] = {BField.x, BField.y, BField.z};
 	
 	for(int i = 0; i < 3; i++){
 		for(int j = 0; j < 3; j++){
@@ -353,7 +400,7 @@ Matrix3d Simulation::evaluateAlphaRotationTensor(double beta, Vector3d BField){
 void Simulation::updateDeltaT(){
 	double delta = min3(deltaX, deltaY, deltaZ);
 	deltaT = 0.01*delta/speed_of_light;
-	deltaT = min2(deltaT, 0.1*massElectron*speed_of_light/(electron_charge*B0.getNorm()));
+	deltaT = min2(deltaT, 0.05*massElectron*speed_of_light/(electron_charge*B0.getNorm()));
 }
 
 void Simulation::createParticles(){
