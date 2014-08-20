@@ -60,6 +60,5 @@ void outputDistribution(FILE* outFile, std::vector<Particle*> particles, int par
 }
 
 void outputTraectory(FILE* outFile, Particle* particle, double time){
-	Vector3d velocity = particle->velocity();
-	fprintf(outFile, "%g %15.10g %15.10g %15.10g %15.10g %15.10g %15.10g\n", time, particle->coordinates.x, particle->coordinates.y, particle->coordinates.z, velocity.x, velocity.y, velocity.z);
+	fprintf(outFile, "%g %15.10g %15.10g %15.10g %15.10g %15.10g %15.10g %15.10g\n", time, particle->coordinates.x, particle->coordinates.y, particle->coordinates.z, particle->momentum.x, particle->momentum.y, particle->momentum.z, particle->momentum.getNorm());
 }

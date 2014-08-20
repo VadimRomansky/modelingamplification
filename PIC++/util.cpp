@@ -73,6 +73,14 @@ void alertNegative(double value, const char* s){
 	}
 }
 
+int trunc(double value){
+	int round = value;
+	if(round > value){
+		round--;
+	}
+	return round;
+}
+
 void solveSpecialMatrix(double** const leftHalf, double* const rightPart, double* const output){
 	for(int j = 0; j < 2; ++j){
 		leftHalf[2][j] /= leftHalf[2][2];
@@ -109,14 +117,14 @@ void solveSpecialMatrix(double** const leftHalf, double* const rightPart, double
 	}
 }
 
-double coordinateDifference(double* const a, double* const b, double dt){
+double coordinateDifference(double* const a, double* const b, double dt, double mass){
 	double result = 0;
 	for(int i = 0; i < 3; ++i){
 		result += fabs(a[i] - b[i]);
 	}
 
 	for(int i = 3; i < 6; ++i){
-		result += fabs(a[i] - b[i])*dt;
+		result += fabs(a[i] - b[i])*dt/mass;
 	}
 	return result;
 }

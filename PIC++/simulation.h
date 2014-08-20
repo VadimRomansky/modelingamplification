@@ -78,12 +78,12 @@ public:
 	Vector3d correlationTempEfield(Particle& particle);
 	Vector3d correlationBfield(Particle& particle);
 	
-	Vector3d correlationField(Particle* particle, Vector3d*** field);
-	Vector3d correlationField(Particle& particle, Vector3d*** field);
-	Vector3d correlationFieldWithBin(Particle& particle, Vector3d*** field, int i, int j, int k);
+	Vector3d correlationField(Particle* particle, Vector3d*** field, Vector3d defaultField);
+	Vector3d correlationField(Particle& particle, Vector3d*** field, Vector3d defaultField);
+	Vector3d correlationFieldWithBin(Particle& particle, Vector3d*** field, int i, int j, int k, Vector3d defaultField);
 	double correlationBspline(const double& x, const double&  dx, const double& leftx, const double& rightx);
 
-	Matrix3d evaluateAlphaRotationTensor(double beta, Vector3d BField); //see Lapenta 2006
+	Matrix3d Simulation::evaluateAlphaRotationTensor(double beta, Vector3d velocity, Vector3d EField, Vector3d BField); //see Noguchi
 
 	void moveParticles();
 	void moveParticle(Particle* particle);
