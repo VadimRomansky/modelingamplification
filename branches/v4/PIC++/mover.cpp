@@ -86,12 +86,14 @@ void Simulation::moveParticleNewtonIteration(Particle* particle, double* const o
 
 	Vector3d E = correlationTempEfield(tempparticle);
 	Vector3d B = correlationBfield(tempparticle);
+	Vector3d oldE = correlationTempEfield(particle);
+	Vector3d oldB = correlationBfield(particle);
 
 	double gamma_factor = 1/sqrt(1 - sqr(velocity.getNorm()/speed_of_light));
-	double G = (beta*(E.scalarMult(velocity))/speed_of_light_sqr) + gamma_factor;
+	double G = (beta*(oldE.scalarMult(velocity))/speed_of_light_sqr) + gamma_factor;
 	double beta1 = beta/G;
 
-	Matrix3d rotationTensor = evaluateAlphaRotationTensor(beta, velocity, E, B);
+	Matrix3d rotationTensor = evaluateAlphaRotationTensor(beta, velocity, oldE, oldB);
 
 	Vector3d tempE;
 	Vector3d tempB;
@@ -102,7 +104,7 @@ void Simulation::moveParticleNewtonIteration(Particle* particle, double* const o
 	tempB = correlationBfield(tempparticle);
 	Vector3d EderX = (tempE - E)/dx;
 	Vector3d BderX = (tempB - B)/dx;
-	Matrix3d rotationTensorDerX = (evaluateAlphaRotationTensor(beta, velocity, tempE, tempB) - rotationTensor)/dx;
+	//Matrix3d rotationTensorDerX = (evaluateAlphaRotationTensor(beta, velocity, tempE, tempB) - rotationTensor)/dx;
 
 	tempparticle.coordinates.x -= dx;
 	tempparticle.coordinates.y += dy;
@@ -111,7 +113,7 @@ void Simulation::moveParticleNewtonIteration(Particle* particle, double* const o
 	tempB = correlationBfield(tempparticle);
 	Vector3d EderY = (tempE - E)/dy;
 	Vector3d BderY = (tempB - B)/dy;
-	Matrix3d rotationTensorDerY = (evaluateAlphaRotationTensor(beta, velocity, tempE, tempB) - rotationTensor)/dy;
+	//Matrix3d rotationTensorDerY = (evaluateAlphaRotationTensor(beta, velocity, tempE, tempB) - rotationTensor)/dy;
 
 	tempparticle.coordinates.y -= dy;
 	tempparticle.coordinates.z += dz;
@@ -120,15 +122,18 @@ void Simulation::moveParticleNewtonIteration(Particle* particle, double* const o
 	tempB = correlationBfield(tempparticle);
 	Vector3d EderZ = (tempE - E)/dz;
 	Vector3d BderZ = (tempB - B)/dz;
-	Matrix3d rotationTensorDerZ = (evaluateAlphaRotationTensor(beta, velocity, tempE, tempB) - rotationTensor)/dz;
+	//Matrix3d rotationTensorDerZ = (evaluateAlphaRotationTensor(beta, velocity, tempE, tempB) - rotationTensor)/dz;
 
 	tempparticle.coordinates.z -= dz;
 
 
 	Vector3d middleVelocity = rotationTensor*(velocity*gamma_factor + E*beta1);
-	Vector3d middleVelocityDerX = rotationTensorDerX*velocity*gamma_factor + (rotationTensorDerX*E + rotationTensor*EderX)*beta1;
-	Vector3d middleVelocityDerY = rotationTensorDerY*velocity*gamma_factor + (rotationTensorDerY*E + rotationTensor*EderY)*beta1;
-	Vector3d middleVelocityDerZ = rotationTensorDerZ*velocity*gamma_factor + (rotationTensorDerZ*E + rotationTensor*EderZ)*beta1;
+	//Vector3d middleVelocityDerX = rotationTensorDerX*velocity*gamma_factor + (rotationTensorDerX*E + rotationTensor*EderX)*beta1;
+	//Vector3d middleVelocityDerY = rotationTensorDerY*velocity*gamma_factor + (rotationTensorDerY*E + rotationTensor*EderY)*beta1;
+	//Vector3d middleVelocityDerZ = rotationTensorDerZ*velocity*gamma_factor + (rotationTensorDerZ*E + rotationTensor*EderZ)*beta1;
+	Vector3d middleVelocityDerX = rotationTensor*EderX*beta1;
+	Vector3d middleVelocityDerY = rotationTensor*EderY*beta1;
+	Vector3d middleVelocityDerZ = rotationTensor*EderZ*beta1;
 	Vector3d acceleration = (E + (middleVelocity.vectorMult(B))/speed_of_light)*beta;
 
 	functionNewtonMethod[0] = tempCoordinates[0] - oldCoordinates[0] - middleVelocity.x*deltaT;
