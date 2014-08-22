@@ -33,6 +33,8 @@ public:
 	double deltaY;
 	double deltaZ;
 
+	double theta;
+
 	Vector3d B0;
 	Vector3d E0;
 
