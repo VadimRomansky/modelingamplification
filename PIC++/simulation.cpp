@@ -14,6 +14,8 @@ Simulation::Simulation(){
 	time = 0;
 	particlesNumber = 0;
 
+	theta = 0.5;
+
 	//read input!
 	xnumber = 10;
 	ynumber = 10;
@@ -208,7 +210,7 @@ Vector3d Simulation::correlationBfield(Particle* particle){
 }
 
 Vector3d Simulation::correlationTempEfield(Particle& particle){
-	return correlationField(particle, tempEfield, E0);
+	return correlationField(particle, Efield, E0)*(1-theta) + correlationField(particle, newEfield, E0)*theta;
 }
 
 Vector3d Simulation::correlationBfield(Particle& particle){
