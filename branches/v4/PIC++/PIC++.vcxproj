@@ -91,6 +91,7 @@
     <ClCompile Include="particle.cpp" />
     <ClCompile Include="random.cpp" />
     <ClCompile Include="simulation.cpp" />
+    <ClCompile Include="specialmath.cpp" />
     <ClCompile Include="util.cpp" />
     <ClCompile Include="vector3d.cpp" />
   </ItemGroup>
