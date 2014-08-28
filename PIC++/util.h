@@ -16,6 +16,8 @@ int trunc(double value);
 double coordinateDifference(double* const a, double* const b, double dt, double mass);
 void solveSpecialMatrix(double** const leftHalf, double* const rightPart, double* const output);
 
+double* linearLeastSquares(double** matrix, int n);
+
 double McDonaldFunction(double x, double index);
 
 

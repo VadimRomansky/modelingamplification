@@ -45,6 +45,8 @@ public:
 	double* middleYgrid;
 	double* middleZgrid;
 
+	double***** maxwellEquationMatrix;
+	double**** maxwellEquationRightPart;
 
 	Vector3d*** Efield;
 	Vector3d*** Bfield;
@@ -92,6 +94,12 @@ public:
 	void moveParticleNewtonIteration(Particle* particle, double* const oldCoordinates, double* const tempCoordinates, double* const newCoordinates);
 
 	void evaluateFields();
+
+	void generalizedMinimalResidualMethod();
+	double***** arnoldiIterations(double** outHessenbergMatrix, int n, double***** prevBasis, double** prevHessenbergMatrix);
+	double**** multiplySpecialMatrixVector(double**** vector);
+	double evaluateError(double** hessenbergMatrix, double* vector, double beta, int n);
+	double scalarMultiplyLargeVectors(double**** a, double**** b);
 
 	double volume(int i, int j, int k);
 };

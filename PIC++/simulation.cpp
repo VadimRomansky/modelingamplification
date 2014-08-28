@@ -72,6 +72,24 @@ Simulation::~Simulation(){
 		delete[] tempBfield[i];
 	}
 
+	for(int i = 0; i <= xnumber; ++i){
+		for(int j = 0; j <= ynumber; ++j){
+			for(int k = 0; k <= znumber; ++k){
+				for(int l = 0; l < 3; ++l){
+					delete[] maxwellEquationMatrix[i][j][k][l];
+				}
+				delete[] maxwellEquationMatrix[i][j][k];
+				delete[] maxwellEquationRightPart[i][j][k];
+			}
+			delete[] maxwellEquationMatrix[i][j];
+			delete[] maxwellEquationRightPart[i][j];
+		}
+		delete[] maxwellEquationMatrix[i];
+		delete[] maxwellEquationRightPart[i];
+	}
+	delete[] maxwellEquationMatrix;
+	delete[] maxwellEquationRightPart;
+
 	delete[] Efield;
 	delete[] newEfield;
 	delete[] tempEfield;
@@ -162,6 +180,24 @@ void Simulation::createArrays(){
 			Bfield[i][j] = new Vector3d[znumber];
 			newBfield[i][j] = new Vector3d[znumber];
 			tempBfield[i][j] = new Vector3d[znumber];
+		}
+	}
+
+	maxwellEquationMatrix = new double****[xnumber + 1];
+	maxwellEquationRightPart = new double***[xnumber + 1];
+	for(int i = 0; i <= xnumber; ++i){
+		maxwellEquationMatrix[i] = new double***[ynumber + 1];
+		maxwellEquationRightPart[i] = new double**[ynumber + 1];
+		for(int j = 0; j <= ynumber; ++j){
+			maxwellEquationMatrix[i][j] = new double**[znumber + 1];
+			maxwellEquationRightPart[i][j] = new double*[znumber + 1];
+			for(int k = 0; k <= znumber; ++k){
+				maxwellEquationMatrix[i][j][k] = new double*[3];
+				maxwellEquationRightPart[i][j][k] = new double[3];
+				for(int l = 0; l < 3; ++l){
+					maxwellEquationMatrix[i][j][k][l] = new double[29];
+				}
+			}
 		}
 	}
 }

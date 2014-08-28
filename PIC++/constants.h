@@ -15,6 +15,7 @@ const double maxErrorLevel = 1E-16;
 const int pnumber = 100;
 const int writeParameter = 10000;
 const int maxNewtonIterations = 100;
+const int maxGMRESIterations = 100;
 
 const int numThreads = 12;
 
