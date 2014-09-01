@@ -154,7 +154,7 @@ void generalizedMinimalResidualMethod(double** matrix, double* rightPart){
 					}
 					Qmatrix[i][n-1] = 0;
 				} else {
-					for(int j = 0; j < n-2; ++j){
+					for(int j = 0; j < n-1; ++j){
 						Qmatrix[i][j] = 0;
 					}
 					Qmatrix[n-1][n-1] = 1;
