@@ -30,6 +30,21 @@ double Simulation::evaluateError(double** hessenbergMatrix, double* vector, doub
 }
 
 double**** Simulation::multiplySpecialMatrixVector(double**** vector){
+	double**** result = new double***[xnumber];
+	for(int i = 0; i < xnumber; ++i){
+		result[i] = new double**[ynumber];
+		for(int j = 0; j < ynumber; ++j){
+			result[i][j] = new double*[znumber];
+			for(int k = 0; k < znumber; ++k){
+				result[i][j][k] = new double[3];
+				for(int l = 0; l < 3; ++l){
+					result[i][j][k][l] = 0;
+				}
+			}
+		}
+	}
+
+	return result;
 }
 
 double***** Simulation::arnoldiIterations(double** outHessenbergMatrix, int n, double***** prevBasis, double** prevHessenbergMatrix){
@@ -108,6 +123,19 @@ void Simulation::generalizedMinimalResidualMethod(){
 	hessenbergMatrix = new double*[1];
 	hessenbergMatrix[0] = new double[1];
 
+	double** Qmatrix = new double*[2];
+	double** Rmatrix = new double*[2];
+	double** oldQmatrix = new double*[2];
+	double** oldRmatrix = new double*[2];
+
+	for(int i = 0; i < 2; ++i){
+		Qmatrix[i] = new double[2];
+		oldQmatrix[i] = new double[2];
+	}
+
+	Rmatrix[0] = new double[1];
+	oldRmatrix[0] = new double[1];
+
 	double***** basis = new double****[1];
 	basis[0] = new double***[xnumber + 1];
 	for(int i = 0; i < xnumber + 1; ++i){
@@ -127,18 +155,170 @@ void Simulation::generalizedMinimalResidualMethod(){
 	int n = 2;
 	double beta = 1.0;
 	double error = beta;
-	double* y;
+	double* y = new double[1];
+
+	double rho;
+	double sigma;
+	double cosn;
+	double sinn;
+	double module;
 
 	while(error > maxError && n < maxGMRESIterations){
 		newBasis = arnoldiIterations(newHessenbergMatrix, n, basis, hessenbergMatrix);
-		y = linearLeastSquares(newHessenbergMatrix, n);
-		error = evaluateError(newHessenbergMatrix, y, beta, n);
+
 		hessenbergMatrix = newHessenbergMatrix;
 		basis = newBasis;
+
+		if(n == 2){
+			rho = hessenbergMatrix[0][0];
+			sigma = hessenbergMatrix[0][1];
+
+			module = sqrt(rho*rho + sigma*sigma);
+			
+			cosn = rho/module;
+			sinn = sigma/module;
+
+			Qmatrix[0][0] = cosn;
+			Qmatrix[0][1] = sinn;
+			Qmatrix[1][0] = -sinn;
+			Qmatrix[1][1] = cosn;
+
+			oldQmatrix[0][0] = Qmatrix[0][0];
+			oldQmatrix[0][1] = Qmatrix[0][1];
+			oldQmatrix[1][0] = Qmatrix[1][0];
+			oldQmatrix[1][1] = Qmatrix[1][1];
+
+			Rmatrix[0][0] = module;
+			Rmatrix[1][0] = 0;
+
+			oldRmatrix[0][0] = Rmatrix[0][0];
+			oldRmatrix[1][0] = Rmatrix[1][0];
+
+		} else {
+			Rmatrix = new double*[n];
+			for(int i = 0; i < n; ++i){
+				Rmatrix[i] = new double[n-1];
+				if(i < n){
+					for(int j = 0; j < n-2; ++j){
+						Rmatrix[i][j] = oldRmatrix[i][j];
+					}
+				} else {
+					for(int j = 0; j < n-2; ++j){
+						Rmatrix[i][j] = 0;
+					}
+				}
+			}
+
+			Qmatrix = new double*[n];
+			for(int i = 0; i < n;++i){
+				Qmatrix[i] = new double[n];
+				if(i < n-1){
+					for(int j = 0; j < n-1; ++j){
+						Qmatrix[i][j] = oldQmatrix[i][j];
+					}
+					Qmatrix[i][n-1] = 0;
+				} else {
+					for(int j = 0; j < n-2; ++j){
+						Qmatrix[i][j] = 0;
+					}
+					Qmatrix[n-1][n-1] = 1;
+				}
+			}
+
+			for(int i = 0; i < n; ++i){
+				Rmatrix[i][n-2] = 0;
+				for(int j = 0; j < n; ++j){
+					Rmatrix[i][n-2] += Qmatrix[i][j]*hessenbergMatrix[j][n-2];
+				}
+			}
+			rho = Rmatrix[n-2][n-2];
+			sigma = Rmatrix[n-1][n-2];
+
+			module = sqrt(rho*rho + sigma*sigma);
+
+			cosn = rho/module;
+			sinn = sigma/module;
+
+			Rmatrix[n-2][n-2] = module;
+			Rmatrix[n-1][n-2] = 0;
+
+			for(int j = 0; j < n-1; ++j){
+				Qmatrix[n-2][j] = cosn*oldQmatrix[n-2][j];
+				Qmatrix[n-1][j] = - -sinn*oldQmatrix[n-2][j];
+			}
+			Qmatrix[n-2][n-1] = sinn;
+			Qmatrix[n-1][n-1] = cosn;
+		}
+
+		delete[] y;
+		y = new double[n-1];
+
+		for(int i = n-2; i >=0; --i){
+			y[i] = beta*Qmatrix[i][0];
+			for(int j = n-2; j > i; --i){
+				y[i] -= Rmatrix[i][j]*y[j];
+			}
+			y[i] /= Rmatrix[i][i];
+		}
+
+		error = beta*Qmatrix[n-1][0];
+
+		for(int i = 0; i < n-1; ++i){
+			delete[] oldQmatrix[i];
+			delete[] oldRmatrix[i];
+		}
+		delete[] oldQmatrix;
+		delete[] oldRmatrix;
+
+		oldQmatrix = Qmatrix;
+		oldRmatrix = Rmatrix;
+
 		n++;
 	}
 
 	n = n-1;
+
+	//out result
+
+	for(int i = 0; i < xnumber + 1; ++i){
+		for(int j = 0; j < ynumber + 1; ++j){
+			for(int k = 0; k < znumber + 1; ++k){
+				tempEfield[i][j][k].x = 0;
+				tempEfield[i][j][k].y = 0;
+				tempEfield[i][j][k].z = 0;
+				for(int m = 0; m < n; ++m){
+					tempEfield[i][j][k].x += basis[m][i][j][k][0]*y[m];
+					tempEfield[i][j][k].y += basis[m][i][j][k][1]*y[m];
+					tempEfield[i][j][k].z += basis[m][i][j][k][2]*y[m];
+				}
+			}
+		}
+	}
+
+	for(int i = 0; i < n; ++i){
+		delete[] Qmatrix[i];
+		delete[] Rmatrix[i];
+		delete[] hessenbergMatrix[i];
+	}
+	delete[] Qmatrix;
+	delete[] Rmatrix;
+	delete[] hessenbergMatrix;
+
+	for(int m = 0; m < n; ++m){
+		for(int i = 0; i < xnumber + 1; ++i){
+			for(int j = 0; j < ynumber + 1; ++j){
+				for(int k = 0; k < znumber + 1; ++k){
+					delete[] basis[m][i][j][k];
+				}
+				delete[] basis[m][i][j];
+			}
+			delete[] basis[m][i];
+		}
+		delete[] basis[m];
+	}
+	delete[] basis;
+
+	delete[] y;
 }
 
 double Simulation::scalarMultiplyLargeVectors(double**** a, double**** b){
