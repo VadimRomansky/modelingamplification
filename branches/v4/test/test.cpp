@@ -19,18 +19,19 @@ int main()
 			if(i == j){
 				matrix[i][j] = 10;
 			} else {
-				matrix[i][j] = 0;
+				matrix[i][j] = 1;
 			}
 		}
 	}
-
-	matrix[0][3] = 1;
-	matrix[1][5] = 1;
-	matrix[6][7] = 1;
+	matrix[1][2] = 2;
+	matrix[5][3] = 2;
+	matrix[2][4] = 2;
 
 	for(int i = 0; i < number; ++i){
-		rightPart[i] = 1;
+		rightPart[i] = 0;
 	}
+	rightPart[0] = 1.0/sqrt(2.0);
+	rightPart[1] = 1.0/sqrt(2.0);
 
 	generalizedMinimalResidualMethod(matrix, rightPart);
 
