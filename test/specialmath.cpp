@@ -31,7 +31,7 @@ double** arnoldiIterations(double** matrix, double** outHessenbergMatrix, int n,
 	for(int m = 0; m < n-1; ++m){
 		outHessenbergMatrix[m][n-2] = scalarMultiplyLargeVectors(resultBasis[m], tempVector);
 		for(int i = 0; i < number ; ++i){
-			tempVector[i] -= outHessenbergMatrix[m][n-1]*resultBasis[m][i];
+			tempVector[i] -= outHessenbergMatrix[m][n-2]*resultBasis[m][i];
 		}
 	}
 	outHessenbergMatrix[n-1][n-2] = sqrt(scalarMultiplyLargeVectors(tempVector, tempVector));
@@ -54,7 +54,7 @@ void generalizedMinimalResidualMethod(double** matrix, double* rightPart){
 		}
 	}
 
-	double maxError = 0.0001;
+	double maxError = 1E-10;
 
 	double** hessenbergMatrix;
 	double** newHessenbergMatrix = NULL;
@@ -94,7 +94,7 @@ void generalizedMinimalResidualMethod(double** matrix, double* rightPart){
 	double sinn;
 	double module;
 
-	while(error > maxError && n < number){
+	while(error > maxError && n <= number+1){
 		printf("iteration %d\n", n);
 		newHessenbergMatrix = new double*[n];
 		for(int i = 0; i < n; ++i){
@@ -180,7 +180,7 @@ void generalizedMinimalResidualMethod(double** matrix, double* rightPart){
 
 			for(int j = 0; j < n-1; ++j){
 				Qmatrix[n-2][j] = cosn*oldQmatrix[n-2][j];
-				Qmatrix[n-1][j] = - -sinn*oldQmatrix[n-2][j];
+				Qmatrix[n-1][j] = -sinn*oldQmatrix[n-2][j];
 			}
 			Qmatrix[n-2][n-1] = sinn;
 			Qmatrix[n-1][n-1] = cosn;
