@@ -57,19 +57,32 @@ Simulation::Simulation(){
 Simulation::~Simulation(){
 	for(int i = 0; i < xnumber; ++i){
 		for(int j = 0; j < ynumber; ++j){
-			delete[] Efield[i][j];
-			delete[] newEfield[i][j];
-			delete[] tempEfield[i][j];
 			delete[] Bfield[i][j];
 			delete[] newBfield[i][j];
 			delete[] tempBfield[i][j];
+			delete[] electricDensity[i][j];
+		}
+		delete[] Bfield[i];
+		delete[] newBfield[i];
+		delete[] tempBfield[i];
+		delete[] electricDensity[i];
+	}
+
+	for(int i = 0; i < xnumber; ++i){
+		for(int j = 0; j < ynumber; ++j){
+			delete[] Efield[i][j];
+			delete[] newEfield[i][j];
+			delete[] tempEfield[i][j];
+			delete[] electricFlux[i][j];
+			delete[] dielectricTensor[i][j];
+			delete[] nablaPressureTensor[i][j];
 		}
 		delete[] Efield[i];
 		delete[] newEfield[i];
 		delete[] tempEfield[i];
-		delete[] Bfield[i];
-		delete[] newBfield[i];
-		delete[] tempBfield[i];
+		delete[] electricFlux[i];
+		delete[] dielectricTensor[i];
+		delete[] nablaPressureTensor[i];
 	}
 
 	for(int i = 0; i <= xnumber; ++i){
@@ -96,6 +109,11 @@ Simulation::~Simulation(){
 	delete[] Bfield;
 	delete[] newBfield;
 	delete[] tempBfield;
+
+	delete[] electricDensity;
+	delete[] electricFlux;
+	delete[] dielectricTensor;
+	delete[] nablaPressureTensor;
 
 	delete[] xgrid;
 	delete[] ygrid;
@@ -135,12 +153,20 @@ void Simulation::initialize(){
 		middleZgrid[i] = (zgrid[i] + zgrid[i+1])/2;
 	}
 
-	for(int i = 0; i < xnumber; ++i){
-		for(int j = 0; j < ynumber; ++j){
-			for(int k = 0; k < znumber; ++k){
+	for(int i = 0; i < xnumber+1; ++i){
+		for(int j = 0; j < ynumber+1; ++j){
+			for(int k = 0; k < znumber+1; ++k){
 				Efield[i][j][k] = E0;
 				newEfield[i][j][k] = Efield[i][j][k];
 				tempEfield[i][j][k] = Efield[i][j][k];
+
+			}
+		}
+	}
+
+	for(int i = 0; i < xnumber; ++i){
+		for(int j = 0; j < ynumber; ++j){
+			for(int k = 0; k < znumber; ++k){
 				Bfield[i][j][k] = B0;
 				newBfield[i][j][k] = Bfield[i][j][k];
 				tempBfield[i][j][k] = Bfield[i][j][k];
@@ -159,27 +185,48 @@ void Simulation::createArrays(){
 	middleYgrid = new double[ynumber];
 	middleZgrid = new double[znumber];
 
-	Efield = new Vector3d**[xnumber];
-	newEfield = new Vector3d**[xnumber];
-	tempEfield = new Vector3d**[xnumber];
+	Efield = new Vector3d**[xnumber + 1];
+	newEfield = new Vector3d**[xnumber + 1];
+	tempEfield = new Vector3d**[xnumber + 1];
 	Bfield = new Vector3d**[xnumber];
 	newBfield = new Vector3d**[xnumber];
 	tempBfield = new Vector3d**[xnumber];
+
+	electricFlux = new Vector3d**[xnumber + 1];
+	electricDensity = new double**[xnumber];
+	dielectricTensor = new Matrix3d**[xnumber + 1];
+	nablaPressureTensor = new Vector3d**[xnumber + 1];
+
+
 	for(int i = 0; i < xnumber; ++i){
-		Efield[i] = new Vector3d*[ynumber];
-		newEfield[i] = new Vector3d*[ynumber];
-		tempEfield[i] = new Vector3d*[ynumber];
 		Bfield[i] = new Vector3d*[ynumber];
 		newBfield[i] = new Vector3d*[ynumber];
 		tempBfield[i] = new Vector3d*[ynumber];
+		electricDensity[i] = new double*[ynumber];
 
 		for(int j = 0; j < ynumber; ++j){
-			Efield[i][j] = new Vector3d[znumber];
-			newEfield[i][j] = new Vector3d[znumber];
-			tempEfield[i][j] = new Vector3d[znumber];
 			Bfield[i][j] = new Vector3d[znumber];
 			newBfield[i][j] = new Vector3d[znumber];
 			tempBfield[i][j] = new Vector3d[znumber];
+			electricDensity[i][j] = new double[znumber];
+		}
+	}
+
+	for(int i = 0; i < xnumber+1; ++i){
+		Efield[i] = new Vector3d*[ynumber+1];
+		newEfield[i] = new Vector3d*[ynumber+1];
+		tempEfield[i] = new Vector3d*[ynumber+1];
+		electricFlux[i] = new Vector3d*[ynumber+1];
+		dielectricTensor[i] = new Matrix3d*[ynumber+1];
+		nablaPressureTensor[i] = new Vector3d*[ynumber+1];
+
+		for(int j = 0; j < ynumber+1; ++j){
+			Efield[i][j] = new Vector3d[znumber+1];
+			newEfield[i][j] = new Vector3d[znumber+1];
+			tempEfield[i][j] = new Vector3d[znumber+1];
+			electricFlux[i][j] = new Vector3d[znumber+1];
+			dielectricTensor[i][j] = new Matrix3d[znumber+1];
+			nablaPressureTensor[i][j] = new Vector3d[znumber+1];
 		}
 	}
 
@@ -238,26 +285,66 @@ void Simulation::simulate(){
 }
 
 Vector3d Simulation::correlationTempEfield(Particle* particle){
-	return correlationField(particle, tempEfield, E0);
+	return correlationTempEfield(*particle);
 }
 
 Vector3d Simulation::correlationBfield(Particle* particle){
-	return correlationField(particle, Bfield, B0);
+	return correlationBfield(*particle);
 }
 
 Vector3d Simulation::correlationTempEfield(Particle& particle){
-	return correlationField(particle, Efield, E0)*(1-theta) + correlationField(particle, newEfield, E0)*theta;
+	checkParticleInBox(particle);
+
+	int xcount = trunc(particle.coordinates.x/deltaX + 0.5);
+	int ycount = trunc(particle.coordinates.y/deltaY + 0.5);
+	int zcount = trunc(particle.coordinates.z/deltaZ + 0.5);
+
+	if(xcount < 0){
+		printf("xcount < 0\n");
+		//exit(0);
+	}
+
+	if(xcount > xnumber){
+		printf("xcount > xnumber\n");
+		//exit(0);
+	}
+
+	if(ycount < 0){
+		printf("ycount < 0\n");
+		//exit(0);
+	}
+
+	if(ycount > ynumber){
+		printf("ycount > ynumber\n");
+		//exit(0);
+	}
+
+	if(zcount < 0){
+		printf("zcount < 0\n");
+		//exit(0);
+	}
+
+	if(zcount > znumber){
+		printf("zcount > znumber\n");
+		//exit(0);
+	}
+
+	Vector3d result = Vector3d(0,0,0);
+
+	for(int i = xcount-1; i <= xcount + 1; ++i){
+		for(int j = ycount-1; j <= ycount + 1; ++j){
+			for(int k = zcount-1; k <= zcount + 1; ++k){
+				result = result + correlationFieldWithEbin(particle, i, j, k);
+			}
+		}
+	}
+
+	return result;
 }
 
 Vector3d Simulation::correlationBfield(Particle& particle){
-	return correlationField(particle, Bfield, B0);
-}
+	checkParticleInBox(particle);
 
-Vector3d Simulation::correlationField(Particle* particle, Vector3d*** field, Vector3d defaultField){
-	return correlationField(*particle, field, defaultField);
-}
-	
-Vector3d Simulation::correlationField(Particle& particle, Vector3d*** field, Vector3d defaultField){
 	int xcount = trunc(particle.coordinates.x/deltaX);
 	int ycount = trunc(particle.coordinates.y/deltaY);
 	int zcount = trunc(particle.coordinates.z/deltaZ);
@@ -297,7 +384,7 @@ Vector3d Simulation::correlationField(Particle& particle, Vector3d*** field, Vec
 	for(int i = xcount-1; i <= xcount + 1; ++i){
 		for(int j = ycount-1; j <= ycount + 1; ++j){
 			for(int k = zcount-1; k <= zcount + 1; ++k){
-				result = result + correlationFieldWithBin(particle, field, i, j, k, defaultField);
+				result = result + correlationFieldWithBbin(particle, i, j, k);
 			}
 		}
 	}
@@ -305,7 +392,93 @@ Vector3d Simulation::correlationField(Particle& particle, Vector3d*** field, Vec
 	return result;
 }
 
-Vector3d Simulation::correlationFieldWithBin(Particle& particle, Vector3d*** field, int i, int j, int k, Vector3d defaultField){
+	
+
+Vector3d Simulation::correlationFieldWithBbin(Particle& particle, int i, int j, int k){
+
+	Vector3d _field;
+	
+	if(i < 0){
+		//_field = Vector3d(0,0,0);
+		//note: not zero because reflection
+		if(j < 0){
+			if(k < 0){
+				_field = Bfield[0][ynumber - 1][znumber - 1];
+			} else if(k >= znumber){
+				_field = Bfield[0][ynumber - 1][0];
+			} else {
+				_field = Bfield[0][ynumber - 1][k];
+			}
+		} else if(j >= ynumber){
+			if(k < 0){
+				_field = Bfield[0][0][znumber - 1];
+			} else if(k >= znumber){
+				_field = Bfield[0][0][0];
+			} else {
+				_field = Bfield[0][0][k];
+			}
+		} else {
+			if(k < 0){
+				_field = Bfield[0][j][znumber - 1];
+			} else if(k >= znumber){
+				_field = Bfield[0][j][0];
+			} else {
+				_field = Bfield[0][j][k];
+			}
+		}
+	} else if( i >= xnumber){
+		_field = B0;
+	} else {
+		if(j < 0){
+			if(k < 0){
+				_field = Bfield[i][ynumber - 1][znumber - 1];
+			} else if(k >= znumber){
+				_field = Bfield[i][ynumber - 1][0];
+			} else {
+				_field = Bfield[i][ynumber - 1][k];
+			}
+		} else if(j >= ynumber){
+			if(k < 0){
+				_field = Bfield[i][0][znumber - 1];
+			} else if(k >= znumber){
+				_field = Bfield[i][0][0];
+			} else {
+				_field = Bfield[i][0][k];
+			}
+		} else {
+			if(k < 0){
+				_field = Bfield[i][j][znumber - 1];
+			} else if(k >= znumber){
+				_field = Bfield[i][j][0];
+			} else {
+				_field = Bfield[i][j][k];
+			}
+		}
+	}
+
+	double correlation = correlationWithBbin(particle, i, j, k);
+
+	return _field*correlation;
+}
+
+Vector3d Simulation::correlationFieldWithEbin(Particle& particle, int i, int j, int k){
+
+	Vector3d _field;
+
+	if(i < 0){
+		_field = Vector3d(0, 0, 0);
+	} else if (i > xnumber){
+		_field = E0;
+	} else {
+		_field = Efield[i][j][k];
+	}
+
+	double correlation = correlationWithEbin(particle, i, j, k);
+
+	return _field*correlation;
+}
+
+double Simulation::correlationWithBbin(Particle& particle, int i, int j, int k){
 	double x = particle.coordinates.x;
 	double y = particle.coordinates.y;
 	double z = particle.coordinates.z;
@@ -316,15 +489,7 @@ Vector3d Simulation::correlationFieldWithBin(Particle& particle, Vector3d*** fie
 	double righty;
 	double leftz;
 	double rightz;
-
-	Vector3d _field;
-
-	if((i < 0) || (i >= xnumber) || (j < 0) || (j >= ynumber) || (k < 0) || (k >= znumber)){
-		_field = defaultField;
-	} else {
-		_field = field[i][j][k];
-	}
-
+		
 	if(i < 0){
 		leftx = particle.coordinates.x - 2*deltaX;
 		rightx = xgrid[0];
@@ -339,22 +504,22 @@ Vector3d Simulation::correlationFieldWithBin(Particle& particle, Vector3d*** fie
 
 
 	if(j < 0){
-		lefty = particle.coordinates.y -2*deltaY;
+		lefty = ygrid[0] - deltaY;
 		righty = ygrid[0];
 	} else if(j >= ynumber){
 		lefty = ygrid[ynumber];
-		righty = particle.coordinates.y + 2*deltaY;
+		righty = ygrid[ynumber] + deltaY;
 	} else {
 		lefty = ygrid[j];
 		righty = ygrid[j+1];
 	}
 
 	if(k < 0){
-		leftz = particle.coordinates.z - 2*deltaZ;
+		leftz = zgrid[0] - deltaZ;
 		rightz = zgrid[0];
 	} else if(k >= znumber){
 		leftz = zgrid[znumber];
-		rightz = particle.coordinates.z + 2*deltaZ;
+		rightz = zgrid[znumber] + deltaZ;
 	} else {
 		leftz = zgrid[k];
 		rightz = zgrid[k+1];
@@ -369,7 +534,69 @@ Vector3d Simulation::correlationFieldWithBin(Particle& particle, Vector3d*** fie
 
 	correlation = correlationx*correlationy*correlationz;
 
-	return _field*correlation;
+	return correlation;
+}
+
+double Simulation::correlationWithEbin(Particle& particle, int i, int , int k){
+	double x = particle.coordinates.x;
+	double y = particle.coordinates.y;
+	double z = particle.coordinates.z;
+
+	double leftx;
+	double rightx;
+	double lefty;
+	double righty;
+	double leftz;
+	double rightz;
+
+	if(i < 0){
+		leftx = particle.coordinates.x - 2*deltaX;
+		rightx = xgrid[0] - deltaX/2;
+	} else if(i > xnumber){
+		leftx = xgrid[xnumber] + deltaX/2;
+		rightx = particle.coordinates.x + 2*deltaX;
+	/*} else if(i == 0){
+		////note: needs because in the middle of 0 Ebin is wall
+		leftx = 0;
+		rightx = deltaX/2;*/
+	} else {
+		leftx = xgrid[i] - deltaX/2;
+		rightx = xgrid[i] + deltaX/2;
+	} 
+
+
+	if(j < 0){
+		lefty = particle.coordinates.y - 2*deltaY;
+		righty = ygrid[0];
+	} else if(j > ynumber){
+		lefty = ygrid[ynumber] + deltaX/2;
+		righty = particle.coordinates.y + 2*deltaY;
+	} else {
+		lefty = ygrid[j] - deltaX/2;
+		righty = ygrid[j] + deltaX/2;
+	} 
+
+	if(k < 0){
+		leftz = particle.coordinates.z - 2*deltaZ;
+		rightz = zgrid[0];
+	} else if(k > znumber){
+		leftz = zgrid[znumber] + deltaZ/2;
+		rightz = particle.coordinates.z + 2*deltaZ;
+	} else {
+		leftz = zgrid[k] - deltaZ/2;
+		rightz = zgrid[k] + deltaZ/2;
+	}
+
+
+	double correlation = 1;
+
+	double correlationx = correlationBspline(x, particle.dx, leftx, rightx);
+	double correlationy = correlationBspline(y, particle.dy, lefty, righty);
+	double correlationz = correlationBspline(z, particle.dz, leftz, rightz);
+
+	correlation = correlationx*correlationy*correlationz;
+
+	return correlation;
 }
 
 double Simulation::correlationBspline(const double& x, const double&  dx, const double& leftx, const double& rightx){
@@ -518,4 +745,142 @@ Particle* Simulation::createParticle(int i, int j, int k, double weight, Particl
 
 double Simulation::volume(int i, int j, int k){
 	return deltaX*deltaY*deltaZ;
+}
+
+void Simulation::collectParticlesIntoBins(){
+	for(int i = 0; i < xnumber; ++i){
+		for(int j = 0; j < ynumber; ++j){
+			for(int k = 0; k < znumber; ++k){
+				particlesInBbin[i][j][k].clear();
+			}
+		}
+	}
+
+	for(int i = 0; i < xnumber + 1; ++i){
+		for(int j = 0; j < ynumber + 1; ++j){
+			for(int k = 0; k < znumber + 1; ++k){
+				particlesInEbin[i][j][k].clear();
+			}
+		}
+	}
+
+	for(int pcount = 0; pcount < particles.size(); ++pcount){
+		Particle* particle = particles[pcount];
+		checkParticleInBox(*particle);
+
+		int xcount = trunc(particle->coordinates.x/deltaX);
+		int ycount = trunc(particle->coordinates.y/deltaY);
+		int zcount = trunc(particle->coordinates.z/deltaZ);
+
+		for(int i = xcount - 1; i <= xcount + 1; ++i){
+			for(int j = ycount - 1; j <= ycount + 1; ++j){
+				for(int k = zcount - 1; k <= zcount + 1; ++k){
+					if( particleCrossBbin(particle, i, j, k)){
+						particlesInBbin[i][j][k].push_back(particle);
+					}
+				}
+			}
+		}
+
+		xcount = trunc(particle->coordinates.x/deltaX + 0.5);
+		ycount = trunc(particle->coordinates.y/deltaY + 0.5);
+		zcount = trunc(particle->coordinates.z/deltaZ + 0.5);
+
+		for(int i = xcount - 1; i <= xcount + 1; ++i){
+			for(int j = ycount - 1; j <= ycount + 1; ++j){
+				for(int k = zcount - 1; k <= zcount + 1; ++k){
+					if( particleCrossBbin(particle, i, j, k)){
+						particlesInEbin[i][j][k].push_back(particle);
+					}
+				}
+			}
+		}
+	}
+
+}
+
+bool Simulation::particleCrossBbin(Particle* particle, int i, int j, int k){
+
+	if( i == 0){
+	} else if( i == xnumber - 1){
+	} else {
+		if((xgrid[i] > particle->coordinates.x + particle->dx) || (xgrid[i+1] < particle->coordinates.x - particle->dx))
+			return false;
+	}
+
+	if(j == 0){
+	} else if( j == ynumber - 1){
+	} else {
+		if((ygrid[j] > particle->coordinates.y + particle->dy) || (ygrid[j+1] < particle->coordinates.y - particle->dy))
+			return false;
+	}
+
+	if(k == 0){
+	} else if(k == znumber - 1){
+	} else {
+		if((zgrid[k] > particle->coordinates.z + particle->dz) || (zgrid[k+1] < particle->coordinates.z - particle->dz))
+			return false;
+	}
+	return true;
+}
+
+bool Simulation::particleCrossEbin(Particle* particle, int i, int j, int k){
+	if((xgrid[i] - deltaX/2 > particle->coordinates.x + particle->dx) || (xgrid[i+1] - deltaX/2 < particle->coordinates.x - particle->dx))
+		return false;
+	if((ygrid[j] - deltaY/2 > particle->coordinates.y + particle->dy) || (ygrid[j+1] - deltaY/2 < particle->coordinates.y - particle->dy))
+		return false;
+	if((zgrid[k] - deltaZ/2 > particle->coordinates.z + particle->dz) || (zgrid[k+1] - deltaZ/2 < particle->coordinates.z - particle->dz))
+		return false;
+	return true;
+}
+
+void Simulation::checkParticleInBox(Particle& particle){
+	if(particle.coordinates.x < 0){
+		printf("particle.x < 0\n");
+		exit(0);
+	}
+	if(particle.coordinates.x > xgrid[xnumber]){
+		printf("particle.x > xsize\n");
+		exit(0);
+	}
+	if(particle.coordinates.y < 0){
+		printf("particle.y < 0\n");
+		exit(0);
+	}
+	if(particle.coordinates.y > ygrid[ynumber]){
+		printf("particle.y > ysize\n");
+		exit(0);
+	}
+	if(particle.coordinates.z < 0){
+		printf("particle.z < 0\n");
+		exit(0);
+	}
+	if(particle.coordinates.z > zgrid[znumber]){
+		printf("particle.z > zsize\n");
+		exit(0);
+	}
+}
+
+void Simulation::updateParameters(){
+	for(int i = 0; i < xnumber + 1; ++i){
+		for(int j = 0; j < ynumber + 1; ++j){
+			for(int k = 0; k < znumber + 1; ++k){
+				electricFlux[i][j][k] = Vector3d(0,0,0);
+				dielectricTensor[i][j][k] = Matrix3d(0,0,0,0,0,0,0,0,0);
+				nablaPressureTensor[i][j][k] = Vector3d(0,0,0);
+			}
+		}
+	}
+
+	for(int i = 0; i < xnumber; ++i){
+		for(int j = 0; j < ynumber; ++j){
+			for(int k = 0; k < znumber; ++k){
+				electricDensity[i][j][k] = 0;
+				for(int pcount = 0; pcount < particlesInBbin[i][j][k].size(); ++pcount){
+					Particle* particle = particlesInBbin[i][j][k][pcount];
+					electricDensity[i][j][k] += particle->weight*particle->charge*correlationWithBbin(*particle, i, j, k);
+				}
+			}
+		}
+	}
 }

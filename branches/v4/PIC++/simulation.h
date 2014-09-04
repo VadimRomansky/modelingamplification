@@ -48,6 +48,11 @@ public:
 	double***** maxwellEquationMatrix;
 	double**** maxwellEquationRightPart;
 
+	Vector3d*** electricFlux;
+	double*** electricDensity;
+	Matrix3d*** dielectricTensor;
+	Vector3d*** nablaPressureTensor;
+
 	Vector3d*** Efield;
 	Vector3d*** Bfield;
 
@@ -58,6 +63,9 @@ public:
 	Vector3d*** tempBfield;
 
 	std::vector<Particle*> particles;
+
+	std::vector<Particle*>*** particlesInEbin;
+	std::vector<Particle*>*** particlesInBbin;
 
 	Matrix3d Kronecker;
 	double LeviCivita[3][3][3];
@@ -82,9 +90,10 @@ public:
 	Vector3d correlationTempEfield(Particle& particle);
 	Vector3d correlationBfield(Particle& particle);
 	
-	Vector3d correlationField(Particle* particle, Vector3d*** field, Vector3d defaultField);
-	Vector3d correlationField(Particle& particle, Vector3d*** field, Vector3d defaultField);
-	Vector3d correlationFieldWithBin(Particle& particle, Vector3d*** field, int i, int j, int k, Vector3d defaultField);
+	Vector3d correlationFieldWithBbin(Particle& particle, int i, int j, int k);
+	Vector3d correlationFieldWithEbin(Particle& particle, int i, int j, int k);
+	double correlationWithBbin(Particle& particle, int i, int j, int k);
+	double correlationWithEbin(Particle& particle, int i, int , int k);
 	double correlationBspline(const double& x, const double&  dx, const double& leftx, const double& rightx);
 
 	Matrix3d Simulation::evaluateAlphaRotationTensor(double beta, Vector3d velocity, Vector3d EField, Vector3d BField); //see Noguchi
@@ -102,6 +111,13 @@ public:
 	double scalarMultiplyLargeVectors(double**** a, double**** b);
 
 	double volume(int i, int j, int k);
+
+	void collectParticlesIntoBins();
+	bool particleCrossBbin(Particle* particle, int i, int j, int k);
+	bool particleCrossEbin(Particle* particle, int i, int j, int k);
+	void checkParticleInBox(Particle& particle);
+
+	void updateParameters();
 };
 
 #endif
