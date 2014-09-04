@@ -16,6 +16,9 @@ public:
 
 	Vector3d momentum;
 
+	Matrix3d rotationTensor;
+
+
 	double dx;
 	double dy;
 	double dz;

@@ -94,6 +94,7 @@ void Simulation::moveParticleNewtonIteration(Particle* particle, double* const o
 	double beta1 = beta/G;
 
 	Matrix3d rotationTensor = evaluateAlphaRotationTensor(beta, velocity, oldE, oldB);
+	particle->rotationTensor = rotationTensor;
 
 	Vector3d tempE;
 	Vector3d tempB;

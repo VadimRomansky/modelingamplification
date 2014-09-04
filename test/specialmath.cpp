@@ -197,7 +197,7 @@ void generalizedMinimalResidualMethod(double** matrix, double* rightPart){
 			y[i] /= Rmatrix[i][i];
 		}
 
-		error = abs(beta*Qmatrix[n-1][0]);
+		error = fabs(beta*Qmatrix[n-1][0]);
 
 		for(int i = 0; i < n-1; ++i){
 			delete[] oldQmatrix[i];

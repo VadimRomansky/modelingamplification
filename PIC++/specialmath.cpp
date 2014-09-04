@@ -39,6 +39,122 @@ double**** Simulation::multiplySpecialMatrixVector(double**** vector){
 				result[i][j][k] = new double[3];
 				for(int l = 0; l < 3; ++l){
 					result[i][j][k][l] = 0;
+					
+					if(l == 0){
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][0]*vector[i][j][k][l];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][1]*vector[i+1][j][k][l];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][2]*vector[i-1][j][k][l];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][3]*vector[i][j+1][k][l];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][4]*vector[i][j-1][k][l];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][5]*vector[i][j][k+1][l];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][6]*vector[i][j][k-1][l];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][7]*vector[i+1][j+1][k][l];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][8]*vector[i+1][j-1][k][l];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][9]*vector[i-1][j+1][k][l];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][10]*vector[i-1][j-1][k][l];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][11]*vector[i+1][j][k+1][l];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][12]*vector[i+1][j][k-1][l];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][13]*vector[i-1][j][k+1][l];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][14]*vector[i-1][j][k-1][l];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][15]*vector[i][j][k][l+1];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][16]*vector[i+1][j][k][l+1];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][17]*vector[i-1][j][k][l+1];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][18]*vector[i+1][j+1][k][l+1];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][19]*vector[i+1][j-1][k][l+1];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][20]*vector[i-1][j+1][k][l+1];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][21]*vector[i-1][j-1][k][l+1];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][22]*vector[i+1][j][k+1][l+1];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][23]*vector[i+1][j][k-1][l+1];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][24]*vector[i-1][j][k+1][l+1];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][25]*vector[i-1][j][k-1][l+1];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][26]*vector[i][j][k][l+2];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][27]*vector[i+1][j][k][l+2];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][28]*vector[i-1][j][k][l+2];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][29]*vector[i+1][j+1][k][l+2];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][30]*vector[i+1][j-1][k][l+2];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][31]*vector[i-1][j+1][k][l+2];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][32]*vector[i-1][j-1][k][l+2];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][33]*vector[i+1][j][k+1][l+2];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][34]*vector[i+1][j][k-1][l+2];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][35]*vector[i-1][j][k+1][l+2];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][36]*vector[i-1][j][k-1][l+2];
+					} else if(l == 1){
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][0]*vector[i][j][k][l];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][1]*vector[i+1][j][k][l];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][2]*vector[i-1][j][k][l];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][3]*vector[i][j+1][k][l];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][4]*vector[i][j-1][k][l];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][5]*vector[i][j][k+1][l];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][6]*vector[i][j][k-1][l];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][7]*vector[i][j+1][k+1][l];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][8]*vector[i][j+1][k-1][l];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][9]*vector[i][j-1][k+1][l];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][10]*vector[i][j-1][k-1][l];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][11]*vector[i+1][j+1][k][l];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][12]*vector[i-1][j+1][k][l];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][13]*vector[i+1][j-1][k][l];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][14]*vector[i-1][j-1][k][l];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][15]*vector[i][j][k][l+1];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][16]*vector[i][j+1][k][l+1];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][17]*vector[i][j-1][k][l+1];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][18]*vector[i][j+1][k+1][l+1];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][19]*vector[i][j+1][k-1][l+1];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][20]*vector[i][j-1][k+1][l+1];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][21]*vector[i][j-1][k-1][l+1];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][22]*vector[i+1][j+1][k][l+1];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][23]*vector[i-1][j+1][k][l+1];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][24]*vector[i+1][j-1][k][l+1];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][25]*vector[i-1][j-1][k][l+1];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][26]*vector[i][j][k][l-1];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][27]*vector[i][j+1][k][l-1];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][28]*vector[i][j-1][k][l-1];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][29]*vector[i][j+1][k+1][l-1];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][30]*vector[i][j+1][k-1][l-1];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][31]*vector[i][j-1][k+1][l-1];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][32]*vector[i][j-1][k-1][l-1];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][33]*vector[i+1][j+1][k][l-1];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][34]*vector[i-1][j+1][k][l-1];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][35]*vector[i+1][j-1][k][l-1];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][36]*vector[i-1][j-1][k][l-1];
+					} else {
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][0]*vector[i][j][k][l];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][1]*vector[i+1][j][k][l];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][2]*vector[i-1][j][k][l];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][3]*vector[i][j+1][k][l];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][4]*vector[i][j-1][k][l];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][5]*vector[i][j][k+1][l];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][6]*vector[i][j][k-1][l];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][7]*vector[i][j+1][k+1][l];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][8]*vector[i][j-1][k+1][l];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][9]*vector[i][j+1][k-1][l];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][10]*vector[i][j-1][k-1][l];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][11]*vector[i+1][j][k+1][l];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][12]*vector[i-1][j][k+1][l];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][13]*vector[i+1][j][k-1][l];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][14]*vector[i-1][j][k-1][l];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][15]*vector[i][j][k][l-2];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][16]*vector[i][j][k+1][l-2];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][17]*vector[i][j][k-1][l-2];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][18]*vector[i+1][j][k+1][l-2];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][19]*vector[i-1][j][k+1][l-2];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][20]*vector[i+1][j][k-1][l-2];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][21]*vector[i-1][j][k-1][l-2];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][22]*vector[i][j+1][k+1][l-2];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][23]*vector[i][j-1][k+1][l-2];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][24]*vector[i][j+1][k-1][l-2];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][25]*vector[i][j-1][k-1][l-2];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][26]*vector[i][j][k][l-1];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][27]*vector[i][j][k+1][l-1];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][28]*vector[i][j][k-1][l-1];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][29]*vector[i+1][j][k+1][l-1];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][30]*vector[i-1][j][k+1][l-1];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][31]*vector[i+1][j][k-1][l-1];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][32]*vector[i-1][j][k-1][l-1];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][33]*vector[i][j+1][k+1][l-1];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][34]*vector[i][j-1][k+1][l-1];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][35]*vector[i][j+1][k-1][l-1];
+						result[i][j][k][l] += maxwellEquationMatrix[i][j][k][l][36]*vector[i][j-1][k-1][l-1];
+					}
 				}
 			}
 		}
@@ -54,9 +170,7 @@ double***** Simulation::arnoldiIterations(double** outHessenbergMatrix, int n, d
 	}
 	delete[] prevBasis;
 
-	outHessenbergMatrix = new double*[n];
 	for(int i = 0; i < n; ++i){
-		outHessenbergMatrix[i] = new double[n-1];
 		if(i < n - 1){
 			for(int j = 0; j < n-2; ++j){
 				outHessenbergMatrix[i][j] = prevHessenbergMatrix[i][j];
@@ -72,13 +186,13 @@ double***** Simulation::arnoldiIterations(double** outHessenbergMatrix, int n, d
 
 	double**** tempVector = multiplySpecialMatrixVector(resultBasis[n-2]);
 
-	for(int m = 0; m < n; ++m){
+	for(int m = 0; m < n-1; ++m){
 		outHessenbergMatrix[m][n-2] = scalarMultiplyLargeVectors(resultBasis[m], tempVector);
 		for(int i = 0; i < xnumber + 1; ++i){
 			for(int j = 0; j < ynumber + 1; ++j){
 				for(int k = 0; k < znumber + 1; ++k){
 					for(int l = 0; l < 3; ++l){
-						tempVector[i][j][k][l] -= outHessenbergMatrix[m][n-1]*resultBasis[m][i][j][k][l];
+						tempVector[i][j][k][l] -= outHessenbergMatrix[m][n-2]*resultBasis[m][i][j][k][l];
 					}
 				}
 			}
@@ -164,6 +278,11 @@ void Simulation::generalizedMinimalResidualMethod(){
 	double module;
 
 	while(error > maxError && n < maxGMRESIterations){
+		printf("GMRES iteration %d\n", n);
+		newHessenbergMatrix = new double*[n];
+		for(int i = 0; i < n; ++i){
+			newHessenbergMatrix[i] = new double[n-1];
+		}
 		newBasis = arnoldiIterations(newHessenbergMatrix, n, basis, hessenbergMatrix);
 
 		hessenbergMatrix = newHessenbergMatrix;
@@ -171,7 +290,7 @@ void Simulation::generalizedMinimalResidualMethod(){
 
 		if(n == 2){
 			rho = hessenbergMatrix[0][0];
-			sigma = hessenbergMatrix[0][1];
+			sigma = hessenbergMatrix[1][0];
 
 			module = sqrt(rho*rho + sigma*sigma);
 			
@@ -198,7 +317,7 @@ void Simulation::generalizedMinimalResidualMethod(){
 			Rmatrix = new double*[n];
 			for(int i = 0; i < n; ++i){
 				Rmatrix[i] = new double[n-1];
-				if(i < n){
+				if(i < n-1){
 					for(int j = 0; j < n-2; ++j){
 						Rmatrix[i][j] = oldRmatrix[i][j];
 					}
@@ -218,7 +337,7 @@ void Simulation::generalizedMinimalResidualMethod(){
 					}
 					Qmatrix[i][n-1] = 0;
 				} else {
-					for(int j = 0; j < n-2; ++j){
+					for(int j = 0; j < n-1; ++j){
 						Qmatrix[i][j] = 0;
 					}
 					Qmatrix[n-1][n-1] = 1;
@@ -244,7 +363,7 @@ void Simulation::generalizedMinimalResidualMethod(){
 
 			for(int j = 0; j < n-1; ++j){
 				Qmatrix[n-2][j] = cosn*oldQmatrix[n-2][j];
-				Qmatrix[n-1][j] = - -sinn*oldQmatrix[n-2][j];
+				Qmatrix[n-1][j] = -sinn*oldQmatrix[n-2][j];
 			}
 			Qmatrix[n-2][n-1] = sinn;
 			Qmatrix[n-1][n-1] = cosn;
@@ -255,13 +374,13 @@ void Simulation::generalizedMinimalResidualMethod(){
 
 		for(int i = n-2; i >=0; --i){
 			y[i] = beta*Qmatrix[i][0];
-			for(int j = n-2; j > i; --i){
+			for(int j = n-2; j > i; --j){
 				y[i] -= Rmatrix[i][j]*y[j];
 			}
 			y[i] /= Rmatrix[i][i];
 		}
 
-		error = beta*Qmatrix[n-1][0];
+		error = fabs(beta*Qmatrix[n-1][0]);
 
 		for(int i = 0; i < n-1; ++i){
 			delete[] oldQmatrix[i];
