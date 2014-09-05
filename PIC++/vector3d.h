@@ -1,6 +1,8 @@
 #ifndef VECTOR3D_H
 #define VECTOR3D_H
 
+#include "matrix3d.h"
+
 class Vector3d{
 public:
 	double x;
@@ -16,6 +18,7 @@ public:
 	Vector3d operator/(const double& value);
 	double scalarMult(const Vector3d& vector);
 	Vector3d vectorMult(const Vector3d& vector);
+	Matrix3d tensorMult(const Vector3d& vector);
 };
 
 #endif

@@ -51,7 +51,7 @@ public:
 	Vector3d*** electricFlux;
 	double*** electricDensity;
 	Matrix3d*** dielectricTensor;
-	Vector3d*** nablaPressureTensor;
+	Matrix3d*** pressureTensor;
 
 	Vector3d*** Efield;
 	Vector3d*** Bfield;
@@ -113,8 +113,8 @@ public:
 	double volume(int i, int j, int k);
 
 	void collectParticlesIntoBins();
-	bool particleCrossBbin(Particle* particle, int i, int j, int k);
-	bool particleCrossEbin(Particle* particle, int i, int j, int k);
+	bool particleCrossBbin(Particle& particle, int i, int j, int k);
+	bool particleCrossEbin(Particle& particle, int i, int j, int k);
 	void checkParticleInBox(Particle& particle);
 
 	void updateParameters();
