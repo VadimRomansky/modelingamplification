@@ -109,3 +109,9 @@ void Particle::setMomentumByV(Vector3d v){
 	double gamma_factor = 1/sqrt(1 - v.scalarMult(v)/speed_of_light_sqr);
 	momentum = v*(mass*gamma_factor);
 }
+
+double Particle::gammaFactor(){
+	double p2 = momentum.x*momentum.x + momentum.y*momentum.y + momentum.z*momentum.z;
+	double mc2 = mass*speed_of_light*speed_of_light;
+	return sqrt(p2*speed_of_light*speed_of_light + mc2*mc2)/mc2;
+}

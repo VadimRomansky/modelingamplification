@@ -61,11 +61,14 @@ Simulation::~Simulation(){
 			delete[] newBfield[i][j];
 			delete[] tempBfield[i][j];
 			delete[] electricDensity[i][j];
+			delete[] pressureTensor[i][j];
+
 		}
 		delete[] Bfield[i];
 		delete[] newBfield[i];
 		delete[] tempBfield[i];
 		delete[] electricDensity[i];
+		delete[] pressureTensor[i]
 	}
 
 	for(int i = 0; i < xnumber; ++i){
@@ -75,14 +78,12 @@ Simulation::~Simulation(){
 			delete[] tempEfield[i][j];
 			delete[] electricFlux[i][j];
 			delete[] dielectricTensor[i][j];
-			delete[] nablaPressureTensor[i][j];
 		}
 		delete[] Efield[i];
 		delete[] newEfield[i];
 		delete[] tempEfield[i];
 		delete[] electricFlux[i];
 		delete[] dielectricTensor[i];
-		delete[] nablaPressureTensor[i];
 	}
 
 	for(int i = 0; i <= xnumber; ++i){
@@ -113,7 +114,7 @@ Simulation::~Simulation(){
 	delete[] electricDensity;
 	delete[] electricFlux;
 	delete[] dielectricTensor;
-	delete[] nablaPressureTensor;
+	delete[] pressureTensor;
 
 	delete[] xgrid;
 	delete[] ygrid;
@@ -195,7 +196,7 @@ void Simulation::createArrays(){
 	electricFlux = new Vector3d**[xnumber + 1];
 	electricDensity = new double**[xnumber];
 	dielectricTensor = new Matrix3d**[xnumber + 1];
-	nablaPressureTensor = new Vector3d**[xnumber + 1];
+	pressureTensor = new Matrix3d**[xnumber];
 
 
 	for(int i = 0; i < xnumber; ++i){
@@ -203,12 +204,14 @@ void Simulation::createArrays(){
 		newBfield[i] = new Vector3d*[ynumber];
 		tempBfield[i] = new Vector3d*[ynumber];
 		electricDensity[i] = new double*[ynumber];
+		pressureTensor[i] = new Matrix3d*[ynumber];
 
 		for(int j = 0; j < ynumber; ++j){
 			Bfield[i][j] = new Vector3d[znumber];
 			newBfield[i][j] = new Vector3d[znumber];
 			tempBfield[i][j] = new Vector3d[znumber];
 			electricDensity[i][j] = new double[znumber];
+			pressureTensor[i] = new Matrix3d[znumber];
 		}
 	}
 
@@ -218,7 +221,6 @@ void Simulation::createArrays(){
 		tempEfield[i] = new Vector3d*[ynumber+1];
 		electricFlux[i] = new Vector3d*[ynumber+1];
 		dielectricTensor[i] = new Matrix3d*[ynumber+1];
-		nablaPressureTensor[i] = new Vector3d*[ynumber+1];
 
 		for(int j = 0; j < ynumber+1; ++j){
 			Efield[i][j] = new Vector3d[znumber+1];
@@ -226,7 +228,6 @@ void Simulation::createArrays(){
 			tempEfield[i][j] = new Vector3d[znumber+1];
 			electricFlux[i][j] = new Vector3d[znumber+1];
 			dielectricTensor[i][j] = new Matrix3d[znumber+1];
-			nablaPressureTensor[i][j] = new Vector3d[znumber+1];
 		}
 	}
 
@@ -242,7 +243,7 @@ void Simulation::createArrays(){
 				maxwellEquationMatrix[i][j][k] = new double*[3];
 				maxwellEquationRightPart[i][j][k] = new double[3];
 				for(int l = 0; l < 3; ++l){
-					maxwellEquationMatrix[i][j][k][l] = new double[29];
+					maxwellEquationMatrix[i][j][k][l] = new double[spareParameter];
 				}
 			}
 		}
@@ -479,6 +480,9 @@ Vector3d Simulation::correlationFieldWithEbin(Particle& particle, int i, int j, 
 }
 
 double Simulation::correlationWithBbin(Particle& particle, int i, int j, int k){
+	if(! particleCrossBbin(particle, i, j, k))
+		return 0.0;
+
 	double x = particle.coordinates.x;
 	double y = particle.coordinates.y;
 	double z = particle.coordinates.z;
@@ -509,6 +513,22 @@ double Simulation::correlationWithBbin(Particle& particle, int i, int j, int k){
 	} else if(j >= ynumber){
 		lefty = ygrid[ynumber];
 		righty = ygrid[ynumber] + deltaY;
+	} else if(j == 0){
+		if(particle.coordinates.y - particle.dy > ygrid[1]){
+			lefty = ygrid[ynumber];
+			righty = ygrid[ynumber] + deltaY;
+		} else {
+			lefty = ygrid[0];
+			righty = ygrid[1];
+		}
+	} else if(j == ynumber - 1){
+		if(particle.coordinates.y + particle.dy < ygrid[ynumber-1]){
+			lefty = ygrid[0] - deltaY;
+			righty = ygrid[0];
+		} else {
+			lefty = ygrid[ynumber-1];
+			righty = ygrid[ynumber];
+		}
 	} else {
 		lefty = ygrid[j];
 		righty = ygrid[j+1];
@@ -520,6 +540,22 @@ double Simulation::correlationWithBbin(Particle& particle, int i, int j, int k){
 	} else if(k >= znumber){
 		leftz = zgrid[znumber];
 		rightz = zgrid[znumber] + deltaZ;
+	} else if(k == 0){
+		if(particle.coordinates.z - particle.dz > zgrid[1]){
+			leftz = zgrid[ynumber];
+			rightz = zgrid[ynumber] + deltaZ;
+		} else {
+			leftz = zgrid[0];
+			rightz = zgrid[1];
+		}
+	} else if(k == znumber-1){
+		if(particle.coordinates.z + particle.dz < zgrid[znumber - 1]){
+			leftz = zgrid[0] - deltaZ;
+			rightz = zgrid[0];
+		} else {
+			leftz = zgrid[znumber-1];
+			rightz = zgrid[znumber];
+		}
 	} else {
 		leftz = zgrid[k];
 		rightz = zgrid[k+1];
@@ -775,7 +811,7 @@ void Simulation::collectParticlesIntoBins(){
 		for(int i = xcount - 1; i <= xcount + 1; ++i){
 			for(int j = ycount - 1; j <= ycount + 1; ++j){
 				for(int k = zcount - 1; k <= zcount + 1; ++k){
-					if( particleCrossBbin(particle, i, j, k)){
+					if( particleCrossBbin(*particle, i, j, k)){
 						particlesInBbin[i][j][k].push_back(particle);
 					}
 				}
@@ -789,7 +825,7 @@ void Simulation::collectParticlesIntoBins(){
 		for(int i = xcount - 1; i <= xcount + 1; ++i){
 			for(int j = ycount - 1; j <= ycount + 1; ++j){
 				for(int k = zcount - 1; k <= zcount + 1; ++k){
-					if( particleCrossBbin(particle, i, j, k)){
+					if( particleCrossBbin(*particle, i, j, k)){
 						particlesInEbin[i][j][k].push_back(particle);
 					}
 				}
@@ -799,37 +835,42 @@ void Simulation::collectParticlesIntoBins(){
 
 }
 
-bool Simulation::particleCrossBbin(Particle* particle, int i, int j, int k){
+bool Simulation::particleCrossBbin(Particle& particle, int i, int j, int k){
 
-	if( i == 0){
-	} else if( i == xnumber - 1){
-	} else {
-		if((xgrid[i] > particle->coordinates.x + particle->dx) || (xgrid[i+1] < particle->coordinates.x - particle->dx))
+	if((xgrid[i] > particle.coordinates.x + particle.dx) || (xgrid[i+1] < particle.coordinates.x - particle.dx))
+		return false;
+
+	if( j == 0){
+		if((ygrid[j+1] < particle.coordinates.y - particle.dy) && (ygrid[ynumber] > particle.coordinates.y + particle.dy))
 			return false;
-	}
-
-	if(j == 0){
 	} else if( j == ynumber - 1){
+		if((ygrid[j] > particle.coordinates.y + particle.dy) && (ygrid[0] < particle.coordinates.y - particle.dy))
+			return false;
 	} else {
-		if((ygrid[j] > particle->coordinates.y + particle->dy) || (ygrid[j+1] < particle->coordinates.y - particle->dy))
+		if((ygrid[j] > particle.coordinates.y + particle.dy) || (ygrid[j+1] < particle.coordinates.y - particle.dy))
 			return false;
 	}
 
-	if(k == 0){
-	} else if(k == znumber - 1){
+	if( k == 0){
+		if((zgrid[k+1] < particle.coordinates.z - particle.dz) && (zgrid[znumber] > particle.coordinates.z + particle.dz))
+			return false;
+	} else if( k == znumber - 1){
+		if((zgrid[k] > particle.coordinates.z + particle.dz) && (zgrid[0] < particle.coordinates.z - particle.dz))
+			return false;
 	} else {
-		if((zgrid[k] > particle->coordinates.z + particle->dz) || (zgrid[k+1] < particle->coordinates.z - particle->dz))
+		if((zgrid[k] > particle.coordinates.z + particle.dz) || (zgrid[k+1] < particle.coordinates.z - particle.dz))
 			return false;
 	}
+
 	return true;
 }
 
-bool Simulation::particleCrossEbin(Particle* particle, int i, int j, int k){
-	if((xgrid[i] - deltaX/2 > particle->coordinates.x + particle->dx) || (xgrid[i+1] - deltaX/2 < particle->coordinates.x - particle->dx))
+bool Simulation::particleCrossEbin(Particle& particle, int i, int j, int k){
+	if((xgrid[i] - deltaX/2 > particle.coordinates.x + particle.dx) || (xgrid[i+1] - deltaX/2 < particle.coordinates.x - particle.dx))
 		return false;
-	if((ygrid[j] - deltaY/2 > particle->coordinates.y + particle->dy) || (ygrid[j+1] - deltaY/2 < particle->coordinates.y - particle->dy))
+	if((ygrid[j] - deltaY/2 > particle.coordinates.y + particle.dy) || (ygrid[j+1] - deltaY/2 < particle.coordinates.y - particle.dy))
 		return false;
-	if((zgrid[k] - deltaZ/2 > particle->coordinates.z + particle->dz) || (zgrid[k+1] - deltaZ/2 < particle->coordinates.z - particle->dz))
+	if((zgrid[k] - deltaZ/2 > particle.coordinates.z + particle.dz) || (zgrid[k+1] - deltaZ/2 < particle.coordinates.z - particle.dz))
 		return false;
 	return true;
 }
@@ -867,8 +908,36 @@ void Simulation::updateParameters(){
 			for(int k = 0; k < znumber + 1; ++k){
 				electricFlux[i][j][k] = Vector3d(0,0,0);
 				dielectricTensor[i][j][k] = Matrix3d(0,0,0,0,0,0,0,0,0);
-				nablaPressureTensor[i][j][k] = Vector3d(0,0,0);
+				for(int pcount = 0; pcount < particlesInEbin[i][j][k].size(); ++pcount){
+					Particle* particle = particlesInEbin[i][j][k][pcount];
+					double correlation = correlationWithEbin(*particle, i, j, k)/volume(i, j, k);
+					double gamma = particle->gammaFactor();
+					Vector3d velocity = particle->velocity();
+					Vector3d rotatedVelocity = particle->rotationTensor*velocity*gamma;
+
+					electricFlux[i][j][j] = electricFlux[i][j][k] + rotatedVelocity*particle->weight*particle->charge*correlation;				
+					dielectricTensor[i][j][k] = dielectricTensor[i][j][k] - particle->rotationTensor*(theta*deltaT*deltaT*2*pi*particle->charge*particle->charge*correlation/particle->mass); 
+				}
 			}
+		}
+	}
+
+	//for periodic conditions we must summ sides parameters
+	for(int i = 0; i < xnumber + 1; ++i){
+		for(int j = 0; j < ynumber + 1; ++j){
+			electricFlux[i][j][0] = electricFlux[i][j][0] + electricFlux[i][j][znumber];
+			electricFlux[i][j][znumber] = electricFlux[i][j][0];
+
+			dielectricTensor[i][j][0] = dielectricTensor[i][j][0] + dielectricTensor[i][j][znumber];
+			dielectricTensor[i][j][znumber] = dielectricTensor[i][j][0];
+		}
+
+		for(int k = 0; k < znumber + 1; ++k){
+			electricFlux[i][0][k] = electricFlux[i][0][k] + electricFlux[i][ynumber][k];
+			electricFlux[i][ynumber][k] = electricFlux[i][0][k];
+
+			dielectricTensor[i][0][k] = dielectricTensor[i][0][k] + dielectricTensor[i][ynumber][k];
+			dielectricTensor[i][ynumber][k] = dielectricTensor[i][0][k];
 		}
 	}
 
@@ -876,9 +945,16 @@ void Simulation::updateParameters(){
 		for(int j = 0; j < ynumber; ++j){
 			for(int k = 0; k < znumber; ++k){
 				electricDensity[i][j][k] = 0;
+				pressureTensor[i][j][k] = Matrix3d(0,0,0,0,0,0,0,0,0);
 				for(int pcount = 0; pcount < particlesInBbin[i][j][k].size(); ++pcount){
 					Particle* particle = particlesInBbin[i][j][k][pcount];
-					electricDensity[i][j][k] += particle->weight*particle->charge*correlationWithBbin(*particle, i, j, k);
+					double correlation = correlationWithBbin(*particle, i, j, k)/volume(i, j, k);
+					double gamma = particle->gammaFactor();
+					Vector3d velocity = particle->velocity();
+					Vector3d rotatedVelocity = particle->rotationTensor*velocity*gamma;
+
+					electricDensity[i][j][k] += particle->weight*particle->charge*correlation;
+					pressureTensor[i][j][k] = rotatedVelocity.tensorMult(rotatedVelocity)*particle->weight*particle->charge*correlation; 
 				}
 			}
 		}
