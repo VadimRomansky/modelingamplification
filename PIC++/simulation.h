@@ -103,6 +103,8 @@ public:
 	void moveParticleNewtonIteration(Particle* particle, double* const oldCoordinates, double* const tempCoordinates, double* const newCoordinates);
 
 	void evaluateFields();
+	void evaluateMaxwellEquationMatrix();
+	void evaluateMagneticField();
 
 	void generalizedMinimalResidualMethod();
 	double***** arnoldiIterations(double** outHessenbergMatrix, int n, double***** prevBasis, double** prevHessenbergMatrix);
@@ -118,6 +120,10 @@ public:
 	void checkParticleInBox(Particle& particle);
 
 	void updateParameters();
+	double evaluateDivFlux(int i, int j, int k);
+	Vector3d evaluateRotB(int i, int j, int k);
+	Vector3d evaluateRotE(int i, int j, int k);
+	Vector3d evaluateDivPressureTensor(int i, int j, int k);
 };
 
 #endif
