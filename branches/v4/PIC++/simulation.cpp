@@ -55,8 +55,17 @@ Simulation::Simulation(){
 }
 
 Simulation::~Simulation(){
+	for(int pcount = 0; pcount < particles.size(); ++pcount){
+		Particle* particle = particles[pcount];
+		delete particle;
+	}
+	particles.clear();
+
 	for(int i = 0; i < xnumber; ++i){
 		for(int j = 0; j < ynumber; ++j){
+			for(int k = 0; k < znumber; ++k){
+				particlesInBbin[i][j][k].clear();
+			}
 			delete[] Bfield[i][j];
 			delete[] newBfield[i][j];
 			delete[] tempBfield[i][j];
@@ -68,11 +77,14 @@ Simulation::~Simulation(){
 		delete[] newBfield[i];
 		delete[] tempBfield[i];
 		delete[] electricDensity[i];
-		delete[] pressureTensor[i]
+		delete[] pressureTensor[i];
 	}
 
 	for(int i = 0; i < xnumber; ++i){
 		for(int j = 0; j < ynumber; ++j){
+			for(int k = 0; k < znumber + 1; ++k){
+				particlesInEbin[i][j][k].clear();
+			}
 			delete[] Efield[i][j];
 			delete[] newEfield[i][j];
 			delete[] tempEfield[i][j];
@@ -268,8 +280,9 @@ void Simulation::simulate(){
 
 	while(time < maxTime && currentIteration < maxIteration){
 		printf("iteration number %d time = %lf\n", currentIteration, time);
-		moveParticles();
+
 		evaluateFields();
+		moveParticles();
 
 		time += deltaT;
 		currentIteration++;
@@ -954,9 +967,146 @@ void Simulation::updateParameters(){
 					Vector3d rotatedVelocity = particle->rotationTensor*velocity*gamma;
 
 					electricDensity[i][j][k] += particle->weight*particle->charge*correlation;
+
+					double divJ = evaluateDivFlux(i, j, k);
+
+					electricDensity[i][j][k] -= deltaT*theta*divJ;
+
 					pressureTensor[i][j][k] = rotatedVelocity.tensorMult(rotatedVelocity)*particle->weight*particle->charge*correlation; 
 				}
 			}
 		}
 	}
+}
+
+double Simulation::evaluateDivFlux(int i, int j, int k){
+	if(i < 0){
+		printf("i < 0\n");
+		exit(0);
+	}
+
+	if(i >= xnumber){
+		printf("x >= xnumber\n");
+		exit(0);
+	}
+
+	if(j < 0){
+		printf("j < 0\n");
+		exit(0);
+	}
+
+	if(j >= ynumber){
+		printf("j >= ynumber\n");
+		exit(0);
+	}
+
+	if(k < 0){
+		printf("k < 0\n");
+		exit(0);
+	}
+
+	if(k >= znumber){
+		printf("k >= znumber\n");
+		exit(0);
+	}
+
+
+	double rfluxX = (electricFlux[i+1][j][k].x + electricFlux[i+1][j+1][k].x + electricFlux[i+1][j][k+1].x + electricFlux[i+1][j+1][k+1].x)/4;
+	double lfluxX = (electricFlux[i][j][k].x + electricFlux[i][j+1][k].x + electricFlux[i][j][k+1].x + electricFlux[i][j+1][k+1].x)/4;
+
+	double rfluxY = (electricFlux[i][j+1][k].y + electricFlux[i+1][j+1][k].y + electricFlux[i][j+1][k+1].y + electricFlux[i+1][j+1][k+1].y)/4;
+	double lfluxY = (electricFlux[i][j][k].y + electricFlux[i+1][j][k].y + electricFlux[i][j][k+1].y + electricFlux[i+1][j][k+1].y)/4;
+
+	double rfluxZ = (electricFlux[i][j][k+1].z + electricFlux[i+1][j][k+1].z + electricFlux[i][j+1][k+1].z + electricFlux[i+1][j+1][k+1].z)/4;
+	double lfluxZ = (electricFlux[i][j][k].z + electricFlux[i+1][j][k].z + electricFlux[i][j+1][k].z + electricFlux[i+1][j+1][k].z)/4;
+
+	return ((rfluxX - lfluxX)/deltaX) + ((rfluxY - lfluxY)/deltaY) + ((rfluxZ - lfluxZ)/deltaZ);
+}
+
+Vector3d Simulation::evaluateRotB(int i, int j, int k){
+	if(i < 0){
+		printf("i < 0\n");
+		exit(0);
+	}
+
+	if(i > xnumber){
+		printf("x >= xnumber\n");
+		exit(0);
+	}
+
+	if(j < 0){
+		printf("j < 0\n");
+		exit(0);
+	}
+
+	if(j > ynumber){
+		printf("j >= ynumber\n");
+		exit(0);
+	}
+
+	if(k < 0){
+		printf("k < 0\n");
+		exit(0);
+	}
+
+	if(k > znumber){
+		printf("k >= znumber\n");
+		exit(0);
+	}
+
+
+}
+
+Vector3d Simulation::evaluateRotE(int i, int j, int k){
+	if(i < 0){
+		printf("i < 0\n");
+		exit(0);
+	}
+
+	if(i >= xnumber){
+		printf("x >= xnumber\n");
+		exit(0);
+	}
+
+	if(j < 0){
+		printf("j < 0\n");
+		exit(0);
+	}
+
+	if(j >= ynumber){
+		printf("j >= ynumber\n");
+		exit(0);
+	}
+
+	if(k < 0){
+		printf("k < 0\n");
+		exit(0);
+	}
+
+	if(k >= znumber){
+		printf("k >= znumber\n");
+		exit(0);
+	}
+
+	double x = 0;
+	double y = 0;
+	double z = 0;
+
+	Vector3d ErightX = (tempEfield[i+1][j][k] + tempEfield[i+1][j+1][k] + tempEfield[i+1][j][k+1] + tempEfield[i+1][j+1][k+1])/4;
+	Vector3d EleftX = (tempEfield[i][j][k] + tempEfield[i][j+1][k] + tempEfield[i][j][k+1] + tempEfield[i][j+1][k+1])/4;
+
+	Vector3d ErightY = (tempEfield[i][j+1][k] + tempEfield[i+1][j+1][k] + tempEfield[i][j+1][k+1] + tempEfield[i+1][j+1][k+1])/4;
+	Vector3d EleftY = (tempEfield[i][j][k] + tempEfield[i+1][j][k] + tempEfield[i][j][k+1] + tempEfield[i+1][j][k+1])/4;
+
+	Vector3d ErightZ = (tempEfield[i][j][k+1] + tempEfield[i+1][j][k+1] + tempEfield[i][j+1][k+1] + tempEfield[i+1][j+1][k+1])/4;
+	Vector3d EleftZ = (tempEfield[i][j][k] + tempEfield[i+1][j][k] + tempEfield[i][j+1][k] + tempEfield[i+1][j+1][k])/4;
+
+	x = ((ErightY.z - EleftY.z)/deltaY) - ((ErightZ.y - EleftZ.y)/deltaZ);
+	y = ((ErightZ.x - EleftZ.x)/deltaZ) - ((ErightX.z - EleftX.z)/deltaX);
+	z = ((ErightX.y - EleftX.y)/deltaX) - ((ErightY.x - EleftY.x)/deltaY);
+
+	return Vector3d(x, y, z);
+}
+
+Vector3d Simulation::evaluateDivPressureTensor(int i, int j, int k){
 }
