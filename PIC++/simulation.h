@@ -35,8 +35,11 @@ public:
 
 	double theta;
 
+	Vector3d V0;
+
 	Vector3d B0;
 	Vector3d E0;
+	Matrix3d pressureTensor0;
 
 	double* xgrid;
 	double* ygrid;
@@ -124,6 +127,10 @@ public:
 	Vector3d evaluateRotB(int i, int j, int k);
 	Vector3d evaluateRotE(int i, int j, int k);
 	Vector3d evaluateDivPressureTensor(int i, int j, int k);
+
+	Vector3d getBfield(int i, int j, int k);
+	Vector3d getTempEfield(int i, int j, int k);
+	Matrix3d getPressureTensor(int i, int j, int k);
 };
 
 #endif
