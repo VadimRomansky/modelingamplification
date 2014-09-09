@@ -16,7 +16,6 @@ const int pnumber = 100;
 const int writeParameter = 10000;
 const int maxNewtonIterations = 100;
 const int maxGMRESIterations = 100;
-const int spareParameter = 37;
 
 const int numThreads = 12;
 

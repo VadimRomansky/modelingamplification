@@ -3,6 +3,8 @@
 
 #include "vector3d.h"
 
+class Vector3d;
+
 class Matrix3d{
 public:
   double** matrix;
