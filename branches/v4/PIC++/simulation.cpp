@@ -10,6 +10,8 @@
 #include "random.h"
 
 Simulation::Simulation(){
+	debugMode = true;
+
 	currentIteration = 0;
 	time = 0;
 	particlesNumber = 0;
@@ -102,7 +104,7 @@ Simulation::~Simulation(){
 		for(int j = 0; j <= ynumber; ++j){
 			for(int k = 0; k <= znumber; ++k){
 				for(int l = 0; l < 3; ++l){
-					delete[] maxwellEquationMatrix[i][j][k][l];
+					maxwellEquationMatrix[i][j][k][l].clear();
 				}
 				delete[] maxwellEquationMatrix[i][j][k];
 				delete[] maxwellEquationRightPart[i][j][k];
@@ -223,7 +225,7 @@ void Simulation::createArrays(){
 			newBfield[i][j] = new Vector3d[znumber];
 			tempBfield[i][j] = new Vector3d[znumber];
 			electricDensity[i][j] = new double[znumber];
-			pressureTensor[i] = new Matrix3d[znumber];
+			pressureTensor[i][j] = new Matrix3d[znumber];
 		}
 	}
 
@@ -243,20 +245,17 @@ void Simulation::createArrays(){
 		}
 	}
 
-	maxwellEquationMatrix = new double****[xnumber + 1];
+	maxwellEquationMatrix = new std::vector<MatrixElement>***[xnumber + 1];
 	maxwellEquationRightPart = new double***[xnumber + 1];
 	for(int i = 0; i <= xnumber; ++i){
-		maxwellEquationMatrix[i] = new double***[ynumber + 1];
+		maxwellEquationMatrix[i] = new std::vector<MatrixElement>**[ynumber + 1];
 		maxwellEquationRightPart[i] = new double**[ynumber + 1];
 		for(int j = 0; j <= ynumber; ++j){
-			maxwellEquationMatrix[i][j] = new double**[znumber + 1];
+			maxwellEquationMatrix[i][j] = new std::vector<MatrixElement>*[znumber + 1];
 			maxwellEquationRightPart[i][j] = new double*[znumber + 1];
 			for(int k = 0; k <= znumber; ++k){
-				maxwellEquationMatrix[i][j][k] = new double*[3];
+				maxwellEquationMatrix[i][j][k] = new std::vector<MatrixElement>[3];
 				maxwellEquationRightPart[i][j][k] = new double[3];
-				for(int l = 0; l < 3; ++l){
-					maxwellEquationMatrix[i][j][k][l] = new double[spareParameter];
-				}
 			}
 		}
 	}
@@ -281,8 +280,10 @@ void Simulation::simulate(){
 	while(time < maxTime && currentIteration < maxIteration){
 		printf("iteration number %d time = %lf\n", currentIteration, time);
 
+		evaluateParticlesRotationTensor();
 		evaluateFields();
 		moveParticles();
+		updateFields();
 
 		time += deltaT;
 		currentIteration++;
@@ -304,6 +305,10 @@ Vector3d Simulation::correlationTempEfield(Particle* particle){
 
 Vector3d Simulation::correlationBfield(Particle* particle){
 	return correlationBfield(*particle);
+}
+
+Vector3d Simulation::correlationEfield(Particle* particle){
+	return correlationEfield(*particle);
 }
 
 Vector3d Simulation::correlationTempEfield(Particle& particle){
@@ -348,7 +353,7 @@ Vector3d Simulation::correlationTempEfield(Particle& particle){
 	for(int i = xcount-1; i <= xcount + 1; ++i){
 		for(int j = ycount-1; j <= ycount + 1; ++j){
 			for(int k = zcount-1; k <= zcount + 1; ++k){
-				result = result + correlationFieldWithEbin(particle, i, j, k);
+				result = result + correlationFieldWithTempEbin(particle, i, j, k);
 			}
 		}
 	}
@@ -399,6 +404,56 @@ Vector3d Simulation::correlationBfield(Particle& particle){
 		for(int j = ycount-1; j <= ycount + 1; ++j){
 			for(int k = zcount-1; k <= zcount + 1; ++k){
 				result = result + correlationFieldWithBbin(particle, i, j, k);
+			}
+		}
+	}
+
+	return result;
+}
+
+Vector3d Simulation::correlationEfield(Particle& particle){
+	checkParticleInBox(particle);
+
+	int xcount = trunc(particle.coordinates.x/deltaX + 0.5);
+	int ycount = trunc(particle.coordinates.y/deltaY + 0.5);
+	int zcount = trunc(particle.coordinates.z/deltaZ + 0.5);
+
+	if(xcount < 0){
+		printf("xcount < 0\n");
+		//exit(0);
+	}
+
+	if(xcount > xnumber){
+		printf("xcount > xnumber\n");
+		//exit(0);
+	}
+
+	if(ycount < 0){
+		printf("ycount < 0\n");
+		//exit(0);
+	}
+
+	if(ycount > ynumber){
+		printf("ycount > ynumber\n");
+		//exit(0);
+	}
+
+	if(zcount < 0){
+		printf("zcount < 0\n");
+		//exit(0);
+	}
+
+	if(zcount > znumber){
+		printf("zcount > znumber\n");
+		//exit(0);
+	}
+
+	Vector3d result = Vector3d(0,0,0);
+
+	for(int i = xcount-1; i <= xcount + 1; ++i){
+		for(int j = ycount-1; j <= ycount + 1; ++j){
+			for(int k = zcount-1; k <= zcount + 1; ++k){
+				result = result + correlationFieldWithEbin(particle, i, j, k);
 			}
 		}
 	}
@@ -485,6 +540,23 @@ Vector3d Simulation::correlationFieldWithEbin(Particle& particle, int i, int j, 
 		_field = E0;
 	} else {
 		_field = Efield[i][j][k];
+	}
+
+	double correlation = correlationWithEbin(particle, i, j, k);
+
+	return _field*correlation;
+}
+
+Vector3d Simulation::correlationFieldWithTempEbin(Particle& particle, int i, int j, int k){
+
+	Vector3d _field;
+
+	if(i < 0){
+		_field = Vector3d(0, 0, 0);
+	} else if (i > xnumber){
+		_field = E0;
+	} else {
+		_field = tempEfield[i][j][k];
 	}
 
 	double correlation = correlationWithEbin(particle, i, j, k);
@@ -586,7 +658,7 @@ double Simulation::correlationWithBbin(Particle& particle, int i, int j, int k){
 	return correlation;
 }
 
-double Simulation::correlationWithEbin(Particle& particle, int i, int , int k){
+double Simulation::correlationWithEbin(Particle& particle, int i, int j, int k){
 	double x = particle.coordinates.x;
 	double y = particle.coordinates.y;
 	double z = particle.coordinates.z;

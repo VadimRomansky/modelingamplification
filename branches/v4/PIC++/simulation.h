@@ -5,7 +5,7 @@
 #include "stdio.h"
 #include "vector"
 #include "matrix3d.h"
-
+#include "matrixElement.h"
 #include "particle.h"
 
 class Simulation{
@@ -35,6 +35,8 @@ public:
 
 	double theta;
 
+	bool debugMode;
+
 	Vector3d V0;
 
 	Vector3d B0;
@@ -48,7 +50,7 @@ public:
 	double* middleYgrid;
 	double* middleZgrid;
 
-	double***** maxwellEquationMatrix;
+	std::vector<MatrixElement>**** maxwellEquationMatrix;
 	double**** maxwellEquationRightPart;
 
 	Vector3d*** electricFlux;
@@ -92,9 +94,12 @@ public:
 	Vector3d correlationBfield(Particle* particle);
 	Vector3d correlationTempEfield(Particle& particle);
 	Vector3d correlationBfield(Particle& particle);
+	Vector3d correlationEfield(Particle* particle);
+	Vector3d correlationEfield(Particle& particle);
 	
 	Vector3d correlationFieldWithBbin(Particle& particle, int i, int j, int k);
 	Vector3d correlationFieldWithEbin(Particle& particle, int i, int j, int k);
+	Vector3d correlationFieldWithTempEbin(Particle& particle, int i, int j, int k);
 	double correlationWithBbin(Particle& particle, int i, int j, int k);
 	double correlationWithEbin(Particle& particle, int i, int , int k);
 	double correlationBspline(const double& x, const double&  dx, const double& leftx, const double& rightx);
@@ -104,8 +109,10 @@ public:
 	void moveParticles();
 	void moveParticle(Particle* particle);
 	void moveParticleNewtonIteration(Particle* particle, double* const oldCoordinates, double* const tempCoordinates, double* const newCoordinates);
+	void evaluateParticlesRotationTensor();
 
 	void evaluateFields();
+	void checkMaxwellEquationMatrix();
 	void evaluateMaxwellEquationMatrix();
 	void evaluateMagneticField();
 
@@ -123,6 +130,7 @@ public:
 	void checkParticleInBox(Particle& particle);
 
 	void updateParameters();
+	void updateFields();
 	double evaluateDivFlux(int i, int j, int k);
 	Vector3d evaluateRotB(int i, int j, int k);
 	Vector3d evaluateRotE(int i, int j, int k);

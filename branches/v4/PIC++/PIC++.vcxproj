@@ -86,6 +86,7 @@
     <ClCompile Include="fields.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="matrix3d.cpp" />
+    <ClCompile Include="matrixelement.cpp" />
     <ClCompile Include="mover.cpp" />
     <ClCompile Include="output.cpp" />
     <ClCompile Include="particle.cpp" />
@@ -98,6 +99,7 @@
   <ItemGroup>
     <ClInclude Include="constants.h" />
     <ClInclude Include="matrix3d.h" />
+    <ClInclude Include="matrixElement.h" />
     <ClInclude Include="output.h" />
     <ClInclude Include="particle.h" />
     <ClInclude Include="random.h" />
