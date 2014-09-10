@@ -2,6 +2,8 @@
 
 #include "vector3d.h"
 #include "matrix3d.h"
+#include <utility>
+#include <stdexcept>
 
 Vector3d::Vector3d() {
 	x = 0;
@@ -60,4 +62,18 @@ Matrix3d Vector3d::tensorMult(const Vector3d& vector) {
 	result.matrix[2][2] = z * vector.z;
 
 	return result;
+}
+
+double Vector3d::operator[](int i) {
+	switch (i) {
+	case 0:
+		return x;
+	case 1:
+		return y;
+	case 2:
+		return z;
+	default:
+		printf("i must be 0 < i < 3\n");
+		exit(0);
+	}
 }

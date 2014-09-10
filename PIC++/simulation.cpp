@@ -1042,12 +1042,27 @@ void Simulation::updateParameters(){
 
 					electricDensity[i][j][k] += particle->weight*particle->charge*correlation;
 
-					double divJ = evaluateDivFlux(i, j, k);
-
-					electricDensity[i][j][k] -= deltaT*theta*divJ;
-
 					pressureTensor[i][j][k] = rotatedVelocity.tensorMult(rotatedVelocity)*particle->weight*particle->charge*correlation; 
 				}
+			}
+		}
+	}
+
+	for(int i = 0; i <= xnumber; ++i) {
+		for(int j = 0; j <= ynumber; ++ j) {
+			for(int k = 0; k <= znumber; ++k) {
+				Vector3d divPressureTensor = evaluateDivPressureTensor(i, j, k);
+				electricFlux[i][j][k] = electricFlux[i][j][k] - divPressureTensor*deltaT/2;
+			}
+		}
+	}
+
+	for(int i = 0; i < xnumber; ++i) {
+		for(int j = 0; j < ynumber; ++j) {
+			for(int k = 0; k < znumber; ++k) {
+				double divJ = evaluateDivFlux(i, j, k);
+
+				electricDensity[i][j][k] -= deltaT*theta*divJ;
 			}
 		}
 	}
@@ -1117,4 +1132,25 @@ Matrix3d Simulation::getPressureTensor(int i, int j, int k){
 	}
 
 	return pressureTensor[i][j][k];
+}
+
+double Simulation::getDensity(int i, int j, int k) {
+	if(i < 0) return 0;
+	if (i >= xnumber) return 0;
+
+	if(j < 0) {
+		j = ynumber - 1;
+	}
+	if(j >= ynumber){
+		j = 0;
+	}
+
+	if(k < 0){
+		k = znumber - 1;
+	} 
+	if(k >= znumber){
+		k = 0;
+	}
+
+	return electricDensity[i][j][k];
 }
