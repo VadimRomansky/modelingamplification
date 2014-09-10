@@ -21,14 +21,11 @@ void Simulation::moveParticle(Particle* particle){
 
 	Particle newparticle = Particle(*particle);
 
-	double beta = particle->charge*deltaT/particle->mass;
 	Vector3d oldV = particle->velocity();
 
 	newparticle.coordinates = newparticle.coordinates + oldV*deltaT;
-	Vector3d newV = oldV + (oldE + (oldV.vectorMult(oldB))/speed_of_light)*beta;
 	newparticle.momentum = newparticle.momentum + (oldE + (oldV.vectorMult(oldB))/speed_of_light)*newparticle.charge*deltaT;
 
-	Vector3d tempV = newparticle.velocity();
 	double oldCoordinates[6] = {particle->coordinates.x, particle->coordinates.y, particle->coordinates.z, particle->momentum.x, particle->momentum.y, particle->momentum.z};
 	double tempCoordinates[6] = {newparticle.coordinates.x, newparticle.coordinates.y, newparticle.coordinates.z, newparticle.momentum.x, newparticle.momentum.y, newparticle.momentum.z};
 	double newCoordinates[6];
@@ -38,7 +35,7 @@ void Simulation::moveParticle(Particle* particle){
 	moveParticleNewtonIteration(particle, oldCoordinates, tempCoordinates, newCoordinates);
 
 	int iterationCount = 0;
-	double error = particle->dx*maxErrorLevel;
+	double error = oldV.getNorm()*deltaT*maxErrorLevel;
 	while( coordinateDifference(tempCoordinates, newCoordinates, deltaT, particle->mass) > error && iterationCount < maxNewtonIterations){
 		for(int i = 0; i < 6; ++i){
 			tempCoordinates[i] = newCoordinates[i];
@@ -62,6 +59,39 @@ void Simulation::moveParticle(Particle* particle){
 	particle->momentum.y = newCoordinates[4];
 	particle->momentum.z = newCoordinates[5];
 
+	correctParticlePosition(particle);
+}
+
+void Simulation::correctParticlePosition(Particle* particle) {
+	if(particle->coordinates.x < 0) {
+		particle->coordinates.x = -particle->coordinates.x;
+		particle->momentum.x = -particle->momentum.x;
+	}
+	if(particle->coordinates.x > xsize) {
+		std::vector<Particle*>::iterator it = particles.begin();
+
+		while(it != particles.end()) {
+			if(*it == particle) {
+				break;
+			}
+			++it;
+		}
+		particles.erase(it);
+		delete particle;
+		return;
+	}
+	if(particle->coordinates.y < 0) {
+		particle->coordinates.y += ysize;
+	}
+	if(particle->coordinates.y > ysize) {
+		particle->coordinates.y -= ysize;
+	}
+	if(particle->coordinates.z < 0) {
+		particle->coordinates.z += zsize;
+	}
+	if(particle->coordinates.z > zsize){
+		particle->coordinates.z -= zsize;
+	}
 }
 
 void Simulation::moveParticleNewtonIteration(Particle* particle, double* const oldCoordinates, double* const tempCoordinates, double* const newCoordinates){

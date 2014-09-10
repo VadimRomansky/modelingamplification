@@ -35,7 +35,7 @@ Simulation::Simulation(){
 
 	particlesPerBin = 10;
 
-	B0 = Vector3d(1E-6, 0, 0);
+	B0 = Vector3d(1E-5, 0, 0);
 	E0 = Vector3d(0, 0, 0);
 
 
@@ -281,9 +281,9 @@ void Simulation::simulate(){
 		printf("iteration number %d time = %lf\n", currentIteration, time);
 
 		evaluateParticlesRotationTensor();
-		evaluateFields();
+		//evaluateFields();
 		moveParticles();
-		updateFields();
+		//updateFields();
 
 		time += deltaT;
 		currentIteration++;
@@ -532,15 +532,7 @@ Vector3d Simulation::correlationFieldWithBbin(Particle& particle, int i, int j, 
 
 Vector3d Simulation::correlationFieldWithEbin(Particle& particle, int i, int j, int k){
 
-	Vector3d _field;
-
-	if(i < 0){
-		_field = Vector3d(0, 0, 0);
-	} else if (i > xnumber){
-		_field = E0;
-	} else {
-		_field = Efield[i][j][k];
-	}
+	Vector3d _field = getEfield(i, j, k);
 
 	double correlation = correlationWithEbin(particle, i, j, k);
 
@@ -549,15 +541,7 @@ Vector3d Simulation::correlationFieldWithEbin(Particle& particle, int i, int j, 
 
 Vector3d Simulation::correlationFieldWithTempEbin(Particle& particle, int i, int j, int k){
 
-	Vector3d _field;
-
-	if(i < 0){
-		_field = Vector3d(0, 0, 0);
-	} else if (i > xnumber){
-		_field = E0;
-	} else {
-		_field = tempEfield[i][j][k];
-	}
+	Vector3d _field = getTempEfield(i, j, k);
 
 	double correlation = correlationWithEbin(particle, i, j, k);
 
@@ -1110,6 +1094,28 @@ Vector3d Simulation::getTempEfield(int i, int j, int k){
 	}
 
 	return tempEfield[i][j][k];
+}
+
+Vector3d Simulation::getEfield(int i, int j, int k) {
+	if(i < 0){
+		return Vector3d(0.0, 0.0, 0.0);
+	} else if(i > xnumber){
+		return E0;
+	}
+
+	if(j < 0){
+		j = ynumber-1;
+	} else if(j > ynumber){
+		j = 1;
+	}
+
+	if(k < 0){
+		k = znumber-1;
+	} else if(k > znumber){
+		k = 1;
+	}
+
+	return Efield[i][j][k];
 }
 
 Matrix3d Simulation::getPressureTensor(int i, int j, int k){

@@ -107,6 +107,7 @@ public:
 	Matrix3d Simulation::evaluateAlphaRotationTensor(double beta, Vector3d velocity, Vector3d EField, Vector3d BField); //see Noguchi
 
 	void moveParticles();
+	void correctParticlePosition(Particle* particle);
 	void moveParticle(Particle* particle);
 	void moveParticleNewtonIteration(Particle* particle, double* const oldCoordinates, double* const tempCoordinates, double* const newCoordinates);
 	void evaluateParticlesRotationTensor();
@@ -114,6 +115,9 @@ public:
 	void evaluateFields();
 	void checkMaxwellEquationMatrix();
 	void createPerfectConductaryBoundaryCondition(int j, int k);
+	void createInternalEquationX(int i, int j, int k);
+	void createInternalEquationY(int i, int j, int k);
+	void createInternalEquationZ(int i, int j, int k);
 	void createInternalEquation(int i, int j, int k);
 	void evaluateMaxwellEquationMatrix();
 	void evaluateMagneticField();
@@ -141,6 +145,7 @@ public:
 
 	Vector3d getBfield(int i, int j, int k);
 	Vector3d getTempEfield(int i, int j, int k);
+	Vector3d getEfield(int i, int j, int k);
 	Matrix3d getPressureTensor(int i, int j, int k);
 	double getDensity(int i, int j, int k);
 };
