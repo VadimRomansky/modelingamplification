@@ -36,7 +36,7 @@ Simulation::Simulation(){
 	particlesPerBin = 10;
 
 	B0 = Vector3d(1E-5, 0, 0);
-	E0 = Vector3d(0, 0, 0);
+	E0 = Vector3d(1E-15, 0, 0);
 
 
 	Kronecker = Matrix3d(1.0,0,0,0,1.0,0,0,0,1.0);
@@ -212,6 +212,8 @@ void Simulation::createArrays(){
 	dielectricTensor = new Matrix3d**[xnumber + 1];
 	pressureTensor = new Matrix3d**[xnumber];
 
+	particlesInEbin = new std::vector<Particle*>**[xnumber + 1];
+	particlesInBbin = new std::vector<Particle*>**[xnumber];
 
 	for(int i = 0; i < xnumber; ++i){
 		Bfield[i] = new Vector3d*[ynumber];
@@ -219,6 +221,7 @@ void Simulation::createArrays(){
 		tempBfield[i] = new Vector3d*[ynumber];
 		electricDensity[i] = new double*[ynumber];
 		pressureTensor[i] = new Matrix3d*[ynumber];
+		particlesInBbin[i] = new std::vector<Particle*>*[ynumber];
 
 		for(int j = 0; j < ynumber; ++j){
 			Bfield[i][j] = new Vector3d[znumber];
@@ -226,6 +229,7 @@ void Simulation::createArrays(){
 			tempBfield[i][j] = new Vector3d[znumber];
 			electricDensity[i][j] = new double[znumber];
 			pressureTensor[i][j] = new Matrix3d[znumber];
+			particlesInBbin[i][j] = new std::vector<Particle*>[znumber];
 		}
 	}
 
@@ -235,6 +239,7 @@ void Simulation::createArrays(){
 		tempEfield[i] = new Vector3d*[ynumber+1];
 		electricFlux[i] = new Vector3d*[ynumber+1];
 		dielectricTensor[i] = new Matrix3d*[ynumber+1];
+		particlesInEbin[i] = new std::vector<Particle*>*[ynumber+1];
 
 		for(int j = 0; j < ynumber+1; ++j){
 			Efield[i][j] = new Vector3d[znumber+1];
@@ -242,6 +247,7 @@ void Simulation::createArrays(){
 			tempEfield[i][j] = new Vector3d[znumber+1];
 			electricFlux[i][j] = new Vector3d[znumber+1];
 			dielectricTensor[i][j] = new Matrix3d[znumber+1];
+			particlesInEbin[i][j] = new std::vector<Particle*>[znumber+1];
 		}
 	}
 
@@ -266,6 +272,16 @@ void Simulation::createFiles(){
 	fclose(traectoryFile);
 	distributionFile = fopen("./output/distribution_protons.dat","w");
 	fclose(distributionFile);
+	EfieldFile = fopen("./output/Efield.dat","w");
+	fclose(EfieldFile);
+	BfieldFile = fopen("./output/Bfield.dat","w");
+	fclose(BfieldFile);
+	Xfile = fopen("./output/Xfile.dat","w");
+	fclose(Xfile);
+	Yfile = fopen("./output/Yfile.dat","w");
+	fclose(Yfile);
+	Zfile = fopen("./output/Zfile.dat","w");
+	fclose(Zfile);
 }
 
 void Simulation::simulate(){
@@ -281,9 +297,9 @@ void Simulation::simulate(){
 		printf("iteration number %d time = %lf\n", currentIteration, time);
 
 		evaluateParticlesRotationTensor();
-		//evaluateFields();
-		moveParticles();
-		//updateFields();
+		evaluateFields();
+		//moveParticles();
+		updateFields();
 
 		time += deltaT;
 		currentIteration++;
@@ -295,6 +311,23 @@ void Simulation::simulate(){
 			traectoryFile = fopen("./output/traectory.dat","a");
 			outputTraectory(traectoryFile, particles[0], time);
 			fclose(traectoryFile);
+			EfieldFile = fopen("./output/Efield.dat","w");
+			BfieldFile = fopen("./output/Bfield.dat","w");
+			outputFields(EfieldFile, BfieldFile, Efield, Bfield, xnumber, ynumber, znumber);
+			fclose(EfieldFile);
+			fclose(BfieldFile);
+
+			Xfile = fopen("./output/Xfile.dat","w");
+			outputGrid(Xfile, xgrid, xnumber);
+			fclose(Xfile);
+
+			Yfile = fopen("./output/Yfile.dat","w");
+			outputGrid(Yfile, ygrid, ynumber);
+			fclose(Yfile);
+
+			Zfile = fopen("./output/Zfile.dat","w");
+			outputGrid(Zfile, zgrid, znumber);
+			fclose(Zfile);
 		}
 	}
 }
@@ -775,12 +808,12 @@ void Simulation::updateDeltaT(){
 
 void Simulation::createParticles(){
 	printf("creating particles\n");
-	//for(int i = 0; i < xnumber; ++i){
-		//for(int j = 0; j < ynumber; ++j){
-			//for(int k = 0; k < znumber; ++k){
-	for(int i = 0; i < 1; ++i){
-		for(int j = 0; j < 1; ++j){
-			for(int k = 0; k < 1; ++k){
+	for(int i = 0; i < xnumber; ++i){
+		for(int j = 0; j < ynumber; ++j){
+			for(int k = 0; k < znumber; ++k){
+	//for(int i = 0; i < 1; ++i){
+		//for(int j = 0; j < 1; ++j){
+			//for(int k = 0; k < 1; ++k){
 				for(int l = 0; l < particlesPerBin; ++l){
 					ParticleTypes type;
 					if(l % 2 == 0){
@@ -792,7 +825,7 @@ void Simulation::createParticles(){
 					Particle* particle = createParticle(i, j, k, weight, type);
 					particles.push_back(particle);
 					particlesNumber++;
-					printf("%d\n", particlesNumber);
+					printf("create particle number %d\n", particlesNumber);
 				}
 			}
 		}
@@ -972,6 +1005,7 @@ void Simulation::checkParticleInBox(Particle& particle){
 }
 
 void Simulation::updateParameters(){
+	collectParticlesIntoBins();
 	for(int i = 0; i < xnumber + 1; ++i){
 		for(int j = 0; j < ynumber + 1; ++j){
 			for(int k = 0; k < znumber + 1; ++k){

@@ -30,16 +30,16 @@ double Simulation::evaluateError(double** hessenbergMatrix, double* vector, doub
 }
 
 double**** Simulation::multiplySpecialMatrixVector(double**** vector) {
-	double**** result = new double***[xnumber];
-	for (int i = 0; i < xnumber; ++i) {
-		result[i] = new double**[ynumber];
-		for (int j = 0; j < ynumber; ++j) {
-			result[i][j] = new double*[znumber];
-			for (int k = 0; k < znumber; ++k) {
+	double**** result = new double***[xnumber+1];
+	for (int i = 0; i <= xnumber; ++i) {
+		result[i] = new double**[ynumber+1];
+		for (int j = 0; j <= ynumber; ++j) {
+			result[i][j] = new double*[znumber+1];
+			for (int k = 0; k <= znumber; ++k) {
 				result[i][j][k] = new double[3];
 				for (int l = 0; l < 3; ++l) {
 					result[i][j][k][l] = 0;
-					for (int m = 0; m < maxwellEquationMatrix[i][j][k][l].size(); ++i) {
+					for (int m = 0; m < maxwellEquationMatrix[i][j][k][l].size(); ++m) {
 						MatrixElement element = maxwellEquationMatrix[i][j][k][l][m];
 
 						result[i][j][k][l] += element.value * vector[element.i][element.j][element.k][element.l];
@@ -82,20 +82,26 @@ double***** Simulation::arnoldiIterations(double** outHessenbergMatrix, int n, d
 				for (int k = 0; k < znumber + 1; ++k) {
 					for (int l = 0; l < 3; ++l) {
 						tempVector[i][j][k][l] -= outHessenbergMatrix[m][n - 2] * resultBasis[m][i][j][k][l];
+						alertNaNOrInfinity(tempVector[i][j][k][l], "tempVector = NaN\n");
 					}
 				}
 			}
 		}
 	}
 	outHessenbergMatrix[n - 1][n - 2] = sqrt(scalarMultiplyLargeVectors(tempVector, tempVector));
-	for (int i = 0; i < xnumber + 1; ++i) {
-		for (int j = 0; j < ynumber + 1; ++j) {
-			for (int k = 0; k < znumber + 1; ++k) {
-				for (int l = 0; l < 3; ++l) {
-					tempVector[i][j][k][l] /= outHessenbergMatrix[n - 1][n - 2];
+	if (outHessenbergMatrix[n - 1][n - 2] > 0) {
+		for (int i = 0; i < xnumber + 1; ++i) {
+			for (int j = 0; j < ynumber + 1; ++j) {
+				for (int k = 0; k < znumber + 1; ++k) {
+					for (int l = 0; l < 3; ++l) {
+						tempVector[i][j][k][l] /= outHessenbergMatrix[n - 1][n - 2];
+						alertNaNOrInfinity(tempVector[i][j][k][l], "tempVector = NaN\n");
+					}
 				}
 			}
 		}
+	} else {
+		printf("outHessenbergMatrix[n-1][n-2] == 0\n");
 	}
 
 	resultBasis[n - 1] = tempVector;
@@ -137,7 +143,9 @@ void Simulation::generalizedMinimalResidualMethod() {
 	}
 
 	Rmatrix[0] = new double[1];
+	Rmatrix[1] = new double[1];
 	oldRmatrix[0] = new double[1];
+	oldRmatrix[1] = new double[1];
 
 	double***** basis = new double****[1];
 	basis[0] = new double***[xnumber + 1];
@@ -266,7 +274,13 @@ void Simulation::generalizedMinimalResidualMethod() {
 			for (int j = n - 2; j > i; --j) {
 				y[i] -= Rmatrix[i][j] * y[j];
 			}
-			y[i] /= Rmatrix[i][i];
+			if(Rmatrix[i][i] > 0){
+				y[i] /= Rmatrix[i][i];
+			} else {
+				y[i] = 0;
+				printf("Rmatrix[%d][%d] = 0\n", i, i);
+			}
+			alertNaNOrInfinity(y[i], "y = NaN\n");
 		}
 
 		error = fabs(beta * Qmatrix[n - 1][0]);
@@ -334,7 +348,7 @@ double Simulation::scalarMultiplyLargeVectors(double**** a, double**** b) {
 	for (int i = 0; i < xnumber + 1; ++i) {
 		for (int j = 0; j < ynumber + 1; ++j) {
 			for (int k = 0; k < znumber + 1; ++k) {
-				for (int l = 0; l < 3; ++i) {
+				for (int l = 0; l < 3; ++l) {
 					result += a[i][j][k][l] * b[i][j][k][l];
 				}
 			}

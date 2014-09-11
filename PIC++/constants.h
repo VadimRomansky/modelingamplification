@@ -13,9 +13,9 @@ const double pi = 3.1415926535897932384626433832795028841971693993751;
 const double epsilon = 1E-16;
 const double maxErrorLevel = 1E-8;
 const int pnumber = 100;
-const int writeParameter = 10000;
+const int writeParameter = 1;
 const int maxNewtonIterations = 100;
-const int maxGMRESIterations = 100;
+const int maxGMRESIterations = 11*11*11;
 
 const int numThreads = 12;
 

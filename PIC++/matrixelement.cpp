@@ -12,6 +12,7 @@ bool MatrixElement::equalsIndex(MatrixElement& element) {
 	if(i != element.i) return false;
 	if(j != element.j) return false;
 	if(k != element.k) return false;
+	if(l != element.l) return false;
 	
 	return true;
 }

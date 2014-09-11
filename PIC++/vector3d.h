@@ -1,6 +1,8 @@
 #ifndef VECTOR3D_H
 #define VECTOR3D_H
 
+#include "stdio.h"
+
 #include "matrix3d.h"
 
 class Matrix3d;

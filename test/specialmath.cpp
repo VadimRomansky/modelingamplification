@@ -3,6 +3,7 @@
 #include <math.h>
 
 #include "specialmath.h"
+#include "../PIC++/simulation.h"
 
 
 double** arnoldiIterations(double** matrix, double** outHessenbergMatrix, int n, double** prevBasis, double** prevHessenbergMatrix){
@@ -54,7 +55,7 @@ void generalizedMinimalResidualMethod(double** matrix, double* rightPart){
 		}
 	}
 
-	double maxError = 1E-10;
+	double maxError = E0.getNorm;
 
 	double** hessenbergMatrix;
 	double** newHessenbergMatrix = NULL;

@@ -134,7 +134,7 @@ void Simulation::checkMaxwellEquationMatrix() {
 							printf("eement k > znumber\n");
 							exit(0);
 						}
-						for (int n = m + 1; m < maxwellEquationMatrix[i][j][k][l].size(); ++n) {
+						for (int n = m + 1; n < maxwellEquationMatrix[i][j][k][l].size(); ++n) {
 							MatrixElement tempElement = maxwellEquationMatrix[i][j][k][l][n];
 
 							if (element.equalsIndex(tempElement)) {

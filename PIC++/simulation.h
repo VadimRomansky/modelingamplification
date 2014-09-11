@@ -77,6 +77,11 @@ public:
 
 	FILE* traectoryFile;
 	FILE* distributionFile;
+	FILE* EfieldFile;
+	FILE* BfieldFile;
+	FILE* Xfile;
+	FILE* Yfile;
+	FILE* Zfile;
 
 	Simulation();
 	~Simulation();
