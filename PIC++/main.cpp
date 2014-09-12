@@ -6,6 +6,7 @@
 #include "matrix3d.h"
 #include "util.h"
 #include "random.h"
+#include "input.h"
 #include "simulation.h"
 
 //test solving matrix
@@ -152,7 +153,9 @@ int main()
 {	
 	srand (time(NULL));
 
-	Simulation simulation;
+	FILE* inputFile = fopen("./input/input.dat","r");
+	Simulation simulation = readInput(inputFile);;
+	fclose(inputFile);
 
 	simulation.simulate();
 

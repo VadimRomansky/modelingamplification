@@ -56,6 +56,53 @@ Simulation::Simulation(){
 	LeviCivita[2][1][0] = -1.0;
 }
 
+Simulation::Simulation(double xn, double yn, double zn, double xsizev, double ysizev, double zsizev, double temp, double rho, double Ex, double Ey, double Ez, double Bx, double By, double Bz, int maxIterations, double maxTimeV, int particlesPerBinV) {
+	debugMode = true;
+
+	currentIteration = 0;
+	time = 0;
+	particlesNumber = 0;
+
+	theta = 0.5;
+
+	//read input!
+	xnumber = xn;
+	ynumber = yn;
+	znumber = zn;
+
+	xsize = xsizev;
+	ysize = ysizev;
+	zsize = zsizev;
+
+	temperature = temp;
+	density = rho;
+
+	maxIteration = maxIterations;
+	maxTime = maxTimeV;
+
+	particlesPerBin = particlesPerBinV;
+
+	B0 = Vector3d(Bx, By, Bz);
+	E0 = Vector3d(Ex, Ey, Ez);
+
+
+	Kronecker = Matrix3d(1.0,0,0,0,1.0,0,0,0,1.0);
+
+	for(int i = 0; i < 3; ++i){
+		for(int j = 0; j < 3; ++j){
+			for(int k = 0; k < 3; ++k){
+				LeviCivita[i][j][k] = 0;
+			}
+		}
+	}
+	LeviCivita[0][1][2] = 1.0;
+	LeviCivita[0][2][1] = -1.0;
+	LeviCivita[1][0][2] = -1.0;
+	LeviCivita[1][2][0] = 1.0;
+	LeviCivita[2][0][1] = 1.0;
+	LeviCivita[2][1][0] = -1.0;
+}
+
 Simulation::~Simulation(){
 	for(int pcount = 0; pcount < particles.size(); ++pcount){
 		Particle* particle = particles[pcount];
@@ -288,7 +335,7 @@ void Simulation::simulate(){
 	createArrays();
 	initialize();
 	createFiles();
-	createParticles();
+	//createParticles();
 
 	updateDeltaT();
 	//deltaT = 0;
@@ -857,9 +904,9 @@ Particle* Simulation::createParticle(int i, int j, int k, double weight, Particl
 
 	double energy = mass*speed_of_light_sqr;
 
-	double theta = kBoltzman*temperature/(mass*speed_of_light_sqr);
+	double thetaParamter = kBoltzman*temperature/(mass*speed_of_light_sqr);
 
-	if(theta < 0.01){
+	if(thetaParamter < 0.01){
 		energy = mass*speed_of_light_sqr + maxwellDistribution(temperature);
 	} else {
 		energy = maxwellJuttnerDistribution(temperature, mass);
@@ -914,7 +961,7 @@ void Simulation::collectParticlesIntoBins(){
 			for(int j = ycount - 1; j <= ycount + 1; ++j){
 				for(int k = zcount - 1; k <= zcount + 1; ++k){
 					if( particleCrossBbin(*particle, i, j, k)){
-						particlesInBbin[i][j][k].push_back(particle);
+						pushParticleIntoBbin(particle, i, j, k);
 					}
 				}
 			}
@@ -928,13 +975,45 @@ void Simulation::collectParticlesIntoBins(){
 			for(int j = ycount - 1; j <= ycount + 1; ++j){
 				for(int k = zcount - 1; k <= zcount + 1; ++k){
 					if( particleCrossBbin(*particle, i, j, k)){
-						particlesInEbin[i][j][k].push_back(particle);
+						pushParticleIntoEbin(particle, i, j, k);
 					}
 				}
 			}
 		}
 	}
 
+}
+
+void Simulation::pushParticleIntoEbin(Particle* particle, int i, int j, int k) {
+	if(i < 0) return;
+	if(i > xnumber) return;
+	if(j < 0) {
+		j = ynumber - 1;
+	} else if(j > ynumber){
+		j = 1;
+	}
+	if(k < 0) {
+		k = znumber  - 1;
+	} else if(k > znumber) {
+		k = 1;
+	}
+	particlesInEbin[i][j][k].push_back(particle);
+}
+
+void Simulation::pushParticleIntoBbin(Particle* particle, int i, int j, int k) {
+	if(i < 0) return;
+	if(i >= xnumber) return;
+	if(j < 0) {
+		j = ynumber - 1;
+	} else if(j >= ynumber){
+		j = 0;
+	}
+	if(k < 0) {
+		k = znumber  - 1;
+	} else if(k >= znumber) {
+		k = 0;
+	}
+	particlesInBbin[i][j][k].push_back(particle);
 }
 
 bool Simulation::particleCrossBbin(Particle& particle, int i, int j, int k){
