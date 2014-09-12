@@ -352,12 +352,14 @@ void Simulation::simulate(){
 		currentIteration++;
 
 		if(currentIteration % writeParameter == 0){
-			distributionFile = fopen("./output/distribution_protons.dat", "a");
-			outputDistribution(distributionFile, particles, ParticleTypes::PROTON);
-			fclose(distributionFile);
-			traectoryFile = fopen("./output/traectory.dat","a");
-			outputTraectory(traectoryFile, particles[0], time);
-			fclose(traectoryFile);
+			if(particles.size() > 0){
+				distributionFile = fopen("./output/distribution_protons.dat", "a");
+				outputDistribution(distributionFile, particles, ParticleTypes::PROTON);
+				fclose(distributionFile);
+				traectoryFile = fopen("./output/traectory.dat","a");
+				outputTraectory(traectoryFile, particles[0], time);
+				fclose(traectoryFile);
+			}
 			EfieldFile = fopen("./output/Efield.dat","w");
 			BfieldFile = fopen("./output/Bfield.dat","w");
 			outputFields(EfieldFile, BfieldFile, Efield, Bfield, xnumber, ynumber, znumber);
@@ -861,14 +863,14 @@ void Simulation::createParticles(){
 	//for(int i = 0; i < 1; ++i){
 		//for(int j = 0; j < 1; ++j){
 			//for(int k = 0; k < 1; ++k){
-				for(int l = 0; l < particlesPerBin; ++l){
+				for(int l = 0; l < 2*particlesPerBin; ++l){
 					ParticleTypes type;
 					if(l % 2 == 0){
 						type = ParticleTypes::PROTON;
 					} else {
 						type = ParticleTypes::ELECTRON;
 					}
-					double weight = density*2/(massProton*particlesPerBin)*volume(i, j, k);
+					double weight = density/(massProton*particlesPerBin)*volume(i, j, k);
 					Particle* particle = createParticle(i, j, k, weight, type);
 					particles.push_back(particle);
 					particlesNumber++;

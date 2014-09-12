@@ -7,10 +7,26 @@ Simulation readInput(FILE* inputFile) {
 	int xnumber;
 	char ch = ' ';
 	fscanf(inputFile, "%d", &xnumber);
+
+	if(xnumber < 0) {
+		printf("xnumber must be > 0\n");
+		exit(0);
+	}
+
 	int ynumber;
 	fscanf(inputFile, "%d", &ynumber);
+
+	if(ynumber < 0) {
+		printf("ynumber must be > 0\n");
+		exit(0);
+	}
+
 	int znumber;
 	fscanf(inputFile, "%d", &znumber);
+	if(znumber < 0) {
+		printf("znumber must be > 0\n");
+		exit(0);
+	}
 
 	while(ch != '\n') {
 		fscanf(inputFile, "%c", &ch);
@@ -18,10 +34,24 @@ Simulation readInput(FILE* inputFile) {
 
 	double xsize;
 	fscanf(inputFile, "%lf", &xsize);
+	if(xsize < 0) {
+		printf("xsize must be > 0\n");
+		exit(0);
+	}
+
 	double ysize;
 	fscanf(inputFile, "%lf", &ysize);
+	if(ysize < 0) {
+		printf("ysize must be > 0\n");
+		exit(0);
+	}
+
 	double zsize;
 	fscanf(inputFile, "%lf", &zsize);
+	if(zsize < 0) {
+		printf("zsize must be > 0\n");
+		exit(0);
+	}
 
 	ch = ' ';
 	while(ch != '\n') {
@@ -31,6 +61,11 @@ Simulation readInput(FILE* inputFile) {
 	double temperature;
 	fscanf(inputFile, "%lf", &temperature);
 
+	if(temperature < 0) {
+		printf("temperature must be > 0\n");
+		exit(0);
+	}
+
 	ch = ' ';
 	while(ch != '\n') {
 		fscanf(inputFile, "%c", &ch);
@@ -38,6 +73,11 @@ Simulation readInput(FILE* inputFile) {
 
 	double density;
 	fscanf(inputFile, "%lf", &density);
+
+	if(density < 0) {
+		printf("density must be > 0\n");
+		exit(0);
+	}
 
 	ch = ' ';
 	while(ch != '\n') {
@@ -75,6 +115,11 @@ Simulation readInput(FILE* inputFile) {
 	int maxIterations;
 	fscanf(inputFile, "%d", &maxIterations);
 
+	if(maxIterations < 0) {
+		printf("max iterations must be > 0\n");
+		exit(0);
+	}
+
 	ch = ' ';
 	while(ch != '\n') {
 		fscanf(inputFile, "%c", &ch);
@@ -83,6 +128,11 @@ Simulation readInput(FILE* inputFile) {
 	double maxTime;
 	fscanf(inputFile, "%lf", &maxTime);
 
+	if(maxTime < 0) {
+		printf("max time must be > 0\n");
+		exit(0);
+	}
+
 	ch = ' ';
 	while(ch != '\n') {
 		fscanf(inputFile, "%c", &ch);
@@ -90,6 +140,11 @@ Simulation readInput(FILE* inputFile) {
 
 	int particlesPerBin;
 	fscanf(inputFile, "%d", &particlesPerBin);
+
+	if(particlesPerBin < 0) {
+		printf("particles per bin must be > 0\n");
+		exit(0);
+	}
 
 	return Simulation(xnumber, ynumber, znumber, xsize, ysize, zsize, temperature, density, Ex, Ey, Ez, Bx, By, Bz, maxIterations, maxTime, particlesPerBin);
 }

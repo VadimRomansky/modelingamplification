@@ -55,7 +55,7 @@ void generalizedMinimalResidualMethod(double** matrix, double* rightPart){
 		}
 	}
 
-	double maxError = E0.getNorm;
+	double maxError = 1E-7;
 
 	double** hessenbergMatrix;
 	double** newHessenbergMatrix = NULL;
