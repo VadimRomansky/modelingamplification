@@ -84,6 +84,7 @@ public:
 	FILE* Zfile;
 
 	Simulation();
+	Simulation(double xn, double yn, double zn, double xsizev, double ysizev, double zsizev, double temp, double rho, double Ex, double Ey, double Ez, double Bx, double By, double Bz, int maxIterations, double maxTimeV, int particlesPerBinV);
 	~Simulation();
 
 	void initialize();
@@ -136,6 +137,8 @@ public:
 	double volume(int i, int j, int k);
 
 	void collectParticlesIntoBins();
+	void pushParticleIntoEbin(Particle* particle, int i, int j, int k);
+	void pushParticleIntoBbin(Particle* particle, int i, int j, int k);
 	bool particleCrossBbin(Particle& particle, int i, int j, int k);
 	bool particleCrossEbin(Particle& particle, int i, int j, int k);
 	void checkParticleInBox(Particle& particle);
