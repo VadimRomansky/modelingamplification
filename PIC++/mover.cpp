@@ -77,6 +77,7 @@ void Simulation::correctParticlePosition(Particle* particle) {
 			++it;
 		}
 		particles.erase(it);
+		particlesNumber--;
 		delete particle;
 		return;
 	}
@@ -117,7 +118,6 @@ void Simulation::moveParticleNewtonIteration(Particle* particle, double* const o
 	Vector3d E = correlationTempEfield(tempparticle);
 	Vector3d B = correlationBfield(tempparticle);
 	Vector3d oldE = correlationTempEfield(particle);
-	Vector3d oldB = correlationBfield(particle);
 
 	double gamma_factor = 1/sqrt(1 - sqr(velocity.getNorm()/speed_of_light));
 	double G = (beta*(oldE.scalarMult(velocity))/speed_of_light_sqr) + gamma_factor;
@@ -179,17 +179,21 @@ void Simulation::moveParticleNewtonIteration(Particle* particle, double* const o
 	leftHalf[2][1] = - middleVelocityDerY.z*0.5*deltaT;
 	leftHalf[2][2] = 1 - middleVelocityDerZ.z*0.5*deltaT;
 
-	leftHalf[3][0] = -0.5*particle->mass*beta*(EderX + (middleVelocityDerX.vectorMult(B)/speed_of_light) + (middleVelocity.vectorMult(BderX)/speed_of_light)).x;
-	leftHalf[3][1] = -0.5*particle->mass*beta*(EderY + (middleVelocityDerY.vectorMult(B)/speed_of_light) + (middleVelocity.vectorMult(BderY)/speed_of_light)).x;
-	leftHalf[3][2] = -0.5*particle->mass*beta*(EderZ + (middleVelocityDerZ.vectorMult(B)/speed_of_light) + (middleVelocity.vectorMult(BderZ)/speed_of_light)).x;
+	Vector3d tempDerX = (EderX + (middleVelocityDerX.vectorMult(B)/speed_of_light) + (middleVelocity.vectorMult(BderX)/speed_of_light))*(-0.5*particle->mass*beta);
+	Vector3d tempDerY = (EderY + (middleVelocityDerY.vectorMult(B)/speed_of_light) + (middleVelocity.vectorMult(BderY)/speed_of_light))*(-0.5*particle->mass*beta);
+	Vector3d tempDerZ = (EderZ + (middleVelocityDerZ.vectorMult(B)/speed_of_light) + (middleVelocity.vectorMult(BderZ)/speed_of_light))*(-0.5*particle->mass*beta);
 
-	leftHalf[4][0] = -0.5*particle->mass*beta*(EderX + (middleVelocityDerX.vectorMult(B)/speed_of_light) + (middleVelocity.vectorMult(BderX)/speed_of_light)).y;
-	leftHalf[4][1] = -0.5*particle->mass*beta*(EderY + (middleVelocityDerY.vectorMult(B)/speed_of_light) + (middleVelocity.vectorMult(BderY)/speed_of_light)).y;
-	leftHalf[4][2] = -0.5*particle->mass*beta*(EderZ + (middleVelocityDerZ.vectorMult(B)/speed_of_light) + (middleVelocity.vectorMult(BderZ)/speed_of_light)).y;
+	leftHalf[3][0] = tempDerX.x;
+	leftHalf[3][1] = tempDerY.x;
+	leftHalf[3][2] = tempDerZ.x;
 
-	leftHalf[5][0] = -0.5*particle->mass*beta*(EderX + (middleVelocityDerX.vectorMult(B)/speed_of_light) + (middleVelocity.vectorMult(BderX)/speed_of_light)).z;
-	leftHalf[5][1] = -0.5*particle->mass*beta*(EderY + (middleVelocityDerY.vectorMult(B)/speed_of_light) + (middleVelocity.vectorMult(BderY)/speed_of_light)).z;
-	leftHalf[5][2] = -0.5*particle->mass*beta*(EderZ + (middleVelocityDerZ.vectorMult(B)/speed_of_light) + (middleVelocity.vectorMult(BderZ)/speed_of_light)).z;
+	leftHalf[4][0] = tempDerX.y;
+	leftHalf[4][1] = tempDerY.y;
+	leftHalf[4][2] = tempDerZ.y;
+
+	leftHalf[5][0] = tempDerX.z;
+	leftHalf[5][1] = tempDerY.z;
+	leftHalf[5][2] = tempDerZ.z;
 
 	for(int i = 0; i < 6; ++i){
 		rightPart[i] = - functionNewtonMethod[i];

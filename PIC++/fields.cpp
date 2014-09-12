@@ -154,19 +154,19 @@ void Simulation::checkMaxwellEquationMatrix() {
 void Simulation::createPerfectConductaryBoundaryCondition(int j, int k) {
 	int i = 0;
 
-	maxwellEquationRightPart[i][j][k][0] = 4 * pi * electricDensity[i][j][k] * deltaX * deltaY * deltaZ;
+	maxwellEquationRightPart[i][j][k][0] = 4 * pi * electricDensity[0][j][k] * deltaX * deltaY * deltaZ;
 
-	double element = -deltaZ * deltaY * (1 + dielectricTensor[i][j][k].matrix[0][0]) / 4;
-	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(element, i, j, k, 0));
+	double element = -deltaZ * deltaY * (1 + dielectricTensor[0][j][k].matrix[0][0]) / 4;
+	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(element, 0, j, k, 0));
 
-	element = -deltaZ * deltaY * (1 + dielectricTensor[i][j + 1][k].matrix[0][0]) / 4;
-	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(element, i, j + 1, k, 0));
+	element = -deltaZ * deltaY * (1 + dielectricTensor[0][j + 1][k].matrix[0][0]) / 4;
+	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(element, 0, j + 1, k, 0));
 
-	element = -deltaZ * deltaY * (1 + dielectricTensor[i][j][k + 1].matrix[0][0]) / 4;
-	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(element, i, j, k + 1, 0));
+	element = -deltaZ * deltaY * (1 + dielectricTensor[0][j][k + 1].matrix[0][0]) / 4;
+	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(element, 0, j, k + 1, 0));
 
-	element = -deltaZ * deltaY * (1 + dielectricTensor[i][j + 1][k + 1].matrix[0][0]) / 4;
-	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(element, i, j + 1, k + 1, 0));
+	element = -deltaZ * deltaY * (1 + dielectricTensor[0][j + 1][k + 1].matrix[0][0]) / 4;
+	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(element, 0, j + 1, k + 1, 0));
 
 	element = (deltaZ * deltaY * (1 + dielectricTensor[i + 1][j][k].matrix[0][0]) / 4) - (deltaY * deltaX * (dielectricTensor[i + 1][j][k].matrix[2][0]) / 4) - (deltaX * deltaZ * (dielectricTensor[i + 1][j][k].matrix[1][0]) / 4);
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(element, i + 1, j, k, 0));

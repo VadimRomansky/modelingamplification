@@ -174,7 +174,9 @@ void Simulation::generalizedMinimalResidualMethod() {
 	double sinn;
 	double module;
 
-	while (error > maxError && n < maxGMRESIterations) {
+	int matrixDimension = 3*(xnumber+1)*(ynumber+1)*(znumber+1);
+
+	while (error > maxError && n < min2(maxGMRESIterations, matrixDimension)) {
 		printf("GMRES iteration %d\n", n);
 		newHessenbergMatrix = new double*[n];
 		for (int i = 0; i < n; ++i) {

@@ -151,7 +151,7 @@
 
 int main()
 {	
-	srand (time(NULL));
+	srand (time(nullptr));
 
 	FILE* inputFile = fopen("./input/input.dat","r");
 	Simulation simulation = readInput(inputFile);;
