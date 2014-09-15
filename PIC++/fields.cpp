@@ -76,7 +76,7 @@ void Simulation::evaluateMaxwellEquationMatrix() {
 			}
 		}
 
-		if (i < xnumber) {
+		//if (i < xnumber) {
 			//periodic by Y
 			for (int k = 0; k <= znumber; ++k) {
 				for (int l = 0; l < 3; ++l) {
@@ -95,7 +95,7 @@ void Simulation::evaluateMaxwellEquationMatrix() {
 					maxwellEquationMatrix[i][j][znumber][l].push_back(MatrixElement(-1.0, i, j, 0, l));
 				}
 			}
-		}
+		//}
 	}
 
 	if (debugMode) {
@@ -154,7 +154,7 @@ void Simulation::checkMaxwellEquationMatrix() {
 void Simulation::createPerfectConductaryBoundaryCondition(int j, int k) {
 	int i = 0;
 
-	maxwellEquationRightPart[i][j][k][0] = 4 * pi * electricDensity[0][j][k] * deltaX * deltaY * deltaZ;
+	/*maxwellEquationRightPart[i][j][k][0] = 4 * pi * electricDensity[0][j][k] * deltaX * deltaY * deltaZ;
 
 	double element = -deltaZ * deltaY * (1 + dielectricTensor[0][j][k].matrix[0][0]) / 4;
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(element, 0, j, k, 0));
@@ -204,7 +204,9 @@ void Simulation::createPerfectConductaryBoundaryCondition(int j, int k) {
 	element = (deltaZ * deltaY * dielectricTensor[i + 1][j + 1][k + 1].matrix[0][2] / 4) + (deltaY * deltaX * (1 + dielectricTensor[i + 1][j + 1][k + 1].matrix[2][2]) / 4) + (deltaX * deltaZ * dielectricTensor[i + 1][j + 1][k + 1].matrix[1][2] / 4);
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(element, i + 1, j + 1, k + 1, 2));
 
-
+	*/
+	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(1.0, 1, j, k, 0));
+	maxwellEquationRightPart[i][j][k][0] = 0;
 	//Ey and Ez = 0
 	maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(1.0, i, j, k, 1));
 	maxwellEquationRightPart[i][j][k][1] = 0;
