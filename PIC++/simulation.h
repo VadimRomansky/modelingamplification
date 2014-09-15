@@ -19,6 +19,14 @@ public:
 	double density;
 	double temperature;
 
+	double plasma_period;
+	double gyroradius;
+
+	double speed_of_light_normalized;
+	double speed_of_light_normalized_sqr;
+	double kBoltzman_normalized;
+	double electron_charge_normalized;
+
 	double time;
 	double maxTime;
 	int currentIteration;

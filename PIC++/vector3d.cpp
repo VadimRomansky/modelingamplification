@@ -17,7 +17,7 @@ Vector3d::Vector3d(double vx, double vy, double vz) {
 	z = vz;
 }
 
-double Vector3d::getNorm() {
+double Vector3d::norm() {
 	return sqrt(x * x + y * y + z * z);
 }
 

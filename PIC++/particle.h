@@ -33,13 +33,13 @@ public:
 	double shapeFunction(const double& xvalue, const double& yvalue, const double& zvalue);
 
 	double momentumAbs();
-	Vector3d velocity();
-	double velocityX();
-	double velocityY();
-	double velocityZ();
-	double gammaFactor();
+	Vector3d velocity(double c);
+	double velocityX(double c);
+	double velocityY(double c);
+	double velocityZ(double c);
+	double gammaFactor(double c);
 
-	void setMomentumByV(Vector3d v);
+	void setMomentumByV(Vector3d v, double c);
 };
 
 #endif

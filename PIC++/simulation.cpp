@@ -38,6 +38,20 @@ Simulation::Simulation(){
 	B0 = Vector3d(1E-5, 0, 0);
 	E0 = Vector3d(1E-15, 0, 0);
 
+	double concentration = density/massProton;
+
+	plasma_period = sqrt(massElectron/(4*pi*concentration*sqr(electron_charge)))/(2*pi);
+	gyroradius = kBoltzman*temperature/(electron_charge*B0.norm());
+
+	kBoltzman_normalized = kBoltzman*gyroradius*gyroradius/(plasma_period*plasma_period);
+	speed_of_light_normalized = speed_of_light*plasma_period/gyroradius;
+	speed_of_light_normalized_sqr = speed_of_light_normalized*speed_of_light_normalized;
+	electron_charge_normalized = electron_charge*plasma_period/sqr(gyroradius);
+
+	E0 = E0/(plasma_period*gyroradius);
+	B0 = B0/(plasma_period*gyroradius);
+
+	density = density*cube(gyroradius);
 
 	Kronecker = Matrix3d(1.0,0,0,0,1.0,0,0,0,1.0);
 
@@ -85,6 +99,23 @@ Simulation::Simulation(double xn, double yn, double zn, double xsizev, double ys
 	B0 = Vector3d(Bx, By, Bz);
 	E0 = Vector3d(Ex, Ey, Ez);
 
+	double concentration = density/massProton;
+
+	plasma_period = sqrt(massElectron/(4*pi*concentration*sqr(electron_charge)))/(2*pi);
+	gyroradius = kBoltzman*temperature/(electron_charge*B0.norm());
+
+	plasma_period = 1;
+	gyroradius = 1;
+
+	kBoltzman_normalized = kBoltzman*gyroradius*gyroradius/(plasma_period*plasma_period);
+	speed_of_light_normalized = speed_of_light*plasma_period/gyroradius;
+	speed_of_light_normalized_sqr = speed_of_light_normalized*speed_of_light_normalized;
+	electron_charge_normalized = electron_charge*plasma_period/sqr(gyroradius);
+
+	E0 = E0/(plasma_period*gyroradius);
+	B0 = B0/(plasma_period*gyroradius);
+
+	density = density*cube(gyroradius);
 
 	Kronecker = Matrix3d(1.0,0,0,0,1.0,0,0,0,1.0);
 
@@ -362,7 +393,7 @@ void Simulation::simulate(){
 			}
 			EfieldFile = fopen("./output/Efield.dat","w");
 			BfieldFile = fopen("./output/Bfield.dat","w");
-			outputFields(EfieldFile, BfieldFile, Efield, Bfield, xnumber, ynumber, znumber);
+			outputFields(EfieldFile, BfieldFile, Efield, Bfield, xnumber, ynumber, znumber, plasma_period, gyroradius);
 			fclose(EfieldFile);
 			fclose(BfieldFile);
 
@@ -824,10 +855,10 @@ double Simulation::correlationBspline(const double& x, const double&  dx, const 
 Matrix3d Simulation::evaluateAlphaRotationTensor(double beta, Vector3d velocity, Vector3d EField, Vector3d BField){
 	Matrix3d result;
 
-	beta = beta/speed_of_light;
+	beta = beta/speed_of_light_normalized;
 
-	double gamma_factor = 1/sqrt(1 - (velocity.x*velocity.x + velocity.y*velocity.y + velocity.z*velocity.z)/speed_of_light_sqr);
-	double G = (beta*(EField.scalarMult(velocity))/speed_of_light_sqr + gamma_factor);
+	double gamma_factor = 1/sqrt(1 - (velocity.x*velocity.x + velocity.y*velocity.y + velocity.z*velocity.z)/speed_of_light_normalized_sqr);
+	double G = (beta*(EField.scalarMult(velocity))/speed_of_light_normalized_sqr + gamma_factor);
 	beta = beta/G;
 	double denominator = G*(1 + beta*beta*BField.scalarMult(BField));
 
@@ -851,8 +882,8 @@ Matrix3d Simulation::evaluateAlphaRotationTensor(double beta, Vector3d velocity,
 
 void Simulation::updateDeltaT(){
 	double delta = min3(deltaX, deltaY, deltaZ);
-	deltaT = 0.01*delta/speed_of_light;
-	deltaT = min2(deltaT, 0.05*massElectron*speed_of_light/(electron_charge*B0.getNorm()));
+	deltaT = 0.01*delta/speed_of_light_normalized;
+	deltaT = min2(deltaT, 0.05*massElectron*speed_of_light_normalized/(electron_charge_normalized*B0.norm()));
 }
 
 void Simulation::createParticles(){
@@ -888,11 +919,11 @@ Particle* Simulation::createParticle(int i, int j, int k, double weight, Particl
 	switch(type){
 		case ParticleTypes::PROTON :
 			mass = massProton;
-			charge = electron_charge;
+			charge = electron_charge_normalized;
 			break;
 		case ParticleTypes::ELECTRON :
 			mass = massElectron;
-			charge = -electron_charge;
+			charge = -electron_charge_normalized;
 			break;
 	}
 
@@ -904,17 +935,17 @@ Particle* Simulation::createParticle(int i, int j, int k, double weight, Particl
 	double dy = deltaY/4;
 	double dz = deltaZ/4;
 
-	double energy = mass*speed_of_light_sqr;
+	double energy = mass*speed_of_light_normalized_sqr;
 
-	double thetaParamter = kBoltzman*temperature/(mass*speed_of_light_sqr);
+	double thetaParamter = kBoltzman_normalized*temperature/(mass*speed_of_light_normalized_sqr);
 
 	if(thetaParamter < 0.01){
-		energy = mass*speed_of_light_sqr + maxwellDistribution(temperature);
+		energy = mass*speed_of_light_normalized_sqr + maxwellDistribution(temperature, kBoltzman_normalized);
 	} else {
-		energy = maxwellJuttnerDistribution(temperature, mass);
+		energy = maxwellJuttnerDistribution(temperature, mass, speed_of_light_normalized, kBoltzman_normalized);
 	}
 
-	double p = sqrt(energy*energy - sqr(mass*speed_of_light_sqr))/speed_of_light;
+	double p = sqrt(energy*energy - sqr(mass*speed_of_light_normalized_sqr))/speed_of_light_normalized;
 	
 	double pz = p*(2*uniformDistribution() - 1);
 	double phi = 2*pi*uniformDistribution();
@@ -1095,8 +1126,8 @@ void Simulation::updateParameters(){
 				for(int pcount = 0; pcount < particlesInEbin[i][j][k].size(); ++pcount){
 					Particle* particle = particlesInEbin[i][j][k][pcount];
 					double correlation = correlationWithEbin(*particle, i, j, k)/volume(i, j, k);
-					double gamma = particle->gammaFactor();
-					Vector3d velocity = particle->velocity();
+					double gamma = particle->gammaFactor(speed_of_light_normalized);
+					Vector3d velocity = particle->velocity(speed_of_light_normalized);
 					Vector3d rotatedVelocity = particle->rotationTensor*velocity*gamma;
 
 					if(i > 0){
@@ -1135,8 +1166,8 @@ void Simulation::updateParameters(){
 				for(int pcount = 0; pcount < particlesInBbin[i][j][k].size(); ++pcount){
 					Particle* particle = particlesInBbin[i][j][k][pcount];
 					double correlation = correlationWithBbin(*particle, i, j, k)/volume(i, j, k);
-					double gamma = particle->gammaFactor();
-					Vector3d velocity = particle->velocity();
+					double gamma = particle->gammaFactor(speed_of_light_normalized);
+					Vector3d velocity = particle->velocity(speed_of_light_normalized);
 					Vector3d rotatedVelocity = particle->rotationTensor*velocity*gamma;
 
 					electricDensity[i][j][k] += particle->weight*particle->charge*correlation;
