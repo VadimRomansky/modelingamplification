@@ -14,13 +14,13 @@ void outputDistribution(FILE* outFile, std::vector<Particle*> particles, int par
 	for(int i = 0; i < particles.size(); ++i){
 		if(particles[i]->type == particleType){
 			if(minMomentum < 0){
-				minMomentum = particles[i]->momentum.getNorm();
+				minMomentum = particles[i]->momentum.norm();
 			}
-			if(particles[i]->momentum.getNorm() < minMomentum){
-				minMomentum = particles[i]->momentum.getNorm();
+			if(particles[i]->momentum.norm() < minMomentum){
+				minMomentum = particles[i]->momentum.norm();
 			} else {
-				if(particles[i]->momentum.getNorm() > maxMomentum){
-					maxMomentum = particles[i]->momentum.getNorm();
+				if(particles[i]->momentum.norm() > maxMomentum){
+					maxMomentum = particles[i]->momentum.norm();
 				}
 			}
 		}
@@ -42,7 +42,7 @@ void outputDistribution(FILE* outFile, std::vector<Particle*> particles, int par
 
 	for(int i = 0; i < particles.size(); ++i){
 		if(particles[i]->type == particleType){
-			int j = (log(particles[i]->momentum.getNorm()) - logMinMomentum)/deltaLogP;
+			int j = (log(particles[i]->momentum.norm()) - logMinMomentum)/deltaLogP;
 			if( j >= 0 && j < pnumber){
 				distribution[j] += particles[i]->weight;
 				weight += particles[i]->weight;
@@ -60,7 +60,7 @@ void outputDistribution(FILE* outFile, std::vector<Particle*> particles, int par
 }
 
 void outputTraectory(FILE* outFile, Particle* particle, double time){
-	fprintf(outFile, "%g %15.10g %15.10g %15.10g %15.10g %15.10g %15.10g %15.10g\n", time, particle->coordinates.x, particle->coordinates.y, particle->coordinates.z, particle->momentum.x, particle->momentum.y, particle->momentum.z, particle->momentum.getNorm());
+	fprintf(outFile, "%g %15.10g %15.10g %15.10g %15.10g %15.10g %15.10g %15.10g\n", time, particle->coordinates.x, particle->coordinates.y, particle->coordinates.z, particle->momentum.x, particle->momentum.y, particle->momentum.z, particle->momentum.norm());
 }
 
 void outputGrid(FILE* outFile, double* grid, int number) {
@@ -69,12 +69,20 @@ void outputGrid(FILE* outFile, double* grid, int number) {
 	}
 }
 
-void outputFields(FILE* outEfile, FILE* outBfile, Vector3d*** Efield, Vector3d*** Bfield, int xnumber, int ynumber, int znumber) {
+void outputFields(FILE* outEfile, FILE* outBfile, Vector3d*** Efield, Vector3d*** Bfield, int xnumber, int ynumber, int znumber, double plasma_preiod, double gyroradius) {
+	double scale = 1.0/(plasma_preiod*gyroradius);
 	for(int i = 0; i < xnumber; ++i) {
 		for(int j = 0; j < ynumber; ++j) {
 			for(int k = 0; k < znumber; ++k) {
-				fprintf(outEfile, "%15.10g %15.10g %15.10g\n", Efield[i][j][k].x, Efield[i][j][k].y, Efield[i][j][k].z);
-				fprintf(outBfile, "%15.10g %15.10g %15.10g\n", Bfield[i][j][k].x, Bfield[i][j][k].y, Bfield[i][j][k].z);
+				fprintf(outBfile, "%15.10g %15.10g %15.10g\n", scale*Bfield[i][j][k].x, scale*Bfield[i][j][k].y, scale*Bfield[i][j][k].z);
+			}
+		}
+	}
+
+	for(int i = 0; i <= xnumber; ++i) {
+		for(int j = 0; j <= ynumber; ++j) {
+			for(int k = 0; k <= znumber; ++k) {
+				fprintf(outEfile, "%15.10g %15.10g %15.10g\n", scale*Efield[i][j][k].x, scale*Efield[i][j][k].y, scale*Efield[i][j][k].z);
 			}
 		}
 	}

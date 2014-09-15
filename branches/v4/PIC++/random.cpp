@@ -15,20 +15,20 @@ double normalDistribution(){
 	return cos(2*pi*x)*sqrt(-2*log(y));
 }
 
-double maxwellDistribution(double temperature){
+double maxwellDistribution(double temperature, double k){
 	double normal = normalDistribution();
-	return kBoltzman*temperature*(0.5*normal*normal - log(uniformDistribution()));
+	return k*temperature*(0.5*normal*normal - log(uniformDistribution()));
 }
 
-double maxwellJuttnerDistribution(double temperature, double mass){
-	double theta = kBoltzman*temperature/(mass*speed_of_light_sqr);
+double maxwellJuttnerDistribution(double temperature, double mass, double c, double k){
+	double theta = k*temperature/(mass*c*c);
 	double besselK = McDonaldFunction(1.0/theta, 2.0);
 
 	double x = uniformDistribution();
 
 	double gamma = solveInverceJuttnerFunction(x, theta, besselK);
 
-	return gamma*mass*speed_of_light_sqr;
+	return gamma*mass*c*c;
 }
 
 double solveInverceJuttnerFunction(double x, double theta, double besselK){

@@ -70,48 +70,48 @@ double Particle::shapeFunction(const double& xvalue, const double& yvalue, const
 }
 
 double Particle::momentumAbs(){
-	return momentum.getNorm();
+	return momentum.norm();
 }
 
-Vector3d Particle::velocity(){
+Vector3d Particle::velocity(double c){
 	double p2 = momentum.x*momentum.x + momentum.y*momentum.y + momentum.z*momentum.z;
-	double mc2 = mass*speed_of_light*speed_of_light;
-	double gamma_factor = sqrt(p2*speed_of_light*speed_of_light + mc2*mc2)/mc2;
+	double mc2 = mass*c*c;
+	double gamma_factor = sqrt(p2*c*c + mc2*mc2)/mc2;
 
 	return momentum/(mass*gamma_factor);
 }
 
-double Particle::velocityX(){
+double Particle::velocityX(double c){
 	double p2 = momentum.x*momentum.x + momentum.y*momentum.y + momentum.z*momentum.z;
-	double mc2 = mass*speed_of_light*speed_of_light;
-	double gamma_factor = sqrt(p2*speed_of_light*speed_of_light + mc2*mc2)/mc2;
+	double mc2 = mass*c*c;
+	double gamma_factor = sqrt(p2*c*c + mc2*mc2)/mc2;
 	return momentum.x/(mass*gamma_factor);
 }
 
-double Particle::velocityY(){
+double Particle::velocityY(double c){
 	double p2 = momentum.x*momentum.x + momentum.y*momentum.y + momentum.z*momentum.z;
-	double mc2 = mass*speed_of_light*speed_of_light;
-	double gamma_factor = sqrt(p2*speed_of_light*speed_of_light + mc2*mc2)/mc2;
+	double mc2 = mass*c*c;
+	double gamma_factor = sqrt(p2*c*c + mc2*mc2)/mc2;
 	return momentum.y/(mass*gamma_factor);
 }
-double Particle::velocityZ(){
+double Particle::velocityZ(double c){
 	double p2 = momentum.x*momentum.x + momentum.y*momentum.y + momentum.z*momentum.z;
-	double mc2 = mass*speed_of_light*speed_of_light;
-	double gamma_factor = sqrt(p2*speed_of_light*speed_of_light + mc2*mc2)/mc2;
+	double mc2 = mass*c*c;
+	double gamma_factor = sqrt(p2*c*c + mc2*mc2)/mc2;
 	return momentum.z/(mass*gamma_factor);
 }
 
-void Particle::setMomentumByV(Vector3d v){
-	if(v.getNorm() > speed_of_light){
+void Particle::setMomentumByV(Vector3d v, double c){
+	if(v.norm() > c){
 		printf("ERROR v > c\n");
 		exit(0);
 	}
-	double gamma_factor = 1/sqrt(1 - v.scalarMult(v)/speed_of_light_sqr);
+	double gamma_factor = 1/sqrt(1 - v.scalarMult(v)/c);
 	momentum = v*(mass*gamma_factor);
 }
 
-double Particle::gammaFactor(){
+double Particle::gammaFactor(double c){
 	double p2 = momentum.x*momentum.x + momentum.y*momentum.y + momentum.z*momentum.z;
-	double mc2 = mass*speed_of_light*speed_of_light;
-	return sqrt(p2*speed_of_light*speed_of_light + mc2*mc2)/mc2;
+	double mc2 = mass*c*c;
+	return sqrt(p2*c*c + mc2*mc2)/mc2;
 }

@@ -15,7 +15,7 @@ public:
 	
 	Vector3d();
 	Vector3d(double vx, double vy, double vz);
-	double getNorm();
+	double norm();
 	Vector3d operator-(const Vector3d& vector);
 	Vector3d operator+(const Vector3d& vector);
 	Vector3d operator*(const double& value);

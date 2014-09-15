@@ -21,10 +21,10 @@ void Simulation::moveParticle(Particle* particle){
 
 	Particle newparticle = Particle(*particle);
 
-	Vector3d oldV = particle->velocity();
+	Vector3d oldV = particle->velocity(speed_of_light_normalized);
 
 	newparticle.coordinates = newparticle.coordinates + oldV*deltaT;
-	newparticle.momentum = newparticle.momentum + (oldE + (oldV.vectorMult(oldB))/speed_of_light)*newparticle.charge*deltaT;
+	newparticle.momentum = newparticle.momentum + (oldE + (oldV.vectorMult(oldB))/speed_of_light_normalized)*newparticle.charge*deltaT;
 
 	double oldCoordinates[6] = {particle->coordinates.x, particle->coordinates.y, particle->coordinates.z, particle->momentum.x, particle->momentum.y, particle->momentum.z};
 	double tempCoordinates[6] = {newparticle.coordinates.x, newparticle.coordinates.y, newparticle.coordinates.z, newparticle.momentum.x, newparticle.momentum.y, newparticle.momentum.z};
@@ -35,7 +35,7 @@ void Simulation::moveParticle(Particle* particle){
 	moveParticleNewtonIteration(particle, oldCoordinates, tempCoordinates, newCoordinates);
 
 	int iterationCount = 0;
-	double error = oldV.getNorm()*deltaT*maxErrorLevel;
+	double error = oldV.norm()*deltaT*maxErrorLevel;
 	while( coordinateDifference(tempCoordinates, newCoordinates, deltaT, particle->mass) > error && iterationCount < maxNewtonIterations){
 		for(int i = 0; i < 6; ++i){
 			tempCoordinates[i] = newCoordinates[i];
@@ -109,7 +109,7 @@ void Simulation::moveParticleNewtonIteration(Particle* particle, double* const o
 		leftHalf[i] = new double[3];
 	}
 
-	Vector3d velocity = particle->velocity();
+	Vector3d velocity = particle->velocity(speed_of_light_normalized);
 
 	tempparticle.coordinates.x = (oldCoordinates[0] + tempCoordinates[0])/2;
 	tempparticle.coordinates.y = (oldCoordinates[1] + tempCoordinates[1])/2;
@@ -119,8 +119,8 @@ void Simulation::moveParticleNewtonIteration(Particle* particle, double* const o
 	Vector3d B = correlationBfield(tempparticle);
 	Vector3d oldE = correlationTempEfield(particle);
 
-	double gamma_factor = 1/sqrt(1 - sqr(velocity.getNorm()/speed_of_light));
-	double G = (beta*(oldE.scalarMult(velocity))/speed_of_light_sqr) + gamma_factor;
+	double gamma_factor = 1/sqrt(1 - sqr(velocity.norm()/speed_of_light_normalized));
+	double G = (beta*(oldE.scalarMult(velocity))/speed_of_light_normalized_sqr) + gamma_factor;
 	double beta1 = beta/G;
 
 
@@ -158,7 +158,7 @@ void Simulation::moveParticleNewtonIteration(Particle* particle, double* const o
 	Vector3d middleVelocityDerX = particle->rotationTensor*EderX*beta1;
 	Vector3d middleVelocityDerY = particle->rotationTensor*EderY*beta1;
 	Vector3d middleVelocityDerZ = particle->rotationTensor*EderZ*beta1;
-	Vector3d acceleration = (E + (middleVelocity.vectorMult(B))/speed_of_light)*beta;
+	Vector3d acceleration = (E + (middleVelocity.vectorMult(B))/speed_of_light_normalized)*beta;
 
 	functionNewtonMethod[0] = tempCoordinates[0] - oldCoordinates[0] - middleVelocity.x*deltaT;
 	functionNewtonMethod[1] = tempCoordinates[1] - oldCoordinates[1] - middleVelocity.y*deltaT;
@@ -179,9 +179,9 @@ void Simulation::moveParticleNewtonIteration(Particle* particle, double* const o
 	leftHalf[2][1] = - middleVelocityDerY.z*0.5*deltaT;
 	leftHalf[2][2] = 1 - middleVelocityDerZ.z*0.5*deltaT;
 
-	Vector3d tempDerX = (EderX + (middleVelocityDerX.vectorMult(B)/speed_of_light) + (middleVelocity.vectorMult(BderX)/speed_of_light))*(-0.5*particle->mass*beta);
-	Vector3d tempDerY = (EderY + (middleVelocityDerY.vectorMult(B)/speed_of_light) + (middleVelocity.vectorMult(BderY)/speed_of_light))*(-0.5*particle->mass*beta);
-	Vector3d tempDerZ = (EderZ + (middleVelocityDerZ.vectorMult(B)/speed_of_light) + (middleVelocity.vectorMult(BderZ)/speed_of_light))*(-0.5*particle->mass*beta);
+	Vector3d tempDerX = (EderX + (middleVelocityDerX.vectorMult(B)/speed_of_light_normalized) + (middleVelocity.vectorMult(BderX)/speed_of_light_normalized))*(-0.5*particle->mass*beta);
+	Vector3d tempDerY = (EderY + (middleVelocityDerY.vectorMult(B)/speed_of_light_normalized) + (middleVelocity.vectorMult(BderY)/speed_of_light_normalized))*(-0.5*particle->mass*beta);
+	Vector3d tempDerZ = (EderZ + (middleVelocityDerZ.vectorMult(B)/speed_of_light_normalized) + (middleVelocity.vectorMult(BderZ)/speed_of_light_normalized))*(-0.5*particle->mass*beta);
 
 	leftHalf[3][0] = tempDerX.x;
 	leftHalf[3][1] = tempDerY.x;
@@ -219,7 +219,7 @@ void Simulation::evaluateParticlesRotationTensor()
 	{
 		Particle* particle = particles[i];
 		double beta = particle->charge*deltaT/particle->mass;
-		Vector3d velocity = particle->velocity();
+		Vector3d velocity = particle->velocity(speed_of_light_normalized);
 
 		Vector3d oldE = correlationEfield(particle);
 		Vector3d oldB = correlationBfield(particle);

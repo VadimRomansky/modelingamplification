@@ -205,8 +205,8 @@ void Simulation::createPerfectConductaryBoundaryCondition(int j, int k) {
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(element, i + 1, j + 1, k + 1, 2));
 
 	*/
-	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(1.0, 1, j, k, 0));
-	maxwellEquationRightPart[i][j][k][0] = 0;
+	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(1.0, i, j, k, 0));
+	maxwellEquationRightPart[i][j][k][0] = E0.x;
 	//Ey and Ez = 0
 	maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(1.0, i, j, k, 1));
 	maxwellEquationRightPart[i][j][k][1] = 0;
@@ -217,8 +217,8 @@ void Simulation::createPerfectConductaryBoundaryCondition(int j, int k) {
 void Simulation::createInternalEquation(int i, int j, int k) {
 	Vector3d rightPart = Efield[i][j][k];
 
-	rightPart = rightPart + (evaluateRotB(i, j, k) - electricFlux[i][j][k]*4*pi/speed_of_light)*speed_of_light*theta*deltaT;
-	rightPart = rightPart - evaluateGradDensity(i, j, k)*4*pi*sqr(speed_of_light*theta*deltaT);
+	rightPart = rightPart + (evaluateRotB(i, j, k) - electricFlux[i][j][k]*4*pi/speed_of_light_normalized)*speed_of_light_normalized*theta*deltaT;
+	rightPart = rightPart - evaluateGradDensity(i, j, k)*4*pi*sqr(speed_of_light_normalized*theta*deltaT);
 
 	createInternalEquationX(i, j, k);
 	createInternalEquationY(i, j, k);
@@ -239,7 +239,7 @@ void Simulation::createInternalEquationX(int i, int j, int k) {
 		prevK = znumber - 1;
 	}
 
-	double cthetadt2 = sqr(speed_of_light*theta*deltaT);
+	double cthetadt2 = sqr(speed_of_light_normalized*theta*deltaT);
 
 	MatrixElement element = MatrixElement(1 + dielectricTensor[i][j][k].matrix[0][0] + cthetadt2*((2*(1+0.25*dielectricTensor[i][j][k].matrix[0][0])/(deltaX*deltaX)) + (2/(deltaY*deltaY)) + (2/(deltaZ*deltaZ))), i, j, k, 0);
 
@@ -356,7 +356,7 @@ void Simulation::createInternalEquationY(int i, int j, int k) {
 	if(prevK < 0) {
 		prevK = znumber - 1;
 	}
-	double cthetadt2 = sqr(speed_of_light*theta*deltaT);
+	double cthetadt2 = sqr(speed_of_light_normalized*theta*deltaT);
 
 	MatrixElement element = MatrixElement(1 + dielectricTensor[i][j][k].matrix[1][1] + cthetadt2*((2/(deltaX*deltaX)) + (2*(1+0.25*dielectricTensor[i][j][k].matrix[1][1])/(deltaY*deltaY)) + (2/(deltaZ*deltaZ))), i, j, k, 1);
 
@@ -473,7 +473,7 @@ void Simulation::createInternalEquationZ(int i, int j, int k) {
 	if(prevK < 0) {
 		prevK = znumber - 1;
 	}
-	double cthetadt2 = sqr(speed_of_light*theta*deltaT);
+	double cthetadt2 = sqr(speed_of_light_normalized*theta*deltaT);
 
 	MatrixElement element = MatrixElement(1 + dielectricTensor[i][j][k].matrix[2][2] + cthetadt2*((2/(deltaX*deltaX)) + (2/(deltaY*deltaY)) + (2*(1+0.25*dielectricTensor[i][j][k].matrix[2][2])/(deltaZ*deltaZ))), i, j, k, 2);
 

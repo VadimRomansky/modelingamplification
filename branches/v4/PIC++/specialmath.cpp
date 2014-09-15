@@ -88,6 +88,7 @@ double***** Simulation::arnoldiIterations(double** outHessenbergMatrix, int n, d
 			}
 		}
 	}
+	double a = scalarMultiplyLargeVectors(resultBasis[0], tempVector);
 	outHessenbergMatrix[n - 1][n - 2] = sqrt(scalarMultiplyLargeVectors(tempVector, tempVector));
 	if (outHessenbergMatrix[n - 1][n - 2] > 0) {
 		for (int i = 0; i < xnumber + 1; ++i) {
@@ -100,6 +101,8 @@ double***** Simulation::arnoldiIterations(double** outHessenbergMatrix, int n, d
 				}
 			}
 		}
+		a = scalarMultiplyLargeVectors(resultBasis[0], tempVector);
+		a = scalarMultiplyLargeVectors(tempVector, tempVector);
 	} else {
 		printf("outHessenbergMatrix[n-1][n-2] == 0\n");
 	}
@@ -118,14 +121,16 @@ void Simulation::generalizedMinimalResidualMethod() {
 				for (int l = 0; l < 3; ++l) {
 					maxwellEquationRightPart[i][j][k][l] /= norm;
 					for (int m = 0; m < maxwellEquationMatrix[i][j][k][l].size(); ++m) {
+						double value = maxwellEquationMatrix[i][j][k][l][m].value;
 						maxwellEquationMatrix[i][j][k][l][m].value /= norm;
+						value = maxwellEquationMatrix[i][j][k][l][m].value;
 					}
 				}
 			}
 		}
 	}
 
-	double maxError = E0.getNorm() / 100;
+	double maxError = E0.norm() / 100;
 
 	double** hessenbergMatrix;
 	double** newHessenbergMatrix;

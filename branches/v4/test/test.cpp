@@ -30,8 +30,8 @@ int main()
 	for(int i = 0; i < number; ++i){
 		rightPart[i] = 0;
 	}
-	rightPart[0] = 1.0/sqrt(2.0);
-	rightPart[1] = 1.0/sqrt(2.0);
+	rightPart[0] = 1/sqrt(2.0);
+	rightPart[1] = 1/sqrt(2.0);
 
 	generalizedMinimalResidualMethod(matrix, rightPart);
 
