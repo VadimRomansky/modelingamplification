@@ -150,11 +150,11 @@ void Simulation::generalizedMinimalResidualMethod() {
 	double***** basis = new double****[1];
 	basis[0] = new double***[xnumber + 1];
 	for (int i = 0; i < xnumber + 1; ++i) {
-		basis[0][i] = new double**[xnumber + 1];
+		basis[0][i] = new double**[ynumber + 1];
 		for (int j = 0; j < ynumber + 1; ++j) {
-			basis[0][i][j] = new double*[ynumber + 1];
+			basis[0][i][j] = new double*[znumber + 1];
 			for (int k = 0; k < znumber + 1; ++k) {
-				basis[0][i][j][k] = new double[znumber + 1];
+				basis[0][i][j][k] = new double[3];
 				for (int l = 0; l < 3; ++l) {
 					basis[0][i][j][k][l] = maxwellEquationRightPart[i][j][k][l];
 				}
