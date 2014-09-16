@@ -202,9 +202,9 @@ void Simulation::createPerfectConductaryBoundaryCondition(int j, int k) {
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(element, i + 1, j + 1, k + 1, 1));
 
 	element = (deltaZ * deltaY * dielectricTensor[i + 1][j + 1][k + 1].matrix[0][2] / 4) + (deltaY * deltaX * (1 + dielectricTensor[i + 1][j + 1][k + 1].matrix[2][2]) / 4) + (deltaX * deltaZ * dielectricTensor[i + 1][j + 1][k + 1].matrix[1][2] / 4);
-	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(element, i + 1, j + 1, k + 1, 2));
+	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(element, i + 1, j + 1, k + 1, 2));*/
 
-	*/
+	
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(1.0, i, j, k, 0));
 	maxwellEquationRightPart[i][j][k][0] = E0.x;
 	//Ey and Ez = 0
@@ -586,7 +586,7 @@ void Simulation::evaluateMagneticField() {
 		for (int j = 0; j < ynumber; ++j) {
 			for (int k = 0; k < znumber; ++k) {
 				Vector3d rotE = evaluateRotE(i, j, k);
-				newBfield[i][j][k] = Bfield[i][j][k] + rotE * deltaT;
+				newBfield[i][j][k] = Bfield[i][j][k] + rotE * speed_of_light_normalized * deltaT;
 			}
 		}
 	}

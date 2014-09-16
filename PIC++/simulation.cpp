@@ -104,18 +104,22 @@ Simulation::Simulation(double xn, double yn, double zn, double xsizev, double ys
 	plasma_period = sqrt(massElectron/(4*pi*concentration*sqr(electron_charge)))/(2*pi);
 	gyroradius = kBoltzman*temperature/(electron_charge*B0.norm());
 
-	plasma_period = 1;
-	gyroradius = 1;
+	plasma_period = 1.0;
+	gyroradius = 1.0;
 
-	kBoltzman_normalized = kBoltzman*gyroradius*gyroradius/(plasma_period*plasma_period);
+	kBoltzman_normalized = kBoltzman*plasma_period*plasma_period/(gyroradius*gyroradius);
 	speed_of_light_normalized = speed_of_light*plasma_period/gyroradius;
 	speed_of_light_normalized_sqr = speed_of_light_normalized*speed_of_light_normalized;
 	electron_charge_normalized = electron_charge*plasma_period/sqr(gyroradius);
 
-	E0 = E0/(plasma_period*gyroradius);
-	B0 = B0/(plasma_period*gyroradius);
+	E0 = E0*(plasma_period*gyroradius);
+	B0 = B0*(plasma_period*gyroradius);
 
 	density = density*cube(gyroradius);
+
+	xsize /= gyroradius;
+	ysize /= gyroradius;
+	zsize /= gyroradius;
 
 	Kronecker = Matrix3d(1.0,0,0,0,1.0,0,0,0,1.0);
 
@@ -218,9 +222,9 @@ Simulation::~Simulation(){
 
 void Simulation::initialize(){
 
-	deltaX = xsize/(xnumber-1);
-	deltaY = ysize/(ynumber-1);
-	deltaZ = zsize/(znumber-1);
+	deltaX = xsize/(xnumber);
+	deltaY = ysize/(ynumber);
+	deltaZ = zsize/(znumber);
 
 	for(int i = 0; i <= xnumber; ++i){
 		xgrid[i] = i*deltaX;
@@ -372,7 +376,7 @@ void Simulation::simulate(){
 	//deltaT = 0;
 
 	while(time < maxTime && currentIteration < maxIteration){
-		printf("iteration number %d time = %lf\n", currentIteration, time);
+		printf("iteration number %d time = %lf\n", currentIteration, time*plasma_period);
 
 		evaluateParticlesRotationTensor();
 		evaluateFields();
@@ -884,6 +888,7 @@ void Simulation::updateDeltaT(){
 	double delta = min3(deltaX, deltaY, deltaZ);
 	deltaT = 0.01*delta/speed_of_light_normalized;
 	deltaT = min2(deltaT, 0.05*massElectron*speed_of_light_normalized/(electron_charge_normalized*B0.norm()));
+	deltaT = min2(deltaT, 0.02);
 }
 
 void Simulation::createParticles(){
@@ -1268,7 +1273,7 @@ Matrix3d Simulation::getPressureTensor(int i, int j, int k){
 	if(i < 0){
 		return Matrix3d(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
 	} else if(i >= xnumber){
-		return pressureTensor0;
+		return Matrix3d(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
 	}
 
 	if(j < 0){
