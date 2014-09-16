@@ -13,7 +13,7 @@ int main()
 	double** matrix = new double*[number];
 	double* rightPart = new double[number];
 
-	for(int i = 0; i < number; ++i){
+	/*for(int i = 0; i < number; ++i){
 		matrix[i] = new double[number];
 		for(int j = 0; j < number; ++j){
 			if(i == j){
@@ -31,8 +31,19 @@ int main()
 		rightPart[i] = 0;
 	}
 	rightPart[0] = 1/sqrt(2.0);
-	rightPart[1] = 1/sqrt(2.0);
+	rightPart[1] = 1/sqrt(2.0);*/
 
+	for(int i = 0; i < number; ++i) {
+		matrix[i] = new double[number];
+		for(int j = 0; j < number; ++j) {
+			matrix[i][j] = 0;
+		}
+		rightPart[i] = 1;
+	}
+
+	matrix[0][0] = 1;
+	matrix[1][2] = 1;
+	matrix[2][1] = 1;
 	generalizedMinimalResidualMethod(matrix, rightPart);
 
 

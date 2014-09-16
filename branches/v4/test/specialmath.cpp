@@ -216,13 +216,23 @@ void generalizedMinimalResidualMethod(double** matrix, double* rightPart){
 	n = n-1;
 
 	//out result
+	double a[number];
 
 	for(int i = 0; i < number; ++i){
-		double a = 0;
+		a[i] = 0;
 		for(int m = 0; m < n; ++m){
-			a += basis[m][i]*y[m];
+			a[i] += basis[m][i]*y[m];
 		}
-		printf("%lf\n", a);
+		printf("%lf\n", a[i]);
+	}
+
+	error = 0;
+	for(int i = 0; i < number; ++i) {
+		double b = 0;
+		for(int j = 0; j < number; ++j) {
+			b += matrix[i][j]*a[i];
+		}
+		error += abs(b - rightPart[i]);
 	}
 
 	for(int i = 0; i < n; ++i){

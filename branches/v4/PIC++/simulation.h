@@ -139,6 +139,7 @@ public:
 	void generalizedMinimalResidualMethod();
 	double***** arnoldiIterations(double** outHessenbergMatrix, int n, double***** prevBasis, double** prevHessenbergMatrix);
 	double**** multiplySpecialMatrixVector(double**** vector);
+	double**** multiplySpecialMatrixVector(Vector3d*** vector);
 	double evaluateError(double** hessenbergMatrix, double* vector, double beta, int n);
 	double scalarMultiplyLargeVectors(double**** a, double**** b);
 
