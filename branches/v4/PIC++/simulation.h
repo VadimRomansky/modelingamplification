@@ -129,12 +129,13 @@ public:
 	void evaluateFields();
 	void checkMaxwellEquationMatrix();
 	void createPerfectConductaryBoundaryCondition(int j, int k);
-	void createInternalEquationX(int i, int j, int k);
-	void createInternalEquationY(int i, int j, int k);
-	void createInternalEquationZ(int i, int j, int k);
+	void createInternalEquationX(int i, int j, int k, Vector3d& rightPart);
+	void createInternalEquationY(int i, int j, int k, Vector3d& rightPart);
+	void createInternalEquationZ(int i, int j, int k, Vector3d& rightPart);
 	void createInternalEquation(int i, int j, int k);
 	void evaluateMaxwellEquationMatrix();
 	void evaluateMagneticField();
+	void updateBoundaries();
 
 	void generalizedMinimalResidualMethod();
 	double***** arnoldiIterations(double** outHessenbergMatrix, int n, double***** prevBasis, double** prevHessenbergMatrix);
