@@ -335,13 +335,13 @@ void Simulation::createArrays(){
 
 	maxwellEquationMatrix = new std::vector<MatrixElement>***[xnumber + 1];
 	maxwellEquationRightPart = new double***[xnumber + 1];
-	for(int i = 0; i <= xnumber; ++i){
+	for(int i = 0; i < xnumber; ++i){
 		maxwellEquationMatrix[i] = new std::vector<MatrixElement>**[ynumber + 1];
 		maxwellEquationRightPart[i] = new double**[ynumber + 1];
-		for(int j = 0; j <= ynumber; ++j){
+		for(int j = 0; j < ynumber; ++j){
 			maxwellEquationMatrix[i][j] = new std::vector<MatrixElement>*[znumber + 1];
 			maxwellEquationRightPart[i][j] = new double*[znumber + 1];
-			for(int k = 0; k <= znumber; ++k){
+			for(int k = 0; k < znumber; ++k){
 				maxwellEquationMatrix[i][j][k] = new std::vector<MatrixElement>[3];
 				maxwellEquationRightPart[i][j][k] = new double[3];
 			}
