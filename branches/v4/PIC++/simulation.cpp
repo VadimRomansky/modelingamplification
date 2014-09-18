@@ -922,9 +922,9 @@ Matrix3d Simulation::evaluateAlphaRotationTensor(double beta, Vector3d velocity,
 void Simulation::updateDeltaT() {
 	double delta = min3(deltaX, deltaY, deltaZ);
 	deltaT = 0.01 * delta / speed_of_light_normalized;
-	deltaT = min2(deltaT, 0.05 * massElectron * speed_of_light_normalized / (electron_charge_normalized * B0.norm()));
-	deltaT = min2(deltaT, 0.02);
-	deltaT = 1E-1;
+	//deltaT = min2(deltaT, 0.05 * massElectron * speed_of_light_normalized / (electron_charge_normalized * B0.norm()));
+	//deltaT = min2(deltaT, 0.02);
+	deltaT = min2(deltaT, 1E-1);
 }
 
 void Simulation::createParticles() {
