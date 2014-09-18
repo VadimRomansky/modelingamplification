@@ -679,18 +679,14 @@ void Simulation::evaluateMagneticField() {
 void Simulation::updateBoundaries() {
 	for (int i = 0; i < xnumber; ++i) {
 		//periodic by Y
-		for (int k = 0; k <= znumber; ++k) {
-			for (int l = 0; l < 3; ++l) {
-				tempEfield[i][ynumber][k] = tempEfield[i][0][k];
-			}
+		for (int k = 0; k < znumber; ++k) {
+			tempEfield[i][ynumber][k] = tempEfield[i][0][k];
 		}
 		//periodic by Z
-		//note j < number because corner point is alredy added upper
+		//note j <= number because corner point
 
-		for (int j = 0; j < ynumber; ++j) {
-			for (int l = 0; l < 3; ++l) {
-				tempEfield[i][j][znumber] = tempEfield[i][j][0];
-			}
+		for (int j = 0; j <= ynumber; ++j) {
+			tempEfield[i][j][znumber] = tempEfield[i][j][0];
 		}
 	}
 
