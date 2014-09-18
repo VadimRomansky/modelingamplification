@@ -143,18 +143,18 @@ void Simulation::generalizedMinimalResidualMethod() {
 			for (int k = 0; k < znumber; ++k) {
 				for (int l = 0; l < 3; ++l) {
 					maxwellEquationRightPart[i][j][k][l] /= norm;
-					for (int m = 0; m < maxwellEquationMatrix[i][j][k][l].size(); ++m) {
+					/*for (int m = 0; m < maxwellEquationMatrix[i][j][k][l].size(); ++m) {
 						double value = maxwellEquationMatrix[i][j][k][l][m].value;
 						maxwellEquationMatrix[i][j][k][l][m].value /= norm;
 						value = maxwellEquationMatrix[i][j][k][l][m].value;
-					}
+					}*/
 				}
 			}
 		}
 	}
 
 	int matrixDimension = 3*(xnumber)*(ynumber)*(znumber);
-	double maxError = E0.norm() / (100000*matrixDimension);
+	double maxError = E0.norm() / (matrixDimension*1E10);
 
 	double** hessenbergMatrix;
 	double** newHessenbergMatrix;
@@ -376,9 +376,12 @@ void Simulation::generalizedMinimalResidualMethod() {
 				tempEfield[i][j][k].y = 0;
 				tempEfield[i][j][k].z = 0;
 				for (int m = 0; m < n; ++m) {
-					tempEfield[i][j][k].x += basis[m][i][j][k][0] * y[m];
-					tempEfield[i][j][k].y += basis[m][i][j][k][1] * y[m];
-					tempEfield[i][j][k].z += basis[m][i][j][k][2] * y[m];
+					//tempEfield[i][j][k].x += basis[m][i][j][k][0] * y[m];
+					//tempEfield[i][j][k].y += basis[m][i][j][k][1] * y[m];
+					//tempEfield[i][j][k].z += basis[m][i][j][k][2] * y[m];
+					tempEfield[i][j][k].x += basis[m][i][j][k][0] * y[m]*norm;
+					tempEfield[i][j][k].y += basis[m][i][j][k][1] * y[m]*norm;
+					tempEfield[i][j][k].z += basis[m][i][j][k][2] * y[m]*norm;
 				}
 			}
 		}

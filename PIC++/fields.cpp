@@ -22,7 +22,7 @@ void Simulation::evaluateFields() {
 	for (int i = 0; i < xnumber + 1; ++i) {
 		for (int j = 0; j < ynumber + 1; ++j) {
 			for (int k = 0; k < znumber + 1; ++k) {
-				newEfield[i][j][k] = (tempEfield[i][j][k] - tempEfield[i][j][k] * (1 - theta)) / theta;
+				newEfield[i][j][k] = (tempEfield[i][j][k] - Efield[i][j][k] * (1 - theta)) / theta;
 			}
 		}
 	}
@@ -134,7 +134,7 @@ void Simulation::createPerfectConductaryBoundaryCondition(int j, int k) {
 		nextK = 0;
 	}
 
-	/*maxwellEquationRightPart[i][j][k][0] = 4 * pi * electricDensity[0][j][k] * deltaX * deltaY * deltaZ;
+	maxwellEquationRightPart[i][j][k][0] = 4 * pi * electricDensity[0][j][k] * deltaX * deltaY * deltaZ;
 
 	double element = -deltaZ * deltaY * (1 + dielectricTensor[0][j][k].matrix[0][0]) / 4;
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(element, 0, j, k, 0));
@@ -182,11 +182,11 @@ void Simulation::createPerfectConductaryBoundaryCondition(int j, int k) {
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(element, i + 1, nextJ, nextK, 1));
 
 	element = (deltaZ * deltaY * dielectricTensor[i + 1][nextJ][nextK].matrix[0][2] / 4) + (deltaY * deltaX * (1 + dielectricTensor[i + 1][nextJ][nextK].matrix[2][2]) / 4) + (deltaX * deltaZ * dielectricTensor[i + 1][nextJ][nextK].matrix[1][2] / 4);
-	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(element, i + 1, nextJ, nextK, 2));*/
+	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(element, i + 1, nextJ, nextK, 2));
 
 
-	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(1.0, i, j, k, 0));
-	maxwellEquationRightPart[i][j][k][0] = E0.x;
+	/*maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(1.0, i, j, k, 0));
+	maxwellEquationRightPart[i][j][k][0] = E0.x;*/
 	//Ey and Ez = 0
 	maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(1.0, i, j, k, 1));
 	maxwellEquationRightPart[i][j][k][1] = 0;
@@ -363,6 +363,12 @@ void Simulation::createInternalEquationX(int i, int j, int k, Vector3d& rightPar
 	maxwellEquationMatrix[i][j][k][0].push_back(element);
 	element = MatrixElement(cthetadt2 * (dielectricTensor[i - 1][j][nextK].matrix[2][2] / (4 * deltaX * deltaZ)), i - 1, j, nextK, 2);
 	maxwellEquationMatrix[i][j][k][0].push_back(element);
+
+	double value = 0;
+	for(int m = 0; m < maxwellEquationMatrix[i][j][k][0].size(); ++m) {
+		value += maxwellEquationMatrix[i][j][k][0][m].value*Efield[maxwellEquationMatrix[i][j][k][0][m].i][maxwellEquationMatrix[i][j][k][0][m].j][maxwellEquationMatrix[i][j][k][0][m].k][maxwellEquationMatrix[i][j][k][0][m].l];
+	}
+	value = value - rightPart.x;
 }
 
 void Simulation::createInternalEquationY(int i, int j, int k, Vector3d& rightPart) {
@@ -504,6 +510,12 @@ void Simulation::createInternalEquationY(int i, int j, int k, Vector3d& rightPar
 	maxwellEquationMatrix[i][j][k][1].push_back(element);
 	element = MatrixElement(cthetadt2 * (dielectricTensor[i][prevJ][nextK].matrix[2][2] / (4 * deltaY * deltaZ)), i, prevJ, nextK, 2);
 	maxwellEquationMatrix[i][j][k][1].push_back(element);
+
+	double value = 0;
+	for(int m = 0; m < maxwellEquationMatrix[i][j][k][1].size(); ++m) {
+		value += maxwellEquationMatrix[i][j][k][1][m].value*Efield[maxwellEquationMatrix[i][j][k][1][m].i][maxwellEquationMatrix[i][j][k][1][m].j][maxwellEquationMatrix[i][j][k][1][m].k][maxwellEquationMatrix[i][j][k][1][m].l];
+	}
+	value = value - rightPart.y;
 }
 
 void Simulation::createInternalEquationZ(int i, int j, int k, Vector3d& rightPart) {
@@ -555,7 +567,7 @@ void Simulation::createInternalEquationZ(int i, int j, int k, Vector3d& rightPar
 		element = MatrixElement(-cthetadt2 / (deltaX * deltaX), i + 1, j, k, 2);
 		maxwellEquationMatrix[i][j][k][2].push_back(element);
 	} else {
-		rightPart.z += (cthetadt2 / (deltaX * deltaX))*E0.x;
+		rightPart.z += (cthetadt2 / (deltaX * deltaX))*E0.z;
 	}
 
 	//Ez i-1 j k
@@ -645,6 +657,12 @@ void Simulation::createInternalEquationZ(int i, int j, int k, Vector3d& rightPar
 	maxwellEquationMatrix[i][j][k][2].push_back(element);
 	element = MatrixElement(cthetadt2 * (dielectricTensor[i][prevJ][nextK].matrix[1][2] / (4 * deltaY * deltaZ)), i, prevJ, nextK, 2);
 	maxwellEquationMatrix[i][j][k][2].push_back(element);
+
+	double value = 0;
+	for(int m = 0; m < maxwellEquationMatrix[i][j][k][2].size(); ++m) {
+		value += maxwellEquationMatrix[i][j][k][2][m].value*Efield[maxwellEquationMatrix[i][j][k][2][m].i][maxwellEquationMatrix[i][j][k][2][m].j][maxwellEquationMatrix[i][j][k][2][m].k][maxwellEquationMatrix[i][j][k][2][m].l];
+	}
+	value = value - rightPart.z;
 }
 
 void Simulation::evaluateMagneticField() {
@@ -652,7 +670,7 @@ void Simulation::evaluateMagneticField() {
 		for (int j = 0; j < ynumber; ++j) {
 			for (int k = 0; k < znumber; ++k) {
 				Vector3d rotE = evaluateRotE(i, j, k);
-				newBfield[i][j][k] = Bfield[i][j][k] + rotE * speed_of_light_normalized * deltaT;
+				newBfield[i][j][k] = Bfield[i][j][k];// + rotE * speed_of_light_normalized * deltaT;
 			}
 		}
 	}
