@@ -670,7 +670,7 @@ void Simulation::evaluateMagneticField() {
 		for (int j = 0; j < ynumber; ++j) {
 			for (int k = 0; k < znumber; ++k) {
 				Vector3d rotE = evaluateRotE(i, j, k);
-				newBfield[i][j][k] = Bfield[i][j][k];// + rotE * speed_of_light_normalized * deltaT;
+				newBfield[i][j][k] = Bfield[i][j][k] + rotE * speed_of_light_normalized * deltaT;
 			}
 		}
 	}

@@ -96,9 +96,12 @@ public:
 	~Simulation();
 
 	void initialize();
+	void initializeSimpleElectroMagneticWave();
 	void createArrays();
 	void createFiles();
 	void simulate();
+
+	void output();
 
 	void updateDeltaT();
 	void createParticles();
