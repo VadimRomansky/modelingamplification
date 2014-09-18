@@ -197,7 +197,8 @@ void Simulation::createPerfectConductaryBoundaryCondition(int j, int k) {
 void Simulation::createInternalEquation(int i, int j, int k) {
 	Vector3d rightPart = Efield[i][j][k];
 
-	rightPart = rightPart + (evaluateRotB(i, j, k) - electricFlux[i][j][k] * 4 * pi / speed_of_light_normalized) * speed_of_light_normalized * theta * deltaT;
+	//rightPart = rightPart + (evaluateRotB(i, j, k) - electricFlux[i][j][k] * 4 * pi / speed_of_light_normalized) * speed_of_light_normalized * theta * deltaT;
+	rightPart = rightPart - (evaluateRotB(i, j, k) - electricFlux[i][j][k] * 4 * pi / speed_of_light_normalized) * speed_of_light_normalized * theta * deltaT;
 	rightPart = rightPart - evaluateGradDensity(i, j, k) * 4 * pi * sqr(speed_of_light_normalized * theta * deltaT);
 
 	createInternalEquationX(i, j, k, rightPart);
