@@ -154,7 +154,7 @@ void Simulation::generalizedMinimalResidualMethod() {
 	}
 
 	int matrixDimension = 3*(xnumber)*(ynumber)*(znumber);
-	double maxError = E0.norm() / (matrixDimension*1E10);
+	double maxError = E0.norm() / (matrixDimension*1E12);
 
 	double** hessenbergMatrix;
 	double** newHessenbergMatrix;
