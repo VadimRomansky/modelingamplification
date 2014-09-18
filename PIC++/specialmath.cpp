@@ -143,11 +143,11 @@ void Simulation::generalizedMinimalResidualMethod() {
 			for (int k = 0; k < znumber; ++k) {
 				for (int l = 0; l < 3; ++l) {
 					maxwellEquationRightPart[i][j][k][l] /= norm;
-					/*for (int m = 0; m < maxwellEquationMatrix[i][j][k][l].size(); ++m) {
+					for (int m = 0; m < maxwellEquationMatrix[i][j][k][l].size(); ++m) {
 						double value = maxwellEquationMatrix[i][j][k][l][m].value;
 						maxwellEquationMatrix[i][j][k][l][m].value /= norm;
 						value = maxwellEquationMatrix[i][j][k][l][m].value;
-					}*/
+					}
 				}
 			}
 		}
@@ -155,6 +155,7 @@ void Simulation::generalizedMinimalResidualMethod() {
 
 	int matrixDimension = 3*(xnumber)*(ynumber)*(znumber);
 	double maxError = E0.norm() / (matrixDimension*1E4);
+	//double maxError = 1/(matrixDimension * 1E5);
 
 	double** hessenbergMatrix;
 	double** newHessenbergMatrix;
@@ -214,7 +215,10 @@ void Simulation::generalizedMinimalResidualMethod() {
 	double sinn;
 	double module;
 
-	while (error > maxError && n < min2(maxGMRESIterations, matrixDimension)) {
+	double relativeError = 1;
+	double maxRelativeError = 1/(matrixDimension*1E4);
+
+	while (relativeError > maxRelativeError  && n < min2(maxGMRESIterations, matrixDimension)) {
 		printf("GMRES iteration %d\n", n);
 		newHessenbergMatrix = new double*[n];
 		for (int i = 0; i < n; ++i) {
@@ -324,8 +328,7 @@ void Simulation::generalizedMinimalResidualMethod() {
 		}
 
 		error = fabs(beta * Qmatrix[n - 1][0]);
-
-		for (int i = 0; i < xnumber; ++i) {
+		/*for (int i = 0; i < xnumber; ++i) {
 			for (int j = 0; j < ynumber; ++j) {
 				for (int k = 0; k < znumber; ++k) {
 					tempEfield[i][j][k].x = 0;
@@ -348,9 +351,16 @@ void Simulation::generalizedMinimalResidualMethod() {
 					for(int l = 0; l < 3; ++l){
 						error1 += abs(leftPart1[i][j][k][l] - maxwellEquationRightPart[i][j][k][l]);
 					}
+					delete[] leftPart1[i][j][k];
 				}
+				delete[] leftPart1[i][j];
 			}
+			delete[] leftPart1[i];
 		}
+		delete[] leftPart1;*/
+
+		double normRightPart = sqrt(scalarMultiplyLargeVectors(maxwellEquationRightPart, maxwellEquationRightPart));
+		relativeError = error/normRightPart;
 
 		for (int i = 0; i < n - 1; ++i) {
 			delete[] oldQmatrix[i];
@@ -376,12 +386,12 @@ void Simulation::generalizedMinimalResidualMethod() {
 				tempEfield[i][j][k].y = 0;
 				tempEfield[i][j][k].z = 0;
 				for (int m = 0; m < n; ++m) {
-					//tempEfield[i][j][k].x += basis[m][i][j][k][0] * y[m];
-					//tempEfield[i][j][k].y += basis[m][i][j][k][1] * y[m];
-					//tempEfield[i][j][k].z += basis[m][i][j][k][2] * y[m];
-					tempEfield[i][j][k].x += basis[m][i][j][k][0] * y[m]*norm;
-					tempEfield[i][j][k].y += basis[m][i][j][k][1] * y[m]*norm;
-					tempEfield[i][j][k].z += basis[m][i][j][k][2] * y[m]*norm;
+					tempEfield[i][j][k].x += basis[m][i][j][k][0] * y[m];
+					tempEfield[i][j][k].y += basis[m][i][j][k][1] * y[m];
+					tempEfield[i][j][k].z += basis[m][i][j][k][2] * y[m];
+					//tempEfield[i][j][k].x += basis[m][i][j][k][0] * y[m]*norm;
+					//tempEfield[i][j][k].y += basis[m][i][j][k][1] * y[m]*norm;
+					//tempEfield[i][j][k].z += basis[m][i][j][k][2] * y[m]*norm;
 				}
 			}
 		}
@@ -426,6 +436,20 @@ void Simulation::generalizedMinimalResidualMethod() {
 }
 
 double Simulation::scalarMultiplyLargeVectors(double**** a, double**** b) {
+	double result = 0;
+	for (int i = 0; i < xnumber; ++i) {
+		for (int j = 0; j < ynumber; ++j) {
+			for (int k = 0; k < znumber; ++k) {
+				for (int l = 0; l < 3; ++l) {
+					result += a[i][j][k][l] * b[i][j][k][l];
+				}
+			}
+		}
+	}
+	return result;
+}
+
+double Simulation::scalarMultiplyLargeVectors(Vector3d*** a, Vector3d*** b) {
 	double result = 0;
 	for (int i = 0; i < xnumber; ++i) {
 		for (int j = 0; j < ynumber; ++j) {

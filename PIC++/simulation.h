@@ -146,6 +146,7 @@ public:
 	double**** multiplySpecialMatrixVector(Vector3d*** vector);
 	double evaluateError(double** hessenbergMatrix, double* vector, double beta, int n);
 	double scalarMultiplyLargeVectors(double**** a, double**** b);
+	double scalarMultiplyLargeVectors(Vector3d*** a, Vector3d*** b);
 
 	double volume(int i, int j, int k);
 
