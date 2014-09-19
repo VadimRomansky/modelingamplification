@@ -18,6 +18,12 @@ Simulation::Simulation() {
 
 	theta = 0.5;
 
+	particleEnergy = 0;
+	electricFieldEnergy = 0;
+	magneticFieldEnergy = 0;
+
+	momentum = Vector3d(0, 0, 0);
+
 	//read input!
 	xnumber = 10;
 	ynumber = 10;
@@ -76,6 +82,13 @@ Simulation::Simulation(double xn, double yn, double zn, double xsizev, double ys
 	currentIteration = 0;
 	time = 0;
 	particlesNumber = 0;
+
+	particleEnergy = 0;
+	electricFieldEnergy = 0;
+	magneticFieldEnergy = 0;
+
+	momentum = Vector3d(0, 0, 0);
+
 
 	theta = 0.5;
 
@@ -152,16 +165,23 @@ Simulation::~Simulation() {
 			}
 			delete[] Bfield[i][j];
 			delete[] newBfield[i][j];
-			delete[] tempBfield[i][j];
+			//delete[] tempBfield[i][j];
 			delete[] electricDensity[i][j];
 			delete[] pressureTensor[i][j];
 
+			delete[] electronConcentration[i][j];
+			delete[] protonConcentration[i][j];
+			delete[] chargeDensity[i][j];
 		}
 		delete[] Bfield[i];
 		delete[] newBfield[i];
-		delete[] tempBfield[i];
+		//delete[] tempBfield[i];
 		delete[] electricDensity[i];
 		delete[] pressureTensor[i];
+
+		delete[] electronConcentration[i];
+		delete[] protonConcentration[i];
+		delete[] chargeDensity[i];
 	}
 
 	for (int i = 0; i < xnumber; ++i) {
@@ -205,12 +225,16 @@ Simulation::~Simulation() {
 	delete[] tempEfield;
 	delete[] Bfield;
 	delete[] newBfield;
-	delete[] tempBfield;
+	//delete[] tempBfield;
 
 	delete[] electricDensity;
 	delete[] electricFlux;
 	delete[] dielectricTensor;
 	delete[] pressureTensor;
+
+	delete[] electronConcentration;
+	delete[] protonConcentration;
+	delete[] chargeDensity;
 
 	delete[] xgrid;
 	delete[] ygrid;
@@ -266,8 +290,10 @@ void Simulation::initialize() {
 			for (int k = 0; k < znumber; ++k) {
 				Bfield[i][j][k] = B0;
 				newBfield[i][j][k] = Bfield[i][j][k];
-				tempBfield[i][j][k] = Bfield[i][j][k];
-
+				//tempBfield[i][j][k] = Bfield[i][j][k];
+				electronConcentration[i][j][k] = 0;
+				protonConcentration[i][j][k] = 0;
+				chargeDensity[i][j][k] = 0;
 			}
 		}
 	}
@@ -284,7 +310,7 @@ void Simulation::initializeSimpleElectroMagneticWave() {
 			}
 		}
 	}
-	double kw = 2 * pi / xsize;
+	double kw = 6 * pi / xsize;
 	double E = 1;
 
 	for (int i = 0; i < xnumber + 1; ++i) {
@@ -316,7 +342,11 @@ void Simulation::createArrays() {
 	tempEfield = new Vector3d**[xnumber + 1];
 	Bfield = new Vector3d**[xnumber];
 	newBfield = new Vector3d**[xnumber];
-	tempBfield = new Vector3d**[xnumber];
+	//tempBfield = new Vector3d**[xnumber];
+
+	electronConcentration = new double**[xnumber];
+	protonConcentration = new double**[xnumber];
+	chargeDensity = new double**[xnumber];
 
 	electricFlux = new Vector3d**[xnumber + 1];
 	electricDensity = new double**[xnumber];
@@ -329,18 +359,26 @@ void Simulation::createArrays() {
 	for (int i = 0; i < xnumber; ++i) {
 		Bfield[i] = new Vector3d*[ynumber];
 		newBfield[i] = new Vector3d*[ynumber];
-		tempBfield[i] = new Vector3d*[ynumber];
+		//tempBfield[i] = new Vector3d*[ynumber];
 		electricDensity[i] = new double*[ynumber];
 		pressureTensor[i] = new Matrix3d*[ynumber];
 		particlesInBbin[i] = new std::vector<Particle*>*[ynumber];
 
+		electronConcentration[i] = new double*[ynumber];
+		protonConcentration[i] = new double*[ynumber];
+		chargeDensity[i] = new double*[ynumber];
+
 		for (int j = 0; j < ynumber; ++j) {
 			Bfield[i][j] = new Vector3d[znumber];
 			newBfield[i][j] = new Vector3d[znumber];
-			tempBfield[i][j] = new Vector3d[znumber];
+			//tempBfield[i][j] = new Vector3d[znumber];
 			electricDensity[i][j] = new double[znumber];
 			pressureTensor[i][j] = new Matrix3d[znumber];
 			particlesInBbin[i][j] = new std::vector<Particle*>[znumber];
+
+			electronConcentration[i][j] = new double[znumber];
+			protonConcentration[i][j] = new double[znumber];
+			chargeDensity[i][j] = new double[znumber];
 		}
 	}
 
@@ -393,6 +431,10 @@ void Simulation::createFiles() {
 	fclose(Yfile);
 	Zfile = fopen("./output/Zfile.dat", "w");
 	fclose(Zfile);
+	generalFile = fopen("./output/general.dat", "w");
+	fclose(generalFile);
+	densityFile = fopen("./output/concentrations.dat", "w");
+	fclose(densityFile);
 }
 
 void Simulation::simulate() {
@@ -400,12 +442,15 @@ void Simulation::simulate() {
 	initialize();
 	initializeSimpleElectroMagneticWave();
 	createFiles();
-	//createParticles();
+	createParticles();
+	collectParticlesIntoBins();
+	updateDensityParameters();
+	updateEnergy();
 
 	updateDeltaT();
 	//deltaT = 0;
 
-	while (time < maxTime && currentIteration < maxIteration) {
+	while (time*plasma_period < maxTime && currentIteration < maxIteration) {
 		printf("iteration number %d time = %lf\n", currentIteration, time * plasma_period);
 
 		if (currentIteration % writeParameter == 0) {
@@ -416,6 +461,8 @@ void Simulation::simulate() {
 		evaluateFields();
 		//moveParticles();
 		updateFields();
+		updateDensityParameters();
+		updateEnergy();
 
 		time += deltaT;
 		currentIteration++;
@@ -433,8 +480,8 @@ void Simulation::output() {
 		outputTraectory(traectoryFile, particles[0], time);
 		fclose(traectoryFile);
 	}
-	EfieldFile = fopen("./output/Efield.dat", "w");
-	BfieldFile = fopen("./output/Bfield.dat", "w");
+	EfieldFile = fopen("./output/Efield.dat", "a");
+	BfieldFile = fopen("./output/Bfield.dat", "a");
 	outputFields(EfieldFile, BfieldFile, Efield, Bfield, xnumber, ynumber, znumber, plasma_period, gyroradius);
 	fclose(EfieldFile);
 	fclose(BfieldFile);
@@ -450,6 +497,14 @@ void Simulation::output() {
 	Zfile = fopen("./output/Zfile.dat", "w");
 	outputGrid(Zfile, zgrid, znumber);
 	fclose(Zfile);
+
+	generalFile = fopen("./output/general.dat", "a");
+	outputGeneral(generalFile, this);
+	fclose(generalFile);
+
+	densityFile = fopen("./output/concentrations.dat", "a");
+	outputConcentrations(densityFile, electronConcentration, protonConcentration, chargeDensity, xnumber, ynumber, znumber);
+	fclose(densityFile);
 }
 
 Vector3d Simulation::correlationTempEfield(Particle* particle) {
@@ -829,8 +884,8 @@ double Simulation::correlationWithEbin(Particle& particle, int i, int j, int k) 
 		lefty = ygrid[ynumber] + deltaX / 2;
 		righty = particle.coordinates.y + 2 * deltaY;
 	} else {
-		lefty = ygrid[j] - deltaX / 2;
-		righty = ygrid[j] + deltaX / 2;
+		lefty = ygrid[j] - deltaY / 2;
+		righty = ygrid[j] + deltaY / 2;
 	}
 
 	if (k < 0) {
@@ -922,7 +977,7 @@ Matrix3d Simulation::evaluateAlphaRotationTensor(double beta, Vector3d velocity,
 void Simulation::updateDeltaT() {
 	double delta = min3(deltaX, deltaY, deltaZ);
 	deltaT = 0.01 * delta / speed_of_light_normalized;
-	//deltaT = min2(deltaT, 0.05 * massElectron * speed_of_light_normalized / (electron_charge_normalized * B0.norm()));
+	deltaT = min2(deltaT, 0.05 * massElectron * speed_of_light_normalized / (electron_charge_normalized * B0.norm()));
 	//deltaT = min2(deltaT, 0.02);
 	deltaT = min2(deltaT, 1E-1);
 }
@@ -969,8 +1024,8 @@ Particle* Simulation::createParticle(int i, int j, int k, double weight, Particl
 	}
 
 	double x = xgrid[i] + deltaX * uniformDistribution();
-	double y = ygrid[i] + deltaY * uniformDistribution();
-	double z = zgrid[i] + deltaZ * uniformDistribution();
+	double y = ygrid[j] + deltaY * uniformDistribution();
+	double z = zgrid[k] + deltaZ * uniformDistribution();
 
 	double dx = deltaX / 4;
 	double dy = deltaY / 4;
@@ -1157,7 +1212,7 @@ void Simulation::checkParticleInBox(Particle& particle) {
 	}
 }
 
-void Simulation::updateParameters() {
+void Simulation::updateElectroMagneticParameters() {
 	collectParticlesIntoBins();
 	for (int i = 0; i < xnumber + 1; ++i) {
 		for (int j = 0; j < ynumber + 1; ++j) {
@@ -1237,6 +1292,99 @@ void Simulation::updateParameters() {
 			}
 		}
 	}
+}
+
+void Simulation::updateDensityParameters() {
+	for(int i = 0; i < xnumber; ++i) {
+		for(int j = 0; j < ynumber; ++j) {
+			for(int k = 0; k < znumber; ++k) {
+				electronConcentration[i][j][k] = 0;
+				protonConcentration[i][j][k] = 0;
+				chargeDensity[i][j][k] = 0;
+
+				for(int pcount = 0; pcount < particlesInBbin[i][j][k].size(); ++pcount) {
+					Particle* particle = particlesInBbin[i][j][k][pcount];
+
+					double correlation = correlationWithBbin(*particle, i, j, k)/volume(i, j, k);
+
+					chargeDensity[i][j][k] += correlation*particle->charge*particle->weight;
+					if(particle->type == ParticleTypes::ELECTRON) {
+						electronConcentration[i][j][k] += correlation*particle->weight;
+					} else if (particle->type == ParticleTypes::PROTON) {
+						protonConcentration[i][j][k] += correlation*particle->weight;
+					}
+				}
+
+				electronConcentration[i][j][k] /= cube(gyroradius);
+				protonConcentration[i][j][k] /= cube(gyroradius);
+				chargeDensity[i][j][k] /= (sqrt(cube(gyroradius))*plasma_period);
+			}
+		}
+	}
+
+
+}
+
+void Simulation::updateEnergy() {
+	particleEnergy = 0;
+	electricFieldEnergy = 0;
+	magneticFieldEnergy = 0;
+	energy = 0;
+
+	momentum = Vector3d(0, 0, 0);
+	for(int i = 0; i < xnumber+1; ++i) {
+		for(int j = 0; j < ynumber+1; ++j){
+			for(int k = 0; k < znumber+1; ++k){
+				double factor = 1;
+				if(i == 0 || i == xnumber) {
+					factor = factor/2;
+				}
+				if(j == 0 || j == ynumber) {
+					factor = factor/2;
+				}
+				if(k == 0 || k == znumber) {
+					factor = factor/2;
+				}
+				Vector3d E = Efield[i][j][k];
+				electricFieldEnergy += E.scalarMult(E)*volume(i, j, k)*factor/(8*pi);
+			}
+		}
+	}
+
+	for(int i = 0; i < xnumber; ++i) {
+		for(int j = 0; j < ynumber; ++j) {
+			for(int k = 0; k < znumber; ++k){
+				Vector3d B = Bfield[i][j][k];
+				magneticFieldEnergy += B.scalarMult(B)*volume(i, j, k)/(8*pi);
+			}
+		}
+	}
+
+	for(int i = 0; i < xnumber; ++i) {
+		for(int j = 0; j < ynumber; ++j) {
+			for(int k = 0; k < znumber; ++k) {
+				Vector3d E = (Efield[i][j][k]  + Efield[i][j+1][k] + Efield[i][j][k+1] + Efield[i][j+1][k+1] + Efield[i+1][j][k] + Efield[i+1][j+1][k] + Efield[i+1][j][k+1] + Efield[i+1][j+1][k+1])/8;
+				Vector3d B = Bfield[i][j][k];
+
+				momentum += (E.vectorMult(B)/(4*pi*speed_of_light_normalized))*volume(i, j, k);
+			}
+		}
+	}
+
+	for(int pcount = 0; pcount < particles.size(); ++pcount) {
+		Particle* particle = particles[pcount];
+
+		particleEnergy += particle->energy(speed_of_light_normalized)*particle->weight;
+		momentum += particle->momentum*particle->weight;
+	}
+
+	particleEnergy *= sqr(gyroradius/plasma_period);
+	electricFieldEnergy *= sqr(gyroradius/plasma_period);
+	magneticFieldEnergy *= sqr(gyroradius/plasma_period);
+	momentum = momentum * gyroradius/plasma_period;
+
+
+	energy = particleEnergy + electricFieldEnergy + magneticFieldEnergy;
 }
 
 Vector3d Simulation::getBfield(int i, int j, int k) {

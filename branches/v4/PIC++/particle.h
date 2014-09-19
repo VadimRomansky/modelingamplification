@@ -38,6 +38,7 @@ public:
 	double velocityY(double c);
 	double velocityZ(double c);
 	double gammaFactor(double c);
+	double energy(double c);
 
 	void setMomentumByV(Vector3d v, double c);
 };

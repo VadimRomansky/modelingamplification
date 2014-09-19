@@ -18,6 +18,8 @@ public:
 	double norm();
 	Vector3d operator-(const Vector3d& vector);
 	Vector3d operator+(const Vector3d& vector);
+	Vector3d& operator+=(const Vector3d& vector);
+	Vector3d& operator-=(const Vector3d& vector);
 	Vector3d operator*(const double& value);
 	Vector3d operator/(const double& value);
 	double scalarMult(const Vector3d& vector);
