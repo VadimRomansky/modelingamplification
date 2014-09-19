@@ -8,7 +8,7 @@
 #include "matrix3d.h"
 
 void Simulation::evaluateFields() {
-	updateParameters();
+	updateElectroMagneticParameters();
 
 	evaluateMaxwellEquationMatrix();
 

@@ -9,61 +9,81 @@ Nx = size(Xfile, 1);
 Ny = size(Yfile, 1);
 Nz = size(Zfile, 1);
 
-Ex(1:Nx) = 0;
-Ey(1:Nx) = 0;
-Ez(1:Nx) = 0;
+NE = (Nx+1)*(Ny+1)*(Nz+1);
+NB = Nx*Ny*Nz;
+Nt = size(Efield, 1)/NE;
 
-Bx(1:Nx) = 0;
-By(1:Nx) = 0;
-Bz(1:Nx) = 0;
+a = 0;
+b = fix(Nt/2)-2;
+c = Nt - 1;
+
+Ex(1:Nx, 1:3) = 0;
+Ey(1:Nx, 1:3) = 0;
+Ez(1:Nx, 1:3) = 0;
+
+Bx(1:Nx, 1:3) = 0;
+By(1:Nx, 1:3) = 0;
+Bz(1:Nx, 1:3) = 0;
 
 
 for i=1:Nx,
-   Ex(i) = Efield((Nz+1)*(Ny+1)*(i-1) + (Nz+1)*3 + 1, 1);
-   Ey(i) = Efield((Nz+1)*(Ny+1)*(i-1) + (Nz+1)*3 + 1, 2);
-   Ez(i) = Efield((Nz+1)*(Ny+1)*(i-1) + (Nz+1)*3 + 1, 3);
+   Ex(i,1) = Efield((Nz+1)*(Ny+1)*(i-1) + (Nz+1)*3 + 1 + a*NE, 1);
+   Ex(i,2) = Efield((Nz+1)*(Ny+1)*(i-1) + (Nz+1)*3 + 1 + b*NE, 1);
+   Ex(i,3) = Efield((Nz+1)*(Ny+1)*(i-1) + (Nz+1)*3 + 1 + c*NE, 1);
+   Ey(i,1) = Efield((Nz+1)*(Ny+1)*(i-1) + (Nz+1)*3 + 1 + a*NE, 2);
+   Ey(i,2) = Efield((Nz+1)*(Ny+1)*(i-1) + (Nz+1)*3 + 1 + b*NE, 2);
+   Ey(i,3) = Efield((Nz+1)*(Ny+1)*(i-1) + (Nz+1)*3 + 1 + c*NE, 2);
+   Ez(i,1) = Efield((Nz+1)*(Ny+1)*(i-1) + (Nz+1)*3 + 1 + a*NE, 3);
+   Ez(i,2) = Efield((Nz+1)*(Ny+1)*(i-1) + (Nz+1)*3 + 1 + b*NE, 3);
+   Ez(i,3) = Efield((Nz+1)*(Ny+1)*(i-1) + (Nz+1)*3 + 1 + c*NE, 3);
    
-   Bx(i) = Bfield(Nz*Ny*(i-1) + Nz*3 + 1, 1);
-   By(i) = Bfield(Nz*Ny*(i-1) + Nz*3 + 1, 2);
-   Bz(i) = Bfield(Nz*Ny*(i-1) + Nz*3 + 1, 3);
+   Bx(i, 1) = Bfield((Nz*Ny*(i-1) + Nz*3 + 1) + a*NB, 1);
+   Bx(i, 2) = Bfield((Nz*Ny*(i-1) + Nz*3 + 1) + b*NB, 1);
+   Bx(i, 3) = Bfield((Nz*Ny*(i-1) + Nz*3 + 1) + c*NB, 1);
+   By(i, 1) = Bfield((Nz*Ny*(i-1) + Nz*3 + 1) + a*NB, 2);
+   By(i, 2) = Bfield((Nz*Ny*(i-1) + Nz*3 + 1) + b*NB, 2);
+   By(i, 3) = Bfield((Nz*Ny*(i-1) + Nz*3 + 1) + c*NB, 2);
+   Bz(i, 1) = Bfield((Nz*Ny*(i-1) + Nz*3 + 1) + a*NB, 3);
+   Bz(i, 2) = Bfield((Nz*Ny*(i-1) + Nz*3 + 1) + b*NB, 3);
+   Bz(i, 3) = Bfield((Nz*Ny*(i-1) + Nz*3 + 1) + c*NB, 3);
 end;
 figure(1);
-plot (Xfile(1:Nx,1),Ex(1:Nx), 'red');
+plot (Xfile(1:Nx,1),Ex(1:Nx,1), 'red',Xfile(1:Nx,1),Ex(1:Nx,2), 'green',Xfile(1:Nx,1),Ex(1:Nx,3), 'blue');
 title ('Ex');
 xlabel ('x/r_g');
 ylabel ('E gauss');
 grid ;
 
 figure(2);
-plot (Xfile(1:Nx,1),Ey(1:Nx), 'red');
+plot (Xfile(1:Nx,1),Ey(1:Nx, 1), 'red', Xfile(1:Nx,1), Ey(1:Nx, 2), 'green',Xfile(1:Nx,1),Ey(1:Nx, 3), 'blue');
 title ('Ey');
 xlabel ('x/r_g');
 ylabel ('E gauss');
 grid ;
 
 figure(3);
-plot (Xfile(1:Nx,1),Ez(1:Nx), 'red');
+plot (Xfile(1:Nx,1),Ez(1:Nx, 1), 'red', Xfile(1:Nx,1), Ez(1:Nx, 2), 'green', Xfile(1:Nx,1), Ez(1:Nx, 3), 'blue');
 title ('Ez');
 xlabel ('x/r_g');
 ylabel ('E gauss');
 grid ;
 
 figure(4);
-plot (Xfile(1:Nx,1),Bx(1:Nx), 'red');
+plot (Xfile(1:Nx,1),Bx(1:Nx, 1), 'red', Xfile(1:Nx,1),Bx(1:Nx, 2), 'green', Xfile(1:Nx,1),Bx(1:Nx, 3), 'blue');
 title ('Bx');
 xlabel ('x/r_g');
 ylabel ('B gauss');
 grid ;
 
 figure(5);
-plot (Xfile(1:Nx,1),By(1:Nx), 'red');
+plot (Xfile(1:Nx,1),By(1:Nx, 1), 'red', Xfile(1:Nx,1),By(1:Nx, 2), 'green', Xfile(1:Nx,1),By(1:Nx, 3), 'blue');
 title ('By');
 xlabel ('x/r_g');
 ylabel ('B gauss');
 grid ;
 
 figure(6);
-plot (Xfile(1:Nx,1),Bz(1:Nx), 'red');
+plot (Xfile(1:Nx,1),Bz(1:Nx, 1), 'red', Xfile(1:Nx,1),Bz(1:Nx, 2), 'green', Xfile(1:Nx,1),Bz(1:Nx, 3), 'blue');
 title ('Bz');
 xlabel ('x/r_g');
 ylabel ('B gauss');

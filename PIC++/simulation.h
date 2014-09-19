@@ -45,6 +45,18 @@ public:
 
 	bool debugMode;
 
+	double particleEnergy;
+	double electricFieldEnergy;
+	double magneticFieldEnergy;
+	double energy;
+
+	Vector3d momentum;
+
+	double*** electronConcentration;
+	double*** protonConcentration;
+	double*** chargeDensity;
+
+
 	Vector3d V0;
 
 	Vector3d B0;
@@ -73,7 +85,7 @@ public:
 	Vector3d*** newBfield;
 
 	Vector3d*** tempEfield;
-	Vector3d*** tempBfield;
+	//Vector3d*** tempBfield;
 
 	std::vector<Particle*> particles;
 
@@ -90,6 +102,8 @@ public:
 	FILE* Xfile;
 	FILE* Yfile;
 	FILE* Zfile;
+	FILE* generalFile;
+	FILE* densityFile;
 
 	Simulation();
 	Simulation(double xn, double yn, double zn, double xsizev, double ysizev, double zsizev, double temp, double rho, double Ex, double Ey, double Ez, double Bx, double By, double Bz, int maxIterations, double maxTimeV, int particlesPerBinV);
@@ -157,7 +171,9 @@ public:
 	bool particleCrossEbin(Particle& particle, int i, int j, int k);
 	void checkParticleInBox(Particle& particle);
 
-	void updateParameters();
+	void updateElectroMagneticParameters();
+	void updateDensityParameters();
+	void updateEnergy();
 	void updateFields();
 	double evaluateDivFlux(int i, int j, int k);
 	Vector3d evaluateRotB(int i, int j, int k);

@@ -115,3 +115,8 @@ double Particle::gammaFactor(double c){
 	double mc2 = mass*c*c;
 	return sqrt(p2*c*c + mc2*mc2)/mc2;
 }
+
+double Particle::energy(double c) {
+	double gamma_factor = gammaFactor(c);
+	return gamma_factor*mass*c*c;
+}

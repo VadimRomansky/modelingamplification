@@ -25,6 +25,22 @@ Vector3d Vector3d::operator+(const Vector3d& vector) {
 	return Vector3d(x + vector.x, y + vector.y, z + vector.z);
 }
 
+Vector3d& Vector3d::operator+=(Vector3d const& vector) {
+	x += vector.x;
+	y += vector.y;
+	z += vector.z;
+
+	return *this;
+}
+
+Vector3d& Vector3d::operator-=(Vector3d const& vector) {
+	x -= vector.x;
+	y -= vector.y;
+	z -= vector.z;
+
+	return *this;
+}
+
 Vector3d Vector3d::operator-(const Vector3d& vector) {
 	return Vector3d(x - vector.x, y - vector.y, z - vector.z);
 }

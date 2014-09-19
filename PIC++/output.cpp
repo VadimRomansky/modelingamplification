@@ -87,3 +87,28 @@ void outputFields(FILE* outEfile, FILE* outBfile, Vector3d*** Efield, Vector3d**
 		}
 	}
 }
+
+void outputConcentrations(FILE* outFile, double*** electronConcentration, double*** protonConcentration, double*** chargeDensity, int xnumber, int ynumber, int znumber) {
+	for(int i = 0; i < xnumber; ++i) {
+		for(int j = 0; j < ynumber; ++j) {
+			for(int k = 0; k < znumber; ++k) {
+				fprintf(outFile, "%g %g %g\n", electronConcentration[i][j][k], protonConcentration[i][j][k], chargeDensity[i][j][k]);
+			}
+		}
+	}
+}
+
+void outputArrayParameter(FILE* outFile, double*** arrayParameter, int xnumber, int ynumber, int znumber) {
+	for(int i = 0; i < xnumber; ++i){
+		for(int j = 0; j < ynumber; ++j) {
+			for(int k = 0; k < znumber; ++k) {
+				fprintf(outFile, "%g\n", arrayParameter[i][j][k]);
+			}
+		}
+	}
+}
+
+void outputGeneral(FILE* outFile, Simulation* simulation) {
+	fprintf(outFile, "%g %g %g %g %g %g %g %g %g\n", simulation->time, simulation->time*simulation->plasma_period, simulation->particleEnergy,
+		simulation->electricFieldEnergy, simulation->magneticFieldEnergy, simulation->energy, simulation->momentum.x, simulation->momentum.y, simulation->momentum.z);
+}
