@@ -29,7 +29,7 @@ double Simulation::evaluateError(double** hessenbergMatrix, double* vector, doub
 	return sqrt(norm);
 }
 
-double**** Simulation::multiplySpecialMatrixVector(double**** vector) {
+double**** Simulation::multiplySpecialMatrixVector(std::vector<MatrixElement>**** matrix, Vector3d*** vector) {
 	double**** result = new double***[xnumber];
 	for (int i = 0; i < xnumber; ++i) {
 		result[i] = new double**[ynumber];
@@ -39,8 +39,8 @@ double**** Simulation::multiplySpecialMatrixVector(double**** vector) {
 				result[i][j][k] = new double[3];
 				for (int l = 0; l < 3; ++l) {
 					result[i][j][k][l] = 0;
-					for (int m = 0; m < maxwellEquationMatrix[i][j][k][l].size(); ++m) {
-						MatrixElement element = maxwellEquationMatrix[i][j][k][l][m];
+					for (int m = 0; m < matrix[i][j][k][l].size(); ++m) {
+						MatrixElement element = matrix[i][j][k][l][m];
 
 						result[i][j][k][l] += element.value * vector[element.i][element.j][element.k][element.l];
 					}
@@ -52,7 +52,7 @@ double**** Simulation::multiplySpecialMatrixVector(double**** vector) {
 	return result;
 }
 
-double**** Simulation::multiplySpecialMatrixVector(Vector3d*** vector) {
+double**** Simulation::multiplySpecialMatrixVector(std::vector<MatrixElement>**** matrix, double**** vector) {
 	double**** result = new double***[xnumber];
 	for (int i = 0; i < xnumber; ++i) {
 		result[i] = new double**[ynumber];
@@ -62,8 +62,8 @@ double**** Simulation::multiplySpecialMatrixVector(Vector3d*** vector) {
 				result[i][j][k] = new double[3];
 				for (int l = 0; l < 3; ++l) {
 					result[i][j][k][l] = 0;
-					for (int m = 0; m < maxwellEquationMatrix[i][j][k][l].size(); ++m) {
-						MatrixElement element = maxwellEquationMatrix[i][j][k][l][m];
+					for (int m = 0; m < matrix[i][j][k][l].size(); ++m) {
+						MatrixElement element = matrix[i][j][k][l][m];
 
 						result[i][j][k][l] += element.value * vector[element.i][element.j][element.k][element.l];
 					}
@@ -75,7 +75,7 @@ double**** Simulation::multiplySpecialMatrixVector(Vector3d*** vector) {
 	return result;
 }
 
-double***** Simulation::arnoldiIterations(double** outHessenbergMatrix, int n, double***** prevBasis, double** prevHessenbergMatrix) {
+double***** Simulation::arnoldiIterations(std::vector<MatrixElement>**** matrix,double** outHessenbergMatrix, int n, double***** prevBasis, double** prevHessenbergMatrix) {
 	double***** resultBasis = new double****[n];
 	for (int m = 0; m < n - 1; ++m) {
 		resultBasis[m] = prevBasis[m];
@@ -96,7 +96,7 @@ double***** Simulation::arnoldiIterations(double** outHessenbergMatrix, int n, d
 	}
 	delete[] prevHessenbergMatrix;
 
-	double**** tempVector = multiplySpecialMatrixVector(resultBasis[n - 2]);
+	double**** tempVector = multiplySpecialMatrixVector(matrix, resultBasis[n - 2]);
 
 	for (int m = 0; m < n - 1; ++m) {
 		outHessenbergMatrix[m][n - 2] = scalarMultiplyLargeVectors(resultBasis[m], tempVector);
@@ -135,18 +135,29 @@ double***** Simulation::arnoldiIterations(double** outHessenbergMatrix, int n, d
 	return resultBasis;
 }
 
-void Simulation::generalizedMinimalResidualMethod() {
-	double norm = sqrt(scalarMultiplyLargeVectors(maxwellEquationRightPart, maxwellEquationRightPart));
+void Simulation::generalizedMinimalResidualMethod(std::vector<MatrixElement>**** matrix, double**** rightPart, Vector3d*** outvector) {
+	double norm = sqrt(scalarMultiplyLargeVectors(rightPart, rightPart));
+
+	if(norm == 0) {
+		for(int i = 0; i < xnumber; ++i) {
+			for(int j = 0; j < ynumber; ++j) {
+				for(int k = 0; k < znumber; ++k) {
+					outvector[i][j][k] = Vector3d(0, 0, 0);
+					return;
+				}
+			}
+		}
+	}
 
 	for (int i = 0; i < xnumber; ++i) {
 		for (int j = 0; j < ynumber; ++j) {
 			for (int k = 0; k < znumber; ++k) {
 				for (int l = 0; l < 3; ++l) {
-					maxwellEquationRightPart[i][j][k][l] /= norm;
-					for (int m = 0; m < maxwellEquationMatrix[i][j][k][l].size(); ++m) {
-						double value = maxwellEquationMatrix[i][j][k][l][m].value;
-						maxwellEquationMatrix[i][j][k][l][m].value /= norm;
-						value = maxwellEquationMatrix[i][j][k][l][m].value;
+					rightPart[i][j][k][l] /= norm;
+					for (int m = 0; m < matrix[i][j][k][l].size(); ++m) {
+						double value = matrix[i][j][k][l][m].value;
+						matrix[i][j][k][l][m].value /= norm;
+						value = matrix[i][j][k][l][m].value;
 					}
 				}
 			}
@@ -186,7 +197,7 @@ void Simulation::generalizedMinimalResidualMethod() {
 			for (int k = 0; k < znumber; ++k) {
 				basis[0][i][j][k] = new double[3];
 				for (int l = 0; l < 3; ++l) {
-					basis[0][i][j][k][l] = maxwellEquationRightPart[i][j][k][l];
+					basis[0][i][j][k][l] = rightPart[i][j][k][l];
 				}
 			}
 		}
@@ -224,7 +235,7 @@ void Simulation::generalizedMinimalResidualMethod() {
 		for (int i = 0; i < n; ++i) {
 			newHessenbergMatrix[i] = new double[n - 1];
 		}
-		newBasis = arnoldiIterations(newHessenbergMatrix, n, basis, hessenbergMatrix);
+		newBasis = arnoldiIterations(matrix, newHessenbergMatrix, n, basis, hessenbergMatrix);
 
 		hessenbergMatrix = newHessenbergMatrix;
 		basis = newBasis;
@@ -331,25 +342,25 @@ void Simulation::generalizedMinimalResidualMethod() {
 		/*for (int i = 0; i < xnumber; ++i) {
 			for (int j = 0; j < ynumber; ++j) {
 				for (int k = 0; k < znumber; ++k) {
-					tempEfield[i][j][k].x = 0;
-					tempEfield[i][j][k].y = 0;
-					tempEfield[i][j][k].z = 0;
+					outvector[i][j][k].x = 0;
+					outvector[i][j][k].y = 0;
+					outvector[i][j][k].z = 0;
 					for (int m = 0; m < n; ++m) {
-						tempEfield[i][j][k].x += basis[m][i][j][k][0] * y[m];
-						tempEfield[i][j][k].y += basis[m][i][j][k][1] * y[m];
-						tempEfield[i][j][k].z += basis[m][i][j][k][2] * y[m];
+						outvector[i][j][k].x += basis[m][i][j][k][0] * y[m];
+						outvector[i][j][k].y += basis[m][i][j][k][1] * y[m];
+						outvector[i][j][k].z += basis[m][i][j][k][2] * y[m];
 					}
 				}
 			}
 		}
 
-		double**** leftPart1 = multiplySpecialMatrixVector(tempEfield);
+		double**** leftPart1 = multiplySpecialMatrixVector(outvector);
 		double error1 = 0;
 		for (int i = 0; i < xnumber; ++i) {
 			for (int j = 0; j < ynumber; ++j) {
 				for (int k = 0; k < znumber; ++k) {
 					for(int l = 0; l < 3; ++l){
-						error1 += abs(leftPart1[i][j][k][l] - maxwellEquationRightPart[i][j][k][l]);
+						error1 += abs(leftPart1[i][j][k][l] - rightPart[i][j][k][l]);
 					}
 					delete[] leftPart1[i][j][k];
 				}
@@ -359,7 +370,7 @@ void Simulation::generalizedMinimalResidualMethod() {
 		}
 		delete[] leftPart1;*/
 
-		double normRightPart = sqrt(scalarMultiplyLargeVectors(maxwellEquationRightPart, maxwellEquationRightPart));
+		double normRightPart = sqrt(scalarMultiplyLargeVectors(rightPart, rightPart));
 		relativeError = error/normRightPart;
 
 		for (int i = 0; i < n - 1; ++i) {
@@ -382,28 +393,28 @@ void Simulation::generalizedMinimalResidualMethod() {
 	for (int i = 0; i < xnumber; ++i) {
 		for (int j = 0; j < ynumber; ++j) {
 			for (int k = 0; k < znumber; ++k) {
-				tempEfield[i][j][k].x = 0;
-				tempEfield[i][j][k].y = 0;
-				tempEfield[i][j][k].z = 0;
+				outvector[i][j][k].x = 0;
+				outvector[i][j][k].y = 0;
+				outvector[i][j][k].z = 0;
 				for (int m = 0; m < n; ++m) {
-					tempEfield[i][j][k].x += basis[m][i][j][k][0] * y[m];
-					tempEfield[i][j][k].y += basis[m][i][j][k][1] * y[m];
-					tempEfield[i][j][k].z += basis[m][i][j][k][2] * y[m];
-					//tempEfield[i][j][k].x += basis[m][i][j][k][0] * y[m]*norm;
-					//tempEfield[i][j][k].y += basis[m][i][j][k][1] * y[m]*norm;
-					//tempEfield[i][j][k].z += basis[m][i][j][k][2] * y[m]*norm;
+					outvector[i][j][k].x += basis[m][i][j][k][0] * y[m];
+					outvector[i][j][k].y += basis[m][i][j][k][1] * y[m];
+					outvector[i][j][k].z += basis[m][i][j][k][2] * y[m];
+					//outvector[i][j][k].x += basis[m][i][j][k][0] * y[m]*norm;
+					//outvector[i][j][k].y += basis[m][i][j][k][1] * y[m]*norm;
+					//outvector[i][j][k].z += basis[m][i][j][k][2] * y[m]*norm;
 				}
 			}
 		}
 	}
 
-	double**** leftPart = multiplySpecialMatrixVector(tempEfield);
+	double**** leftPart = multiplySpecialMatrixVector(matrix, outvector);
 	error = 0;
 	for (int i = 0; i < xnumber; ++i) {
 		for (int j = 0; j < ynumber; ++j) {
 			for (int k = 0; k < znumber; ++k) {
 				for(int l = 0; l < 3; ++l){
-					error += abs(leftPart[i][j][k][l] - maxwellEquationRightPart[i][j][k][l]);
+					error += abs(leftPart[i][j][k][l] - rightPart[i][j][k][l]);
 				}
 			}
 		}

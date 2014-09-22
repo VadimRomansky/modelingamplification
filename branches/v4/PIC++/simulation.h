@@ -73,6 +73,9 @@ public:
 	std::vector<MatrixElement>**** maxwellEquationMatrix;
 	double**** maxwellEquationRightPart;
 
+	std::vector<MatrixElement>**** divergenceCleanUpMatrix;
+	double**** divergenceCleanUpRightPart;
+
 	Vector3d*** electricFlux;
 	double*** electricDensity;
 	Matrix3d*** dielectricTensor;
@@ -86,6 +89,8 @@ public:
 
 	Vector3d*** tempEfield;
 	//Vector3d*** tempBfield;
+
+	Vector3d*** divergenceCleaningEfield;
 
 	std::vector<Particle*> particles;
 
@@ -153,14 +158,20 @@ public:
 	void evaluateMaxwellEquationMatrix();
 	void evaluateMagneticField();
 	void updateBoundaries();
+	void updateBoundariesOldField();
 
-	void generalizedMinimalResidualMethod();
-	double***** arnoldiIterations(double** outHessenbergMatrix, int n, double***** prevBasis, double** prevHessenbergMatrix);
-	double**** multiplySpecialMatrixVector(double**** vector);
-	double**** multiplySpecialMatrixVector(Vector3d*** vector);
+	void generalizedMinimalResidualMethod(std::vector<MatrixElement>**** matrix, double**** rightPart, Vector3d*** outvector);
+	double***** arnoldiIterations(std::vector<MatrixElement>**** matrix,double** outHessenbergMatrix, int n, double***** prevBasis, double** prevHessenbergMatrix);
+	double**** multiplySpecialMatrixVector(std::vector<MatrixElement>**** matrix, double**** vector);
+	double**** multiplySpecialMatrixVector(std::vector<MatrixElement>**** matrix, Vector3d*** vector);
 	double evaluateError(double** hessenbergMatrix, double* vector, double beta, int n);
 	double scalarMultiplyLargeVectors(double**** a, double**** b);
 	double scalarMultiplyLargeVectors(Vector3d*** a, Vector3d*** b);
+
+	void cleanupDivergence();
+	void createDivergenceLeftBoundaryCondition(int j, int k);
+	void createDivergenceCleanupEquation(int i, int j, int k);
+	double cleanUpRightPart(int i, int j, int k);
 
 	double volume(int i, int j, int k);
 

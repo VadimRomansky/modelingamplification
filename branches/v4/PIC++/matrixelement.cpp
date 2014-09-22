@@ -1,5 +1,13 @@
 #include "matrixElement.h"
 
+MatrixElement::MatrixElement() {
+	value = 0;
+	i = 0;
+	j = 0;
+	k = 0;
+	l = 0;
+}
+
 MatrixElement::MatrixElement(double v, int iv, int jv, int kv, int lv) {
 	value = v;
 	i = iv;
