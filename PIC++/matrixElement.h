@@ -9,6 +9,7 @@ struct MatrixElement
 	int k;
 	int l;
 
+	MatrixElement();
 	MatrixElement(double v, int iv, int jv, int kv, int lv);
 
 	bool equalsIndex(MatrixElement& element);

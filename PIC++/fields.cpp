@@ -12,7 +12,7 @@ void Simulation::evaluateFields() {
 
 	evaluateMaxwellEquationMatrix();
 
-	generalizedMinimalResidualMethod();
+	generalizedMinimalResidualMethod(maxwellEquationMatrix, maxwellEquationRightPart, tempEfield);
 
 	updateBoundaries();
 
@@ -694,6 +694,27 @@ void Simulation::updateBoundaries() {
 	for (int j = 0; j <= ynumber; ++j) {
 		for (int k = 0; k <= znumber; ++k) {
 			tempEfield[xnumber][j][k] = E0;
+		}
+	}
+}
+
+void Simulation::updateBoundariesOldField() {
+	for (int i = 0; i < xnumber; ++i) {
+		//periodic by Y
+		for (int k = 0; k < znumber; ++k) {
+			Efield[i][ynumber][k] = Efield[i][0][k];
+		}
+		//periodic by Z
+		//note j <= number because corner point
+
+		for (int j = 0; j <= ynumber; ++j) {
+			Efield[i][j][znumber] = Efield[i][j][0];
+		}
+	}
+
+	for (int j = 0; j <= ynumber; ++j) {
+		for (int k = 0; k <= znumber; ++k) {
+			Efield[xnumber][j][k] = E0;
 		}
 	}
 }
