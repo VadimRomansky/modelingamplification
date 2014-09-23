@@ -882,6 +882,19 @@ Vector3d Simulation::evaluateRotE(int i, int j, int k) {
 	return Vector3d(x, y, z);
 }
 
+double Simulation::evaluateDivE(int i, int j, int k) {
+	double ErightX = (Efield[i+1][j][k].x + Efield[i+1][j+1][k].x + Efield[i+1][j][k+1].x + Efield[i+1][j+1][k+1].x)/4;
+	double EleftX = (Efield[i][j][k].x + Efield[i][j+1][k].x + Efield[i][j][k+1].x + Efield[i][j+1][k+1].x)/4;
+
+	double ErightY = (Efield[i][j+1][k].y + Efield[i+1][j+1][k].y + Efield[i][j+1][k+1].y + Efield[i+1][j+1][k+1].y)/4;
+	double EleftY = (Efield[i][j][k].y + Efield[i+1][j][k].y + Efield[i][j][k+1].y + Efield[i+1][j][k+1].y)/4;
+
+	double ErightZ = (Efield[i][j][k+1].z + Efield[i+1][j][k+1].z + Efield[i][j+1][k+1].z + Efield[i+1][j+1][k+1].z)/4;
+	double EleftZ = (Efield[i][j][k].z + Efield[i+1][j][k].z + Efield[i][j+1][k].z + Efield[i+1][j+1][k].z)/4;
+
+	return ((ErightX - EleftX)/deltaX) + ((ErightY - EleftY)/deltaY) + ((ErightZ - EleftZ)/deltaZ);
+}
+
 Vector3d Simulation::evaluateDivPressureTensor(int i, int j, int k) {
 	Vector3d result = Vector3d(0, 0, 0);
 

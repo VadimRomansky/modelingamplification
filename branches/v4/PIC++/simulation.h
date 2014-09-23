@@ -109,6 +109,7 @@ public:
 	FILE* Zfile;
 	FILE* generalFile;
 	FILE* densityFile;
+	FILE* divergenceErrorFile;
 
 	Simulation();
 	Simulation(double xn, double yn, double zn, double xsizev, double ysizev, double zsizev, double temp, double rho, double Ex, double Ey, double Ez, double Bx, double By, double Bz, int maxIterations, double maxTimeV, int particlesPerBinV);
@@ -188,6 +189,7 @@ public:
 	double evaluateDivFlux(int i, int j, int k);
 	Vector3d evaluateRotB(int i, int j, int k);
 	Vector3d evaluateRotE(int i, int j, int k);
+	double evaluateDivE(int i, int j, int k);
 	Vector3d evaluateDivPressureTensor(int i, int j, int k);
 	Vector3d evaluateGradDensity(int i, int j, int k);
 

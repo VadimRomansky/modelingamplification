@@ -112,3 +112,14 @@ void outputGeneral(FILE* outFile, Simulation* simulation) {
 	fprintf(outFile, "%g %g %g %g %g %g %g %g %g\n", simulation->time, simulation->time*simulation->plasma_period, simulation->particleEnergy,
 		simulation->electricFieldEnergy, simulation->magneticFieldEnergy, simulation->energy, simulation->momentum.x, simulation->momentum.y, simulation->momentum.z);
 }
+
+void outputDivergenceError(FILE* outFile, Simulation* simulation) {
+	for(int i = 0; i < simulation->xnumber; ++i) {
+		for(int j = 0; j < simulation->ynumber; ++j) {
+			for(int k = 0; k < simulation->znumber; ++k) {
+				double div = simulation->evaluateDivE(i, j, k);
+				fprintf(outFile, "%g\n", div - 4*pi*simulation->chargeDensity[i][j][k]);
+			}
+		}
+	}
+}

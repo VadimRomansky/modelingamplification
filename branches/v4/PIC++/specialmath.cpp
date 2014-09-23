@@ -227,7 +227,7 @@ void Simulation::generalizedMinimalResidualMethod(std::vector<MatrixElement>****
 	double module;
 
 	double relativeError = 1;
-	double maxRelativeError = 1/(matrixDimension*1E4);
+	double maxRelativeError = 1/(matrixDimension*1E6);
 
 	while (relativeError > maxRelativeError  && n < min2(maxGMRESIterations, matrixDimension)) {
 		printf("GMRES iteration %d\n", n);
@@ -339,7 +339,7 @@ void Simulation::generalizedMinimalResidualMethod(std::vector<MatrixElement>****
 		}
 
 		error = fabs(beta * Qmatrix[n - 1][0]);
-		/*for (int i = 0; i < xnumber; ++i) {
+		for (int i = 0; i < xnumber; ++i) {
 			for (int j = 0; j < ynumber; ++j) {
 				for (int k = 0; k < znumber; ++k) {
 					outvector[i][j][k].x = 0;
@@ -354,13 +354,13 @@ void Simulation::generalizedMinimalResidualMethod(std::vector<MatrixElement>****
 			}
 		}
 
-		double**** leftPart1 = multiplySpecialMatrixVector(outvector);
+		double**** leftPart1 = multiplySpecialMatrixVector(matrix, outvector);
 		double error1 = 0;
 		for (int i = 0; i < xnumber; ++i) {
 			for (int j = 0; j < ynumber; ++j) {
 				for (int k = 0; k < znumber; ++k) {
 					for(int l = 0; l < 3; ++l){
-						error1 += abs(leftPart1[i][j][k][l] - rightPart[i][j][k][l]);
+						error1 += sqr(leftPart1[i][j][k][l] - rightPart[i][j][k][l]);
 					}
 					delete[] leftPart1[i][j][k];
 				}
@@ -368,7 +368,8 @@ void Simulation::generalizedMinimalResidualMethod(std::vector<MatrixElement>****
 			}
 			delete[] leftPart1[i];
 		}
-		delete[] leftPart1;*/
+		delete[] leftPart1;
+		error1 = sqrt(error1);
 
 		double normRightPart = sqrt(scalarMultiplyLargeVectors(rightPart, rightPart));
 		relativeError = error/normRightPart;
@@ -414,11 +415,17 @@ void Simulation::generalizedMinimalResidualMethod(std::vector<MatrixElement>****
 		for (int j = 0; j < ynumber; ++j) {
 			for (int k = 0; k < znumber; ++k) {
 				for(int l = 0; l < 3; ++l){
-					error += abs(leftPart[i][j][k][l] - rightPart[i][j][k][l]);
+					error += sqr(leftPart[i][j][k][l] - rightPart[i][j][k][l]);
 				}
+				delete[] leftPart[i][j][k];
 			}
+			delete[] leftPart[i][j];
 		}
+		delete[] leftPart[i];
 	}
+	delete[] leftPart;
+
+	error = sqrt(error);
 
 	for (int i = 0; i < n; ++i) {
 		delete[] Qmatrix[i];
