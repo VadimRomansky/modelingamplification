@@ -149,7 +149,7 @@ public:
 	void evaluateParticlesRotationTensor();
 
 	void evaluateFields();
-	void checkMaxwellEquationMatrix();
+	void checkEquationMatrix(std::vector<MatrixElement>**** matrix);
 	void createPerfectConductaryBoundaryCondition(int j, int k);
 	void createInternalEquationX(int i, int j, int k, Vector3d& rightPart);
 	void createInternalEquationY(int i, int j, int k, Vector3d& rightPart);
@@ -169,7 +169,6 @@ public:
 	double scalarMultiplyLargeVectors(Vector3d*** a, Vector3d*** b);
 
 	void cleanupDivergence();
-	void createDivergenceLeftBoundaryCondition(int j, int k);
 	void createDivergenceCleanupEquation(int i, int j, int k);
 	double cleanUpRightPart(int i, int j, int k);
 
