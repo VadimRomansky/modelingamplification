@@ -465,6 +465,8 @@ void Simulation::createFiles() {
 	fclose(generalFile);
 	densityFile = fopen("./output/concentrations.dat", "w");
 	fclose(densityFile);
+	divergenceErrorFile = fopen("./output/divergence_error.dat", "w");
+	fclose(divergenceErrorFile);
 }
 
 void Simulation::simulate() {
@@ -536,6 +538,10 @@ void Simulation::output() {
 	densityFile = fopen("./output/concentrations.dat", "a");
 	outputConcentrations(densityFile, electronConcentration, protonConcentration, chargeDensity, electricDensity, xnumber, ynumber, znumber);
 	fclose(densityFile);
+
+	divergenceErrorFile = fopen("./output/divergence_error.dat", "a");
+	outputDivergenceError(divergenceErrorFile, this);
+	fclose(divergenceErrorFile);
 }
 
 Vector3d Simulation::correlationTempEfield(Particle* particle) {

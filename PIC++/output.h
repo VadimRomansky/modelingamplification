@@ -15,6 +15,7 @@ void outputFields(FILE* outEfile, FILE* outBfile, Vector3d*** Efield, Vector3d**
 void outputConcentrations(FILE* outFile, double*** electronConcentration, double*** protonConcentration, double*** chargeDensity, double*** shiftChargeDensity, int xnumber, int ynumber, int znumber);
 void outputArrayParameter(FILE* outFile, double*** arrayParameter, int xnumber, int ynumber, int znumber);
 void outputGeneral(FILE* outFile, Simulation* simulatiom);
+void outputDivergenceError(FILE* outFile, Simulation* simulation);
 
 
 #endif

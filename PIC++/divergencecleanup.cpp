@@ -54,7 +54,7 @@ void Simulation::createDivergenceCleanupEquation(int i, int j, int k) {
 		nextK = 0;
 	}
 
-	divergenceCleanUpRightPart[i][j][k][0] = cleanUpRightPart(i,j, k);
+	divergenceCleanUpRightPart[i][j][k][0] = cleanUpRightPart(i, j, k);
 	divergenceCleanUpRightPart[i][j][k][1] = 0;
 	divergenceCleanUpRightPart[i][j][k][2] = 0;
 
@@ -84,16 +84,7 @@ void Simulation::createDivergenceCleanupEquation(int i, int j, int k) {
 }
 
 double Simulation::cleanUpRightPart(int i, int j, int k) {
-	double ErightX = (Efield[i+1][j][k].x + Efield[i+1][j+1][k].x + Efield[i+1][j][k+1].x + Efield[i+1][j+1][k+1].x)/4;
-	double EleftX = (Efield[i][j][k].x + Efield[i][j][k].x + Efield[i][j][k+1].x + Efield[i][j+1][k+1].x)/4;
-
-	double ErightY = (Efield[i][j+1][k].y + Efield[i+1][j+1][k].y + Efield[i][j+1][k+1].y + Efield[i+1][j+1][k+1].y)/4;
-	double EleftY = (Efield[i][j][k].y + Efield[i+1][j][k].y + Efield[i][j][k+1].y + Efield[i+1][j][k+1].y)/4;
-
-	double ErightZ = (Efield[i][j][k+1].z + Efield[i+1][j][k+1].z + Efield[i][j+1][k+1].z + Efield[i+1][j+1][k+1].z)/4;
-	double EleftZ = (Efield[i][j][k].z + Efield[i+1][j][k].z + Efield[i][j+1][k].z + Efield[i+1][j+1][k].z)/4;
-
-	double div = ((ErightX - EleftX)/deltaX) + ((ErightY - EleftY)/deltaY) + ((ErightZ - EleftZ)/deltaZ);
+	double div = evaluateDivE(i, j, k);
 
 	return 4*pi*chargeDensity[i][j][k] - div;
 }
