@@ -71,17 +71,17 @@ void Simulation::evaluateMaxwellEquationMatrix() {
 	}
 
 	if (debugMode) {
-		checkMaxwellEquationMatrix();
+		checkEquationMatrix(maxwellEquationMatrix);
 	}
 }
 
-void Simulation::checkMaxwellEquationMatrix() {
+void Simulation::checkEquationMatrix(std::vector<MatrixElement>**** matrix) {
 	for (int i = 0; i < xnumber; ++i) {
 		for (int j = 0; j < ynumber; ++j) {
 			for (int k = 0; k < znumber; ++k) {
 				for (int l = 0; l < 3; ++l) {
-					for (int m = 0; m < maxwellEquationMatrix[i][j][k][l].size(); ++m) {
-						MatrixElement element = maxwellEquationMatrix[i][j][k][l][m];
+					for (int m = 0; m < matrix[i][j][k][l].size(); ++m) {
+						MatrixElement element = matrix[i][j][k][l][m];
 						if (element.i < 0) {
 							printf("element i < 0\n");
 							exit(0);
@@ -106,8 +106,8 @@ void Simulation::checkMaxwellEquationMatrix() {
 							printf("eement k >= znumber\n");
 							exit(0);
 						}
-						for (int n = m + 1; n < maxwellEquationMatrix[i][j][k][l].size(); ++n) {
-							MatrixElement tempElement = maxwellEquationMatrix[i][j][k][l][n];
+						for (int n = m + 1; n < matrix[i][j][k][l].size(); ++n) {
+							MatrixElement tempElement = matrix[i][j][k][l][n];
 
 							if (element.equalsIndex(tempElement)) {
 								printf("equals indexes\n");

@@ -470,7 +470,7 @@ void Simulation::createFiles() {
 void Simulation::simulate() {
 	createArrays();
 	initialize();
-	initializeSimpleElectroMagneticWave();
+	//initializeSimpleElectroMagneticWave();
 	createFiles();
 	createParticles();
 	collectParticlesIntoBins();
@@ -534,7 +534,7 @@ void Simulation::output() {
 	fclose(generalFile);
 
 	densityFile = fopen("./output/concentrations.dat", "a");
-	outputConcentrations(densityFile, electronConcentration, protonConcentration, chargeDensity, xnumber, ynumber, znumber);
+	outputConcentrations(densityFile, electronConcentration, protonConcentration, chargeDensity, electricDensity, xnumber, ynumber, znumber);
 	fclose(densityFile);
 }
 
@@ -1018,9 +1018,8 @@ void Simulation::createParticles() {
 	for (int i = 0; i < xnumber; ++i) {
 		for (int j = 0; j < ynumber; ++j) {
 			for (int k = 0; k < znumber; ++k) {
-				//for(int i = 0; i < 1; ++i){
-				//for(int j = 0; j < 1; ++j){
-				//for(int k = 0; k < 1; ++k){
+				double weight = (density / (massProton * particlesPerBin)) * volume(i, j, k);
+
 				for (int l = 0; l < 2 * particlesPerBin; ++l) {
 					ParticleTypes type;
 					if (l % 2 == 0) {
@@ -1028,11 +1027,12 @@ void Simulation::createParticles() {
 					} else {
 						type = ParticleTypes::ELECTRON;
 					}
-					double weight = (density / (massProton * particlesPerBin)) * volume(i, j, k);
 					Particle* particle = createParticle(i, j, k, weight, type);
 					particles.push_back(particle);
 					particlesNumber++;
-					printf("create particle number %d\n", particlesNumber);
+					if(particlesNumber % 1000 == 0){
+						printf("create particle number %d\n", particlesNumber);
+					}
 				}
 			}
 		}
@@ -1177,9 +1177,13 @@ void Simulation::pushParticleIntoBbin(Particle* particle, int i, int j, int k) {
 }
 
 bool Simulation::particleCrossBbin(Particle& particle, int i, int j, int k) {
-
-	if ((xgrid[i] > particle.coordinates.x + particle.dx) || (xgrid[i + 1] < particle.coordinates.x - particle.dx))
-		return false;
+	if(i < 0) {
+		if(particle.coordinates.x - particle.dx > 0)
+			return false;
+	} else {
+		if ((xgrid[i] > particle.coordinates.x + particle.dx) || (xgrid[i + 1] < particle.coordinates.x - particle.dx))
+			return false;
+	}
 
 	if (j == 0) {
 		if ((ygrid[j + 1] < particle.coordinates.y - particle.dy) && (ygrid[ynumber] > particle.coordinates.y + particle.dy))
@@ -1337,6 +1341,9 @@ void Simulation::updateDensityParameters() {
 					Particle* particle = particlesInBbin[i][j][k][pcount];
 
 					double correlation = correlationWithBbin(*particle, i, j, k)/volume(i, j, k);
+					if(i == 0) {
+						correlation += correlationWithBbin(*particle, i-1, j, k)/volume(i, j, k);
+					}
 
 					chargeDensity[i][j][k] += correlation*particle->charge*particle->weight;
 					if(particle->type == ParticleTypes::ELECTRON) {
