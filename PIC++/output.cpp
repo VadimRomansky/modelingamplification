@@ -7,6 +7,7 @@
 #include "constants.h"
 #include "matrix3d.h"
 #include "vector3d.h"
+#include "util.h"
 
 void outputDistribution(FILE* outFile, std::vector<Particle*> particles, int particleType){
 	double minMomentum = -1; //todo something else
@@ -88,11 +89,11 @@ void outputFields(FILE* outEfile, FILE* outBfile, Vector3d*** Efield, Vector3d**
 	}
 }
 
-void outputConcentrations(FILE* outFile, double*** electronConcentration, double*** protonConcentration, double*** chargeDensity, double*** shiftChargeDensity, int xnumber, int ynumber, int znumber) {
+void outputConcentrations(FILE* outFile, double*** electronConcentration, double*** protonConcentration, double*** chargeDensity, double*** shiftChargeDensity, int xnumber, int ynumber, int znumber, double plasma_period, double gyroradius) {
 	for(int i = 0; i < xnumber; ++i) {
 		for(int j = 0; j < ynumber; ++j) {
 			for(int k = 0; k < znumber; ++k) {
-				fprintf(outFile, "%g %g %g %g\n", electronConcentration[i][j][k], protonConcentration[i][j][k], chargeDensity[i][j][k], shiftChargeDensity[i][j][k]);
+				fprintf(outFile, "%g %g %g %g\n", electronConcentration[i][j][k]/cube(gyroradius), protonConcentration[i][j][k]/cube(gyroradius), chargeDensity[i][j][k]/(sqrt(cube(gyroradius))*plasma_period), shiftChargeDensity[i][j][k]/(sqrt(cube(gyroradius))*plasma_period));
 			}
 		}
 	}

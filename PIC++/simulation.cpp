@@ -133,6 +133,7 @@ Simulation::Simulation(double xn, double yn, double zn, double xsizev, double ys
 	xsize /= gyroradius;
 	ysize /= gyroradius;
 	zsize /= gyroradius;
+	printf("xsize/gyroradius = %lf\n", xsize);
 
 	Kronecker = Matrix3d(1.0, 0, 0, 0, 1.0, 0, 0, 0, 1.0);
 
@@ -305,6 +306,7 @@ void Simulation::initialize() {
 		for (int j = 0; j < ynumber; ++j) {
 			for (int k = 0; k < znumber; ++k) {
 				Bfield[i][j][k] = B0;
+				Bfield[i][j][k].x = B0.x;
 				newBfield[i][j][k] = Bfield[i][j][k];
 				//tempBfield[i][j][k] = Bfield[i][j][k];
 				electronConcentration[i][j][k] = 0;
@@ -472,9 +474,9 @@ void Simulation::createFiles() {
 void Simulation::simulate() {
 	createArrays();
 	initialize();
-	//initializeSimpleElectroMagneticWave();
+	initializeSimpleElectroMagneticWave();
 	createFiles();
-	createParticles();
+	//createParticles();
 	collectParticlesIntoBins();
 	updateDensityParameters();
 	cleanupDivergence();
@@ -536,7 +538,7 @@ void Simulation::output() {
 	fclose(generalFile);
 
 	densityFile = fopen("./output/concentrations.dat", "a");
-	outputConcentrations(densityFile, electronConcentration, protonConcentration, chargeDensity, electricDensity, xnumber, ynumber, znumber);
+	outputConcentrations(densityFile, electronConcentration, protonConcentration, chargeDensity, electricDensity, xnumber, ynumber, znumber, plasma_period, gyroradius);
 	fclose(densityFile);
 
 	divergenceErrorFile = fopen("./output/divergence_error.dat", "a");
@@ -578,6 +580,7 @@ void Simulation::updateDeltaT() {
 	deltaT = 0.01 * delta / speed_of_light_normalized;
 	deltaT = min2(deltaT, 0.05 * massElectron * speed_of_light_normalized / (electron_charge_normalized * B0.norm()));
 	//deltaT = min2(deltaT, 0.02);
+	deltaT = min2(deltaT, plasma_period/10);
 	deltaT = min2(deltaT, 1E-1);
 }
 
@@ -586,7 +589,8 @@ void Simulation::createParticles() {
 	for (int i = 0; i < xnumber; ++i) {
 		for (int j = 0; j < ynumber; ++j) {
 			for (int k = 0; k < znumber; ++k) {
-				double weight = (density / (massProton * particlesPerBin)) * volume(i, j, k);
+				//double weight = (density / (massProton * particlesPerBin)) * volume(i, j, k);
+				double weight = (1.0 / particlesPerBin) * volume(i, j, k);
 
 				for (int l = 0; l < 2 * particlesPerBin; ++l) {
 					ParticleTypes type;
@@ -660,134 +664,6 @@ double Simulation::volume(int i, int j, int k) {
 	return deltaX * deltaY * deltaZ;
 }
 
-void Simulation::collectParticlesIntoBins() {
-	for (int i = 0; i < xnumber; ++i) {
-		for (int j = 0; j < ynumber; ++j) {
-			for (int k = 0; k < znumber; ++k) {
-				particlesInBbin[i][j][k].clear();
-			}
-		}
-	}
-
-	for (int i = 0; i < xnumber + 1; ++i) {
-		for (int j = 0; j < ynumber + 1; ++j) {
-			for (int k = 0; k < znumber + 1; ++k) {
-				particlesInEbin[i][j][k].clear();
-			}
-		}
-	}
-
-	for (int pcount = 0; pcount < particles.size(); ++pcount) {
-		Particle* particle = particles[pcount];
-		checkParticleInBox(*particle);
-
-		int xcount = trunc(particle->coordinates.x / deltaX);
-		int ycount = trunc(particle->coordinates.y / deltaY);
-		int zcount = trunc(particle->coordinates.z / deltaZ);
-
-		for (int i = xcount - 1; i <= xcount + 1; ++i) {
-			for (int j = ycount - 1; j <= ycount + 1; ++j) {
-				for (int k = zcount - 1; k <= zcount + 1; ++k) {
-					if (particleCrossBbin(*particle, i, j, k)) {
-						pushParticleIntoBbin(particle, i, j, k);
-					}
-				}
-			}
-		}
-
-		xcount = trunc(particle->coordinates.x / deltaX + 0.5);
-		ycount = trunc(particle->coordinates.y / deltaY + 0.5);
-		zcount = trunc(particle->coordinates.z / deltaZ + 0.5);
-
-		for (int i = xcount - 1; i <= xcount + 1; ++i) {
-			for (int j = ycount - 1; j <= ycount + 1; ++j) {
-				for (int k = zcount - 1; k <= zcount + 1; ++k) {
-					if (particleCrossBbin(*particle, i, j, k)) {
-						pushParticleIntoEbin(particle, i, j, k);
-					}
-				}
-			}
-		}
-	}
-
-}
-
-void Simulation::pushParticleIntoEbin(Particle* particle, int i, int j, int k) {
-	if (i < 0) return;
-	if (i > xnumber) return;
-	if (j < 0) {
-		j = ynumber - 1;
-	} else if (j > ynumber) {
-		j = 1;
-	}
-	if (k < 0) {
-		k = znumber - 1;
-	} else if (k > znumber) {
-		k = 1;
-	}
-	particlesInEbin[i][j][k].push_back(particle);
-}
-
-void Simulation::pushParticleIntoBbin(Particle* particle, int i, int j, int k) {
-	if (i < 0) return;
-	if (i >= xnumber) return;
-	if (j < 0) {
-		j = ynumber - 1;
-	} else if (j >= ynumber) {
-		j = 0;
-	}
-	if (k < 0) {
-		k = znumber - 1;
-	} else if (k >= znumber) {
-		k = 0;
-	}
-	particlesInBbin[i][j][k].push_back(particle);
-}
-
-bool Simulation::particleCrossBbin(Particle& particle, int i, int j, int k) {
-	if(i < 0) {
-		if(particle.coordinates.x - particle.dx > 0)
-			return false;
-	} else {
-		if ((xgrid[i] > particle.coordinates.x + particle.dx) || (xgrid[i + 1] < particle.coordinates.x - particle.dx))
-			return false;
-	}
-
-	if (j == 0) {
-		if ((ygrid[j + 1] < particle.coordinates.y - particle.dy) && (ygrid[ynumber] > particle.coordinates.y + particle.dy))
-			return false;
-	} else if (j == ynumber - 1) {
-		if ((ygrid[j] > particle.coordinates.y + particle.dy) && (ygrid[0] < particle.coordinates.y - particle.dy))
-			return false;
-	} else {
-		if ((ygrid[j] > particle.coordinates.y + particle.dy) || (ygrid[j + 1] < particle.coordinates.y - particle.dy))
-			return false;
-	}
-
-	if (k == 0) {
-		if ((zgrid[k + 1] < particle.coordinates.z - particle.dz) && (zgrid[znumber] > particle.coordinates.z + particle.dz))
-			return false;
-	} else if (k == znumber - 1) {
-		if ((zgrid[k] > particle.coordinates.z + particle.dz) && (zgrid[0] < particle.coordinates.z - particle.dz))
-			return false;
-	} else {
-		if ((zgrid[k] > particle.coordinates.z + particle.dz) || (zgrid[k + 1] < particle.coordinates.z - particle.dz))
-			return false;
-	}
-
-	return true;
-}
-
-bool Simulation::particleCrossEbin(Particle& particle, int i, int j, int k) {
-	if ((xgrid[i] - deltaX / 2 > particle.coordinates.x + particle.dx) || (xgrid[i + 1] - deltaX / 2 < particle.coordinates.x - particle.dx))
-		return false;
-	if ((ygrid[j] - deltaY / 2 > particle.coordinates.y + particle.dy) || (ygrid[j + 1] - deltaY / 2 < particle.coordinates.y - particle.dy))
-		return false;
-	if ((zgrid[k] - deltaZ / 2 > particle.coordinates.z + particle.dz) || (zgrid[k + 1] - deltaZ / 2 < particle.coordinates.z - particle.dz))
-		return false;
-	return true;
-}
-
 void Simulation::checkParticleInBox(Particle& particle) {
 	if (particle.coordinates.x < 0) {
 		printf("particle.x < 0\n");
@@ -816,7 +692,7 @@ void Simulation::checkParticleInBox(Particle& particle) {
 }
 
 void Simulation::updateElectroMagneticParameters() {
-	collectParticlesIntoBins();
+	//collectParticlesIntoBins();
 	for (int i = 0; i < xnumber + 1; ++i) {
 		for (int j = 0; j < ynumber + 1; ++j) {
 			for (int k = 0; k < znumber + 1; ++k) {
@@ -898,6 +774,9 @@ void Simulation::updateElectroMagneticParameters() {
 }
 
 void Simulation::updateDensityParameters() {
+	double full_density = 0;
+	double full_p_concentration = 0;
+	double full_e_concentration = 0;
 	for(int i = 0; i < xnumber; ++i) {
 		for(int j = 0; j < ynumber; ++j) {
 			for(int k = 0; k < znumber; ++k) {
@@ -910,7 +789,7 @@ void Simulation::updateDensityParameters() {
 
 					double correlation = correlationWithBbin(*particle, i, j, k)/volume(i, j, k);
 					if(i == 0) {
-						correlation += correlationWithBbin(*particle, i-1, j, k)/volume(i, j, k);
+						correlation += correlationWithBbin(*particle, i-1, j, k)/volume(i-1, j, k);
 					}
 
 					chargeDensity[i][j][k] += correlation*particle->charge*particle->weight;
@@ -920,15 +799,21 @@ void Simulation::updateDensityParameters() {
 						protonConcentration[i][j][k] += correlation*particle->weight;
 					}
 				}
-
-				electronConcentration[i][j][k] /= cube(gyroradius);
-				protonConcentration[i][j][k] /= cube(gyroradius);
-				chargeDensity[i][j][k] /= (sqrt(cube(gyroradius))*plasma_period);
+				if(i < xnumber - 1  && i > 0){
+					full_density += chargeDensity[i][j][k]*volume(i, j, k);
+					full_p_concentration += protonConcentration[i][j][k]*volume(i, j, k);
+					full_e_concentration += electronConcentration[i][j][k]*volume(i, j, k);
+					//electronConcentration[i][j][k] /= cube(gyroradius);
+					//protonConcentration[i][j][k] /= cube(gyroradius);
+					//chargeDensity[i][j][k] /= (sqrt(cube(gyroradius))*plasma_period);
+				}
 			}
 		}
 	}
 
-
+	full_density/= ((xsize-2*deltaX)*ysize*zsize);
+	full_p_concentration /= ((xsize-2*deltaX)*ysize*zsize*cube(gyroradius));
+	full_e_concentration /= ((xsize-2*deltaX)*ysize*zsize*cube(gyroradius));
 }
 
 void Simulation::updateEnergy() {
