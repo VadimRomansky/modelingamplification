@@ -17,6 +17,20 @@ Vector3d::Vector3d(double vx, double vy, double vz) {
 	z = vz;
 }
 
+Vector3d::Vector3d(Vector3d const& vector) {
+	x = vector.x;
+	y = vector.y;
+	z = vector.z;
+}
+
+Vector3d& Vector3d::operator=(Vector3d const& vector) {
+	x = vector.x;
+	y = vector.y;
+	z = vector.z;
+
+	return *this;
+}
+
 double Vector3d::norm() {
 	return sqrt(x * x + y * y + z * z);
 }

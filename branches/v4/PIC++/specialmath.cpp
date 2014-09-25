@@ -154,11 +154,11 @@ void Simulation::generalizedMinimalResidualMethod(std::vector<MatrixElement>****
 			for (int k = 0; k < znumber; ++k) {
 				for (int l = 0; l < 3; ++l) {
 					rightPart[i][j][k][l] /= norm;
-					for (int m = 0; m < matrix[i][j][k][l].size(); ++m) {
+					/*for (int m = 0; m < matrix[i][j][k][l].size(); ++m) {
 						double value = matrix[i][j][k][l][m].value;
 						matrix[i][j][k][l][m].value /= norm;
 						value = matrix[i][j][k][l][m].value;
-					}
+					}*/
 				}
 			}
 		}
@@ -398,12 +398,12 @@ void Simulation::generalizedMinimalResidualMethod(std::vector<MatrixElement>****
 				outvector[i][j][k].y = 0;
 				outvector[i][j][k].z = 0;
 				for (int m = 0; m < n; ++m) {
-					outvector[i][j][k].x += basis[m][i][j][k][0] * y[m];
-					outvector[i][j][k].y += basis[m][i][j][k][1] * y[m];
-					outvector[i][j][k].z += basis[m][i][j][k][2] * y[m];
-					//outvector[i][j][k].x += basis[m][i][j][k][0] * y[m]*norm;
-					//outvector[i][j][k].y += basis[m][i][j][k][1] * y[m]*norm;
-					//outvector[i][j][k].z += basis[m][i][j][k][2] * y[m]*norm;
+					//outvector[i][j][k].x += basis[m][i][j][k][0] * y[m];
+					//outvector[i][j][k].y += basis[m][i][j][k][1] * y[m];
+					//outvector[i][j][k].z += basis[m][i][j][k][2] * y[m];
+					outvector[i][j][k].x += basis[m][i][j][k][0] * y[m]*norm;
+					outvector[i][j][k].y += basis[m][i][j][k][1] * y[m]*norm;
+					outvector[i][j][k].z += basis[m][i][j][k][2] * y[m]*norm;
 				}
 			}
 		}
