@@ -474,9 +474,9 @@ void Simulation::createFiles() {
 void Simulation::simulate() {
 	createArrays();
 	initialize();
-	initializeSimpleElectroMagneticWave();
+	//initializeSimpleElectroMagneticWave();
 	createFiles();
-	//createParticles();
+	createParticles();
 	collectParticlesIntoBins();
 	updateDensityParameters();
 	cleanupDivergence();
