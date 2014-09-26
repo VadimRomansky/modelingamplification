@@ -9,8 +9,11 @@
 
 void Simulation::moveParticles(){
 	printf("moving particles\n");
-	//for(int i = 0; i < particles.size(); ++i){
-	for(int i = 0; i < 1; ++i){
+	for(int i = 0; i < particles.size(); ++i){
+	//for(int i = 0; i < 1; ++i){
+		if(i % 1000 == 0) {
+			printf("particle number %d\n", i);
+		}
 		moveParticle(particles[i]);
 	}
 }
@@ -35,7 +38,7 @@ void Simulation::moveParticle(Particle* particle){
 	moveParticleNewtonIteration(particle, oldCoordinates, tempCoordinates, newCoordinates);
 
 	int iterationCount = 0;
-	double error = oldV.norm()*deltaT*maxErrorLevel;
+	double error = max2(oldV.norm()*deltaT*maxErrorLevel, particle->dx*maxErrorLevel);
 	while( coordinateDifference(tempCoordinates, newCoordinates, deltaT, particle->mass) > error && iterationCount < maxNewtonIterations){
 		for(int i = 0; i < 6; ++i){
 			tempCoordinates[i] = newCoordinates[i];

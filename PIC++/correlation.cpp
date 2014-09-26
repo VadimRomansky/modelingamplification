@@ -163,13 +163,13 @@ Vector3d Simulation::correlationEfield(Particle* particle) {
 }
 
 Vector3d Simulation::correlationTempEfield(Particle& particle) {
-	checkParticleInBox(particle);
+	//checkParticleInBox(particle);
 
 	int xcount = trunc((particle.coordinates.x / deltaX) + 0.5);
 	int ycount = trunc((particle.coordinates.y / deltaY) + 0.5);
 	int zcount = trunc((particle.coordinates.z / deltaZ) + 0.5);
 
-	if (xcount < 0) {
+	/*if (xcount < 0) {
 		printf("xcount < 0\n");
 		//exit(0);
 	}
@@ -197,7 +197,7 @@ Vector3d Simulation::correlationTempEfield(Particle& particle) {
 	if (zcount > znumber) {
 		printf("zcount > znumber\n");
 		//exit(0);
-	}
+	}*/
 
 	Vector3d result = Vector3d(0, 0, 0);
 
@@ -213,13 +213,13 @@ Vector3d Simulation::correlationTempEfield(Particle& particle) {
 }
 
 Vector3d Simulation::correlationBfield(Particle& particle) {
-	checkParticleInBox(particle);
+	//checkParticleInBox(particle);
 
 	int xcount = trunc(particle.coordinates.x / deltaX);
 	int ycount = trunc(particle.coordinates.y / deltaY);
 	int zcount = trunc(particle.coordinates.z / deltaZ);
 
-	if (xcount < 0) {
+	/*if (xcount < 0) {
 		printf("xcount < 0\n");
 		//exit(0);
 	}
@@ -247,7 +247,7 @@ Vector3d Simulation::correlationBfield(Particle& particle) {
 	if (zcount >= znumber) {
 		printf("zcount >= znumber\n");
 		//exit(0);
-	}
+	}*/
 
 	Vector3d result = Vector3d(0, 0, 0);
 
@@ -263,13 +263,13 @@ Vector3d Simulation::correlationBfield(Particle& particle) {
 }
 
 Vector3d Simulation::correlationEfield(Particle& particle) {
-	checkParticleInBox(particle);
+	//checkParticleInBox(particle);
 
 	int xcount = trunc((particle.coordinates.x / deltaX) + 0.5);
 	int ycount = trunc((particle.coordinates.y / deltaY) + 0.5);
 	int zcount = trunc((particle.coordinates.z / deltaZ) + 0.5);
 
-	if (xcount < 0) {
+	/*if (xcount < 0) {
 		printf("xcount < 0\n");
 		//exit(0);
 	}
@@ -297,7 +297,7 @@ Vector3d Simulation::correlationEfield(Particle& particle) {
 	if (zcount > znumber) {
 		printf("zcount > znumber\n");
 		//exit(0);
-	}
+	}*/
 
 	Vector3d result = Vector3d(0, 0, 0);
 
