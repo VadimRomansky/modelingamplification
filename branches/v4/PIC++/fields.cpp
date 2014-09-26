@@ -8,6 +8,8 @@
 #include "matrix3d.h"
 
 void Simulation::evaluateFields() {
+	printf("evaluating fields\n");
+
 	updateElectroMagneticParameters();
 
 	evaluateMaxwellEquationMatrix();
@@ -185,8 +187,8 @@ void Simulation::createPerfectConductaryBoundaryCondition(int j, int k) {
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(element, i + 1, nextJ, nextK, 2));
 
 
-	/*maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(1.0, i, j, k, 0));
-	maxwellEquationRightPart[i][j][k][0] = E0.x;*/
+	//maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(1.0, i, j, k, 0));
+	//maxwellEquationRightPart[i][j][k][0] = Efield[i][j][k].x;
 	//Ey and Ez = 0
 	maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(1.0, i, j, k, 1));
 	maxwellEquationRightPart[i][j][k][1] = 0;

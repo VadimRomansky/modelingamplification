@@ -328,7 +328,7 @@ void Simulation::initializeSimpleElectroMagneticWave() {
 			}
 		}
 	}
-	double kw = 6 * pi / xsize;
+	double kw = 2 * pi / xsize;
 	double E = 1;
 
 	for (int i = 0; i < xnumber + 1; ++i) {
@@ -479,7 +479,7 @@ void Simulation::simulate() {
 	createParticles();
 	collectParticlesIntoBins();
 	updateDensityParameters();
-	cleanupDivergence();
+	//cleanupDivergence();
 	updateEnergy();
 
 	updateDeltaT();
@@ -493,8 +493,8 @@ void Simulation::simulate() {
 		}
 
 		evaluateParticlesRotationTensor();
-		evaluateFields();
-		//moveParticles();
+		//evaluateFields();
+		moveParticles();
 		updateFields();
 		updateDensityParameters();
 		updateEnergy();
@@ -591,7 +591,7 @@ void Simulation::createParticles() {
 			for (int k = 0; k < znumber; ++k) {
 				//double weight = (density / (massProton * particlesPerBin)) * volume(i, j, k);
 				double weight = (1.0 / particlesPerBin) * volume(i, j, k);
-
+				Vector3d coordinates;
 				for (int l = 0; l < 2 * particlesPerBin; ++l) {
 					ParticleTypes type;
 					if (l % 2 == 0) {
@@ -600,6 +600,11 @@ void Simulation::createParticles() {
 						type = ParticleTypes::ELECTRON;
 					}
 					Particle* particle = createParticle(i, j, k, weight, type);
+					if (l % 2 == 0) {
+						coordinates = particle->coordinates;
+					} else {
+						particle->coordinates= coordinates;
+					}
 					particles.push_back(particle);
 					particlesNumber++;
 					if(particlesNumber % 1000 == 0){
@@ -692,7 +697,8 @@ void Simulation::checkParticleInBox(Particle& particle) {
 }
 
 void Simulation::updateElectroMagneticParameters() {
-	//collectParticlesIntoBins();
+	printf("updating flux, density snd dielectric tensor\n");
+	collectParticlesIntoBins();
 	for (int i = 0; i < xnumber + 1; ++i) {
 		for (int j = 0; j < ynumber + 1; ++j) {
 			for (int k = 0; k < znumber + 1; ++k) {
@@ -741,6 +747,9 @@ void Simulation::updateElectroMagneticParameters() {
 				for (int pcount = 0; pcount < particlesInBbin[i][j][k].size(); ++pcount) {
 					Particle* particle = particlesInBbin[i][j][k][pcount];
 					double correlation = correlationWithBbin(*particle, i, j, k) / volume(i, j, k);
+					if(i == 0) {
+						correlation += correlationWithBbin(*particle, i - 1, j, k) / volume(i - 1, j, k);
+					}
 					double gamma = particle->gammaFactor(speed_of_light_normalized);
 					Vector3d velocity = particle->velocity(speed_of_light_normalized);
 					Vector3d rotatedVelocity = particle->rotationTensor * velocity * gamma;
