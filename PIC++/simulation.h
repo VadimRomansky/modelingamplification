@@ -100,7 +100,8 @@ public:
 	Matrix3d Kronecker;
 	double LeviCivita[3][3][3];
 
-	FILE* traectoryFile;
+	FILE* protonTraectoryFile;
+	FILE* electronTraectoryFile;
 	FILE* distributionFile;
 	FILE* EfieldFile;
 	FILE* BfieldFile;
@@ -120,12 +121,13 @@ public:
 	void createArrays();
 	void createFiles();
 	void simulate();
-
 	void output();
 
 	void updateDeltaT();
 	void createParticles();
 	Particle* createParticle(int i, int j, int k, double weight, ParticleTypes type);
+	Particle* getFirstProton();
+	Particle* getFirstElectron();
 
 	Vector3d correlationTempEfield(Particle* particle);
 	Vector3d correlationBfield(Particle* particle);

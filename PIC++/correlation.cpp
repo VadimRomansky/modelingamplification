@@ -317,7 +317,7 @@ Vector3d Simulation::correlationFieldWithBbin(Particle& particle, int i, int j, 
 
 	Vector3d _field;
 
-	if (i < 0) {
+	/*if (i < 0) {
 		//_field = Vector3d(0,0,0);
 		//note: not zero because reflection
 		if (j < 0) {
@@ -345,37 +345,35 @@ Vector3d Simulation::correlationFieldWithBbin(Particle& particle, int i, int j, 
 				_field = Bfield[0][j][k];
 			}
 		}
-	} else if (i >= xnumber) {
-		_field = B0;
-	} else {
-		if (j < 0) {
-			if (k < 0) {
-				_field = Bfield[i][ynumber - 1][znumber - 1];
-			} else if (k >= znumber) {
-				_field = Bfield[i][ynumber - 1][0];
-			} else {
-				_field = Bfield[i][ynumber - 1][k];
-			}
-		} else if (j >= ynumber) {
-			if (k < 0) {
-				_field = Bfield[i][0][znumber - 1];
-			} else if (k >= znumber) {
-				_field = Bfield[i][0][0];
-			} else {
-				_field = Bfield[i][0][k];
-			}
-		} else {
-			if (k < 0) {
-				_field = Bfield[i][j][znumber - 1];
-			} else if (k >= znumber) {
-				_field = Bfield[i][j][0];
-			} else {
-				_field = Bfield[i][j][k];
-			}
-		}
-	}
+	} else*/
 
 	double correlation = correlationWithBbin(particle, i, j, k);
+
+	if(i < 0) {
+		i = 0;
+	}
+
+	if(j < 0) {
+		j = j + ynumber;
+	}
+
+	if(j >= ynumber) {
+		j = j - ynumber;
+	}
+
+	if(k < 0) {
+		k  = k + znumber;
+	}
+
+	if(k >= znumber) {
+		k = k - znumber;
+	}
+
+	if (i >= xnumber) {
+		_field = B0;
+	} else {
+		_field = Bfield[i][j][k];
+	}
 
 	return _field * correlation;
 }
@@ -524,7 +522,7 @@ double Simulation::correlationWithEbin(Particle& particle, int i, int j, int k) 
 		lefty = particle.coordinates.y - (2 * deltaY);
 		righty = ygrid[0] - (deltaY / 2);
 	} else if (j > ynumber) {
-		lefty = ygrid[ynumber] + (deltaX / 2);
+		lefty = ygrid[ynumber] + (deltaY / 2);
 		righty = particle.coordinates.y + (2 * deltaY);
 	} else {
 		lefty = ygrid[j] - (deltaY / 2);

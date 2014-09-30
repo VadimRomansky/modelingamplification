@@ -61,7 +61,7 @@ void outputDistribution(FILE* outFile, std::vector<Particle*> particles, int par
 }
 
 void outputTraectory(FILE* outFile, Particle* particle, double time){
-	fprintf(outFile, "%g %15.10g %15.10g %15.10g %15.10g %15.10g %15.10g %15.10g\n", time, particle->coordinates.x, particle->coordinates.y, particle->coordinates.z, particle->momentum.x, particle->momentum.y, particle->momentum.z, particle->momentum.norm());
+	fprintf(outFile, "%g %20.15g %20.15g %20.15g %20.15g %20.15g %20.15g %20.15g\n", time, particle->coordinates.x, particle->coordinates.y, particle->coordinates.z, particle->momentum.x, particle->momentum.y, particle->momentum.z, particle->momentum.norm());
 }
 
 void outputGrid(FILE* outFile, double* grid, int number) {
