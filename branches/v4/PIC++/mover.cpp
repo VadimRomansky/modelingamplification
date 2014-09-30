@@ -38,7 +38,10 @@ void Simulation::moveParticle(Particle* particle){
 	moveParticleNewtonIteration(particle, oldCoordinates, tempCoordinates, newCoordinates);
 
 	int iterationCount = 0;
-	double error = max2(oldV.norm()*deltaT*maxErrorLevel, particle->dx*maxErrorLevel);
+	double error = oldV.norm()*deltaT*maxErrorLevel;
+	if(error <= 0) {
+		error = abs(particle->dx*maxErrorLevel);
+	}
 	while( coordinateDifference(tempCoordinates, newCoordinates, deltaT, particle->mass) > error && iterationCount < maxNewtonIterations){
 		for(int i = 0; i < 6; ++i){
 			tempCoordinates[i] = newCoordinates[i];
@@ -103,7 +106,7 @@ void Simulation::moveParticleNewtonIteration(Particle* particle, double* const o
 	double rightPart[6];
 	double functionNewtonMethod[6];
 	Particle tempparticle = *particle;
-	double beta = particle->charge*deltaT/particle->mass;
+	double beta = 0.5*particle->charge*deltaT/particle->mass;
 	double dx = particle->dx/1000;
 	double dy = particle->dy/1000;
 	double dz = particle->dz/1000;

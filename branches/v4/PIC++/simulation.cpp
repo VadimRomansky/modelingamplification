@@ -47,7 +47,14 @@ Simulation::Simulation() {
 	double concentration = density / massProton;
 
 	plasma_period = sqrt(massElectron / (4 * pi * concentration * sqr(electron_charge))) / (2 * pi);
-	gyroradius = kBoltzman * temperature / (electron_charge * B0.norm());
+
+	double thermal_momentum;
+	if(kBoltzman*temperature > massElectron*speed_of_light*speed_of_light) {
+		thermal_momentum = kBoltzman*temperature/speed_of_light;
+	} else {
+		thermal_momentum = sqrt(2*massElectron*kBoltzman*temperature);
+	}
+	gyroradius = thermal_momentum*speed_of_light / (electron_charge * B0.norm());
 
 	kBoltzman_normalized = kBoltzman * gyroradius * gyroradius / (plasma_period * plasma_period);
 	speed_of_light_normalized = speed_of_light * plasma_period / gyroradius;
@@ -115,7 +122,13 @@ Simulation::Simulation(double xn, double yn, double zn, double xsizev, double ys
 	double concentration = density / massProton;
 
 	plasma_period = sqrt(massElectron / (4 * pi * concentration * sqr(electron_charge))) / (2 * pi);
-	gyroradius = kBoltzman * temperature / (electron_charge * B0.norm());
+	double thermal_momentum;
+	if(kBoltzman*temperature > massElectron*speed_of_light*speed_of_light) {
+		thermal_momentum = kBoltzman*temperature/speed_of_light;
+	} else {
+		thermal_momentum = sqrt(2*massElectron*kBoltzman*temperature);
+	}
+	gyroradius = thermal_momentum*speed_of_light / (electron_charge * B0.norm());
 
 	plasma_period = 1.0;
 	gyroradius = 1.0;
@@ -449,8 +462,10 @@ void Simulation::createArrays() {
 }
 
 void Simulation::createFiles() {
-	traectoryFile = fopen("./output/traectory.dat", "w");
-	fclose(traectoryFile);
+	protonTraectoryFile = fopen("./output/traectory_proton.dat", "w");
+	fclose(protonTraectoryFile);
+	electronTraectoryFile = fopen("./output/traectory_electron.dat", "w");
+	fclose(electronTraectoryFile);
 	distributionFile = fopen("./output/distribution_protons.dat", "w");
 	fclose(distributionFile);
 	EfieldFile = fopen("./output/Efield.dat", "w");
@@ -495,7 +510,7 @@ void Simulation::simulate() {
 		evaluateParticlesRotationTensor();
 		//evaluateFields();
 		moveParticles();
-		updateFields();
+		//updateFields();
 		updateDensityParameters();
 		updateEnergy();
 
@@ -511,9 +526,12 @@ void Simulation::output() {
 		distributionFile = fopen("./output/distribution_protons.dat", "a");
 		outputDistribution(distributionFile, particles, ParticleTypes::PROTON);
 		fclose(distributionFile);
-		traectoryFile = fopen("./output/traectory.dat", "a");
-		outputTraectory(traectoryFile, particles[0], time);
-		fclose(traectoryFile);
+		protonTraectoryFile = fopen("./output/traectory_proton.dat", "a");
+		outputTraectory(protonTraectoryFile, getFirstProton(), time);
+		fclose(protonTraectoryFile);
+		electronTraectoryFile = fopen("./output/traectory_electron.dat", "a");
+		outputTraectory(electronTraectoryFile, getFirstElectron(), time);
+		fclose(electronTraectoryFile);
 	}
 	EfieldFile = fopen("./output/Efield.dat", "a");
 	BfieldFile = fopen("./output/Bfield.dat", "a");
@@ -577,11 +595,12 @@ Matrix3d Simulation::evaluateAlphaRotationTensor(double beta, Vector3d velocity,
 
 void Simulation::updateDeltaT() {
 	double delta = min3(deltaX, deltaY, deltaZ);
-	deltaT = 0.01 * delta / speed_of_light_normalized;
-	deltaT = min2(deltaT, 0.05 * massElectron * speed_of_light_normalized / (electron_charge_normalized * B0.norm()));
+	//deltaT = 0.1 * delta / speed_of_light_normalized;
+	//deltaT = min2(deltaT, 0.005 * massElectron * speed_of_light_normalized / (electron_charge_normalized * B0.norm()));
+	deltaT = 0.005 * massElectron * speed_of_light_normalized / (electron_charge_normalized * B0.norm());
 	//deltaT = min2(deltaT, 0.02);
-	deltaT = min2(deltaT, plasma_period/10);
-	deltaT = min2(deltaT, 1E-1);
+	//deltaT = min2(deltaT, plasma_period/10);
+	//deltaT = min2(deltaT, 1E-1);
 }
 
 void Simulation::createParticles() {
@@ -614,6 +633,26 @@ void Simulation::createParticles() {
 			}
 		}
 	}
+}
+
+Particle* Simulation::getFirstProton() {
+	for(int pcount = 0; pcount < particles.size(); ++pcount) {
+		Particle* particle = particles[pcount];
+		if(particle->type == ParticleTypes::PROTON) {
+			return particle;
+		}
+	}
+	return NULL;
+}
+
+Particle* Simulation::getFirstElectron() {
+	for(int pcount = 0; pcount < particles.size(); ++pcount) {
+		Particle* particle = particles[pcount];
+		if(particle->type == ParticleTypes::ELECTRON) {
+			return particle;
+		}
+	}
+	return NULL;
 }
 
 Particle* Simulation::createParticle(int i, int j, int k, double weight, ParticleTypes type) {
@@ -711,9 +750,6 @@ void Simulation::updateElectroMagneticParameters() {
 					Vector3d velocity = particle->velocity(speed_of_light_normalized);
 					Vector3d rotatedVelocity = particle->rotationTensor * velocity * gamma;
 
-					if (i > 0) {
-						electricFlux[i][j][j] = electricFlux[i][j][k] + rotatedVelocity * particle->weight * particle->charge * correlation;
-					}
 					dielectricTensor[i][j][k] = dielectricTensor[i][j][k] - particle->rotationTensor * (theta * deltaT * deltaT * 2 * pi * particle->charge * particle->charge * correlation / particle->mass);
 				}
 			}
@@ -759,6 +795,13 @@ void Simulation::updateElectroMagneticParameters() {
 					pressureTensor[i][j][k] = rotatedVelocity.tensorMult(rotatedVelocity) * particle->weight * particle->charge * correlation;
 				}
 			}
+		}
+	}
+
+	//for i = 0
+	for(int j = 0; j < ynumber; ++j) {
+		for(int k = 0; k < znumber; ++k) {
+			
 		}
 	}
 
@@ -911,21 +954,22 @@ Vector3d Simulation::getBfield(int i, int j, int k) {
 
 Vector3d Simulation::getTempEfield(int i, int j, int k) {
 	if (i < 0) {
-		return Vector3d(0.0, 0.0, 0.0);
+		//return Vector3d(0.0, 0.0, 0.0);
+		i = 0;
 	} else if (i > xnumber) {
 		return E0;
 	}
 
 	if (j < 0) {
-		j = ynumber - 1;
+		j = j + ynumber;
 	} else if (j > ynumber) {
-		j = 1;
+		j = j - ynumber;
 	}
 
 	if (k < 0) {
-		k = znumber - 1;
+		k = k + znumber;
 	} else if (k > znumber) {
-		k = 1;
+		k = k - znumber;
 	}
 
 	return tempEfield[i][j][k];
