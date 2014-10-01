@@ -11,7 +11,7 @@ void Simulation::moveParticles(){
 	printf("moving particles\n");
 	for(int i = 0; i < particles.size(); ++i){
 	//for(int i = 0; i < 1; ++i){
-		if(i % 1000 == 0) {
+		if(i % 100000 == 0) {
 			printf("particle number %d\n", i);
 		}
 		moveParticle(particles[i]);
