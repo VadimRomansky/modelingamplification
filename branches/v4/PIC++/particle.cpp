@@ -32,6 +32,7 @@ Particle::Particle(const Particle& particle){
 
 	coordinates = particle.coordinates;
 	momentum = particle.momentum;
+	rotationTensor = particle.rotationTensor;
 
 	dx = particle.dx;
 	dy = particle.dy;

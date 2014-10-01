@@ -504,7 +504,10 @@ double Simulation::correlationWithEbin(Particle& particle, int i, int j, int k) 
 
 	if (i < 0) {
 		leftx = particle.coordinates.x - 2 * deltaX;
-		rightx = xgrid[0] - (deltaX / 2);
+		rightx = xgrid[0];
+	} else if(i == 0){
+		leftx = xgrid[0];
+		rightx = xgrid[0] + deltaX/2;
 	} else if (i > xnumber) {
 		leftx = xgrid[xnumber] + (deltaX / 2);
 		rightx = particle.coordinates.x + 2 * deltaX;

@@ -571,18 +571,16 @@ Matrix3d Simulation::evaluateAlphaRotationTensor(double beta, Vector3d velocity,
 	beta = beta / speed_of_light_normalized;
 
 	double gamma_factor = 1 / sqrt(1 - (velocity.x * velocity.x + velocity.y * velocity.y + velocity.z * velocity.z) / speed_of_light_normalized_sqr);
-	double G = (beta * (EField.scalarMult(velocity)) / speed_of_light_normalized_sqr + gamma_factor);
+	double G = ((beta * (EField.scalarMult(velocity)) / speed_of_light_normalized_sqr) + gamma_factor);
 	beta = beta / G;
 	double denominator = G * (1 + beta * beta * BField.scalarMult(BField));
 
-	double B[3] = {BField.x, BField.y, BField.z};
-
 	for (int i = 0; i < 3; i++) {
 		for (int j = 0; j < 3; j++) {
-			result.matrix[i][j] = Kronecker.matrix[i][j] + beta * beta * B[i] * B[j];
+			result.matrix[i][j] = Kronecker.matrix[i][j] + beta * beta * BField[i] * BField[j];
 			for (int k = 0; k < 3; ++k) {
 				for (int l = 0; l < 3; ++l) {
-					result.matrix[i][j] -= beta * LeviCivita[j][k][l] * Kronecker.matrix[i][l] * B[k];
+					result.matrix[i][j] -= beta * LeviCivita[j][k][l] * Kronecker.matrix[i][l] * BField[k];
 				}
 			}
 
@@ -746,12 +744,44 @@ void Simulation::updateElectroMagneticParameters() {
 				for (int pcount = 0; pcount < particlesInEbin[i][j][k].size(); ++pcount) {
 					Particle* particle = particlesInEbin[i][j][k][pcount];
 					double correlation = correlationWithEbin(*particle, i, j, k) / volume(i, j, k);
-					double gamma = particle->gammaFactor(speed_of_light_normalized);
+					if(i == 0) {
+						correlation = correlation * 2; //because smaller volume
+					}
 					Vector3d velocity = particle->velocity(speed_of_light_normalized);
+					double gamma = particle->gammaFactor(speed_of_light_normalized);
 					Vector3d rotatedVelocity = particle->rotationTensor * velocity * gamma;
 
+					electricFlux[i][j][k] += rotatedVelocity * particle->charge * particle->weight * correlation;
 					dielectricTensor[i][j][k] = dielectricTensor[i][j][k] - particle->rotationTensor * (theta * deltaT * deltaT * 2 * pi * particle->charge * particle->charge * correlation / particle->mass);
 				}
+			}
+		}
+	}
+
+	//for i = 0
+	for(int j = 0; j < ynumber + 1; ++j) {
+		for(int k = 0; k < znumber + 1; ++k) {
+			double rho = 0;
+			for(int pcount = 0; pcount < particlesInEbin[0][j][k].size(); ++pcount) {
+				Particle* particle = particlesInEbin[0][j][k][pcount];
+				Particle tempParticle = Particle(*particle);
+
+				double correlation = 2*correlationWithEbin(tempParticle, -1, j, k)/volume(0, j, k);
+				tempParticle.momentum.x = - tempParticle.momentum.x;
+				double beta = tempParticle.charge*deltaT/tempParticle.mass;
+				Vector3d velocity = tempParticle.velocity(speed_of_light_normalized);
+
+				Vector3d oldE = correlationEfield(particle);
+				Vector3d oldB = correlationBfield(particle);
+
+				tempParticle.rotationTensor = evaluateAlphaRotationTensor(beta, velocity, oldE, oldB);
+
+				double gamma = tempParticle.gammaFactor(speed_of_light_normalized);
+				Vector3d rotatedVelocity = tempParticle.rotationTensor * velocity * gamma;
+
+				electricFlux[0][j][k] += rotatedVelocity * tempParticle.charge * tempParticle.weight * correlation;
+				dielectricTensor[0][j][k] = dielectricTensor[0][j][k] - tempParticle.rotationTensor * (theta * deltaT * deltaT * 2 * pi * tempParticle.charge * tempParticle.charge * correlation / tempParticle.mass);
+
 			}
 		}
 	}
@@ -783,9 +813,7 @@ void Simulation::updateElectroMagneticParameters() {
 				for (int pcount = 0; pcount < particlesInBbin[i][j][k].size(); ++pcount) {
 					Particle* particle = particlesInBbin[i][j][k][pcount];
 					double correlation = correlationWithBbin(*particle, i, j, k) / volume(i, j, k);
-					if(i == 0) {
-						correlation += correlationWithBbin(*particle, i - 1, j, k) / volume(i - 1, j, k);
-					}
+
 					double gamma = particle->gammaFactor(speed_of_light_normalized);
 					Vector3d velocity = particle->velocity(speed_of_light_normalized);
 					Vector3d rotatedVelocity = particle->rotationTensor * velocity * gamma;
@@ -801,7 +829,28 @@ void Simulation::updateElectroMagneticParameters() {
 	//for i = 0
 	for(int j = 0; j < ynumber; ++j) {
 		for(int k = 0; k < znumber; ++k) {
-			
+			double rho = 0;
+			for(int pcount = 0; pcount < particlesInBbin[0][j][k].size(); ++pcount) {
+				Particle* particle = particlesInBbin[0][j][k][pcount];
+				Particle tempParticle = Particle(*particle);
+
+				double correlation = correlationWithBbin(tempParticle, -1, j, k)/volume(0, j, k);
+				tempParticle.momentum.x = - tempParticle.momentum.x;
+				double beta = tempParticle.charge*deltaT/tempParticle.mass;
+				Vector3d velocity = tempParticle.velocity(speed_of_light_normalized);
+
+				Vector3d oldE = correlationEfield(particle);
+				Vector3d oldB = correlationBfield(particle);
+
+				tempParticle.rotationTensor = evaluateAlphaRotationTensor(beta, velocity, oldE, oldB);
+
+				double gamma = tempParticle.gammaFactor(speed_of_light_normalized);
+				Vector3d rotatedVelocity = tempParticle.rotationTensor * velocity * gamma;
+
+				electricDensity[0][j][k] += tempParticle.weight*tempParticle.charge*correlation;
+				pressureTensor[0][j][k] += rotatedVelocity.tensorMult(rotatedVelocity)*tempParticle.weight*tempParticle.charge*correlation;
+
+			}
 		}
 	}
 
