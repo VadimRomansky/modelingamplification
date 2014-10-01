@@ -171,4 +171,20 @@ double McDonaldFunction(double x, double index){
 	return result;
 }
 
+double Bspline(double xcenter, double dx, double xvalue) {
+	if(abs(xcenter - xvalue) > dx) {
+		return 0;
+	}
+
+	if(xvalue > xcenter + dx/2) {
+		return 2*sqr(xcenter + dx - xvalue)/cube(dx);
+	}
+
+	if(xvalue < xcenter - dx/2) {
+		return 2*sqr(xcenter - dx - xvalue)/cube(dx);
+	}
+
+	return (1/dx) - 2*sqr(xvalue - xcenter)/cube(dx);
+}
+
 

@@ -4,6 +4,7 @@
 
 #include "constants.h"
 #include "particle.h"
+#include "util.h"
 
 Particle::Particle(double m, double q, double w, ParticleTypes t, double x0, double y0, double z0, double px0, double py0, double pz0, double dx0, double dy0, double dz0){
 	mass = m;
@@ -40,30 +41,15 @@ Particle::Particle(const Particle& particle){
 }
 
 double Particle::shapeFunctionX(const double& xvalue){
-	double epsilon = fabs((coordinates.x - xvalue)/dx);
-	if(epsilon > 1.0){
-		return 0;
-	} else {
-		return 1 - epsilon;
-	}
+	return Bspline(coordinates.x, dx, xvalue);
 }
 
 double Particle::shapeFunctionY(const double& yvalue){
-	double epsilon = fabs((coordinates.y - yvalue)/dy);
-	if(epsilon > 1.0){
-		return 0;
-	} else {
-		return 1 - epsilon;
-	}
+	return Bspline(coordinates.y, dy, yvalue);
 }
 
 double Particle::shapeFunctionZ(const double& zvalue){
-	double epsilon = fabs((coordinates.z - zvalue)/dz);
-	if(epsilon > 1.0){
-		return 0;
-	} else {
-		return 1 - epsilon;
-	}
+	return Bspline(coordinates.z, dz, zvalue);
 }
 
 double Particle::shapeFunction(const double& xvalue, const double& yvalue, const double& zvalue){

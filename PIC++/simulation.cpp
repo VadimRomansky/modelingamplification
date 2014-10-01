@@ -325,6 +325,7 @@ void Simulation::initialize() {
 				electronConcentration[i][j][k] = 0;
 				protonConcentration[i][j][k] = 0;
 				chargeDensity[i][j][k] = 0;
+				electricDensity[i][j][k] = 0;
 			}
 		}
 	}
@@ -494,7 +495,7 @@ void Simulation::simulate() {
 	createParticles();
 	collectParticlesIntoBins();
 	updateDensityParameters();
-	//cleanupDivergence();
+	cleanupDivergence();
 	updateEnergy();
 
 	updateDeltaT();
@@ -508,9 +509,9 @@ void Simulation::simulate() {
 		}
 
 		evaluateParticlesRotationTensor();
-		//evaluateFields();
+		evaluateFields();
 		moveParticles();
-		//updateFields();
+		updateFields();
 		updateDensityParameters();
 		updateEnergy();
 
@@ -593,11 +594,11 @@ Matrix3d Simulation::evaluateAlphaRotationTensor(double beta, Vector3d velocity,
 
 void Simulation::updateDeltaT() {
 	double delta = min3(deltaX, deltaY, deltaZ);
-	//deltaT = 0.1 * delta / speed_of_light_normalized;
-	//deltaT = min2(deltaT, 0.005 * massElectron * speed_of_light_normalized / (electron_charge_normalized * B0.norm()));
-	deltaT = 0.005 * massElectron * speed_of_light_normalized / (electron_charge_normalized * B0.norm());
+	deltaT = 0.1 * delta / speed_of_light_normalized;
+	deltaT = min2(deltaT, 0.005 * massElectron * speed_of_light_normalized / (electron_charge_normalized * B0.norm()));
+	//deltaT = 0.005 * massElectron * speed_of_light_normalized / (electron_charge_normalized * B0.norm());
 	//deltaT = min2(deltaT, 0.02);
-	//deltaT = min2(deltaT, plasma_period/10);
+	deltaT = min2(deltaT, plasma_period/10);
 	//deltaT = min2(deltaT, 1E-1);
 }
 
@@ -617,11 +618,11 @@ void Simulation::createParticles() {
 						type = ParticleTypes::ELECTRON;
 					}
 					Particle* particle = createParticle(i, j, k, weight, type);
-					if (l % 2 == 0) {
+					/*if (l % 2 == 0) {
 						coordinates = particle->coordinates;
 					} else {
 						particle->coordinates= coordinates;
-					}
+					}*/
 					particles.push_back(particle);
 					particlesNumber++;
 					if(particlesNumber % 1000 == 0){
@@ -672,9 +673,9 @@ Particle* Simulation::createParticle(int i, int j, int k, double weight, Particl
 	double y = ygrid[j] + deltaY * uniformDistribution();
 	double z = zgrid[k] + deltaZ * uniformDistribution();
 
-	double dx = deltaX / 4;
-	double dy = deltaY / 4;
-	double dz = deltaZ / 4;
+	double dx = deltaX / 100;
+	double dy = deltaY / 100;
+	double dz = deltaZ / 100;
 
 	double energy = mass * speed_of_light_normalized_sqr;
 
