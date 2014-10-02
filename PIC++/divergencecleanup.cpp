@@ -1,6 +1,7 @@
 #include "simulation.h"
 #include "util.h"
 #include "constants.h"
+#include "specialmath.h"
 
 void Simulation::cleanupDivergence() {
 	printf("cleaning up divergence\n");
@@ -21,19 +22,22 @@ void Simulation::cleanupDivergence() {
 		checkEquationMatrix(divergenceCleanUpMatrix);
 	}
 
-	generalizedMinimalResidualMethod(divergenceCleanUpMatrix, divergenceCleanUpRightPart, divergenceCleaningEfield);
+	generalizedMinimalResidualMethod(divergenceCleanUpMatrix, divergenceCleanUpRightPart, divergenceCleaningPotential, xnumber, ynumber, znumber, 1);
 
-	for(int i = 0; i < xnumber; ++i) {
-		for(int j = 0; j < ynumber; ++j) {
-			for(int k = 0; k < znumber; ++k){
-				Efield[i][j][k] += divergenceCleaningEfield[i][j][k];
-			}
-		}
-	}
+	updateFieldByPotential();
 
 	updateBoundariesOldField();
 }
 
+void Simulation::updateFieldByPotential() {
+	for(int i = 1; i < xnumber; ++i) {
+		for(int j = 0; j < ynumber; ++j) {
+			for(int k = 0; k < znumber; ++k) {
+				Efield[i][j][k] -= evaluateGradPotential(i, j, k);
+			}
+		}
+	}
+}
 
 void Simulation::createDivergenceCleanupEquation(int i, int j, int k) {
 
@@ -54,37 +58,10 @@ void Simulation::createDivergenceCleanupEquation(int i, int j, int k) {
 		nextK = 0;
 	}
 
-	divergenceCleanUpRightPart[i][j][k][0] = cleanUpRightPart(i, j, k);
-	divergenceCleanUpRightPart[i][j][k][1] = 0;
-	divergenceCleanUpRightPart[i][j][k][2] = 0;
-
-	MatrixElement element = MatrixElement(-0.25/deltaX, i, j, k, 0);
-	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-	element = MatrixElement(-0.25/deltaX, i, nextJ, k, 0);
-	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-	element = MatrixElement(-0.25/deltaX, i, j, nextK, 0);
-	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-	element = MatrixElement(-0.25/deltaX, i, nextJ, nextK, 0);
-	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-
-	if(i < xnumber-1){
-		element = MatrixElement(0.25/deltaX, i+1, j, k, 0);
-		divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-		element = MatrixElement(0.25/deltaX, i+1, nextJ, k, 0);
-		divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-		element = MatrixElement(0.25/deltaX, i+1, j, nextK, 0);
-		divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-		element = MatrixElement(0.25/deltaX, i+1, nextJ, nextK, 0);
-		divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-	}
-
-
-	divergenceCleanUpMatrix[i][j][k][1].push_back(MatrixElement(1, i, j, k, 1));
-	divergenceCleanUpMatrix[i][j][k][2].push_back(MatrixElement(1, i, j, k, 2));
 }
 
 double Simulation::cleanUpRightPart(int i, int j, int k) {
 	double div = evaluateDivE(i, j, k);
 
-	return 4*pi*chargeDensity[i][j][k] - div;
+	return -4*pi*chargeDensity[i][j][k] + div;
 }

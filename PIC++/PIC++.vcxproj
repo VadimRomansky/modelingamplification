@@ -108,6 +108,7 @@
     <ClInclude Include="particle.h" />
     <ClInclude Include="random.h" />
     <ClInclude Include="simulation.h" />
+    <ClInclude Include="specialmath.h" />
     <ClInclude Include="util.h" />
     <ClInclude Include="vector3d.h" />
   </ItemGroup>
