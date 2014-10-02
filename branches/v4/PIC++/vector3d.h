@@ -30,7 +30,7 @@ public:
 	Vector3d vectorMult(const Vector3d& vector);
 	Matrix3d tensorMult(const Vector3d& vector);
 
-	double operator[](int i);
+	double& operator[](int i);
 };
 
 #endif

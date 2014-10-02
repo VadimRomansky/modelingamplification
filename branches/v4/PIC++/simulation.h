@@ -90,7 +90,7 @@ public:
 	Vector3d*** tempEfield;
 	//Vector3d*** tempBfield;
 
-	Vector3d*** divergenceCleaningEfield;
+	double**** divergenceCleaningPotential;
 
 	std::vector<Particle*> particles;
 
@@ -163,15 +163,8 @@ public:
 	void updateBoundaries();
 	void updateBoundariesOldField();
 
-	void generalizedMinimalResidualMethod(std::vector<MatrixElement>**** matrix, double**** rightPart, Vector3d*** outvector);
-	double***** arnoldiIterations(std::vector<MatrixElement>**** matrix,double** outHessenbergMatrix, int n, double***** prevBasis, double** prevHessenbergMatrix);
-	double**** multiplySpecialMatrixVector(std::vector<MatrixElement>**** matrix, double**** vector);
-	double**** multiplySpecialMatrixVector(std::vector<MatrixElement>**** matrix, Vector3d*** vector);
-	double evaluateError(double** hessenbergMatrix, double* vector, double beta, int n);
-	double scalarMultiplyLargeVectors(double**** a, double**** b);
-	double scalarMultiplyLargeVectors(Vector3d*** a, Vector3d*** b);
-
 	void cleanupDivergence();
+	void updateFieldByPotential();
 	void createDivergenceCleanupEquation(int i, int j, int k);
 	double cleanUpRightPart(int i, int j, int k);
 
@@ -194,6 +187,7 @@ public:
 	double evaluateDivE(int i, int j, int k);
 	Vector3d evaluateDivPressureTensor(int i, int j, int k);
 	Vector3d evaluateGradDensity(int i, int j, int k);
+	Vector3d evaluateGradPotential(int i, int j, int k);
 
 	Vector3d getBfield(int i, int j, int k);
 	Vector3d getTempEfield(int i, int j, int k);

@@ -94,7 +94,7 @@ Matrix3d Vector3d::tensorMult(const Vector3d& vector) {
 	return result;
 }
 
-double Vector3d::operator[](int i) {
+double& Vector3d::operator[](int i) {
 	switch (i) {
 	case 0:
 		return x;

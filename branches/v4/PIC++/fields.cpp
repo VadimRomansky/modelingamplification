@@ -6,6 +6,7 @@
 #include "particle.h"
 #include "constants.h"
 #include "matrix3d.h"
+#include "specialmath.h"
 
 void Simulation::evaluateFields() {
 	printf("evaluating fields\n");
@@ -14,7 +15,32 @@ void Simulation::evaluateFields() {
 
 	evaluateMaxwellEquationMatrix();
 
-	generalizedMinimalResidualMethod(maxwellEquationMatrix, maxwellEquationRightPart, tempEfield);
+	double**** gmresOutput = new double***[xnumber];
+	for(int i = 0; i < xnumber; ++i) {
+		gmresOutput[i] = new double**[ynumber];
+		for(int j = 0; j < ynumber; ++j) {
+			gmresOutput[i][j] = new double*[znumber];
+			for(int k = 0; k < znumber; ++k) {
+				gmresOutput[i][j][k] = new double[3];
+			}
+		}
+	}
+
+	generalizedMinimalResidualMethod(maxwellEquationMatrix, maxwellEquationRightPart, gmresOutput, xnumber, ynumber, znumber, 3);
+
+	for(int i = 0; i < xnumber; ++i) {
+		for(int j = 0; j < ynumber; ++j) {
+			for(int k = 0; k < znumber; ++k) {
+				for(int l = 0; l < 3; ++l) {
+					tempEfield[i][j][k][l] = gmresOutput[i][j][k][l];
+				}
+				delete[] gmresOutput[i][j][k];
+			}
+			delete[] gmresOutput[i][j];
+		}
+		delete[] gmresOutput[i];
+	}
+	delete[] gmresOutput;
 
 	updateBoundaries();
 
@@ -927,4 +953,37 @@ Vector3d Simulation::evaluateGradDensity(int i, int j, int k) {
 	double z = (densityRightZ - densityLeftZ) / deltaZ;
 
 	return Vector3d(x, y, z);
+}
+
+Vector3d Simulation::evaluateGradPotential(int i, int j, int k) {
+	int prevJ = j - 1;
+	if(prevJ < 0) {
+		prevJ = ynumber - 1;
+	}
+	int prevK = k - 1;
+	if(prevK < 0) {
+		prevK = znumber - 1;
+	}
+
+	Vector3d gradient;
+
+	double phiRightX = (divergenceCleaningPotential[i+1][j][k][0] + divergenceCleaningPotential[i+1][prevJ][k][0] + divergenceCleaningPotential[i+1][j][prevK][0] + divergenceCleaningPotential[i+1][prevJ][prevK][0])/4;
+	double phiLeftX = (divergenceCleaningPotential[i][j][k][0] + divergenceCleaningPotential[i][prevJ][k][0] + divergenceCleaningPotential[i][j][prevK][0] + divergenceCleaningPotential[i][prevJ][prevK][0])/4;
+	double phiRightY = (divergenceCleaningPotential[i+1][j][k][0] + divergenceCleaningPotential[i][j][k][0] + divergenceCleaningPotential[i+1][j][prevK][0] + divergenceCleaningPotential[i][j][prevK][0])/4;
+	double phiLeftY = (divergenceCleaningPotential[i+1][prevJ][k][0] + divergenceCleaningPotential[i][prevJ][k][0] + divergenceCleaningPotential[i+1][prevJ][prevK][0] + divergenceCleaningPotential[i][prevJ][prevK][0])/4;
+	double phiRightZ = (divergenceCleaningPotential[i+1][j][k][0] + divergenceCleaningPotential[i][j][k][0] + divergenceCleaningPotential[i+1][prevJ][k][0] + divergenceCleaningPotential[i][prevJ][k][0])/4;
+	double phiLeftZ = (divergenceCleaningPotential[i+1][j][prevK][0] + divergenceCleaningPotential[i][j][prevK][0] + divergenceCleaningPotential[i+1][prevJ][prevK][0] + divergenceCleaningPotential[i][prevJ][prevK][0])/4;
+
+
+	if(i == 0) {
+		gradient.x = 2*(phiRightX - phiLeftX)/deltaX;
+		gradient.y = 0;
+		gradient.z = 0;
+	} else {
+		gradient.x = (phiRightX - phiLeftX)/deltaX;
+		gradient.y = (phiRightY - phiLeftY)/deltaY;
+		gradient.z = (phiRightZ - phiLeftZ)/deltaZ;
+	}
+
+	return gradient;
 }
