@@ -37,8 +37,8 @@ double**** multiplySpecialMatrixVector(std::vector<MatrixElement>**** matrix, Ve
 		for (int j = 0; j < ynumber; ++j) {
 			result[i][j] = new double*[znumber];
 			for (int k = 0; k < znumber; ++k) {
-				result[i][j][k] = new double[3];
-				for (int l = 0; l < 3; ++l) {
+				result[i][j][k] = new double[lnumber];
+				for (int l = 0; l < lnumber; ++l) {
 					result[i][j][k][l] = 0;
 					for (int m = 0; m < matrix[i][j][k][l].size(); ++m) {
 						MatrixElement element = matrix[i][j][k][l][m];
@@ -60,8 +60,8 @@ double**** multiplySpecialMatrixVector(std::vector<MatrixElement>**** matrix, do
 		for (int j = 0; j < ynumber; ++j) {
 			result[i][j] = new double*[znumber];
 			for (int k = 0; k < znumber; ++k) {
-				result[i][j][k] = new double[3];
-				for (int l = 0; l < 3; ++l) {
+				result[i][j][k] = new double[lnumber];
+				for (int l = 0; l < lnumber; ++l) {
 					result[i][j][k][l] = 0;
 					for (int m = 0; m < matrix[i][j][k][l].size(); ++m) {
 						MatrixElement element = matrix[i][j][k][l][m];
@@ -104,7 +104,7 @@ double***** arnoldiIterations(std::vector<MatrixElement>**** matrix,double** out
 		for (int i = 0; i < xnumber; ++i) {
 			for (int j = 0; j < ynumber; ++j) {
 				for (int k = 0; k < znumber; ++k) {
-					for (int l = 0; l < 3; ++l) {
+					for (int l = 0; l < lnumber; ++l) {
 						tempVector[i][j][k][l] -= outHessenbergMatrix[m][n - 2] * resultBasis[m][i][j][k][l];
 						alertNaNOrInfinity(tempVector[i][j][k][l], "tempVector = NaN\n");
 					}
@@ -118,7 +118,7 @@ double***** arnoldiIterations(std::vector<MatrixElement>**** matrix,double** out
 		for (int i = 0; i < xnumber ; ++i) {
 			for (int j = 0; j < ynumber; ++j) {
 				for (int k = 0; k < znumber; ++k) {
-					for (int l = 0; l < 3; ++l) {
+					for (int l = 0; l < lnumber; ++l) {
 						tempVector[i][j][k][l] /= outHessenbergMatrix[n - 1][n - 2];
 						alertNaNOrInfinity(tempVector[i][j][k][l], "tempVector = NaN\n");
 					}
@@ -155,7 +155,7 @@ void generalizedMinimalResidualMethod(std::vector<MatrixElement>**** matrix, dou
 	for (int i = 0; i < xnumber; ++i) {
 		for (int j = 0; j < ynumber; ++j) {
 			for (int k = 0; k < znumber; ++k) {
-				for (int l = 0; l < 3; ++l) {
+				for (int l = 0; l < lnumber; ++l) {
 					rightPart[i][j][k][l] /= norm;
 					/*for (int m = 0; m < matrix[i][j][k][l].size(); ++m) {
 						double value = matrix[i][j][k][l][m].value;
@@ -167,7 +167,7 @@ void generalizedMinimalResidualMethod(std::vector<MatrixElement>**** matrix, dou
 		}
 	}
 
-	int matrixDimension = 3*(xnumber)*(ynumber)*(znumber);
+	int matrixDimension = lnumber*(xnumber)*(ynumber)*(znumber);
 	//double maxError = 1/(matrixDimension * 1E5);
 
 	double** hessenbergMatrix;
@@ -197,8 +197,8 @@ void generalizedMinimalResidualMethod(std::vector<MatrixElement>**** matrix, dou
 		for (int j = 0; j < ynumber; ++j) {
 			basis[0][i][j] = new double*[znumber];
 			for (int k = 0; k < znumber; ++k) {
-				basis[0][i][j][k] = new double[3];
-				for (int l = 0; l < 3; ++l) {
+				basis[0][i][j][k] = new double[lnumber];
+				for (int l = 0; l < lnumber; ++l) {
 					basis[0][i][j][k][l] = rightPart[i][j][k][l];
 				}
 			}
@@ -212,7 +212,7 @@ void generalizedMinimalResidualMethod(std::vector<MatrixElement>**** matrix, dou
 		for(int j = 0; j < ynumber; ++j) {
 			tempResult[i][j] = new double*[znumber];
 			for(int k = 0; k < znumber; ++k) {
-				tempResult[i][j][k] = new double[3];
+				tempResult[i][j][k] = new double[lnumber];
 			}
 		}
 	}
@@ -229,7 +229,7 @@ void generalizedMinimalResidualMethod(std::vector<MatrixElement>**** matrix, dou
 	double module;
 
 	double relativeError = 1;
-	double maxRelativeError = 1/(matrixDimension*1E6);
+	double maxRelativeError = 1/(matrixDimension*1E9);
 
 	while (relativeError > maxRelativeError  && n < min2(maxGMRESIterations, matrixDimension)) {
 		printf("GMRES iteration %d\n", n);
@@ -409,7 +409,7 @@ void generalizedMinimalResidualMethod(std::vector<MatrixElement>**** matrix, dou
 	for (int i = 0; i < xnumber; ++i) {
 		for (int j = 0; j < ynumber; ++j) {
 			for (int k = 0; k < znumber; ++k) {
-				for(int l = 0; l < 3; ++l){
+				for(int l = 0; l < lnumber; ++l){
 					error += sqr(leftPart[i][j][k][l] - rightPart[i][j][k][l]);
 				}
 				delete[] leftPart[i][j][k];
@@ -453,7 +453,7 @@ double scalarMultiplyLargeVectors(double**** a, double**** b, int xnumber, int y
 	for (int i = 0; i < xnumber; ++i) {
 		for (int j = 0; j < ynumber; ++j) {
 			for (int k = 0; k < znumber; ++k) {
-				for (int l = 0; l < 3; ++l) {
+				for (int l = 0; l < lnumber; ++l) {
 					result += a[i][j][k][l] * b[i][j][k][l];
 				}
 			}
@@ -467,7 +467,7 @@ double scalarMultiplyLargeVectors(Vector3d*** a, Vector3d*** b, int xnumber, int
 	for (int i = 0; i < xnumber; ++i) {
 		for (int j = 0; j < ynumber; ++j) {
 			for (int k = 0; k < znumber; ++k) {
-				for (int l = 0; l < 3; ++l) {
+				for (int l = 0; l < lnumber; ++l) {
 					result += a[i][j][k][l] * b[i][j][k][l];
 				}
 			}
