@@ -130,8 +130,8 @@ Simulation::Simulation(double xn, double yn, double zn, double xsizev, double ys
 	}
 	gyroradius = thermal_momentum*speed_of_light / (electron_charge * B0.norm());
 
-	//plasma_period = 1.0;
-	//gyroradius = 1.0;
+	plasma_period = 1.0;
+	gyroradius = 1.0;
 
 	kBoltzman_normalized = kBoltzman * plasma_period * plasma_period / (gyroradius * gyroradius);
 	speed_of_light_normalized = speed_of_light * plasma_period / gyroradius;
@@ -176,7 +176,6 @@ Simulation::~Simulation() {
 		for (int j = 0; j < ynumber; ++j) {
 			for (int k = 0; k < znumber; ++k) {
 				particlesInBbin[i][j][k].clear();
-				delete[] divergenceCleaningPotential[i][j][k];
 			}
 			delete[] Bfield[i][j];
 			delete[] newBfield[i][j];
@@ -187,8 +186,6 @@ Simulation::~Simulation() {
 			delete[] electronConcentration[i][j];
 			delete[] protonConcentration[i][j];
 			delete[] chargeDensity[i][j];
-
-			delete[] divergenceCleaningPotential[i][j];
 		}
 		delete[] Bfield[i];
 		delete[] newBfield[i];
@@ -200,7 +197,6 @@ Simulation::~Simulation() {
 		delete[] protonConcentration[i];
 		delete[] chargeDensity[i];
 
-		delete[] divergenceCleaningPotential[i];
 	}
 
 	for (int i = 0; i < xnumber; ++i) {
@@ -227,25 +223,35 @@ Simulation::~Simulation() {
 				for (int l = 0; l < 3; ++l) {
 					maxwellEquationMatrix[i][j][k][l].clear();
 				}
-				divergenceCleanUpMatrix[i][j][k][0].clear();
 				delete[] maxwellEquationMatrix[i][j][k];
 				delete[] maxwellEquationRightPart[i][j][k];
 
-				delete[] divergenceCleanUpMatrix[i][j][k];
-				delete[] divergenceCleanUpRightPart[i][j][k];
 			}
 			delete[] maxwellEquationMatrix[i][j];
 			delete[] maxwellEquationRightPart[i][j];
-			delete[] divergenceCleanUpMatrix[i][j];
-			delete[] divergenceCleanUpRightPart[i][j];
 		}
 		delete[] maxwellEquationMatrix[i];
 		delete[] maxwellEquationRightPart[i];
-		delete[] divergenceCleanUpMatrix[i];
-		delete[] divergenceCleanUpRightPart[i];
 	}
 	delete[] maxwellEquationMatrix;
 	delete[] maxwellEquationRightPart;
+
+	for(int i = 0; i < xnumber + 1; ++i) {
+		for(int j = 0; j < ynumber; ++j) {
+			for(int k = 0; k < znumber; ++k) {
+				delete[] divergenceCleaningPotential[i][j][k];
+				delete[] divergenceCleanUpMatrix[i][j][k];
+				delete[] divergenceCleanUpRightPart[i][j][k];
+			}
+			delete[] divergenceCleaningPotential[i][j];
+			delete[] divergenceCleanUpMatrix[i][j];
+			delete[] divergenceCleanUpRightPart[i][j];
+		}
+		delete[] divergenceCleaningPotential[i];
+		delete[] divergenceCleanUpMatrix[i];
+		delete[] divergenceCleanUpRightPart[i];
+	}
+	delete[] divergenceCleaningPotential;
 	delete[] divergenceCleanUpMatrix;
 	delete[] divergenceCleanUpRightPart;
 
@@ -264,8 +270,6 @@ Simulation::~Simulation() {
 	delete[] electronConcentration;
 	delete[] protonConcentration;
 	delete[] chargeDensity;
-
-	delete[] divergenceCleaningPotential;
 
 	delete[] xgrid;
 	delete[] ygrid;
@@ -386,7 +390,7 @@ void Simulation::createArrays() {
 	dielectricTensor = new Matrix3d**[xnumber + 1];
 	pressureTensor = new Matrix3d**[xnumber];
 
-	divergenceCleaningPotential = new double***[xnumber];
+	divergenceCleaningPotential = new double***[xnumber+1];
 
 	particlesInEbin = new std::vector<Particle*>**[xnumber + 1];
 	particlesInBbin = new std::vector<Particle*>**[xnumber];
@@ -403,8 +407,6 @@ void Simulation::createArrays() {
 		protonConcentration[i] = new double*[ynumber];
 		chargeDensity[i] = new double*[ynumber];
 
-		divergenceCleaningPotential[i] = new double**[ynumber];
-
 		for (int j = 0; j < ynumber; ++j) {
 			Bfield[i][j] = new Vector3d[znumber];
 			newBfield[i][j] = new Vector3d[znumber];
@@ -416,12 +418,6 @@ void Simulation::createArrays() {
 			electronConcentration[i][j] = new double[znumber];
 			protonConcentration[i][j] = new double[znumber];
 			chargeDensity[i][j] = new double[znumber];
-
-			divergenceCleaningPotential[i][j] = new double*[znumber];
-
-			for(int k = 0; k < znumber; ++k) {
-				divergenceCleaningPotential[i][j][k] = new double[1];
-			}
 		}
 	}
 
@@ -445,21 +441,32 @@ void Simulation::createArrays() {
 
 	maxwellEquationMatrix = new std::vector<MatrixElement>***[xnumber];
 	maxwellEquationRightPart = new double***[xnumber];
-	divergenceCleanUpMatrix = new std::vector<MatrixElement>***[xnumber];
-	divergenceCleanUpRightPart = new double***[xnumber];
 	for (int i = 0; i < xnumber; ++i) {
 		maxwellEquationMatrix[i] = new std::vector<MatrixElement>**[ynumber];
 		maxwellEquationRightPart[i] = new double**[ynumber];
-		divergenceCleanUpMatrix[i] = new std::vector<MatrixElement>**[ynumber];
-		divergenceCleanUpRightPart[i] = new double**[ynumber];
 		for (int j = 0; j < ynumber; ++j) {
 			maxwellEquationMatrix[i][j] = new std::vector<MatrixElement>*[znumber];
 			maxwellEquationRightPart[i][j] = new double*[znumber];
-			divergenceCleanUpMatrix[i][j] = new std::vector<MatrixElement>*[znumber];
-			divergenceCleanUpRightPart[i][j] = new double*[znumber];
 			for (int k = 0; k < znumber; ++k) {
 				maxwellEquationMatrix[i][j][k] = new std::vector<MatrixElement>[3];
 				maxwellEquationRightPart[i][j][k] = new double[3];
+			}
+		}
+	}
+
+	divergenceCleanUpMatrix = new std::vector<MatrixElement>***[xnumber+1];
+	divergenceCleanUpRightPart = new double***[xnumber+1];
+
+	for(int i = 0; i < xnumber + 1; ++i) {
+		divergenceCleaningPotential[i] = new double**[ynumber];
+		divergenceCleanUpMatrix[i] = new std::vector<MatrixElement>**[ynumber];
+		divergenceCleanUpRightPart[i] = new double**[ynumber];
+		for(int j = 0; j < ynumber; ++j) {
+			divergenceCleaningPotential[i][j] = new double*[znumber];
+			divergenceCleanUpMatrix[i][j] = new std::vector<MatrixElement>*[znumber];
+			divergenceCleanUpRightPart[i][j] = new double*[znumber];
+			for(int k = 0; k < znumber; ++k) {
+				divergenceCleaningPotential[i][j][k] = new double[1];
 				divergenceCleanUpMatrix[i][j][k] = new std::vector<MatrixElement>[1];
 				divergenceCleanUpRightPart[i][j][k] = new double[1];
 			}
