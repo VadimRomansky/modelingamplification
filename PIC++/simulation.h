@@ -165,7 +165,9 @@ public:
 
 	void cleanupDivergence();
 	void updateFieldByPotential();
-	void createDivergenceCleanupEquation(int i, int j, int k);
+	void createDivergenceCleanupInternalEquation(int i, int j, int k);
+	void createDivergenceCleanupLeftEquation(int j, int k);
+	void createDivergenceCleanupRightEquation(int j, int k);
 	double cleanUpRightPart(int i, int j, int k);
 
 	double volume(int i, int j, int k);
