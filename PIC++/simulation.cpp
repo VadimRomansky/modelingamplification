@@ -348,7 +348,7 @@ void Simulation::initializeSimpleElectroMagneticWave() {
 		}
 	}
 	double kw = 2 * pi / xsize;
-	double E = 1;
+	double E = 1E-5;
 
 	for (int i = 0; i < xnumber + 1; ++i) {
 		for (int j = 0; j < ynumber + 1; ++j) {
@@ -502,28 +502,29 @@ void Simulation::createFiles() {
 void Simulation::simulate() {
 	createArrays();
 	initialize();
-	//initializeSimpleElectroMagneticWave();
+	initializeSimpleElectroMagneticWave();
 	createFiles();
 	createParticles();
 	collectParticlesIntoBins();
 	updateDensityParameters();
-	cleanupDivergence();
+	//cleanupDivergence();
 	updateEnergy();
 
-	updateDeltaT();
+	//updateDeltaT();
 	//deltaT = 0;
 
 	while (time*plasma_period < maxTime && currentIteration < maxIteration) {
-		printf("iteration number %d time = %lf\n", currentIteration, time * plasma_period);
+		printf("iteration number %d time = %15.10g\n", currentIteration, time * plasma_period);
 
 		if (currentIteration % writeParameter == 0) {
 			output();
 		}
-
+		updateDeltaT();
 		evaluateParticlesRotationTensor();
 		evaluateFields();
 		moveParticles();
 		updateFields();
+		//cleanupDivergence();
 		updateDensityParameters();
 		updateEnergy();
 
@@ -605,9 +606,35 @@ Matrix3d Simulation::evaluateAlphaRotationTensor(double beta, Vector3d velocity,
 }
 
 void Simulation::updateDeltaT() {
+	printf("updating time step\n");
 	double delta = min3(deltaX, deltaY, deltaZ);
 	deltaT = 0.1 * delta / speed_of_light_normalized;
-	deltaT = min2(deltaT, 0.005 * massElectron * speed_of_light_normalized / (electron_charge_normalized * B0.norm()));
+	double B = B0.norm();
+	double E = E0.norm();
+	for(int i = 0; i < xnumber; ++i) {
+		for(int j = 0; j < ynumber; ++j) {
+			for(int k = 0; k < znumber; ++k) {
+				if(Bfield[i][j][k].norm() > B) {
+					B = Bfield[i][j][k].norm();
+				}
+			}
+		}
+	}
+	for(int i = 0; i < xnumber+1; ++i) {
+		for(int j = 0; j < ynumber+1; ++j) {
+			for(int k = 0; k < znumber+1; ++k) {
+				if(Efield[i][j][k].norm() > E) {
+					E = Efield[i][j][k].norm();
+				}
+			}
+		}
+	}
+	if(B > 0){
+		deltaT = min2(deltaT, 0.005 * massElectron * speed_of_light_normalized / (electron_charge_normalized * B));
+	}
+	if(E > 0) {
+		deltaT = min2(deltaT, 0.005*massElectron * speed_of_light_normalized/(electron_charge_normalized*E));
+	}
 	//deltaT = 0.005 * massElectron * speed_of_light_normalized / (electron_charge_normalized * B0.norm());
 	//deltaT = min2(deltaT, 0.02);
 	//deltaT = min2(deltaT, plasma_period/10);
@@ -619,8 +646,8 @@ void Simulation::createParticles() {
 	for (int i = 0; i < xnumber; ++i) {
 		for (int j = 0; j < ynumber; ++j) {
 			for (int k = 0; k < znumber; ++k) {
-				//double weight = (density / (massProton * particlesPerBin)) * volume(i, j, k);
-				double weight = (1.0 / particlesPerBin) * volume(i, j, k);
+				double weight = (density / (massProton * particlesPerBin)) * volume(i, j, k);
+				//double weight = (1.0 / particlesPerBin) * volume(i, j, k);
 				Vector3d coordinates;
 				for (int l = 0; l < 2 * particlesPerBin; ++l) {
 					ParticleTypes type;
@@ -630,11 +657,11 @@ void Simulation::createParticles() {
 						type = ParticleTypes::ELECTRON;
 					}
 					Particle* particle = createParticle(i, j, k, weight, type);
-					/*if (l % 2 == 0) {
+					if (l % 2 == 0) {
 						coordinates = particle->coordinates;
 					} else {
 						particle->coordinates= coordinates;
-					}*/
+					}
 					particles.push_back(particle);
 					particlesNumber++;
 					if(particlesNumber % 1000 == 0){
@@ -706,9 +733,6 @@ Particle* Simulation::createParticle(int i, int j, int k, double weight, Particl
 	double pnormal = sqrt(p * p - pz * pz);
 	double px = pnormal * cos(phi);
 	double py = pnormal * sin(phi);
-	pz = fabs(pz);
-	py = fabs(py);
-	px = fabs(px);
 
 	Particle* particle = new Particle(mass, charge, weight, type, x, y, z, px, py, pz, dx, dy, dz);
 
