@@ -199,8 +199,8 @@ Simulation::~Simulation() {
 
 	}
 
-	for (int i = 0; i < xnumber; ++i) {
-		for (int j = 0; j < ynumber; ++j) {
+	for (int i = 0; i < xnumber+1; ++i) {
+		for (int j = 0; j < ynumber+1; ++j) {
 			for (int k = 0; k < znumber + 1; ++k) {
 				particlesInEbin[i][j][k].clear();
 			}
