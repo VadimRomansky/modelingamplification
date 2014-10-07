@@ -214,6 +214,10 @@ void Simulation::moveParticleNewtonIteration(Particle* particle, double* const o
 
 	solveSpecialMatrix(leftHalf, rightPart, newCoordinates);
 
+	if(newCoordinates[0] < - deltaX || newCoordinates[0] > xsize + deltaX || newCoordinates[1] < - deltaY || newCoordinates[1] > ysize + deltaY || newCoordinates[2] < - deltaZ || newCoordinates[2] > zsize + deltaZ) {
+		printf("particle out of box\n");
+		exit(0);
+	}
 	for(int i = 0; i < 6; ++i){
 		delete[] leftHalf[i];
 	}

@@ -162,9 +162,9 @@ void Simulation::createPerfectConductaryBoundaryCondition(int j, int k) {
 		nextK = 0;
 	}
 
-	maxwellEquationRightPart[i][j][k][0] = 4 * pi * electricDensity[0][j][k] * deltaX * deltaY * deltaZ;
+	maxwellEquationRightPart[i][j][k][0] = 4 * pi * electricDensity[0][j][k];
 
-	double element = -deltaZ * deltaY * (1 + dielectricTensor[0][j][k].matrix[0][0]) / 4;
+	/*double element = -deltaZ * deltaY * (1 + dielectricTensor[0][j][k].matrix[0][0]) / 4;
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(element, 0, j, k, 0));
 
 	element = -deltaZ * deltaY * (1 + dielectricTensor[0][nextJ][k].matrix[0][0]) / 4;
@@ -210,11 +210,22 @@ void Simulation::createPerfectConductaryBoundaryCondition(int j, int k) {
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(element, i + 1, nextJ, nextK, 1));
 
 	element = (deltaZ * deltaY * dielectricTensor[i + 1][nextJ][nextK].matrix[0][2] / 4) + (deltaY * deltaX * (1 + dielectricTensor[i + 1][nextJ][nextK].matrix[2][2]) / 4) + (deltaX * deltaZ * dielectricTensor[i + 1][nextJ][nextK].matrix[1][2] / 4);
-	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(element, i + 1, nextJ, nextK, 2));
+	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(element, i + 1, nextJ, nextK, 2));*/
 
+	/*double element = -0.25/deltaX;
+	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(element, i, j, k, 0));
+	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(element, i, nextJ, k, 0));
+	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(element, i, j, nextK, 0));
+	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(element, i, nextJ, nextK, 0));
 
-	//maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(1.0, i, j, k, 0));
-	//maxwellEquationRightPart[i][j][k][0] = Efield[i][j][k].x;
+	element = 0.25/deltaX;
+	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(element, i+1, j, k, 0));
+	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(element, i+1, nextJ, k, 0));
+	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(element, i+1, j, nextK, 0));
+	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(element, i+1, nextJ, nextK, 0));*/
+
+	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(1.0, i, j, k, 0));
+	maxwellEquationRightPart[i][j][k][0] = 0;
 	//Ey and Ez = 0
 	maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(1.0, i, j, k, 1));
 	maxwellEquationRightPart[i][j][k][1] = 0;
