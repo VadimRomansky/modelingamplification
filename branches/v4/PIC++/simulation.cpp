@@ -504,7 +504,7 @@ void Simulation::simulate() {
 	initialize();
 	initializeSimpleElectroMagneticWave();
 	createFiles();
-	createParticles();
+	//createParticles();
 	collectParticlesIntoBins();
 	updateDensityParameters();
 	//cleanupDivergence();
