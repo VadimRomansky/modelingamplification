@@ -934,6 +934,19 @@ double Simulation::evaluateDivE(int i, int j, int k) {
 	return ((ErightX - EleftX)/deltaX) + ((ErightY - EleftY)/deltaY) + ((ErightZ - EleftZ)/deltaZ);
 }
 
+double Simulation::evaluateDivTempE(int i, int j, int k) {
+	double ErightX = (tempEfield[i+1][j][k].x + tempEfield[i+1][j+1][k].x + tempEfield[i+1][j][k+1].x + tempEfield[i+1][j+1][k+1].x)/4;
+	double EleftX = (tempEfield[i][j][k].x + tempEfield[i][j+1][k].x + tempEfield[i][j][k+1].x + tempEfield[i][j+1][k+1].x)/4;
+
+	double ErightY = (tempEfield[i][j+1][k].y + tempEfield[i+1][j+1][k].y + tempEfield[i][j+1][k+1].y + tempEfield[i+1][j+1][k+1].y)/4;
+	double EleftY = (tempEfield[i][j][k].y + tempEfield[i+1][j][k].y + tempEfield[i][j][k+1].y + tempEfield[i+1][j][k+1].y)/4;
+
+	double ErightZ = (tempEfield[i][j][k+1].z + tempEfield[i+1][j][k+1].z + tempEfield[i][j+1][k+1].z + tempEfield[i+1][j+1][k+1].z)/4;
+	double EleftZ = (tempEfield[i][j][k].z + tempEfield[i+1][j][k].z + tempEfield[i][j+1][k].z + tempEfield[i+1][j+1][k].z)/4;
+
+	return ((ErightX - EleftX)/deltaX) + ((ErightY - EleftY)/deltaY) + ((ErightZ - EleftZ)/deltaZ);
+}
+
 Vector3d Simulation::evaluateDivPressureTensor(int i, int j, int k) {
 	Vector3d result = Vector3d(0, 0, 0);
 
