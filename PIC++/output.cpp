@@ -119,7 +119,8 @@ void outputDivergenceError(FILE* outFile, Simulation* simulation) {
 		for(int j = 0; j < simulation->ynumber; ++j) {
 			for(int k = 0; k < simulation->znumber; ++k) {
 				double div = simulation->evaluateDivE(i, j, k);
-				fprintf(outFile, "%g\n", div - 4*pi*simulation->chargeDensity[i][j][k]);
+				double div2 = simulation->evaluateDivTempE(i, j, k);
+				fprintf(outFile, "%g %g %g\n", div, div - 4*pi*simulation->chargeDensity[i][j][k], div2 - 4*pi*simulation->electricDensity[i][j][k]);
 			}
 		}
 	}
