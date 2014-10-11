@@ -162,9 +162,9 @@ void Simulation::createPerfectConductaryBoundaryCondition(int j, int k) {
 		nextK = 0;
 	}
 
-	//maxwellEquationRightPart[i][j][k][0] = 4 * pi * electricDensity[0][j][k];
+	/*maxwellEquationRightPart[i][j][k][0] = 4 * pi * electricDensity[0][j][k]*deltaX*deltaY*deltaZ;
 
-	/*double element = -deltaZ * deltaY * (1 + dielectricTensor[0][j][k].matrix[0][0]) / 4;
+	double element = -deltaZ * deltaY * (1 + dielectricTensor[0][j][k].matrix[0][0]) / 4;
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(element, 0, j, k, 0));
 
 	element = -deltaZ * deltaY * (1 + dielectricTensor[0][nextJ][k].matrix[0][0]) / 4;
@@ -589,7 +589,7 @@ void Simulation::createInternalEquationY(int i, int j, int k, Vector3d& rightPar
 	elementX = cthetadt2*(- (0.25*dielectricTensor[i][prevJ][k].matrix[1][0]/(deltaY*deltaY)));
 	maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementX, i, prevJ, k, 0));
 	elementY = cthetadt2*((0.25/(deltaX*deltaX)) - (0.25/(deltaY*deltaY)) + (0.25/(deltaZ*deltaZ)) - (0.25*dielectricTensor[i][prevJ][k].matrix[1][1]/(deltaY*deltaY)));
-	maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementY, i, nextJ, k, 1));
+	maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementY, i, prevJ, k, 1));
 	elementZ = cthetadt2*(- (0.25*dielectricTensor[i][prevJ][k].matrix[1][2]/(deltaY*deltaY)));
 	maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementZ, i, prevJ, k, 2));
 
@@ -983,7 +983,7 @@ void Simulation::createInternalEquationZ(int i, int j, int k, Vector3d& rightPar
 	elementY = cthetadt2*( - (0.125*dielectricTensor[i][nextJ][prevK].matrix[2][1]/(deltaZ*deltaZ)) + (0.125*dielectricTensor[i][nextJ][prevK].matrix[1][1]/(deltaZ*deltaY)));
 	maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementY, i, nextJ, prevK, 1));
 	elementZ = cthetadt2*((0.125/(deltaX*deltaX)) - (0.125/(deltaY*deltaY)) - (0.125/(deltaZ*deltaZ)) - (0.125*dielectricTensor[i][nextJ][prevK].matrix[2][2]/(deltaZ*deltaZ)) + (0.125*dielectricTensor[i][nextJ][prevK].matrix[1][2]/(deltaZ*deltaY)));
-	maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementZ, i, nextJ, nextK, 2));
+	maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementZ, i, nextJ, prevK, 2));
 
 	//E i j-1 k+1
 	elementX = cthetadt2*( - (0.125*dielectricTensor[i][prevJ][nextK].matrix[2][0]/(deltaZ*deltaZ)) + (0.125*dielectricTensor[i][prevJ][nextK].matrix[1][0]/(deltaZ*deltaY)));
