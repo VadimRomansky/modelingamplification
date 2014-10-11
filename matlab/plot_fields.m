@@ -13,8 +13,8 @@ NE = (Nx+1)*(Ny+1)*(Nz+1);
 NB = Nx*Ny*Nz;
 Nt = size(Efield, 1)/NE;
 
-ynumber = 1;
-znumber = 1;
+ynumber = 2;
+znumber = 2;
 
 a = 0;
 b = fix(Nt/2);

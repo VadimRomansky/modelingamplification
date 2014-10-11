@@ -1,7 +1,7 @@
 clear;
-load general.dat;
+load traectory_electron.dat;
 N1=1;
-N2=size(general,1);
+N2=size(traectory_electron,1);
 
 
 figure(1);
