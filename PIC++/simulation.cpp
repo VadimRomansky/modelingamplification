@@ -99,7 +99,6 @@ Simulation::Simulation(double xn, double yn, double zn, double xsizev, double ys
 
 	theta = 0.5;
 
-	//read input!
 	xnumber = xn;
 	ynumber = yn;
 	znumber = zn;
@@ -122,6 +121,7 @@ Simulation::Simulation(double xn, double yn, double zn, double xsizev, double ys
 	double concentration = density / massProton;
 
 	plasma_period = sqrt(massElectron / (4 * pi * concentration * sqr(electron_charge))) / (2 * pi);
+	plasma_period2 = plasma_period;
 	double thermal_momentum;
 	if(kBoltzman*temperature > massElectron*speed_of_light*speed_of_light) {
 		thermal_momentum = kBoltzman*temperature/speed_of_light;
@@ -334,6 +334,8 @@ void Simulation::initialize() {
 			}
 		}
 	}
+
+	//electricDensity[xnumber/2][ynumber/2][znumber/2] = 1;
 }
 
 void Simulation::initializeSimpleElectroMagneticWave() {
@@ -418,6 +420,17 @@ void Simulation::createArrays() {
 			electronConcentration[i][j] = new double[znumber];
 			protonConcentration[i][j] = new double[znumber];
 			chargeDensity[i][j] = new double[znumber];
+
+			for(int k = 0; k < znumber; ++k) {
+				Bfield[i][j][k] = Vector3d(0, 0, 0);
+				newBfield[i][j][k] = Vector3d(0, 0, 0);
+
+				electricDensity[i][j][k] = 0;
+				pressureTensor[i][j][k] = Matrix3d(0, 0, 0, 0, 0, 0, 0, 0, 0);
+				electronConcentration[i][j][k] = 0;
+				protonConcentration[i][j][k] = 0;
+				chargeDensity[i][j][k] = 0;
+			}
 		}
 	}
 
@@ -436,6 +449,14 @@ void Simulation::createArrays() {
 			electricFlux[i][j] = new Vector3d[znumber + 1];
 			dielectricTensor[i][j] = new Matrix3d[znumber + 1];
 			particlesInEbin[i][j] = new std::vector<Particle*>[znumber + 1];
+			for(int k = 0; k < znumber + 1; ++k) {
+				Efield[i][j][k] = Vector3d(0, 0, 0);
+				newEfield[i][j][k] = Vector3d(0, 0, 0);
+				tempEfield[i][j][k] = Vector3d(0, 0, 0);
+
+				electricFlux[i][j][k] = Vector3d(0, 0, 0);
+				dielectricTensor[i][j][k] = Matrix3d(0, 0, 0, 0, 0, 0, 0, 0, 0);
+			}
 		}
 	}
 
@@ -507,7 +528,7 @@ void Simulation::simulate() {
 	createParticles();
 	collectParticlesIntoBins();
 	updateDensityParameters();
-	//cleanupDivergence();
+	cleanupDivergence();
 	updateEnergy();
 
 	//updateDeltaT();
@@ -524,7 +545,7 @@ void Simulation::simulate() {
 		evaluateFields();
 		moveParticles();
 		updateFields();
-		//cleanupDivergence();
+		cleanupDivergence();
 		updateDensityParameters();
 		updateEnergy();
 
@@ -637,8 +658,8 @@ void Simulation::updateDeltaT() {
 	}
 	//deltaT = 0.005 * massElectron * speed_of_light_normalized / (electron_charge_normalized * B0.norm());
 	//deltaT = min2(deltaT, 0.02);
-	//deltaT = min2(deltaT, plasma_period/10);
-	deltaT = min2(deltaT, 1E-1);
+	deltaT = min2(deltaT, plasma_period2/10);
+	//deltaT = min2(deltaT, 1E-1);
 }
 
 void Simulation::createParticles() {
@@ -712,9 +733,9 @@ Particle* Simulation::createParticle(int i, int j, int k, double weight, Particl
 	double y = ygrid[j] + deltaY * uniformDistribution();
 	double z = zgrid[k] + deltaZ * uniformDistribution();
 
-	double dx = deltaX / 100;
-	double dy = deltaY / 100;
-	double dz = deltaZ / 100;
+	double dx = deltaX / 4;
+	double dy = deltaY / 4;
+	double dz = deltaZ / 4;
 
 	double energy = mass * speed_of_light_normalized_sqr;
 
@@ -941,9 +962,9 @@ void Simulation::updateDensityParameters() {
 					full_density += chargeDensity[i][j][k]*volume(i, j, k);
 					full_p_concentration += protonConcentration[i][j][k]*volume(i, j, k);
 					full_e_concentration += electronConcentration[i][j][k]*volume(i, j, k);
-					electronConcentration[i][j][k] /= cube(gyroradius);
-					protonConcentration[i][j][k] /= cube(gyroradius);
-					chargeDensity[i][j][k] /= (sqrt(cube(gyroradius))*plasma_period);
+					//electronConcentration[i][j][k] /= cube(gyroradius);
+					//protonConcentration[i][j][k] /= cube(gyroradius);
+					//chargeDensity[i][j][k] /= (sqrt(cube(gyroradius))*plasma_period);
 				}
 			}
 		}
