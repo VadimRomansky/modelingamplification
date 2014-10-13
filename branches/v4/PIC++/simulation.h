@@ -20,6 +20,7 @@ public:
 	double temperature;
 
 	double plasma_period;
+	double plasma_period2;
 	double gyroradius;
 
 	double speed_of_light_normalized;
