@@ -71,32 +71,20 @@ public:
 	double* middleYgrid;
 	double* middleZgrid;
 
-	std::vector<MatrixElement>**** maxwellEquationMatrix;
-	double**** maxwellEquationRightPart;
+	double*** EfieldX;
+	double*** EfieldY;
+	double*** EfieldZ;
 
-	std::vector<MatrixElement>**** divergenceCleanUpMatrix;
-	double**** divergenceCleanUpRightPart;
+	double*** electricFluxX;
+	double*** electricFluxY;
+	double*** electricFluxZ;
 
-	Vector3d*** electricFlux;
-	double*** electricDensity;
-	Matrix3d*** dielectricTensor;
-	Matrix3d*** pressureTensor;
+	double*** BfieldX;
+	double*** BfieldY;
+	double*** BfieldZ;
 
-	Vector3d*** Efield;
-	Vector3d*** Bfield;
-
-	Vector3d*** newEfield;
-	Vector3d*** newBfield;
-
-	Vector3d*** tempEfield;
-	//Vector3d*** tempBfield;
-
-	double**** divergenceCleaningPotential;
 
 	std::vector<Particle*> particles;
-
-	std::vector<Particle*>*** particlesInEbin;
-	std::vector<Particle*>*** particlesInBbin;
 
 	Matrix3d Kronecker;
 	double LeviCivita[3][3][3];
@@ -130,74 +118,30 @@ public:
 	Particle* getFirstProton();
 	Particle* getFirstElectron();
 
-	Vector3d correlationTempEfield(Particle* particle);
-	Vector3d correlationBfield(Particle* particle);
-	Vector3d correlationTempEfield(Particle& particle);
-	Vector3d correlationBfield(Particle& particle);
-	Vector3d correlationEfield(Particle* particle);
-	Vector3d correlationEfield(Particle& particle);
-	
-	Vector3d correlationFieldWithBbin(Particle& particle, int i, int j, int k);
-	Vector3d correlationFieldWithEbin(Particle& particle, int i, int j, int k);
-	Vector3d correlationFieldWithTempEbin(Particle& particle, int i, int j, int k);
-	double correlationWithBbin(Particle& particle, int i, int j, int k);
-	double correlationWithEbin(Particle& particle, int i, int , int k);
 	double correlationBspline(const double& x, const double&  dx, const double& leftx, const double& rightx);
-
-	Matrix3d Simulation::evaluateAlphaRotationTensor(double beta, Vector3d velocity, Vector3d EField, Vector3d BField); //see Noguchi
 
 	void moveParticles();
 	void correctParticlePosition(Particle* particle);
 	void moveParticle(Particle* particle);
-	void moveParticleNewtonIteration(Particle* particle, double* const oldCoordinates, double* const tempCoordinates, double* const newCoordinates);
-	void evaluateParticlesRotationTensor();
+	void checkParticleInBox(Particle& particle);
 
 	void evaluateFields();
-	void checkEquationMatrix(std::vector<MatrixElement>**** matrix);
-	void createPerfectConductaryBoundaryCondition(int j, int k);
-	void createInternalEquationX(int i, int j, int k, Vector3d& rightPart);
-	void createInternalEquationY(int i, int j, int k, Vector3d& rightPart);
-	void createInternalEquationZ(int i, int j, int k, Vector3d& rightPart);
-	void createInternalEquation(int i, int j, int k);
-	void evaluateMaxwellEquationMatrix();
-	void evaluateMagneticField();
+	void updateEfield(double dt);
+	void updateEfieldX(int i, int j, int k, double dt);
+	void updateEfieldY(int i, int j, int k, double dt);
+	void updateEfieldZ(int i, int j, int k, double dt);
+	void updateBfield(double dt);
+	void updateBfieldX(int i, int j, int k, double dt);
+	void updateBfieldY(int i, int j, int k, double dt);
+	void updateBfieldZ(int i, int j, int k, double dt);
 	void updateBoundaries();
-	void updateBoundariesOldField();
 
-	void cleanupDivergence();
-	void updateFieldByPotential();
-	void createDivergenceCleanupInternalEquation(int i, int j, int k);
-	void createDivergenceCleanupLeftEquation(int j, int k);
-	void createDivergenceCleanupRightEquation(int j, int k);
-	double cleanUpRightPart(int i, int j, int k);
+	void updateEnergy();
 
 	double volume(int i, int j, int k);
 
-	void collectParticlesIntoBins();
-	void pushParticleIntoEbin(Particle* particle, int i, int j, int k);
-	void pushParticleIntoBbin(Particle* particle, int i, int j, int k);
-	bool particleCrossBbin(Particle& particle, int i, int j, int k);
-	bool particleCrossEbin(Particle& particle, int i, int j, int k);
-	void checkParticleInBox(Particle& particle);
-
 	void updateElectroMagneticParameters();
 	void updateDensityParameters();
-	void updateEnergy();
-	void updateFields();
-	double evaluateDivFlux(int i, int j, int k);
-	Vector3d evaluateRotB(int i, int j, int k);
-	Vector3d evaluateRotE(int i, int j, int k);
-	double evaluateDivE(int i, int j, int k);
-	double evaluateDivTempE(int i, int j, int k);
-	Vector3d evaluateDivPressureTensor(int i, int j, int k);
-	Vector3d evaluateGradDensity(int i, int j, int k);
-	Vector3d evaluateGradPotential(int i, int j, int k);
-
-	Vector3d getBfield(int i, int j, int k);
-	Vector3d getTempEfield(int i, int j, int k);
-	Vector3d getEfield(int i, int j, int k);
-	Matrix3d getPressureTensor(int i, int j, int k);
-	double getDensity(int i, int j, int k);
 };
 
 #endif
