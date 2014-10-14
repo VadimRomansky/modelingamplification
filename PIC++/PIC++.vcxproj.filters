@@ -54,12 +54,6 @@
     <ClCompile Include="input.cpp">
       <Filter>Source files</Filter>
     </ClCompile>
-    <ClCompile Include="divergencecleanup.cpp">
-      <Filter>Source files</Filter>
-    </ClCompile>
-    <ClCompile Include="correlation.cpp">
-      <Filter>Source files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="constants.h">

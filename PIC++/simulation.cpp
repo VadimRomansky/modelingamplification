@@ -172,100 +172,64 @@ Simulation::~Simulation() {
 	}
 	particles.clear();
 
+	for(int i = 0; i < xnumber; ++i) {
+		for(int j = 0; j < ynumber + 1; ++j) {
+			delete[] EfieldX[i][j];
+		}
+		delete[] EfieldX[i];
+	}
+	delete[] EfieldX;
+
+	for(int i = 0; i < xnumber + 1; ++i) {
+		for(int j = 0; j < ynumber; ++j) {
+			delete[] EfieldY[i][j];
+		}
+		delete[] EfieldY[i];
+	}
+	delete[] EfieldY;
+
+	for(int i = 0; i < xnumber + 1; ++i) {
+		for(int j = 0; j < ynumber + 1; ++j) {
+			delete[] EfieldZ[i][j];
+		}
+		delete[] EfieldZ[i];
+	}
+	delete[] EfieldZ;
+
+	for(int i = 0; i < xnumber + 1; ++i) {
+		for(int j = 0; j < ynumber; ++j) {
+			delete[] BfieldX[i][j];
+		}
+		delete[] BfieldX[i];
+	}
+	delete[] BfieldX;
+
+	for(int i = 0; i < xnumber; ++i) {
+		for(int j = 0; j < ynumber + 1; ++j) {
+			delete[] BfieldY[i][j];
+		}
+		delete[] BfieldY[i];
+	}
+	delete[] BfieldY;
+
+	for(int i = 0; i < xnumber; ++i) {
+		for(int j = 0; j < ynumber; ++j) {
+			delete[] BfieldZ[i][j];
+		}
+		delete[] BfieldZ[i];
+	}
+	delete[] BfieldZ;
+
 	for (int i = 0; i < xnumber; ++i) {
 		for (int j = 0; j < ynumber; ++j) {
-			for (int k = 0; k < znumber; ++k) {
-				particlesInBbin[i][j][k].clear();
-			}
-			delete[] Bfield[i][j];
-			delete[] newBfield[i][j];
-			//delete[] tempBfield[i][j];
-			delete[] electricDensity[i][j];
-			delete[] pressureTensor[i][j];
-
 			delete[] electronConcentration[i][j];
 			delete[] protonConcentration[i][j];
 			delete[] chargeDensity[i][j];
 		}
-		delete[] Bfield[i];
-		delete[] newBfield[i];
-		//delete[] tempBfield[i];
-		delete[] electricDensity[i];
-		delete[] pressureTensor[i];
-
 		delete[] electronConcentration[i];
 		delete[] protonConcentration[i];
 		delete[] chargeDensity[i];
-
 	}
-
-	for (int i = 0; i < xnumber+1; ++i) {
-		for (int j = 0; j < ynumber+1; ++j) {
-			for (int k = 0; k < znumber + 1; ++k) {
-				particlesInEbin[i][j][k].clear();
-			}
-			delete[] Efield[i][j];
-			delete[] newEfield[i][j];
-			delete[] tempEfield[i][j];
-			delete[] electricFlux[i][j];
-			delete[] dielectricTensor[i][j];
-		}
-		delete[] Efield[i];
-		delete[] newEfield[i];
-		delete[] tempEfield[i];
-		delete[] electricFlux[i];
-		delete[] dielectricTensor[i];
-	}
-
-	for (int i = 0; i < xnumber; ++i) {
-		for (int j = 0; j < ynumber; ++j) {
-			for (int k = 0; k < znumber; ++k) {
-				for (int l = 0; l < 3; ++l) {
-					maxwellEquationMatrix[i][j][k][l].clear();
-				}
-				delete[] maxwellEquationMatrix[i][j][k];
-				delete[] maxwellEquationRightPart[i][j][k];
-
-			}
-			delete[] maxwellEquationMatrix[i][j];
-			delete[] maxwellEquationRightPart[i][j];
-		}
-		delete[] maxwellEquationMatrix[i];
-		delete[] maxwellEquationRightPart[i];
-	}
-	delete[] maxwellEquationMatrix;
-	delete[] maxwellEquationRightPart;
-
-	for(int i = 0; i < xnumber + 1; ++i) {
-		for(int j = 0; j < ynumber; ++j) {
-			for(int k = 0; k < znumber; ++k) {
-				delete[] divergenceCleaningPotential[i][j][k];
-				delete[] divergenceCleanUpMatrix[i][j][k];
-				delete[] divergenceCleanUpRightPart[i][j][k];
-			}
-			delete[] divergenceCleaningPotential[i][j];
-			delete[] divergenceCleanUpMatrix[i][j];
-			delete[] divergenceCleanUpRightPart[i][j];
-		}
-		delete[] divergenceCleaningPotential[i];
-		delete[] divergenceCleanUpMatrix[i];
-		delete[] divergenceCleanUpRightPart[i];
-	}
-	delete[] divergenceCleaningPotential;
-	delete[] divergenceCleanUpMatrix;
-	delete[] divergenceCleanUpRightPart;
-
-	delete[] Efield;
-	delete[] newEfield;
-	delete[] tempEfield;
-	delete[] Bfield;
-	delete[] newBfield;
-	//delete[] tempBfield;
-
-	delete[] electricDensity;
-	delete[] electricFlux;
-	delete[] dielectricTensor;
-	delete[] pressureTensor;
 
 	delete[] electronConcentration;
 	delete[] protonConcentration;
@@ -309,13 +273,53 @@ void Simulation::initialize() {
 		middleZgrid[i] = (zgrid[i] + zgrid[i + 1]) / 2;
 	}
 
-	for (int i = 0; i < xnumber + 1; ++i) {
-		for (int j = 0; j < ynumber + 1; ++j) {
-			for (int k = 0; k < znumber + 1; ++k) {
-				Efield[i][j][k] = E0;
-				newEfield[i][j][k] = Efield[i][j][k];
-				tempEfield[i][j][k] = Efield[i][j][k];
+	for(int i = 0; i < xnumber; ++i) {
+		for(int j = 0; j < ynumber + 1; ++j) {
+			for(int k = 0; k < znumber + 1; ++k) {
+				EfieldX[i][j][k] = E0.x;
+				electricFluxX[i][j][k] = 0;
+			}
+		}
+	}
 
+	for(int i = 0; i < xnumber + 1; ++i) {
+		for(int j = 0; j < ynumber; ++j) {
+			for(int k = 0; k < znumber + 1; ++k) {
+				EfieldY[i][j][k] = E0.y;
+				electricFluxY[i][j][k] = 0;
+			}
+		}
+	}
+
+	for(int i = 0; i < xnumber + 1; ++i) {
+		for(int j = 0; j < ynumber + 1; ++j) {
+			for(int k = 0; k < znumber; ++k) {
+				EfieldZ[i][j][k] = E0.z;
+				electricFluxZ[i][j][k] = 0;
+			}
+		}
+	}
+
+	for(int i = 0; i < xnumber + 1; ++i) {
+		for(int j = 0; j < ynumber; ++j) {
+			for(int k = 0; k < znumber; ++k) {
+				BfieldX[i][j][k] = B0.x;
+			}
+		}
+	}
+
+	for(int i = 0; i < xnumber; ++i) {
+		for(int j = 0; j < ynumber + 1; ++j) {
+			for(int k = 0; k < znumber; ++k) {
+				BfieldY[i][j][k] = B0.y;
+			}
+		}
+	}
+
+	for(int i = 0; i < xnumber; ++i) {
+		for(int j = 0; j < ynumber; ++j) {
+			for(int k = 0; k < znumber + 1; ++k) {
+				BfieldZ[i][j][k] = B0.z;
 			}
 		}
 	}
@@ -323,14 +327,9 @@ void Simulation::initialize() {
 	for (int i = 0; i < xnumber; ++i) {
 		for (int j = 0; j < ynumber; ++j) {
 			for (int k = 0; k < znumber; ++k) {
-				Bfield[i][j][k] = B0;
-				Bfield[i][j][k].x = B0.x;
-				newBfield[i][j][k] = Bfield[i][j][k];
-				//tempBfield[i][j][k] = Bfield[i][j][k];
 				electronConcentration[i][j][k] = 0;
 				protonConcentration[i][j][k] = 0;
 				chargeDensity[i][j][k] = 0;
-				electricDensity[i][j][k] = 0;
 			}
 		}
 	}
@@ -341,30 +340,57 @@ void Simulation::initialize() {
 void Simulation::initializeSimpleElectroMagneticWave() {
 	E0 = Vector3d(0, 0, 0);
 	B0 = Vector3d(0, 0, 0);
-	for (int i = 0; i < xnumber; ++i) {
-		for (int j = 0; j < ynumber; ++j) {
-			for (int k = 0; k < znumber; ++k) {
-				Bfield[i][j][k] = Vector3d(0, 0, 0);
-				newBfield[i][j][k] = Bfield[i][j][k];
-			}
-		}
-	}
+
 	double kw = 2 * pi / xsize;
 	double E = 1E-5;
 
-	for (int i = 0; i < xnumber + 1; ++i) {
-		for (int j = 0; j < ynumber + 1; ++j) {
-			for (int k = 0; k < znumber + 1; ++k) {
-				Efield[i][j][k].x = 0;
-				Efield[i][j][k].y = E * sin(kw * xgrid[i]);
-				Efield[i][j][k].z = 0;
-				tempEfield[i][j][k] = Efield[i][j][k];
-				newEfield[i][j][k] = tempEfield[i][j][k];
+	for(int i = 0; i < xnumber; ++i) {
+		for(int j = 0; j < ynumber + 1; ++j) {
+			for(int k = 0; k < znumber + 1; ++k) {
+				EfieldX[i][j][k] = 0;
 			}
 		}
 	}
 
-	double t = 2 * pi / (kw * speed_of_light_normalized);
+	for(int i = 0; i < xnumber + 1; ++i) {
+		for(int j = 0; j < ynumber; ++j) {
+			for(int k = 0; k < znumber + 1; ++k) {
+				EfieldY[i][j][k] = E*sin(kw*xgrid[i]);
+			}
+		}
+	}
+
+	for(int i = 0; i < xnumber + 1; ++i) {
+		for(int j = 0; j < ynumber + 1; ++j) {
+			for(int k = 0; k < znumber; ++k) {
+				EfieldZ[i][j][k] = 0;
+			}
+		}
+	}
+
+	for(int i = 0; i < xnumber + 1; ++i) {
+		for(int j = 0; j < ynumber; ++j) {
+			for(int k = 0; k < znumber; ++k) {
+				BfieldX[i][j][k] = 0;
+			}
+		}
+	}
+
+	for(int i = 0; i < xnumber; ++i) {
+		for(int j = 0; j < ynumber + 1; ++j) {
+			for(int k = 0; k < znumber; ++k) {
+				BfieldY[i][j][k] = 0;
+			}
+		}
+	}
+
+	for(int i = 0; i < xnumber; ++i) {
+		for(int j = 0; j < ynumber; ++j) {
+			for(int k = 0; k < znumber + 1; ++k) {
+				BfieldZ[i][j][k] = 0;
+			}
+		}
+	}
 }
 
 void Simulation::createArrays() {
@@ -376,121 +402,90 @@ void Simulation::createArrays() {
 	middleYgrid = new double[ynumber];
 	middleZgrid = new double[znumber];
 
-	Efield = new Vector3d**[xnumber + 1];
-	newEfield = new Vector3d**[xnumber + 1];
-	tempEfield = new Vector3d**[xnumber + 1];
-	Bfield = new Vector3d**[xnumber];
-	newBfield = new Vector3d**[xnumber];
-	//tempBfield = new Vector3d**[xnumber];
+	EfieldX = new double**[xnumber];
+	for(int i = 0; i < xnumber; ++i) {
+		EfieldX[i] = new double*[ynumber + 1];
+		for(int j = 0; j < ynumber + 1; ++j) {
+			EfieldX[i][j] = new double[znumber + 1];
+		}
+	}
+
+	EfieldY = new double**[xnumber+1];
+	for(int i = 0; i < xnumber + 1; ++i) {
+		EfieldY[i] = new double*[ynumber];
+		for(int j = 0; j < ynumber; ++j) {
+			EfieldY[i][j] = new double[znumber+1];
+		}
+	}
+
+	EfieldZ = new double**[xnumber + 1];
+	for(int i = 0; i < xnumber + 1; ++i) {
+		EfieldZ[i] = new double*[ynumber + 1];
+		for(int j = 0; j < ynumber + 1; ++j) {
+			EfieldZ[i][j] = new double[znumber];
+		}
+	}
+
+	electricFluxX = new double**[xnumber];
+	for(int i = 0; i < xnumber; ++i) {
+		electricFluxX[i] = new double*[ynumber + 1];
+		for(int j = 0; j < ynumber + 1; ++j) {
+			electricFluxX[i][j] = new double[znumber + 1];
+		}
+	}
+
+	electricFluxY = new double**[xnumber+1];
+	for(int i = 0; i < xnumber + 1; ++i) {
+		electricFluxY[i] = new double*[ynumber];
+		for(int j = 0; j < ynumber; ++j) {
+			electricFluxY[i][j] = new double[znumber+1];
+		}
+	}
+
+	electricFluxZ = new double**[xnumber + 1];
+	for(int i = 0; i < xnumber + 1; ++i) {
+		electricFluxZ[i] = new double*[ynumber + 1];
+		for(int j = 0; j < ynumber + 1; ++j) {
+			electricFluxZ[i][j] = new double[znumber];
+		}
+	}
+
+	BfieldX = new double**[xnumber + 1];
+	for(int i = 0; i < xnumber + 1; ++i) {
+		BfieldX[i] = new double*[ynumber];
+		for(int j = 0; j < ynumber; ++j) {
+			BfieldX[i][j] = new double[znumber];
+		}
+	}
+
+	BfieldY = new double**[xnumber];
+	for(int i = 0; i < xnumber; ++i) {
+		BfieldY[i] = new double*[ynumber + 1];
+		for(int j = 0; j < ynumber + 1; ++j) {
+			BfieldY[i][j] = new double[znumber];
+		}
+	}
+
+	BfieldZ = new double**[xnumber];
+	for(int i = 0; i < xnumber; ++i) {
+		BfieldZ[i] = new double*[ynumber];
+		for(int j = 0; j < ynumber; ++j) {
+			BfieldZ[i][j] = new double[znumber + 1];
+		}
+	}
 
 	electronConcentration = new double**[xnumber];
 	protonConcentration = new double**[xnumber];
 	chargeDensity = new double**[xnumber];
 
-	electricFlux = new Vector3d**[xnumber + 1];
-	electricDensity = new double**[xnumber];
-	dielectricTensor = new Matrix3d**[xnumber + 1];
-	pressureTensor = new Matrix3d**[xnumber];
-
-	divergenceCleaningPotential = new double***[xnumber+1];
-
-	particlesInEbin = new std::vector<Particle*>**[xnumber + 1];
-	particlesInBbin = new std::vector<Particle*>**[xnumber];
-
-	for (int i = 0; i < xnumber; ++i) {
-		Bfield[i] = new Vector3d*[ynumber];
-		newBfield[i] = new Vector3d*[ynumber];
-		//tempBfield[i] = new Vector3d*[ynumber];
-		electricDensity[i] = new double*[ynumber];
-		pressureTensor[i] = new Matrix3d*[ynumber];
-		particlesInBbin[i] = new std::vector<Particle*>*[ynumber];
-
+	for(int i = 0; i < xnumber; ++i) {
 		electronConcentration[i] = new double*[ynumber];
 		protonConcentration[i] = new double*[ynumber];
 		chargeDensity[i] = new double*[ynumber];
-
-		for (int j = 0; j < ynumber; ++j) {
-			Bfield[i][j] = new Vector3d[znumber];
-			newBfield[i][j] = new Vector3d[znumber];
-			//tempBfield[i][j] = new Vector3d[znumber];
-			electricDensity[i][j] = new double[znumber];
-			pressureTensor[i][j] = new Matrix3d[znumber];
-			particlesInBbin[i][j] = new std::vector<Particle*>[znumber];
-
+		for(int j = 0; j < ynumber; ++j) {
 			electronConcentration[i][j] = new double[znumber];
 			protonConcentration[i][j] = new double[znumber];
 			chargeDensity[i][j] = new double[znumber];
-
-			for(int k = 0; k < znumber; ++k) {
-				Bfield[i][j][k] = Vector3d(0, 0, 0);
-				newBfield[i][j][k] = Vector3d(0, 0, 0);
-
-				electricDensity[i][j][k] = 0;
-				pressureTensor[i][j][k] = Matrix3d(0, 0, 0, 0, 0, 0, 0, 0, 0);
-				electronConcentration[i][j][k] = 0;
-				protonConcentration[i][j][k] = 0;
-				chargeDensity[i][j][k] = 0;
-			}
-		}
-	}
-
-	for (int i = 0; i < xnumber + 1; ++i) {
-		Efield[i] = new Vector3d*[ynumber + 1];
-		newEfield[i] = new Vector3d*[ynumber + 1];
-		tempEfield[i] = new Vector3d*[ynumber + 1];
-		electricFlux[i] = new Vector3d*[ynumber + 1];
-		dielectricTensor[i] = new Matrix3d*[ynumber + 1];
-		particlesInEbin[i] = new std::vector<Particle*>*[ynumber + 1];
-
-		for (int j = 0; j < ynumber + 1; ++j) {
-			Efield[i][j] = new Vector3d[znumber + 1];
-			newEfield[i][j] = new Vector3d[znumber + 1];
-			tempEfield[i][j] = new Vector3d[znumber + 1];
-			electricFlux[i][j] = new Vector3d[znumber + 1];
-			dielectricTensor[i][j] = new Matrix3d[znumber + 1];
-			particlesInEbin[i][j] = new std::vector<Particle*>[znumber + 1];
-			for(int k = 0; k < znumber + 1; ++k) {
-				Efield[i][j][k] = Vector3d(0, 0, 0);
-				newEfield[i][j][k] = Vector3d(0, 0, 0);
-				tempEfield[i][j][k] = Vector3d(0, 0, 0);
-
-				electricFlux[i][j][k] = Vector3d(0, 0, 0);
-				dielectricTensor[i][j][k] = Matrix3d(0, 0, 0, 0, 0, 0, 0, 0, 0);
-			}
-		}
-	}
-
-	maxwellEquationMatrix = new std::vector<MatrixElement>***[xnumber];
-	maxwellEquationRightPart = new double***[xnumber];
-	for (int i = 0; i < xnumber; ++i) {
-		maxwellEquationMatrix[i] = new std::vector<MatrixElement>**[ynumber];
-		maxwellEquationRightPart[i] = new double**[ynumber];
-		for (int j = 0; j < ynumber; ++j) {
-			maxwellEquationMatrix[i][j] = new std::vector<MatrixElement>*[znumber];
-			maxwellEquationRightPart[i][j] = new double*[znumber];
-			for (int k = 0; k < znumber; ++k) {
-				maxwellEquationMatrix[i][j][k] = new std::vector<MatrixElement>[3];
-				maxwellEquationRightPart[i][j][k] = new double[3];
-			}
-		}
-	}
-
-	divergenceCleanUpMatrix = new std::vector<MatrixElement>***[xnumber+1];
-	divergenceCleanUpRightPart = new double***[xnumber+1];
-
-	for(int i = 0; i < xnumber + 1; ++i) {
-		divergenceCleaningPotential[i] = new double**[ynumber];
-		divergenceCleanUpMatrix[i] = new std::vector<MatrixElement>**[ynumber];
-		divergenceCleanUpRightPart[i] = new double**[ynumber];
-		for(int j = 0; j < ynumber; ++j) {
-			divergenceCleaningPotential[i][j] = new double*[znumber];
-			divergenceCleanUpMatrix[i][j] = new std::vector<MatrixElement>*[znumber];
-			divergenceCleanUpRightPart[i][j] = new double*[znumber];
-			for(int k = 0; k < znumber; ++k) {
-				divergenceCleaningPotential[i][j][k] = new double[1];
-				divergenceCleanUpMatrix[i][j][k] = new std::vector<MatrixElement>[1];
-				divergenceCleanUpRightPart[i][j][k] = new double[1];
-			}
 		}
 	}
 }
@@ -525,10 +520,8 @@ void Simulation::simulate() {
 	initialize();
 	initializeSimpleElectroMagneticWave();
 	createFiles();
-	createParticles();
-	collectParticlesIntoBins();
+	//createParticles();
 	updateDensityParameters();
-	cleanupDivergence();
 	updateEnergy();
 
 	//updateDeltaT();
@@ -541,11 +534,11 @@ void Simulation::simulate() {
 			output();
 		}
 		updateDeltaT();
-		evaluateParticlesRotationTensor();
-		evaluateFields();
+
 		moveParticles();
-		updateFields();
-		cleanupDivergence();
+		updateElectroMagneticParameters();
+		evaluateFields();
+		
 		updateDensityParameters();
 		updateEnergy();
 
@@ -570,7 +563,7 @@ void Simulation::output() {
 	}
 	EfieldFile = fopen("./output/Efield.dat", "a");
 	BfieldFile = fopen("./output/Bfield.dat", "a");
-	outputFields(EfieldFile, BfieldFile, Efield, Bfield, xnumber, ynumber, znumber, plasma_period, gyroradius);
+	outputFields(EfieldFile, BfieldFile, EfieldX, EfieldY, EfieldZ, BfieldX, BfieldY, BfieldZ, xnumber, ynumber, znumber, plasma_period, gyroradius);
 	fclose(EfieldFile);
 	fclose(BfieldFile);
 
@@ -591,39 +584,12 @@ void Simulation::output() {
 	fclose(generalFile);
 
 	densityFile = fopen("./output/concentrations.dat", "a");
-	outputConcentrations(densityFile, electronConcentration, protonConcentration, chargeDensity, electricDensity, xnumber, ynumber, znumber, plasma_period, gyroradius);
+	outputConcentrations(densityFile, electronConcentration, protonConcentration, chargeDensity, xnumber, ynumber, znumber, plasma_period, gyroradius);
 	fclose(densityFile);
 
 	divergenceErrorFile = fopen("./output/divergence_error.dat", "a");
 	outputDivergenceError(divergenceErrorFile, this);
 	fclose(divergenceErrorFile);
-}
-
-
-Matrix3d Simulation::evaluateAlphaRotationTensor(double beta, Vector3d velocity, Vector3d EField, Vector3d BField) {
-	Matrix3d result;
-
-	beta = beta / speed_of_light_normalized;
-
-	double gamma_factor = 1 / sqrt(1 - (velocity.x * velocity.x + velocity.y * velocity.y + velocity.z * velocity.z) / speed_of_light_normalized_sqr);
-	double G = ((beta * (EField.scalarMult(velocity)) / speed_of_light_normalized_sqr) + gamma_factor);
-	beta = beta / G;
-	double denominator = G * (1 + beta * beta * BField.scalarMult(BField));
-
-	for (int i = 0; i < 3; i++) {
-		for (int j = 0; j < 3; j++) {
-			result.matrix[i][j] = Kronecker.matrix[i][j] + beta * beta * BField[i] * BField[j];
-			for (int k = 0; k < 3; ++k) {
-				for (int l = 0; l < 3; ++l) {
-					result.matrix[i][j] -= beta * LeviCivita[j][k][l] * Kronecker.matrix[i][l] * BField[k];
-				}
-			}
-
-			result.matrix[i][j] /= denominator;
-		}
-	}
-
-	return result;
 }
 
 void Simulation::updateDeltaT() {
@@ -632,7 +598,7 @@ void Simulation::updateDeltaT() {
 	deltaT = 0.1 * delta / speed_of_light_normalized;
 	double B = B0.norm();
 	double E = E0.norm();
-	for(int i = 0; i < xnumber; ++i) {
+	/*for(int i = 0; i < xnumber; ++i) {
 		for(int j = 0; j < ynumber; ++j) {
 			for(int k = 0; k < znumber; ++k) {
 				if(Bfield[i][j][k].norm() > B) {
@@ -640,8 +606,8 @@ void Simulation::updateDeltaT() {
 				}
 			}
 		}
-	}
-	for(int i = 0; i < xnumber+1; ++i) {
+	}*/
+	/*for(int i = 0; i < xnumber+1; ++i) {
 		for(int j = 0; j < ynumber+1; ++j) {
 			for(int k = 0; k < znumber+1; ++k) {
 				if(Efield[i][j][k].norm() > E) {
@@ -649,7 +615,7 @@ void Simulation::updateDeltaT() {
 				}
 			}
 		}
-	}
+	}*/
 	if(B > 0){
 		deltaT = min2(deltaT, 0.005 * massElectron * speed_of_light_normalized / (electron_charge_normalized * B));
 	}
@@ -793,143 +759,6 @@ void Simulation::checkParticleInBox(Particle& particle) {
 
 void Simulation::updateElectroMagneticParameters() {
 	printf("updating flux, density snd dielectric tensor\n");
-	collectParticlesIntoBins();
-	for (int i = 0; i < xnumber + 1; ++i) {
-		for (int j = 0; j < ynumber + 1; ++j) {
-			for (int k = 0; k < znumber + 1; ++k) {
-				electricFlux[i][j][k] = Vector3d(0, 0, 0);
-				dielectricTensor[i][j][k] = Matrix3d(0, 0, 0, 0, 0, 0, 0, 0, 0);
-				for (int pcount = 0; pcount < particlesInEbin[i][j][k].size(); ++pcount) {
-					Particle* particle = particlesInEbin[i][j][k][pcount];
-					double correlation = correlationWithEbin(*particle, i, j, k) / volume(i, j, k);
-					if(i == 0) {
-						correlation = correlation * 2; //because smaller volume
-					}
-					Vector3d velocity = particle->velocity(speed_of_light_normalized);
-					double gamma = particle->gammaFactor(speed_of_light_normalized);
-					Vector3d rotatedVelocity = particle->rotationTensor * velocity * gamma;
-
-					electricFlux[i][j][k] += rotatedVelocity * particle->charge * particle->weight * correlation;
-					dielectricTensor[i][j][k] = dielectricTensor[i][j][k] - particle->rotationTensor * (theta * deltaT * deltaT * 2 * pi * particle->charge * particle->charge * correlation / particle->mass);
-				}
-			}
-		}
-	}
-
-	//for i = 0
-	for(int j = 0; j < ynumber + 1; ++j) {
-		for(int k = 0; k < znumber + 1; ++k) {
-			double rho = 0;
-			for(int pcount = 0; pcount < particlesInEbin[0][j][k].size(); ++pcount) {
-				Particle* particle = particlesInEbin[0][j][k][pcount];
-				Particle tempParticle = Particle(*particle);
-
-				double correlation = 2*correlationWithEbin(tempParticle, -1, j, k)/volume(0, j, k);
-				tempParticle.momentum.x = - tempParticle.momentum.x;
-				double beta = tempParticle.charge*deltaT/tempParticle.mass;
-				Vector3d velocity = tempParticle.velocity(speed_of_light_normalized);
-
-				Vector3d oldE = correlationEfield(particle);
-				Vector3d oldB = correlationBfield(particle);
-
-				tempParticle.rotationTensor = evaluateAlphaRotationTensor(beta, velocity, oldE, oldB);
-
-				double gamma = tempParticle.gammaFactor(speed_of_light_normalized);
-				Vector3d rotatedVelocity = tempParticle.rotationTensor * velocity * gamma;
-
-				electricFlux[0][j][k] += rotatedVelocity * tempParticle.charge * tempParticle.weight * correlation;
-				dielectricTensor[0][j][k] = dielectricTensor[0][j][k] - tempParticle.rotationTensor * (theta * deltaT * deltaT * 2 * pi * tempParticle.charge * tempParticle.charge * correlation / tempParticle.mass);
-
-			}
-		}
-	}
-
-	//for periodic conditions we must summ sides parameters
-	for (int i = 0; i < xnumber + 1; ++i) {
-		for (int j = 0; j < ynumber + 1; ++j) {
-			electricFlux[i][j][0] = electricFlux[i][j][0] + electricFlux[i][j][znumber];
-			electricFlux[i][j][znumber] = electricFlux[i][j][0];
-
-			dielectricTensor[i][j][0] = dielectricTensor[i][j][0] + dielectricTensor[i][j][znumber];
-			dielectricTensor[i][j][znumber] = dielectricTensor[i][j][0];
-		}
-
-		for (int k = 0; k < znumber + 1; ++k) {
-			electricFlux[i][0][k] = electricFlux[i][0][k] + electricFlux[i][ynumber][k];
-			electricFlux[i][ynumber][k] = electricFlux[i][0][k];
-
-			dielectricTensor[i][0][k] = dielectricTensor[i][0][k] + dielectricTensor[i][ynumber][k];
-			dielectricTensor[i][ynumber][k] = dielectricTensor[i][0][k];
-		}
-	}
-
-	for (int i = 0; i < xnumber; ++i) {
-		for (int j = 0; j < ynumber; ++j) {
-			for (int k = 0; k < znumber; ++k) {
-				electricDensity[i][j][k] = 0;
-				pressureTensor[i][j][k] = Matrix3d(0, 0, 0, 0, 0, 0, 0, 0, 0);
-				for (int pcount = 0; pcount < particlesInBbin[i][j][k].size(); ++pcount) {
-					Particle* particle = particlesInBbin[i][j][k][pcount];
-					double correlation = correlationWithBbin(*particle, i, j, k) / volume(i, j, k);
-
-					double gamma = particle->gammaFactor(speed_of_light_normalized);
-					Vector3d velocity = particle->velocity(speed_of_light_normalized);
-					Vector3d rotatedVelocity = particle->rotationTensor * velocity * gamma;
-
-					electricDensity[i][j][k] += particle->weight * particle->charge * correlation;
-
-					pressureTensor[i][j][k] = rotatedVelocity.tensorMult(rotatedVelocity) * particle->weight * particle->charge * correlation;
-				}
-			}
-		}
-	}
-
-	//for i = 0
-	for(int j = 0; j < ynumber; ++j) {
-		for(int k = 0; k < znumber; ++k) {
-			double rho = 0;
-			for(int pcount = 0; pcount < particlesInBbin[0][j][k].size(); ++pcount) {
-				Particle* particle = particlesInBbin[0][j][k][pcount];
-				Particle tempParticle = Particle(*particle);
-
-				double correlation = correlationWithBbin(tempParticle, -1, j, k)/volume(0, j, k);
-				tempParticle.momentum.x = - tempParticle.momentum.x;
-				double beta = tempParticle.charge*deltaT/tempParticle.mass;
-				Vector3d velocity = tempParticle.velocity(speed_of_light_normalized);
-
-				Vector3d oldE = correlationEfield(particle);
-				Vector3d oldB = correlationBfield(particle);
-
-				tempParticle.rotationTensor = evaluateAlphaRotationTensor(beta, velocity, oldE, oldB);
-
-				double gamma = tempParticle.gammaFactor(speed_of_light_normalized);
-				Vector3d rotatedVelocity = tempParticle.rotationTensor * velocity * gamma;
-
-				electricDensity[0][j][k] += tempParticle.weight*tempParticle.charge*correlation;
-				pressureTensor[0][j][k] += rotatedVelocity.tensorMult(rotatedVelocity)*tempParticle.weight*tempParticle.charge*correlation;
-
-			}
-		}
-	}
-
-	for (int i = 0; i <= xnumber; ++i) {
-		for (int j = 0; j <= ynumber; ++ j) {
-			for (int k = 0; k <= znumber; ++k) {
-				Vector3d divPressureTensor = evaluateDivPressureTensor(i, j, k);
-				electricFlux[i][j][k] = electricFlux[i][j][k] - divPressureTensor * deltaT / 2;
-			}
-		}
-	}
-
-	for (int i = 0; i < xnumber; ++i) {
-		for (int j = 0; j < ynumber; ++j) {
-			for (int k = 0; k < znumber; ++k) {
-				double divJ = evaluateDivFlux(i, j, k);
-
-				electricDensity[i][j][k] -= deltaT * theta * divJ;
-			}
-		}
-	}
 }
 
 void Simulation::updateDensityParameters() {
@@ -942,30 +771,6 @@ void Simulation::updateDensityParameters() {
 				electronConcentration[i][j][k] = 0;
 				protonConcentration[i][j][k] = 0;
 				chargeDensity[i][j][k] = 0;
-
-				for(int pcount = 0; pcount < particlesInBbin[i][j][k].size(); ++pcount) {
-					Particle* particle = particlesInBbin[i][j][k][pcount];
-
-					double correlation = correlationWithBbin(*particle, i, j, k)/volume(i, j, k);
-					if(i == 0) {
-						correlation += correlationWithBbin(*particle, i-1, j, k)/volume(i-1, j, k);
-					}
-
-					chargeDensity[i][j][k] += correlation*particle->charge*particle->weight;
-					if(particle->type == ParticleTypes::ELECTRON) {
-						electronConcentration[i][j][k] += correlation*particle->weight;
-					} else if (particle->type == ParticleTypes::PROTON) {
-						protonConcentration[i][j][k] += correlation*particle->weight;
-					}
-				}
-				if(i < xnumber - 1  && i > 0){
-					full_density += chargeDensity[i][j][k]*volume(i, j, k);
-					full_p_concentration += protonConcentration[i][j][k]*volume(i, j, k);
-					full_e_concentration += electronConcentration[i][j][k]*volume(i, j, k);
-					//electronConcentration[i][j][k] /= cube(gyroradius);
-					//protonConcentration[i][j][k] /= cube(gyroradius);
-					//chargeDensity[i][j][k] /= (sqrt(cube(gyroradius))*plasma_period);
-				}
 			}
 		}
 	}
@@ -995,8 +800,6 @@ void Simulation::updateEnergy() {
 				if(k == 0 || k == znumber) {
 					factor = factor/2;
 				}
-				Vector3d E = Efield[i][j][k];
-				electricFieldEnergy += E.scalarMult(E)*volume(i, j, k)*factor/(8*pi);
 			}
 		}
 	}
@@ -1004,8 +807,6 @@ void Simulation::updateEnergy() {
 	for(int i = 0; i < xnumber; ++i) {
 		for(int j = 0; j < ynumber; ++j) {
 			for(int k = 0; k < znumber; ++k){
-				Vector3d B = Bfield[i][j][k];
-				magneticFieldEnergy += B.scalarMult(B)*volume(i, j, k)/(8*pi);
 			}
 		}
 	}
@@ -1013,10 +814,6 @@ void Simulation::updateEnergy() {
 	for(int i = 0; i < xnumber; ++i) {
 		for(int j = 0; j < ynumber; ++j) {
 			for(int k = 0; k < znumber; ++k) {
-				Vector3d E = (Efield[i][j][k]  + Efield[i][j+1][k] + Efield[i][j][k+1] + Efield[i][j+1][k+1] + Efield[i+1][j][k] + Efield[i+1][j+1][k] + Efield[i+1][j][k+1] + Efield[i+1][j+1][k+1])/8;
-				Vector3d B = Bfield[i][j][k];
-
-				momentum += (E.vectorMult(B)/(4*pi*speed_of_light_normalized))*volume(i, j, k);
 			}
 		}
 	}
@@ -1035,114 +832,4 @@ void Simulation::updateEnergy() {
 
 
 	energy = particleEnergy + electricFieldEnergy + magneticFieldEnergy;
-}
-
-Vector3d Simulation::getBfield(int i, int j, int k) {
-	if (i < 0) {
-		return Vector3d(0.0, 0.0, 0.0);
-	} else if (i >= xnumber) {
-		return B0;
-	}
-
-	if (j < 0) {
-		j = ynumber - 1;
-	} else if (j >= ynumber) {
-		j = 0;
-	}
-
-	if (k < 0) {
-		k = znumber - 1;
-	} else if (k >= znumber) {
-		k = 0;
-	}
-
-	return Bfield[i][j][k];
-}
-
-Vector3d Simulation::getTempEfield(int i, int j, int k) {
-	if (i < 0) {
-		//return Vector3d(0.0, 0.0, 0.0);
-		i = 0;
-	} else if (i > xnumber) {
-		return E0;
-	}
-
-	if (j < 0) {
-		j = j + ynumber;
-	} else if (j > ynumber) {
-		j = j - ynumber;
-	}
-
-	if (k < 0) {
-		k = k + znumber;
-	} else if (k > znumber) {
-		k = k - znumber;
-	}
-
-	return tempEfield[i][j][k];
-}
-
-Vector3d Simulation::getEfield(int i, int j, int k) {
-	if (i < 0) {
-		return Vector3d(0.0, 0.0, 0.0);
-	} else if (i > xnumber) {
-		return E0;
-	}
-
-	if (j < 0) {
-		j = ynumber - 1;
-	} else if (j > ynumber) {
-		j = 1;
-	}
-
-	if (k < 0) {
-		k = znumber - 1;
-	} else if (k > znumber) {
-		k = 1;
-	}
-
-	return Efield[i][j][k];
-}
-
-Matrix3d Simulation::getPressureTensor(int i, int j, int k) {
-	if (i < 0) {
-		return Matrix3d(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-	} else if (i >= xnumber) {
-		return Matrix3d(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-	}
-
-	if (j < 0) {
-		j = ynumber - 1;
-	} else if (j >= ynumber) {
-		j = 0;
-	}
-
-	if (k < 0) {
-		k = znumber - 1;
-	} else if (k >= znumber) {
-		k = 0;
-	}
-
-	return pressureTensor[i][j][k];
-}
-
-double Simulation::getDensity(int i, int j, int k) {
-	if (i < 0) return 0;
-	if (i >= xnumber) return 0;
-
-	if (j < 0) {
-		j = ynumber - 1;
-	}
-	if (j >= ynumber) {
-		j = 0;
-	}
-
-	if (k < 0) {
-		k = znumber - 1;
-	}
-	if (k >= znumber) {
-		k = 0;
-	}
-
-	return electricDensity[i][j][k];
 }
