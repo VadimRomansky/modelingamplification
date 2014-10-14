@@ -788,25 +788,34 @@ void Simulation::updateEnergy() {
 
 	momentum = Vector3d(0, 0, 0);
 	for(int i = 0; i < xnumber+1; ++i) {
-		for(int j = 0; j < ynumber+1; ++j){
-			for(int k = 0; k < znumber+1; ++k){
+		for(int j = 0; j < ynumber; ++j) {
+			for(int k = 0; k < znumber; ++k) {
+				if(i < xnumber) {
+					electricFieldEnergy += EfieldX[i][j][k]*EfieldX[i][j][k]*volume(i, j, k);
+				}
 				double factor = 1;
 				if(i == 0 || i == xnumber) {
-					factor = factor/2;
+					factor = 0.5;
 				}
-				if(j == 0 || j == ynumber) {
-					factor = factor/2;
-				}
-				if(k == 0 || k == znumber) {
-					factor = factor/2;
-				}
+				electricFieldEnergy += EfieldY[i][j][k]*EfieldY[i][j][k]*volume(i, j, k)*factor;
+				electricFieldEnergy += EfieldZ[i][j][k]*EfieldZ[i][j][k]*volume(i, j, k)*factor;
 			}
 		}
 	}
 
-	for(int i = 0; i < xnumber; ++i) {
+	for(int i = 0; i < xnumber + 1; ++i) {
 		for(int j = 0; j < ynumber; ++j) {
-			for(int k = 0; k < znumber; ++k){
+			for(int k = 0; k < znumber; ++k) {
+				double factor = 1;
+				if(i == 0 || i == xnumber) {
+					factor = 0.5;
+				}
+				magneticFieldEnergy += BfieldX[i][j][k]*BfieldX[i][j][k]*volume(i, j, k)*factor;
+
+				if(i < xnumber) {
+					magneticFieldEnergy += BfieldY[i][j][k]*BfieldY[i][j][k]*volume(i, j, k);
+					magneticFieldEnergy += BfieldZ[i][j][k]*BfieldZ[i][j][k]*volume(i, j, k);
+				}
 			}
 		}
 	}
@@ -814,6 +823,11 @@ void Simulation::updateEnergy() {
 	for(int i = 0; i < xnumber; ++i) {
 		for(int j = 0; j < ynumber; ++j) {
 			for(int k = 0; k < znumber; ++k) {
+				//not in one point
+				Vector3d E = Vector3d(EfieldX[i][j][k], EfieldY[i][j][k], EfieldZ[i][j][k]);
+				Vector3d B = Vector3d(BfieldX[i][j][k], BfieldY[i][j][k], BfieldZ[i][j][k]);
+
+				momentum += E.vectorMult(B)/(4*pi*speed_of_light_normalized);
 			}
 		}
 	}
