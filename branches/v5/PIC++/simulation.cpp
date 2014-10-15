@@ -537,7 +537,7 @@ void Simulation::simulate() {
 
 		moveParticles();
 		updateElectroMagneticParameters();
-		//evaluateFields();
+		evaluateFields();
 		
 		updateDensityParameters();
 		updateEnergy();
@@ -598,24 +598,28 @@ void Simulation::updateDeltaT() {
 	deltaT = 0.1 * delta / speed_of_light_normalized;
 	double B = B0.norm();
 	double E = E0.norm();
-	/*for(int i = 0; i < xnumber; ++i) {
+	for(int i = 0; i < xnumber; ++i) {
 		for(int j = 0; j < ynumber; ++j) {
 			for(int k = 0; k < znumber; ++k) {
-				if(Bfield[i][j][k].norm() > B) {
-					B = Bfield[i][j][k].norm();
+				double Bfield = sqrt(BfieldX[i][j][k]*BfieldX[i][j][k] + BfieldY[i][j][k]*BfieldY[i][j][k] + BfieldZ[i][j][k]*BfieldZ[i][j][k]);
+				if (Bfield > B)
+				{
+					B = Bfield;
 				}
 			}
 		}
-	}*/
-	/*for(int i = 0; i < xnumber+1; ++i) {
-		for(int j = 0; j < ynumber+1; ++j) {
-			for(int k = 0; k < znumber+1; ++k) {
-				if(Efield[i][j][k].norm() > E) {
-					E = Efield[i][j][k].norm();
+	}
+	for(int i = 0; i < xnumber; ++i) {
+		for(int j = 0; j < ynumber; ++j) {
+			for(int k = 0; k < znumber; ++k) {
+				double Efield = sqrt(EfieldX[i][j][k]*EfieldX[i][j][k] + EfieldY[i][j][k]*EfieldY[i][j][k] + EfieldZ[i][j][k]*EfieldZ[i][j][k]);
+				if (Efield > E)
+				{
+					E = Efield;
 				}
 			}
 		}
-	}*/
+	}
 	if(B > 0){
 		deltaT = min2(deltaT, 0.005 * massElectron * speed_of_light_normalized / (electron_charge_normalized * B));
 	}

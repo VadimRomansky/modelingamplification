@@ -10,7 +10,7 @@
 void Simulation::moveParticles(){
 	printf("moving particles\n");
 	for(int i = 0; i < particles.size(); ++i){
-	//for(int i = 0; i < 1; ++i){
+	//for(int i = 0; i < 2; ++i){
 		if(i % 100000 == 0) {
 			printf("particle number %d\n", i);
 		}
@@ -31,15 +31,15 @@ void Simulation::moveParticle(Particle* particle){
 	double beta = particle->charge*deltaT/particle->mass;
 
 	matrix.matrix[0][0] = 1;
-	matrix.matrix[0][1] = - beta*B.z/(2*gamma);
-	matrix.matrix[0][2] = beta*B.y/(2*gamma);
+	matrix.matrix[0][1] = - beta*B.z/(2*gamma*speed_of_light_normalized);
+	matrix.matrix[0][2] = beta*B.y/(2*gamma*speed_of_light_normalized);
 
-	matrix.matrix[1][0] = beta*B.z/(2*gamma);
+	matrix.matrix[1][0] = beta*B.z/(2*gamma*speed_of_light_normalized);
 	matrix.matrix[1][1] = 1;
-	matrix.matrix[1][2] = - beta*B.x/(2*gamma);
+	matrix.matrix[1][2] = - beta*B.x/(2*gamma*speed_of_light_normalized);
 
-	matrix.matrix[2][0] = - beta*B.y/(2*gamma);
-	matrix.matrix[2][1] = beta*B.x/(2*gamma);
+	matrix.matrix[2][0] = - beta*B.y/(2*gamma*speed_of_light_normalized);
+	matrix.matrix[2][1] = beta*B.x/(2*gamma*speed_of_light_normalized);
 	matrix.matrix[2][2] = 1;
 
 	Vector3d rightPart = particle->momentum + (E + (particle->momentum.vectorMult(B)/(2*gamma*speed_of_light_normalized)))*beta;
