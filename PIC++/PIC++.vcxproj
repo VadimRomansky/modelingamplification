@@ -83,6 +83,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="correlation.cpp" />
     <ClCompile Include="fields.cpp" />
     <ClCompile Include="input.cpp" />
     <ClCompile Include="main.cpp" />

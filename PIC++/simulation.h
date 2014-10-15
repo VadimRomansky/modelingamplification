@@ -118,7 +118,28 @@ public:
 	Particle* getFirstProton();
 	Particle* getFirstElectron();
 
+
+	Vector3d correlationEfield(Particle* particle);
+	Vector3d correlationBfield(Particle* particle);
+	double correlationEfieldX(Particle* particle);
+	double correlationEfieldY(Particle* particle);
+	double correlationEfieldZ(Particle* particle);
+	double correlationBfieldX(Particle* particle);
+	double correlationBfieldY(Particle* particle);
+	double correlationBfieldZ(Particle* particle);
+	double correlationWithExBin(int i, int j, int k, Particle* particle);
+	double correlationWithEyBin(int i, int j, int k, Particle* particle);
+	double correlationWithEzBin(int i, int j, int k, Particle* particle);
+	double correlationWithBxBin(int i, int j, int k, Particle* particle);
+	double correlationWithByBin(int i, int j, int k, Particle* particle);
+	double correlationWithBzBin(int i, int j, int k, Particle* particle);
 	double correlationBspline(const double& x, const double&  dx, const double& leftx, const double& rightx);
+	double getEx(int i, int j, int k);
+	double getEy(int i, int j, int k);
+	double getEz(int i, int j, int k);
+	double getBx(int i, int j, int k);
+	double getBy(int i, int j, int k);
+	double getBz(int i, int j, int k);
 
 	void moveParticles();
 	void correctParticlePosition(Particle* particle);
