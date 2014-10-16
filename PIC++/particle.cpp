@@ -16,6 +16,8 @@ Particle::Particle(double m, double q, double w, ParticleTypes t, double x0, dou
 	coordinates.y = y0;
 	coordinates.z = z0;
 
+	oldCoordinates = coordinates;
+
 	momentum.x = px0;
 	momentum.y = py0;
 	momentum.z = pz0;
@@ -32,6 +34,7 @@ Particle::Particle(const Particle& particle){
 	type = particle.type;
 
 	coordinates = particle.coordinates;
+	oldCoordinates = particle.oldCoordinates;
 	momentum = particle.momentum;
 	rotationTensor = particle.rotationTensor;
 

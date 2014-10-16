@@ -25,6 +25,7 @@ void Simulation::moveParticle(Particle* particle){
 	double gamma = particle->gammaFactor(speed_of_light_normalized);
 	Vector3d velocity = particle->velocity(speed_of_light_normalized);
 
+	particle->oldCoordinates = particle->coordinates;
 	particle->coordinates += velocity*deltaT;
 	Matrix3d matrix;
 

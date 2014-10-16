@@ -83,6 +83,8 @@ void Simulation::updateEfieldX(int i, int j, int k, double dt) {
 	double rotBx = (BrightY - BleftY)/deltaY - (BrightZ - BleftZ)/deltaZ;
 
 	EfieldX[i][j][k] += (speed_of_light_normalized*rotBx -4*pi*electricFluxX[i][j][k])*dt;
+
+	alertNaNOrInfinity(EfieldX[i][j][k], "EfieldX = NaN\n");
 }
 
 void Simulation::updateEfieldY(int i, int j, int k, double dt) {
@@ -121,6 +123,8 @@ void Simulation::updateEfieldY(int i, int j, int k, double dt) {
 	double rotBy = -(BrightX - BleftX)/deltaX + (BrightZ - BleftZ)/deltaZ;
 
 	EfieldY[i][j][k] += (speed_of_light_normalized*rotBy - 4*pi*electricFluxY[i][j][k])*dt;
+
+	alertNaNOrInfinity(EfieldY[i][j][k], "EfieldY = NaN\n");
 }
 
 void Simulation::updateEfieldZ(int i, int j, int k, double dt) {
@@ -166,6 +170,8 @@ void Simulation::updateEfieldZ(int i, int j, int k, double dt) {
 	double rotBy = (BrightX - BleftX)/deltaX - (BrightY - BleftY)/deltaY;
 
 	EfieldZ[i][j][k] += (speed_of_light_normalized*rotBy - 4*pi*electricFluxY[i][j][k])*dt;
+
+	alertNaNOrInfinity(EfieldZ[i][j][k], "EfieldZ = NaN\n");
 }
 
 void Simulation::updateBfield(double dt) {
@@ -212,6 +218,8 @@ void Simulation::updateBfieldX(int i, int j, int k, double dt) {
 	double rotEx = (ErightY - EleftY)/deltaY - (ErightZ - EleftZ)/deltaZ;
 
 	BfieldX[i][j][k] -= speed_of_light_normalized*dt*rotEx;
+
+	alertNaNOrInfinity(BfieldX[i][j][k], "BfieldX = NaN\n");
 }
 
 void Simulation::updateBfieldY(int i, int j, int k, double dt) {
@@ -231,6 +239,8 @@ void Simulation::updateBfieldY(int i, int j, int k, double dt) {
 	double rotEy = - (ErightX - EleftX)/deltaX + (ErightZ - EleftZ)/deltaZ;
 
 	BfieldY[i][j][k] -= speed_of_light_normalized*dt*rotEy;
+
+	alertNaNOrInfinity(BfieldY[i][j][k], "BfieldY = NaN\n");
 }
 
 void Simulation::updateBfieldZ(int i, int j, int k, double dt) {
@@ -250,7 +260,61 @@ void Simulation::updateBfieldZ(int i, int j, int k, double dt) {
 	double rotEz = - (ErightY - EleftY)/deltaY + (ErightX - EleftX)/deltaX;
 
 	BfieldZ[i][j][k] -= speed_of_light_normalized*dt*rotEz;
+
+	alertNaNOrInfinity(BfieldZ[i][j][k], "BfieldZ = NaN\n");
 }
 
 void Simulation::updateBoundaries() {
+	for(int i = 0; i < xnumber + 1; ++i) {
+		for(int j = 0; j < ynumber + 1; ++j) {
+			if(i < xnumber){
+				EfieldX[i][j][znumber] = EfieldX[i][j][0];
+				if(j < ynumber) {
+					BfieldZ[i][j][znumber] = BfieldZ[i][j][0];
+				}
+			}
+
+			EfieldY[i][j][znumber] = EfieldY[i][j][znumber];
+		}
+
+		for(int k = 0; k < znumber + 1; ++k) {
+			if(i < xnumber) {
+				EfieldX[i][ynumber][k] = EfieldX[i][0][k];
+				if(k < znumber) {
+					BfieldY[i][ynumber][k] = BfieldY[i][0][k];
+				}
+			}
+			EfieldZ[i][ynumber][k] = EfieldZ[i][0][k];
+		}
+	}
+}
+
+double Simulation::evaluateDivE(int i, int j, int k) {
+	int prevJ = j - 1;
+	if(prevJ < 0) {
+		prevJ = ynumber - 1;
+	}
+	int middleJ = j;
+	if(middleJ >= ynumber) {
+		middleJ = 0;
+	}
+
+	int prevK = k - 1;
+	if(prevK < 0) {
+		prevK = znumber - 1;
+	}
+	int middleK = k;
+	if(middleK >= znumber) {
+		middleK = 0;
+	}
+
+	if(i == 0) {
+		return 0;
+	}
+
+	if(i == xnumber) {
+		return ((EfieldY[i][middleJ][k] - EfieldY[i][prevJ][k])/deltaY) + ((EfieldZ[i][j][middleK] - EfieldZ[i][j][prevK])/deltaZ);
+	}
+
+	return ((EfieldX[i][j][k] - EfieldX[i-1][j][k])/deltaX) + ((EfieldY[i][middleJ][k] - EfieldY[i][prevJ][k])/deltaY) + ((EfieldZ[i][j][middleK] - EfieldZ[i][j][prevK])/deltaZ);
 }

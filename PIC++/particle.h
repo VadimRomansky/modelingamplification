@@ -13,6 +13,7 @@ public:
 	ParticleTypes type;
 
 	Vector3d coordinates;
+	Vector3d oldCoordinates;
 
 	Vector3d momentum;
 
