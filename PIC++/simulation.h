@@ -83,6 +83,9 @@ public:
 	double*** BfieldY;
 	double*** BfieldZ;
 
+	double*** divergenceCleaningPotential;
+	std::vector<MatrixElement>*** divergenceClaenuoMatrix;
+
 
 	std::vector<Particle*> particles;
 

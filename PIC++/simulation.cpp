@@ -225,15 +225,21 @@ Simulation::~Simulation() {
 			delete[] electronConcentration[i][j];
 			delete[] protonConcentration[i][j];
 			delete[] chargeDensity[i][j];
+			delete[] divergenceCleaningPotential[i][j];
+			delete[] divergenceClaenupMatrix[i][j];
 		}
 		delete[] electronConcentration[i];
 		delete[] protonConcentration[i];
 		delete[] chargeDensity[i];
+		delete[] divergenceCleaningPotential[i];
+		delete[] divergenceClaenupMatrix[i];
 	}
 
 	delete[] electronConcentration;
 	delete[] protonConcentration;
 	delete[] chargeDensity;
+	delete[] divergenceCleaningPotential;
+	delete[] divergenceClaenupMatrix;
 
 	delete[] xgrid;
 	delete[] ygrid;
@@ -330,6 +336,7 @@ void Simulation::initialize() {
 				electronConcentration[i][j][k] = 0;
 				protonConcentration[i][j][k] = 0;
 				chargeDensity[i][j][k] = 0;
+				divergenceCleaningPotential[i][j][k] = 0;
 			}
 		}
 	}
@@ -477,15 +484,21 @@ void Simulation::createArrays() {
 	electronConcentration = new double**[xnumber+1];
 	protonConcentration = new double**[xnumber+1];
 	chargeDensity = new double**[xnumber+1];
+	divergenceCleaningPotential = new double**[xnumber+1];
+	divergenceClaenupMatrix = new std::vector<MatrixElement>**[xnumber+1];
 
 	for(int i = 0; i < xnumber+1; ++i) {
 		electronConcentration[i] = new double*[ynumber+1];
 		protonConcentration[i] = new double*[ynumber+1];
 		chargeDensity[i] = new double*[ynumber+1];
+		divergenceCleaningPotential[i] = new double*[ynumber+1];
+		divergenceClaenupMatrix[i] = new std::vector<MatrixElement>*[ynumber+1];
 		for(int j = 0; j < ynumber+1; ++j) {
 			electronConcentration[i][j] = new double[znumber+1];
 			protonConcentration[i][j] = new double[znumber+1];
 			chargeDensity[i][j] = new double[znumber+1];
+			divergenceCleaningPotential[i][j] = new double[znumber+1];
+			divergenceClaenupMatrix[i][j] = new std::vector<MatrixElement>[znumber+1];
 		}
 	}
 }
@@ -919,7 +932,6 @@ void Simulation::addElectricFluxX(int i, int j, int k, double flux) {
 	if(k > znumber) {
 		k = 1;
 	}
-	alertNaNOrInfinity(electricFluxX[i][j][k], "electric flux x = NaN\n");
 
 	electricFluxX[i][j][k] += flux/volume(i, j, k);
 
