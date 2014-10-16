@@ -220,8 +220,8 @@ Simulation::~Simulation() {
 	}
 	delete[] BfieldZ;
 
-	for (int i = 0; i < xnumber; ++i) {
-		for (int j = 0; j < ynumber; ++j) {
+	for (int i = 0; i < xnumber+1; ++i) {
+		for (int j = 0; j < ynumber+1; ++j) {
 			delete[] electronConcentration[i][j];
 			delete[] protonConcentration[i][j];
 			delete[] chargeDensity[i][j];
@@ -324,9 +324,9 @@ void Simulation::initialize() {
 		}
 	}
 
-	for (int i = 0; i < xnumber; ++i) {
-		for (int j = 0; j < ynumber; ++j) {
-			for (int k = 0; k < znumber; ++k) {
+	for (int i = 0; i < xnumber+1; ++i) {
+		for (int j = 0; j < ynumber+1; ++j) {
+			for (int k = 0; k < znumber+1; ++k) {
 				electronConcentration[i][j][k] = 0;
 				protonConcentration[i][j][k] = 0;
 				chargeDensity[i][j][k] = 0;
@@ -474,18 +474,18 @@ void Simulation::createArrays() {
 		}
 	}
 
-	electronConcentration = new double**[xnumber];
-	protonConcentration = new double**[xnumber];
-	chargeDensity = new double**[xnumber];
+	electronConcentration = new double**[xnumber+1];
+	protonConcentration = new double**[xnumber+1];
+	chargeDensity = new double**[xnumber+1];
 
-	for(int i = 0; i < xnumber; ++i) {
-		electronConcentration[i] = new double*[ynumber];
-		protonConcentration[i] = new double*[ynumber];
-		chargeDensity[i] = new double*[ynumber];
-		for(int j = 0; j < ynumber; ++j) {
-			electronConcentration[i][j] = new double[znumber];
-			protonConcentration[i][j] = new double[znumber];
-			chargeDensity[i][j] = new double[znumber];
+	for(int i = 0; i < xnumber+1; ++i) {
+		electronConcentration[i] = new double*[ynumber+1];
+		protonConcentration[i] = new double*[ynumber+1];
+		chargeDensity[i] = new double*[ynumber+1];
+		for(int j = 0; j < ynumber+1; ++j) {
+			electronConcentration[i][j] = new double[znumber+1];
+			protonConcentration[i][j] = new double[znumber+1];
+			chargeDensity[i][j] = new double[znumber+1];
 		}
 	}
 }
@@ -521,7 +521,6 @@ void Simulation::simulate() {
 	//initializeSimpleElectroMagneticWave();
 	createFiles();
 	createParticles();
-	updateDensityParameters();
 	updateEnergy();
 
 	//updateDeltaT();
@@ -539,7 +538,6 @@ void Simulation::simulate() {
 		updateElectroMagneticParameters();
 		evaluateFields();
 		
-		updateDensityParameters();
 		updateEnergy();
 
 		time += deltaT;
@@ -763,25 +761,366 @@ void Simulation::checkParticleInBox(Particle& particle) {
 
 void Simulation::updateElectroMagneticParameters() {
 	printf("updating flux, density snd dielectric tensor\n");
+
+	resetElectroMagneticParameters();
+
+	for(int pcount = 0; pcount < particles.size(); ++pcount) {
+		Particle* particle = particles[pcount];
+
+		updateElectroMagneticParameters(particle);
+	}
+
+	updateBoundariesParameters();
 }
 
-void Simulation::updateDensityParameters() {
-	double full_density = 0;
-	double full_p_concentration = 0;
-	double full_e_concentration = 0;
+void Simulation::updateElectricFluxX(Particle* particle) {
+	int xcount = trunc(particle->coordinates.x/deltaX);
+	int ycount = trunc((particle->coordinates.y/deltaY) + 0.5);
+	int zcount = trunc((particle->coordinates.z/deltaZ) + 0.5);
+
+	double flux = particle->charge*particle->weight*particle->velocityX(speed_of_light_normalized);
+
+	for(int i = xcount - 1; i <= xcount + 1; ++i) {
+		for(int j = ycount - 1; j <= ycount + 1; ++j) {
+			for(int k = zcount - 1; k <= zcount + 1; ++k) {
+				double correlation = correlationWithExBin(i, j, k, particle);
+				addElectricFluxX(i, j, k, correlation*flux);
+			}
+		}
+	}
+}
+
+void Simulation::updateElectricFluxY(Particle* particle) {
+	int xcount = trunc((particle->coordinates.x/deltaX) + 0.5);
+	int ycount = trunc((particle->coordinates.y/deltaY));
+	int zcount = trunc((particle->coordinates.z/deltaZ) + 0.5);
+
+	double flux = particle->charge*particle->weight*particle->velocityY(speed_of_light_normalized);
+
+	for(int i = xcount - 1; i <= xcount + 1; ++i) {
+		for(int j = ycount - 1; j <= ycount + 1; ++j) {
+			for(int k = zcount - 1; k <= zcount + 1; ++k) {
+				double correlation = correlationWithEyBin(i, j, k, particle);
+				addElectricFluxY(i, j, k, correlation*flux);
+			}
+		}
+	}
+}
+
+void Simulation::updateElectricFluxZ(Particle* particle) {
+	int xcount = trunc((particle->coordinates.x/deltaX) + 0.5);
+	int ycount = trunc((particle->coordinates.y/deltaY) + 0.5);
+	int zcount = trunc((particle->coordinates.z/deltaZ));
+
+	double flux = particle->charge*particle->weight*particle->velocityZ(speed_of_light_normalized);
+
+	for(int i = xcount - 1; i <= xcount + 1; ++i) {
+		for(int j = ycount - 1; j <= ycount + 1; ++j) {
+			for(int k = zcount - 1; k <= zcount + 1; ++k) {
+				double correlation = correlationWithEzBin(i, j, k, particle);
+				addElectricFluxZ(i, j, k, correlation*flux);
+			}
+		}
+	}
+}
+
+void Simulation::updateChargeDensity(Particle* particle) {
+	int xcount = trunc((particle->coordinates.x/deltaX) + 0.5);
+	int ycount = trunc((particle->coordinates.y/deltaY) + 0.5);
+	int zcount = trunc((particle->coordinates.z/deltaZ) + 0.5);
+
+	double charge = particle->charge*particle->weight;
+
+	for(int i = xcount - 1; i <= xcount + 1; ++i) {
+		for(int j = ycount - 1; j <= ycount + 1; ++j) {
+			for(int k = zcount - 1; k <= zcount + 1; ++k) {
+				double correlation = correlationWithShiftGridBin(i, j, k, particle);
+				addChargeDensity(i, j, k, correlation*charge);
+				addConcentration(i, j, k, correlation*particle->weight, particle->type);
+			}
+		}
+	}
+}
+
+void Simulation::updateBoundariesParameters() {
+	for(int i = 0; i < xnumber + 1; ++i) {
+		for(int j = 0; j < ynumber + 1; ++j) {
+			if(i < xnumber){
+				electricFluxX[i][j][0] += electricFluxX[i][j][znumber];
+				electricFluxX[i][j][znumber] = electricFluxX[i][j][0];
+			}
+
+			if(j < ynumber){
+				electricFluxY[i][j][0] += electricFluxY[i][j][znumber];
+				electricFluxY[i][j][znumber] = electricFluxY[i][j][znumber];
+			}
+
+			chargeDensity[i][j][0] += chargeDensity[i][j][znumber];
+			chargeDensity[i][j][znumber] = chargeDensity[i][j][0];
+		}
+
+		for(int k = 0; k < znumber + 1; ++k) {
+			if(i < xnumber) {
+				electricFluxX[i][0][k] += electricFluxX[i][ynumber][k];
+				electricFluxX[i][ynumber][k] = electricFluxX[i][0][k];
+			}
+
+			if(k < znumber){
+				electricFluxZ[i][0][k] += electricFluxZ[i][ynumber][k];
+				electricFluxZ[i][ynumber][k] = electricFluxZ[i][0][k];
+			}
+
+			chargeDensity[i][0][k] += chargeDensity[i][ynumber][k];
+			chargeDensity[i][ynumber][k] = chargeDensity[i][0][k];
+		}
+	}
+}
+
+void Simulation::updateElectroMagneticParameters(Particle* particle) {
+	Particle* tempParticle = new Particle(*particle);
+
+	tempParticle->coordinates = particle->oldCoordinates;
+	tempParticle->weight /= 2;
+	particle->weight /= 2;
+
+	updateElectricFluxX(tempParticle);
+	updateElectricFluxY(tempParticle);
+	updateElectricFluxZ(tempParticle);
+
+	updateElectricFluxX(particle);
+	updateElectricFluxY(particle);
+	updateElectricFluxZ(particle);
+
+	delete tempParticle;
+
+	particle->weight *= 2;
+	updateChargeDensity(particle);
+}
+
+void Simulation::addElectricFluxX(int i, int j, int k, double flux) {
+	if(i < 0) {
+		i = 0;
+		flux = -flux;
+	}
+	if(i >= xnumber) {
+		return;
+	}
+
+	if(j < 0) {
+		j = ynumber - 1;
+	}
+	if(j > ynumber) {
+		j = 1;
+	}
+
+	if(k < 0) {
+		k = znumber - 1;
+	}
+	if(k > znumber) {
+		k = 1;
+	}
+	alertNaNOrInfinity(electricFluxX[i][j][k], "electric flux x = NaN\n");
+
+	electricFluxX[i][j][k] += flux/volume(i, j, k);
+
+	alertNaNOrInfinity(electricFluxX[i][j][k], "electric flux x = NaN\n");
+}
+
+void Simulation::addElectricFluxY(int i, int j, int k, double flux) {
+	double factor = 1;
+	if(i < 0) {
+		i = 0;
+		//todo!
+		return;
+	}
+
+	if(i == 0) {
+		factor *= 2;
+	}
+
+	if(i == xnumber) {
+		factor *= 2;
+	}
+
+	if(i > xnumber) {
+		return;
+	}
+
+	if(j < 0) {
+		j = ynumber - 1;
+	}
+	if(j >= ynumber) {
+		j = 0;
+	}
+
+	if(k < 0) {
+		k = znumber - 1;
+	}
+	if(k > znumber) {
+		k = 1;
+	}
+
+	electricFluxY[i][j][k] += factor*flux/volume(i, j, k);
+
+	alertNaNOrInfinity(electricFluxY[i][j][k], "electric flux y = NaN\n");
+}
+
+void Simulation::addElectricFluxZ(int i, int j, int k, double flux) {
+	double factor = 1;
+	if(i < 0) {
+		i = 0;
+		//todo!
+		return;
+	}
+
+	if(i == 0) {
+		factor *= 2;
+	}
+
+	if(i == xnumber) {
+		factor *= 2;
+	}
+
+	if(i > xnumber) {
+		return;
+	}
+
+	if(j < 0) {
+		j = ynumber - 1;
+	}
+	if(j > ynumber) {
+		j = 1;
+	}
+
+	if(k < 0) {
+		k = znumber - 1;
+	}
+	if(k >= znumber) {
+		k = 0;
+	}
+
+	electricFluxZ[i][j][k] += factor*flux/volume(i, j, k);
+
+	alertNaNOrInfinity(electricFluxZ[i][j][k], "electric flux z = NaN\n");
+}
+
+void Simulation::addChargeDensity(int i, int j, int k, double charge) {
+	double factor = 1;
+	if(i < 0) {
+		i = 0;
+		//todo!
+		return;
+	}
+
+	if(i == 0) {
+		factor *= 2;
+	}
+
+	if(i == xnumber) {
+		factor *= 2;
+	}
+
+	if(i > xnumber) {
+		return;
+	}
+
+	if(j < 0) {
+		j = ynumber - 1;
+	}
+	if(j > ynumber) {
+		j = 1;
+	}
+
+	if(k < 0) {
+		k = znumber - 1;
+	}
+	if(k > znumber) {
+		k = 1;
+	}
+
+	chargeDensity[i][j][k] += factor*charge/volume(i, j, k);
+
+	alertNaNOrInfinity(chargeDensity[i][j][k], "charge density = NaN\n");	
+}
+
+void Simulation::addConcentration(int i, int j, int k, double weight, ParticleTypes particle_type) {
+	double factor = 1;
+	if(i < 0) {
+		i = 0;
+		//todo!
+		return;
+	}
+
+	if(i == 0) {
+		factor *= 2;
+	}
+
+	if(i == xnumber) {
+		factor *= 2;
+	}
+
+	if(i > xnumber) {
+		return;
+	}
+
+	if(j < 0) {
+		j = ynumber - 1;
+	}
+	if(j > ynumber) {
+		j = 1;
+	}
+
+	if(k < 0) {
+		k = znumber - 1;
+	}
+	if(k > znumber) {
+		k = 1;
+	}
+
+	switch (particle_type){
+		case ParticleTypes::ELECTRON :
+			electronConcentration[i][j][k] += factor*weight/volume(i, j, k);
+			break;
+		case ParticleTypes::PROTON :
+			protonConcentration[i][j][k] += factor*weight/volume(i, j, k);
+			break;
+	}
+}
+
+void Simulation::resetElectroMagneticParameters() {
 	for(int i = 0; i < xnumber; ++i) {
-		for(int j = 0; j < ynumber; ++j) {
-			for(int k = 0; k < znumber; ++k) {
-				electronConcentration[i][j][k] = 0;
-				protonConcentration[i][j][k] = 0;
-				chargeDensity[i][j][k] = 0;
+		for(int j = 0; j < ynumber + 1; ++j) {
+			for(int k = 0; k < znumber + 1; ++k) {
+				electricFluxX[i][j][k] = 0;
 			}
 		}
 	}
 
-	full_density/= ((xsize-2*deltaX)*ysize*zsize);
-	full_p_concentration /= ((xsize-2*deltaX)*ysize*zsize*cube(gyroradius));
-	full_e_concentration /= ((xsize-2*deltaX)*ysize*zsize*cube(gyroradius));
+	for(int i = 0; i < xnumber + 1; ++i) {
+		for(int j = 0; j < ynumber; ++j) {
+			for(int k = 0; k < znumber + 1; ++k) {
+				electricFluxY[i][j][k] = 0;
+			}
+		}
+	}
+
+	for(int i = 0; i < xnumber + 1; ++i) {
+		for(int j = 0; j < ynumber + 1; ++j) {
+			for(int k = 0; k < znumber; ++k) {
+				electricFluxZ[i][j][k] = 0;
+			}
+		}
+	}
+
+	for(int i = 0; i < xnumber + 1; ++i) {
+		for(int j = 0; j < ynumber + 1; ++j) {
+			for(int k = 0; k < znumber + 1; ++k) {
+				chargeDensity[i][j][k] = 0;
+				electronConcentration[i][j][k] = 0;
+				protonConcentration[i][j][k] = 0;
+			}
+		}
+	}
 }
 
 void Simulation::updateEnergy() {

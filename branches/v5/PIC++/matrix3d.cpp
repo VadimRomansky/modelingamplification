@@ -4,6 +4,7 @@
 #include "matrix3d.h"
 #include "vector3d.h"
 #include "constants.h"
+#include <stdexcept>
 
 Matrix3d::Matrix3d(){
   int i,j;
@@ -70,6 +71,7 @@ Matrix3d Matrix3d::Inverse(){
 	inv.matrix[2][2]=(1/det)*(matrix[0][0]*matrix[1][1]-matrix[1][0]*matrix[0][1]);
   } else {
 	  printf("determinant = 0\n");
+	  exit(0);
   }
   return inv;
 }

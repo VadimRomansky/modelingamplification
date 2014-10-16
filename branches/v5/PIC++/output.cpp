@@ -118,7 +118,8 @@ void outputDivergenceError(FILE* outFile, Simulation* simulation) {
 	for(int i = 0; i < simulation->xnumber; ++i) {
 		for(int j = 0; j < simulation->ynumber; ++j) {
 			for(int k = 0; k < simulation->znumber; ++k) {
-				//fprintf(outFile, "%g %g %g\n", div, div - 4*pi*simulation->chargeDensity[i][j][k], div2 - 4*pi*simulation->electricDensity[i][j][k]);
+				double div = simulation->evaluateDivE(i, j, k);
+				fprintf(outFile, "%g %g\n", div, div - 4*pi*simulation->chargeDensity[i][j][k]);
 			}
 		}
 	}

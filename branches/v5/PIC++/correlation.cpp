@@ -23,9 +23,9 @@ Vector3d Simulation::correlationBfield(Particle* particle) {
 }
 
 double Simulation::correlationEfieldX(Particle* particle) {
-	int xcount = particle->coordinates.x/deltaX;
-	int ycount = (particle->coordinates.y/deltaY) + 0.5;
-	int zcount = (particle->coordinates.z/deltaZ) + 0.5;
+	int xcount = trunc(particle->coordinates.x/deltaX);
+	int ycount = trunc((particle->coordinates.y/deltaY) + 0.5);
+	int zcount = trunc((particle->coordinates.z/deltaZ) + 0.5);
 
 	double Ex = 0;
 
@@ -41,9 +41,9 @@ double Simulation::correlationEfieldX(Particle* particle) {
 }
 
 double Simulation::correlationEfieldY(Particle* particle) {
-	int xcount = (particle->coordinates.x/deltaX) + 0.5;
-	int ycount = particle->coordinates.y/deltaY;
-	int zcount = (particle->coordinates.z/deltaZ) + 0.5;
+	int xcount = trunc((particle->coordinates.x/deltaX) + 0.5);
+	int ycount = trunc(particle->coordinates.y/deltaY);
+	int zcount = trunc((particle->coordinates.z/deltaZ) + 0.5);
 
 	double Ey = 0;
 
@@ -59,9 +59,9 @@ double Simulation::correlationEfieldY(Particle* particle) {
 }
 
 double Simulation::correlationEfieldZ(Particle* particle) {
-	int xcount = (particle->coordinates.x/deltaX) + 0.5;
-	int ycount = (particle->coordinates.y/deltaY) + 0.5;
-	int zcount = particle->coordinates.z/deltaZ;
+	int xcount = trunc((particle->coordinates.x/deltaX) + 0.5);
+	int ycount = trunc((particle->coordinates.y/deltaY) + 0.5);
+	int zcount = trunc(particle->coordinates.z/deltaZ);
 
 	double Ez = 0;
 
@@ -77,9 +77,9 @@ double Simulation::correlationEfieldZ(Particle* particle) {
 }
 
 double Simulation::correlationBfieldX(Particle* particle) {
-	int xcount = (particle->coordinates.x/deltaX) + 0.5;
-	int ycount = particle->coordinates.y/deltaY;
-	int zcount = particle->coordinates.z/deltaZ;
+	int xcount = trunc((particle->coordinates.x/deltaX) + 0.5);
+	int ycount = trunc(particle->coordinates.y/deltaY);
+	int zcount = trunc(particle->coordinates.z/deltaZ);
 
 	double Bx = 0;
 
@@ -95,9 +95,9 @@ double Simulation::correlationBfieldX(Particle* particle) {
 }
 
 double Simulation::correlationBfieldY(Particle* particle) {
-	int xcount = particle->coordinates.x/deltaX;
-	int ycount = (particle->coordinates.y/deltaY) + 0.5;
-	int zcount = particle->coordinates.z/deltaZ;
+	int xcount = trunc(particle->coordinates.x/deltaX);
+	int ycount = trunc((particle->coordinates.y/deltaY) + 0.5);
+	int zcount = trunc(particle->coordinates.z/deltaZ);
 
 	double By = 0;
 
@@ -113,9 +113,9 @@ double Simulation::correlationBfieldY(Particle* particle) {
 }
 
 double Simulation::correlationBfieldZ(Particle* particle) {
-	int xcount = particle->coordinates.x/deltaX;
-	int ycount = particle->coordinates.y/deltaY;
-	int zcount = (particle->coordinates.z/deltaZ) + 0.5;
+	int xcount = trunc(particle->coordinates.x/deltaX);
+	int ycount = trunc(particle->coordinates.y/deltaY);
+	int zcount = trunc((particle->coordinates.z/deltaZ) + 0.5);
 
 	double Bz = 0;
 
@@ -131,162 +131,108 @@ double Simulation::correlationBfieldZ(Particle* particle) {
 }
 
 double Simulation::correlationWithExBin(int i, int j, int k, Particle* particle) {
-	double rightX;
-	double leftX;
-	double rightY;
-	double leftY;
-	double rightZ;
-	double leftZ;
-
-	if(i < 0) {
-		rightX = 0;
-		leftX = - deltaX;
-	} else if(i >= xnumber){
-		rightX = xgrid[xnumber] + deltaX;
-		leftX = xgrid[xnumber];
-	} else {
-		rightX = xgrid[i+1];
-		leftX = xgrid[i];
-	}
-
-	if(j < 0) {
-		rightY = ygrid[0] - deltaY/2;
-		leftY = ygrid[0] - 3*deltaY/2;
-	} else if(j > ynumber) {
-		rightY = ygrid[ynumber] + 3*deltaY/2;
-		leftY = ygrid[ynumber] + deltaY/2;
-	} else {
-		rightY = ygrid[j] + deltaY/2;
-		leftY = ygrid[j] - deltaY/2;
-	}
-
-	if(k < 0) {
-		rightZ = zgrid[0] - deltaZ/2;
-		leftZ = zgrid[0] - 3*deltaZ/2;
-	} else if(k > znumber) {
-		rightZ = zgrid[znumber] + 3*deltaZ/2;
-		leftZ = zgrid[znumber] + deltaZ/2;
-	} else {
-		rightZ = zgrid[k] + deltaZ/2;
-		leftZ = zgrid[k] - deltaZ/2;
-	}
-
 	double correlation = 1;
 
-	correlation *= correlationBspline(particle->coordinates.x, particle->dx, leftX, rightX);
-	correlation *= correlationBspline(particle->coordinates.y, particle->dy, leftY, rightY);
-	correlation *= correlationBspline(particle->coordinates.z, particle->dz, leftZ, rightZ);
+	correlation *= correlationX(i, particle);
+	correlation *= correlationShiftY(j, particle);
+	correlation *= correlationShiftZ(k, particle);
 
 	return correlation;
 }
 
 double Simulation::correlationWithEyBin(int i, int j, int k, Particle* particle) {
-	double rightX;
-	double leftX;
-	double rightY;
-	double leftY;
-	double rightZ;
-	double leftZ;
-
-	if(i < 0) {
-		rightX = -deltaX/2;
-		leftX = - 3*deltaX/2;
-	} else if(i > xnumber){
-		rightX = xgrid[xnumber] + 3*deltaX/2;
-		leftX = xgrid[xnumber] + deltaX/2;
-	} else {
-		rightX = xgrid[i] + deltaX/2;
-		leftX = xgrid[i] - deltaX/2;
-	}
-
-	if(j < 0) {
-		rightY = ygrid[0];
-		leftY = ygrid[0] - deltaY;
-	} else if(j >= ynumber) {
-		rightY = ygrid[ynumber] + deltaY;
-		leftY = ygrid[ynumber];
-	} else {
-		rightY = ygrid[j + 1];
-		leftY = ygrid[j];
-	}
-
-	if(k < 0) {
-		rightZ = zgrid[0] - deltaZ/2;
-		leftZ = zgrid[0] - 3*deltaZ/2;
-	} else if(k > znumber) {
-		rightZ = zgrid[znumber] + 3*deltaZ/2;
-		leftZ = zgrid[znumber] + deltaZ/2;
-	} else {
-		rightZ = zgrid[k] + deltaZ/2;
-		leftZ = zgrid[k] - deltaZ/2;
-	}
-
 	double correlation = 1;
 
-	correlation *= correlationBspline(particle->coordinates.x, particle->dx, leftX, rightX);
-	correlation *= correlationBspline(particle->coordinates.y, particle->dy, leftY, rightY);
-	correlation *= correlationBspline(particle->coordinates.z, particle->dz, leftZ, rightZ);
+	correlation *= correlationShiftX(i, particle);
+	correlation *= correlationY(j, particle);
+	correlation *= correlationShiftZ(k, particle);
 
 	return correlation;
 }
 
 double Simulation::correlationWithEzBin(int i, int j, int k, Particle* particle) {
-	double rightX;
-	double leftX;
-	double rightY;
-	double leftY;
-	double rightZ;
-	double leftZ;
-
-	if(i < 0) {
-		rightX = - deltaX/2;
-		leftX = - 3*deltaX/2;
-	} else if(i > xnumber){
-		rightX = xgrid[xnumber] + 3*deltaX/2;
-		leftX = xgrid[xnumber] + deltaX/2;
-	} else {
-		rightX = xgrid[i] + deltaX/2;
-		leftX = xgrid[i] - deltaX/2;
-	}
-
-	if(j < 0) {
-		rightY = ygrid[0] - deltaY/2;
-		leftY = ygrid[0] - 3*deltaY/2;
-	} else if(j > ynumber) {
-		rightY = ygrid[ynumber] + 3*deltaY/2;
-		leftY = ygrid[ynumber] + deltaY/2;
-	} else {
-		rightY = ygrid[j] + deltaY/2;
-		leftY = ygrid[j] - deltaY/2;
-	}
-
-	if(k < 0) {
-		rightZ = zgrid[0];
-		leftZ = zgrid[0] - deltaZ;
-	} else if(k >= znumber) {
-		rightZ = zgrid[znumber] + deltaZ;
-		leftZ = zgrid[znumber];
-	} else {
-		rightZ = zgrid[k + 1];
-		leftZ = zgrid[k];
-	}
-
 	double correlation = 1;
 
-	correlation *= correlationBspline(particle->coordinates.x, particle->dx, leftX, rightX);
-	correlation *= correlationBspline(particle->coordinates.y, particle->dy, leftY, rightY);
-	correlation *= correlationBspline(particle->coordinates.z, particle->dz, leftZ, rightZ);
+	correlation *= correlationShiftX(i, particle);
+	correlation *= correlationShiftY(j, particle);
+	correlation *= correlationZ(k, particle);
 
 	return correlation;
 }
 
 double Simulation::correlationWithBxBin(int i, int j, int k, Particle* particle) {
+	double correlation = 1;
+
+	correlation *= correlationShiftX(i, particle);
+	correlation *= correlationY(j, particle);
+	correlation *= correlationZ(k, particle);
+
+	return correlation;
+}
+
+double Simulation::correlationWithByBin(int i, int j, int k, Particle* particle) {
+	double correlation = 1;
+
+	correlation *= correlationX(i, particle);
+	correlation *= correlationShiftY(j, particle);
+	correlation *= correlationZ(k, particle);
+
+	return correlation;
+}
+
+double Simulation::correlationWithBzBin(int i, int j, int k, Particle* particle) {
+	double correlation = 1;
+
+	correlation *= correlationX(i, particle);
+	correlation *= correlationY(j, particle);
+	correlation *= correlationShiftZ(k, particle);
+
+	return correlation;
+}
+
+double Simulation::correlationWithGridBin(int i, int j, int k, Particle* particle) {
+	double correlation = 1;
+
+	correlation *= correlationX(i, particle);
+	correlation *= correlationY(j, particle);
+	correlation *= correlationZ(k, particle);
+
+	return correlation;
+}
+
+double Simulation::correlationWithShiftGridBin(int i, int j, int k, Particle* particle) {
+	double correlation = 1;
+
+	correlation *= correlationShiftX(i, particle);
+	correlation *= correlationShiftY(j, particle);
+	correlation *= correlationShiftZ(k, particle);
+
+	return correlation;
+}
+
+double Simulation::correlationX(int i, Particle* particle) {
 	double rightX;
 	double leftX;
-	double rightY;
-	double leftY;
-	double rightZ;
-	double leftZ;
+
+	if(i < 0) {
+		rightX = 0;
+		leftX = - deltaX;
+	} else if(i >= xnumber){
+		rightX = xgrid[xnumber] + deltaX;
+		leftX = xgrid[xnumber];
+	} else {
+		rightX = xgrid[i+1];
+		leftX = xgrid[i];
+	}
+
+	double correlation = correlationBspline(particle->coordinates.x, particle->dx, leftX, rightX);
+
+	return correlation;
+}
+
+double Simulation::correlationShiftX(int i, Particle* particle) {
+	double rightX;
+	double leftX;
 
 	if(i < 0) {
 		rightX = -deltaX/2;
@@ -299,6 +245,15 @@ double Simulation::correlationWithBxBin(int i, int j, int k, Particle* particle)
 		leftX = xgrid[i] - deltaX/2;
 	}
 
+	double correlation = correlationBspline(particle->coordinates.x, particle->dx, leftX, rightX);
+
+	return correlation;
+}
+
+double Simulation::correlationY(int j, Particle* particle) {
+	double rightY;
+	double leftY;
+
 	if(j < 0) {
 		rightY = ygrid[0];
 		leftY = ygrid[0] - deltaY;
@@ -310,44 +265,14 @@ double Simulation::correlationWithBxBin(int i, int j, int k, Particle* particle)
 		leftY = ygrid[j];
 	}
 
-	if(k < 0) {
-		rightZ = zgrid[0];
-		leftZ = zgrid[0] - deltaZ;
-	} else if(k >= znumber) {
-		rightZ = zgrid[znumber] + deltaZ;
-		leftZ = zgrid[znumber];
-	} else {
-		rightZ = zgrid[k + 1];
-		leftZ = zgrid[k];
-	}
-
-	double correlation = 1;
-
-	correlation *= correlationBspline(particle->coordinates.x, particle->dx, leftX, rightX);
-	correlation *= correlationBspline(particle->coordinates.y, particle->dy, leftY, rightY);
-	correlation *= correlationBspline(particle->coordinates.z, particle->dz, leftZ, rightZ);
+	double correlation = correlationBspline(particle->coordinates.y, particle->dy, leftY, rightY);
 
 	return correlation;
 }
 
-double Simulation::correlationWithByBin(int i, int j, int k, Particle* particle) {
-	double rightX;
-	double leftX;
+double Simulation::correlationShiftY(int j, Particle* particle) {
 	double rightY;
 	double leftY;
-	double rightZ;
-	double leftZ;
-
-	if(i < 0) {
-		rightX = 0;
-		leftX = - deltaX;
-	} else if(i >= xnumber){
-		rightX = xgrid[xnumber] + deltaX;
-		leftX = xgrid[xnumber];
-	} else {
-		rightX = xgrid[i+1];
-		leftX = xgrid[i];
-	}
 
 	if(j < 0) {
 		rightY = ygrid[0] - deltaY/2;
@@ -360,6 +285,15 @@ double Simulation::correlationWithByBin(int i, int j, int k, Particle* particle)
 		leftY = ygrid[j] - deltaY/2;
 	}
 
+	double correlation = correlationBspline(particle->coordinates.y, particle->dy, leftY, rightY);
+
+	return correlation;
+}
+
+double Simulation::correlationZ(int k, Particle* particle) {
+	double rightZ;
+	double leftZ;
+
 	if(k < 0) {
 		rightZ = zgrid[0];
 		leftZ = zgrid[0] - deltaZ;
@@ -371,44 +305,14 @@ double Simulation::correlationWithByBin(int i, int j, int k, Particle* particle)
 		leftZ = zgrid[k];
 	}
 
-	double correlation = 1;
-
-	correlation *= correlationBspline(particle->coordinates.x, particle->dx, leftX, rightX);
-	correlation *= correlationBspline(particle->coordinates.y, particle->dy, leftY, rightY);
-	correlation *= correlationBspline(particle->coordinates.z, particle->dz, leftZ, rightZ);
+	double correlation = correlationBspline(particle->coordinates.z, particle->dz, leftZ, rightZ);
 
 	return correlation;
 }
 
-double Simulation::correlationWithBzBin(int i, int j, int k, Particle* particle) {
-	double rightX;
-	double leftX;
-	double rightY;
-	double leftY;
+double Simulation::correlationShiftZ(int k, Particle* particle) {
 	double rightZ;
 	double leftZ;
-
-	if(i < 0) {
-		rightX = 0;
-		leftX = - deltaX;
-	} else if(i >= xnumber){
-		rightX = xgrid[xnumber] + deltaX;
-		leftX = xgrid[xnumber];
-	} else {
-		rightX = xgrid[i+1];
-		leftX = xgrid[i];
-	}
-
-	if(j < 0) {
-		rightY = ygrid[0];
-		leftY = ygrid[0] - deltaY;
-	} else if(j >= ynumber) {
-		rightY = ygrid[ynumber] + deltaY;
-		leftY = ygrid[ynumber];
-	} else {
-		rightY = ygrid[j + 1];
-		leftY = ygrid[j];
-	}
 
 	if(k < 0) {
 		rightZ = zgrid[0] - deltaZ/2;
@@ -421,11 +325,7 @@ double Simulation::correlationWithBzBin(int i, int j, int k, Particle* particle)
 		leftZ = zgrid[k] - deltaZ/2;
 	}
 
-	double correlation = 1;
-
-	correlation *= correlationBspline(particle->coordinates.x, particle->dx, leftX, rightX);
-	correlation *= correlationBspline(particle->coordinates.y, particle->dy, leftY, rightY);
-	correlation *= correlationBspline(particle->coordinates.z, particle->dz, leftZ, rightZ);
+	double correlation = correlationBspline(particle->coordinates.z, particle->dz, leftZ, rightZ);
 
 	return correlation;
 }

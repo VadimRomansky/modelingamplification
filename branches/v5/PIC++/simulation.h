@@ -133,6 +133,16 @@ public:
 	double correlationWithBxBin(int i, int j, int k, Particle* particle);
 	double correlationWithByBin(int i, int j, int k, Particle* particle);
 	double correlationWithBzBin(int i, int j, int k, Particle* particle);
+	double correlationWithGridBin(int i, int j, int k, Particle* particle);
+	double correlationWithShiftGridBin(int i, int j, int k, Particle*particle);
+
+	double correlationX(int i, Particle* particle);
+	double correlationShiftX(int i, Particle* particle);
+	double correlationY(int j, Particle* particle);
+	double correlationShiftY(int j, Particle* particle);
+	double correlationZ(int k, Particle* particle);
+	double correlationShiftZ(int k, Particle* particle);
+
 	double correlationBspline(const double& x, const double&  dx, const double& leftx, const double& rightx);
 	double getEx(int i, int j, int k);
 	double getEy(int i, int j, int k);
@@ -156,13 +166,25 @@ public:
 	void updateBfieldY(int i, int j, int k, double dt);
 	void updateBfieldZ(int i, int j, int k, double dt);
 	void updateBoundaries();
+	double evaluateDivE(int i, int j, int k);
 
 	void updateEnergy();
 
 	double volume(int i, int j, int k);
 
+	void resetElectroMagneticParameters();
 	void updateElectroMagneticParameters();
-	void updateDensityParameters();
+	void updateElectricFluxX(Particle* particle);
+	void updateElectricFluxY(Particle* particle);
+	void updateElectricFluxZ(Particle* particle);
+	void updateChargeDensity(Particle* particle);
+	void updateBoundariesParameters();
+	void updateElectroMagneticParameters(Particle* particle);
+	void addElectricFluxX(int i, int j, int k, double flux);
+	void addElectricFluxY(int i, int j, int k, double flux);
+	void addElectricFluxZ(int i, int j, int k, double flux);
+	void addChargeDensity(int i, int j, int k, double charge);
+	void addConcentration(int i, int j, int k, double weight, ParticleTypes particle_type);
 };
 
 #endif
