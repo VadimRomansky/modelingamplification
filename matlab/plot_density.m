@@ -12,8 +12,8 @@ Nz = size(Zfile, 1);
 N = Nx*Ny*Nz;
 Nt = size(concentrations, 1)/N;
 
-ynumber = 3;
-znumber = 3;
+ynumber = 2;
+znumber = 2;
 
 a = 0;
 b = fix(Nt/2);
@@ -36,9 +36,9 @@ for i=1:Nx,
    chargeDensity(i, 1) = concentrations((Nz*Ny*(i-1) + Nz*(ynumber-1) + znumber) + a*N, 3);
    chargeDensity(i, 2) = concentrations((Nz*Ny*(i-1) + Nz*(ynumber-1) + znumber) + b*N, 3);
    chargeDensity(i, 3) = concentrations((Nz*Ny*(i-1) + Nz*(ynumber-1) + znumber) + c*N, 3);
-   divergenceError(i, 1) = divergence_error((Nz*Ny*(i-1) + Nz*(ynumber-1) + znumber) + a*N, 1);
-   divergenceError(i, 2) = divergence_error((Nz*Ny*(i-1) + Nz*(ynumber-1) + znumber) + b*N, 1);
-   divergenceError(i, 3) = divergence_error((Nz*Ny*(i-1) + Nz*(ynumber-1) + znumber) + c*N, 1);
+   divergenceError(i, 1) = divergence_error((Nz*Ny*(i-1) + Nz*(ynumber-1) + znumber) + a*N, 2);
+   divergenceError(i, 2) = divergence_error((Nz*Ny*(i-1) + Nz*(ynumber-1) + znumber) + b*N, 2);
+   divergenceError(i, 3) = divergence_error((Nz*Ny*(i-1) + Nz*(ynumber-1) + znumber) + c*N, 2);
 end;
 figure(1);
 plot (Xfile(1:Nx,1),electronConcentration(1:Nx,1), 'red',Xfile(1:Nx,1),electronConcentration(1:Nx,2), 'green',Xfile(1:Nx,1),electronConcentration(1:Nx,3), 'blue');
@@ -63,6 +63,13 @@ grid ;
 
 figure(4);
 plot (Xfile(1:Nx,1),divergenceError(1:Nx, 1), 'red', Xfile(1:Nx,1), divergenceError(1:Nx, 2), 'green', Xfile(1:Nx,1), divergenceError(1:Nx, 3), 'blue');
+title ('divergence error');
+xlabel ('x/r_g');
+ylabel ('rho sgs*cm^-3');
+grid ;
+
+figure(5);
+plot (Xfile(2:Nx,1),divergenceError(2:Nx, 1), 'red', Xfile(2:Nx,1), divergenceError(2:Nx, 2), 'green', Xfile(2:Nx,1), divergenceError(2:Nx, 3), 'blue');
 title ('divergence error');
 xlabel ('x/r_g');
 ylabel ('rho sgs*cm^-3');

@@ -16,6 +16,12 @@ void Simulation::evaluateFields() {
 	updateEfield(deltaT);
 
 	updateBfield(deltaT/2);
+
+	updateBoundaries();
+
+	double error = 4*pi*chargeDensity[xnumber/2][ynumber/2][znumber/2] - evaluateDivE(xnumber/2, ynumber/2, znumber/2);
+	cleanupDivergence();
+	error = 4*pi*chargeDensity[xnumber/2][ynumber/2][znumber/2] - evaluateDivE(xnumber/2, ynumber/2, znumber/2);
 }
 
 void Simulation::updateEfield(double dt) {
@@ -82,7 +88,7 @@ void Simulation::updateEfieldX(int i, int j, int k, double dt) {
 
 	double rotBx = (BrightY - BleftY)/deltaY - (BrightZ - BleftZ)/deltaZ;
 
-	EfieldX[i][j][k] += (speed_of_light_normalized*rotBx -4*pi*electricFluxX[i][j][k])*dt;
+	EfieldX[i][j][k] += (speed_of_light_normalized*rotBx - 4*pi*electricFluxX[i][j][k])*dt;
 
 	alertNaNOrInfinity(EfieldX[i][j][k], "EfieldX = NaN\n");
 }
@@ -274,7 +280,9 @@ void Simulation::updateBoundaries() {
 				}
 			}
 
-			EfieldY[i][j][znumber] = EfieldY[i][j][znumber];
+			if(j < ynumber){
+				EfieldY[i][j][znumber] = EfieldY[i][j][0];
+			}
 		}
 
 		for(int k = 0; k < znumber + 1; ++k) {
@@ -284,7 +292,9 @@ void Simulation::updateBoundaries() {
 					BfieldY[i][ynumber][k] = BfieldY[i][0][k];
 				}
 			}
-			EfieldZ[i][ynumber][k] = EfieldZ[i][0][k];
+			if(k < znumber){
+				EfieldZ[i][ynumber][k] = EfieldZ[i][0][k];
+			}
 		}
 	}
 }
@@ -313,7 +323,7 @@ double Simulation::evaluateDivE(int i, int j, int k) {
 	}
 
 	if(i == xnumber) {
-		return ((EfieldY[i][middleJ][k] - EfieldY[i][prevJ][k])/deltaY) + ((EfieldZ[i][j][middleK] - EfieldZ[i][j][prevK])/deltaZ);
+		return ((E0.x - EfieldX[i-1][j][k])/deltaX) + ((EfieldY[i][middleJ][k] - EfieldY[i][prevJ][k])/deltaY) + ((EfieldZ[i][j][middleK] - EfieldZ[i][j][prevK])/deltaZ);
 	}
 
 	return ((EfieldX[i][j][k] - EfieldX[i-1][j][k])/deltaX) + ((EfieldY[i][middleJ][k] - EfieldY[i][prevJ][k])/deltaY) + ((EfieldZ[i][j][middleK] - EfieldZ[i][j][prevK])/deltaZ);
