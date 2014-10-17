@@ -84,7 +84,8 @@ public:
 	double*** BfieldZ;
 
 	double*** divergenceCleaningPotential;
-	std::vector<MatrixElement>*** divergenceClaenuoMatrix;
+	std::vector<MatrixElement>*** divergenceCleanUpMatrix;
+	double*** divergenceCleanUpRightPart;
 
 
 	std::vector<Particle*> particles;
@@ -171,6 +172,11 @@ public:
 	void updateBoundaries();
 	double evaluateDivE(int i, int j, int k);
 
+	void cleanupDivergence();
+	void updateFieldByPotential();
+	double cleanUpRightPart(int i, int j, int k);
+	void createDivergenceCleanupInternalEquation(int i, int j, int k);
+	void createDivergenceCleanupRightEquation(int j, int k);
 	void updateEnergy();
 
 	double volume(int i, int j, int k);

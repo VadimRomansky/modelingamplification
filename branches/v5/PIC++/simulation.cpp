@@ -226,20 +226,23 @@ Simulation::~Simulation() {
 			delete[] protonConcentration[i][j];
 			delete[] chargeDensity[i][j];
 			delete[] divergenceCleaningPotential[i][j];
-			delete[] divergenceClaenupMatrix[i][j];
+			delete[] divergenceCleanUpMatrix[i][j];
+			delete[] divergenceCleanUpRightPart[i][j];
 		}
 		delete[] electronConcentration[i];
 		delete[] protonConcentration[i];
 		delete[] chargeDensity[i];
 		delete[] divergenceCleaningPotential[i];
-		delete[] divergenceClaenupMatrix[i];
+		delete[] divergenceCleanUpMatrix[i];
+		delete[] divergenceCleanUpRightPart[i];
 	}
 
 	delete[] electronConcentration;
 	delete[] protonConcentration;
 	delete[] chargeDensity;
 	delete[] divergenceCleaningPotential;
-	delete[] divergenceClaenupMatrix;
+	delete[] divergenceCleanUpMatrix;
+	delete[] divergenceCleanUpRightPart;
 
 	delete[] xgrid;
 	delete[] ygrid;
@@ -337,6 +340,7 @@ void Simulation::initialize() {
 				protonConcentration[i][j][k] = 0;
 				chargeDensity[i][j][k] = 0;
 				divergenceCleaningPotential[i][j][k] = 0;
+				divergenceCleanUpRightPart[i][j][k] = 0;
 			}
 		}
 	}
@@ -485,20 +489,23 @@ void Simulation::createArrays() {
 	protonConcentration = new double**[xnumber+1];
 	chargeDensity = new double**[xnumber+1];
 	divergenceCleaningPotential = new double**[xnumber+1];
-	divergenceClaenupMatrix = new std::vector<MatrixElement>**[xnumber+1];
+	divergenceCleanUpMatrix = new std::vector<MatrixElement>**[xnumber+1];
+	divergenceCleanUpRightPart = new double**[xnumber + 1];
 
 	for(int i = 0; i < xnumber+1; ++i) {
 		electronConcentration[i] = new double*[ynumber+1];
 		protonConcentration[i] = new double*[ynumber+1];
 		chargeDensity[i] = new double*[ynumber+1];
 		divergenceCleaningPotential[i] = new double*[ynumber+1];
-		divergenceClaenupMatrix[i] = new std::vector<MatrixElement>*[ynumber+1];
+		divergenceCleanUpMatrix[i] = new std::vector<MatrixElement>*[ynumber+1];
+		divergenceCleanUpRightPart[i] = new double*[ynumber + 1];
 		for(int j = 0; j < ynumber+1; ++j) {
 			electronConcentration[i][j] = new double[znumber+1];
 			protonConcentration[i][j] = new double[znumber+1];
 			chargeDensity[i][j] = new double[znumber+1];
 			divergenceCleaningPotential[i][j] = new double[znumber+1];
-			divergenceClaenupMatrix[i][j] = new std::vector<MatrixElement>[znumber+1];
+			divergenceCleanUpMatrix[i][j] = new std::vector<MatrixElement>[znumber+1];
+			divergenceCleanUpRightPart[i][j] = new double[znumber + 1];
 		}
 	}
 }
@@ -535,6 +542,7 @@ void Simulation::simulate() {
 	createFiles();
 	createParticles();
 	updateEnergy();
+	updateElectroMagneticParameters();
 
 	//updateDeltaT();
 	//deltaT = 0;
