@@ -172,7 +172,7 @@ void Simulation::createDivergenceCleanupRightEquation(int j, int k) {
 	
 
 	divergenceCleanUpRightPart[i][j][k] = cleanUpRightPart(i, j, k);
-	divergenceCleanUpRightPart[i][j][k] -= E0.x/deltaX;
+	//divergenceCleanUpRightPart[i][j][k] -= E0.x/deltaX;
 }
 
 double Simulation::cleanUpRightPart(int i, int j, int k) {
