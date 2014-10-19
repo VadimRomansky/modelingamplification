@@ -146,5 +146,6 @@ Simulation readInput(FILE* inputFile) {
 		exit(0);
 	}
 
-	return Simulation(xnumber, ynumber, znumber, xsize, ysize, zsize, temperature, density, Ex, Ey, Ez, Bx, By, Bz, maxIterations, maxTime, particlesPerBin);
+	//return Simulation(xnumber, ynumber, znumber, xsize, ysize, zsize, temperature, density, Ex, Ey, Ez, Bx, By, Bz, maxIterations, maxTime, particlesPerBin, BoundaryConditionTypes::SUPERCONDUCTERLEFT);
+	return Simulation(xnumber, ynumber, znumber, xsize, ysize, zsize, temperature, density, Ex, Ey, Ez, Bx, By, Bz, maxIterations, maxTime, particlesPerBin, BoundaryConditionTypes::PERIODIC);
 }

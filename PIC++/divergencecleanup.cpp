@@ -11,13 +11,26 @@ void Simulation::cleanupDivergence() {
 			for (int k = 0; k < znumber; ++k) {
 				divergenceCleanUpMatrix[i][j][k].clear();
 				divergenceCleanUpRightPart[i][j][k] = 0;
-				if(i == 0) {
-					divergenceCleanUpMatrix[i][j][k].push_back(MatrixElement(1.0, i, j, k));
-					divergenceCleanUpRightPart[i][j][k] = 0;				
-				} else if(i == xnumber) {
-					createDivergenceCleanupRightEquation(j, k);
-				} else {
-					createDivergenceCleanupInternalEquation(i, j, k);
+				if(boundaryConditionType == BoundaryConditionTypes::SUPERCONDUCTERLEFT){
+					if(i == 0) {
+						divergenceCleanUpMatrix[i][j][k].push_back(MatrixElement(1.0, i, j, k));
+						divergenceCleanUpRightPart[i][j][k] = 0;				
+					} else if(i == xnumber) {
+						createDivergenceCleanupRightEquation(j, k);
+					} else {
+						createDivergenceCleanupInternalEquation(i, j, k);
+					}
+				} else if(boundaryConditionType == BoundaryConditionTypes::PERIODIC) {
+					if(i == xnumber) {
+						divergenceCleanUpMatrix[i][j][k].push_back(MatrixElement(1.0, i, j, k));
+						divergenceCleanUpMatrix[i][j][k].push_back(MatrixElement(-1.0, 0, j, k));
+						divergenceCleanUpRightPart[i][j][k] = 0;
+					} else if(i == 0 && j == 0 && k == 0) {
+						divergenceCleanUpMatrix[i][j][k].push_back(MatrixElement(1.0, i, j, k));
+						divergenceCleanUpRightPart[i][j][k] = 0;
+					} else {
+						createDivergenceCleanupInternalEquation(i,j, k);
+					}
 				}
 			}
 		}
@@ -28,6 +41,14 @@ void Simulation::cleanupDivergence() {
 	}*/
 
 	generalizedMinimalResidualMethod(divergenceCleanUpMatrix, divergenceCleanUpRightPart, divergenceCleaningPotential, xnumber+1, ynumber, znumber);
+
+	if(boundaryConditionType == BoundaryConditionTypes::PERIODIC) {
+		for(int j = 0; j < ynumber; ++j) {
+			for(int k = 0; k < znumber; ++k) {
+				divergenceCleaningPotential[xnumber][j][k] = divergenceCleaningPotential[0][j][k];
+			}
+		}
+	}
 
 	for(int i = 0; i < xnumber + 1; ++i) {
 		for(int j = 0; j < ynumber; ++j) {
@@ -90,6 +111,15 @@ void Simulation::updateFieldByPotential() {
 
 void Simulation::createDivergenceCleanupInternalEquation(int i, int j, int k) {
 
+	int prevI = i-1;
+	if(prevI < 0) {
+		prevI = xnumber - 1;
+	}
+	int nextI = i+1;
+	if(nextI > xnumber) {
+		nextI = 1;
+	}
+
 	int prevJ = j - 1;
 	if(prevJ < 0) {
 		prevJ = ynumber - 1;
@@ -116,8 +146,8 @@ void Simulation::createDivergenceCleanupInternalEquation(int i, int j, int k) {
 	divergenceCleanUpMatrix[i][j][k].push_back(MatrixElement(element, i, j, k));
 
 	element = 1/(dx2);
-	divergenceCleanUpMatrix[i][j][k].push_back(MatrixElement(element, i+1, j, k));
-	divergenceCleanUpMatrix[i][j][k].push_back(MatrixElement(element, i-1, j, k));
+	divergenceCleanUpMatrix[i][j][k].push_back(MatrixElement(element, nextI, j, k));
+	divergenceCleanUpMatrix[i][j][k].push_back(MatrixElement(element, prevI, j, k));
 
 	element = 1/(dy2);
 	divergenceCleanUpMatrix[i][j][k].push_back(MatrixElement(element, i, nextJ, k));
