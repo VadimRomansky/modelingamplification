@@ -94,13 +94,24 @@ void Simulation::updateEfieldX(int i, int j, int k, double dt) {
 }
 
 void Simulation::updateEfieldY(int i, int j, int k, double dt) {
-	if(i == 0) {
-		EfieldY[i][j][k] = 0;
-		return;
-	}
-	if(i == xnumber) {
-		EfieldY[i][j][k] = E0.y;
-		return;
+	int middleI = i;
+	int prevI = i-1;
+	if(boundaryConditionType== BoundaryConditionTypes::SUPERCONDUCTERLEFT){
+		if(i == 0) {
+			EfieldY[i][j][k] = 0;
+			return;
+		}
+		if(i == xnumber) {
+			EfieldY[i][j][k] = E0.y;
+			return;
+		}
+	} else if(boundaryConditionType == BoundaryConditionTypes::PERIODIC) {
+		if(middleI >= xnumber) {
+			middleI = 0;
+		}
+		if(prevI < 0) {
+			prevI = xnumber - 1;
+		}
 	}
 
 	int prevJ = j - 1;
@@ -120,11 +131,11 @@ void Simulation::updateEfieldY(int i, int j, int k, double dt) {
 		middleK = 0;
 	}
 
-	double BrightX = BfieldZ[i][middleJ][middleK];
-	double BleftX = BfieldZ[i-1][middleJ][middleK];
+	double BrightX = BfieldZ[middleI][middleJ][middleK];
+	double BleftX = BfieldZ[prevI][middleJ][middleK];
 
-	double BrightZ = BfieldX[i][middleJ][middleK];
-	double BleftZ = BfieldX[i][middleJ][prevK];
+	double BrightZ = BfieldX[middleI][middleJ][middleK];
+	double BleftZ = BfieldX[middleI][middleJ][prevK];
 
 	double rotBy = -(BrightX - BleftX)/deltaX + (BrightZ - BleftZ)/deltaZ;
 
@@ -134,13 +145,24 @@ void Simulation::updateEfieldY(int i, int j, int k, double dt) {
 }
 
 void Simulation::updateEfieldZ(int i, int j, int k, double dt) {
-	if(i == 0) {
-		EfieldZ[i][j][k] = 0;
-		return;
-	}
-	if(i == xnumber) {
-		EfieldZ[i][j][k] = E0.z;
-		return;
+	int middleI = i;
+	int prevI = i-1;
+	if(boundaryConditionType== BoundaryConditionTypes::SUPERCONDUCTERLEFT){
+		if(i == 0) {
+			EfieldZ[i][j][k] = 0;
+			return;
+		}
+		if(i == xnumber) {
+			EfieldZ[i][j][k] = E0.z;
+			return;
+		}
+	} else if(boundaryConditionType == BoundaryConditionTypes::PERIODIC) {
+		if(middleI >= xnumber) {
+			middleI = 0;
+		}
+		if(prevI < 0) {
+			prevI = xnumber - 1;
+		}
 	}
 
 	int prevJ = j - 1;
@@ -167,11 +189,11 @@ void Simulation::updateEfieldZ(int i, int j, int k, double dt) {
 		middleK = 0;
 	}
 
-	double BrightX = BfieldY[i][middleJ][middleK];
-	double BleftX = BfieldY[i-1][middleJ][middleK];
+	double BrightX = BfieldY[middleI][middleJ][middleK];
+	double BleftX = BfieldY[prevI][middleJ][middleK];
 
-	double BrightY = BfieldX[i][middleJ][middleK];
-	double BleftY = BfieldX[i][prevJ][middleK];
+	double BrightY = BfieldX[middleI][middleJ][middleK];
+	double BleftY = BfieldX[middleI][prevJ][middleK];
 
 	double rotBy = (BrightX - BleftX)/deltaX - (BrightY - BleftY)/deltaY;
 
@@ -271,6 +293,17 @@ void Simulation::updateBfieldZ(int i, int j, int k, double dt) {
 }
 
 void Simulation::updateBoundaries() {
+	if(boundaryConditionType == BoundaryConditionTypes::PERIODIC){
+		for(int j = 0; j < ynumber; ++j) {
+			for(int k = 0; k < znumber; ++k) {
+				EfieldY[xnumber][j][k] = EfieldY[0][j][k];
+				EfieldZ[xnumber][j][k] = EfieldZ[0][j][k];
+
+				BfieldX[xnumber][j][k] = BfieldX[0][j][k];
+			}
+		}
+	}
+
 	for(int i = 0; i < xnumber + 1; ++i) {
 		for(int j = 0; j < ynumber + 1; ++j) {
 			if(i < xnumber){
@@ -318,12 +351,22 @@ double Simulation::evaluateDivE(int i, int j, int k) {
 		middleK = 0;
 	}
 
-	if(i == 0) {
-		return 0;
-	}
+	if(boundaryConditionType == BoundaryConditionTypes::SUPERCONDUCTERLEFT){
+		if(i == 0) {
+			return 0;
+		}
 
-	if(i == xnumber) {
-		return ((E0.x - EfieldX[i-1][j][k])/deltaX) + ((EfieldY[i][middleJ][k] - EfieldY[i][prevJ][k])/deltaY) + ((EfieldZ[i][j][middleK] - EfieldZ[i][j][prevK])/deltaZ);
+		if(i == xnumber) {
+			return ((E0.x - EfieldX[i-1][j][k])/deltaX) + ((EfieldY[i][middleJ][k] - EfieldY[i][prevJ][k])/deltaY) + ((EfieldZ[i][j][middleK] - EfieldZ[i][j][prevK])/deltaZ);
+		}
+	} else if(boundaryConditionType == BoundaryConditionTypes::PERIODIC){
+		if(i == 0) {
+			return ((EfieldX[i][j][k] - EfieldX[xnumber - 1][j][k])/deltaX) + ((EfieldY[i][middleJ][k] - EfieldY[i][prevJ][k])/deltaY) + ((EfieldZ[i][j][middleK] - EfieldZ[i][j][prevK])/deltaZ);
+		} 
+
+		if(i == xnumber) {
+			return ((EfieldX[0][j][k] - EfieldX[i-1][j][k])/deltaX) + ((EfieldY[i][middleJ][k] - EfieldY[i][prevJ][k])/deltaY) + ((EfieldZ[i][j][middleK] - EfieldZ[i][j][prevK])/deltaZ);
+		}
 	}
 
 	return ((EfieldX[i][j][k] - EfieldX[i-1][j][k])/deltaX) + ((EfieldY[i][middleJ][k] - EfieldY[i][prevJ][k])/deltaY) + ((EfieldZ[i][j][middleK] - EfieldZ[i][j][prevK])/deltaZ);

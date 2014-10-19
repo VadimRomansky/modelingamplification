@@ -8,6 +8,8 @@
 #include "matrixElement.h"
 #include "particle.h"
 
+enum BoundaryConditionTypes {SUPERCONDUCTERLEFT, PERIODIC};
+
 class Simulation{
 public:
 	int xnumber;
@@ -18,6 +20,8 @@ public:
 
 	double density;
 	double temperature;
+
+	BoundaryConditionTypes boundaryConditionType;
 
 	double plasma_period;
 	double plasma_period2;
@@ -106,7 +110,7 @@ public:
 	FILE* divergenceErrorFile;
 
 	Simulation();
-	Simulation(double xn, double yn, double zn, double xsizev, double ysizev, double zsizev, double temp, double rho, double Ex, double Ey, double Ez, double Bx, double By, double Bz, int maxIterations, double maxTimeV, int particlesPerBinV);
+	Simulation(double xn, double yn, double zn, double xsizev, double ysizev, double zsizev, double temp, double rho, double Ex, double Ey, double Ez, double Bx, double By, double Bz, int maxIterations, double maxTimeV, int particlesPerBinV, BoundaryConditionTypes type);
 	~Simulation();
 
 	void initialize();
@@ -194,6 +198,8 @@ public:
 	void addElectricFluxZ(int i, int j, int k, double flux);
 	void addChargeDensity(int i, int j, int k, double charge);
 	void addConcentration(int i, int j, int k, double weight, ParticleTypes particle_type);
+
+	double evaluateFullChargeDensity();
 };
 
 #endif
