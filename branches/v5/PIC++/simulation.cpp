@@ -872,6 +872,33 @@ void Simulation::updateChargeDensity(Particle* particle) {
 	int ycount = trunc((particle->coordinates.y/deltaY) + 0.5);
 	int zcount = trunc((particle->coordinates.z/deltaZ) + 0.5);
 
+	if(xcount < 0) {
+		printf("xcount < 0\n");
+		exit(0);
+	}
+	if(xcount > xnumber) {
+		printf("xcount > xnumber\n");
+		exit(0);
+	}
+
+	if(ycount < 0) {
+		printf("ycount < 0\n");
+		exit(0);
+	}
+	if(ycount > ynumber) {
+		printf("ycount > ynumber\n");
+		exit(0);
+	}
+
+	if(zcount < 0) {
+		printf("zcount < 0\n");
+		exit(0);
+	}
+	if(zcount > znumber) {
+		printf("zcount > znumber\n");
+		exit(0);
+	}
+
 	double charge = particle->charge*particle->weight;
 
 	double fullCorrelation = 0;
@@ -889,15 +916,19 @@ void Simulation::updateChargeDensity(Particle* particle) {
 
 void Simulation::updateBoundariesParameters() {
 	if(boundaryConditionType == BoundaryConditionTypes::PERIODIC){
-		for(int j = 0; j < ynumber; ++j) {
-			for(int k = 0; k < znumber; ++k) {
-				electricFluxY[xnumber][j][k] += electricFluxY[0][j][k];
-				//electricFluxY[xnumber][j][k] /=2;
-				electricFluxY[0][j][k] = electricFluxY[xnumber][j][k];
+		for(int j = 0; j < ynumber+1; ++j) {
+			for(int k = 0; k < znumber+1; ++k) {
+				if(j < ynumber){
+					electricFluxY[xnumber][j][k] += electricFluxY[0][j][k];
+					//electricFluxY[xnumber][j][k] /=2;
+					electricFluxY[0][j][k] = electricFluxY[xnumber][j][k];
+				}
 
-				electricFluxZ[xnumber][j][k] += electricFluxZ[0][j][k];
-				//electricFluxZ[xnumber][j][k] /= 2;
-				electricFluxZ[0][j][k] = electricFluxZ[znumber][j][k];
+				if(k < znumber){
+					electricFluxZ[xnumber][j][k] += electricFluxZ[0][j][k];
+					//electricFluxZ[xnumber][j][k] /= 2;
+					electricFluxZ[0][j][k] = electricFluxZ[znumber][j][k];
+				}
 
 				chargeDensity[xnumber][j][k] += chargeDensity[0][j][k];
 				//chargeDensity[xnumber][j][k] /= 2;
