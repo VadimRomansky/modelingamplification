@@ -13,7 +13,7 @@ public:
   Matrix3d(const Matrix3d& matrix);
 
   ~Matrix3d();
-  Matrix3d Inverse();
+  Matrix3d inverse();
   double determinant();
   double getvalue(int i,int j);
   void setvalue(int i,int j, double value);

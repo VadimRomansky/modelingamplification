@@ -43,9 +43,12 @@ void Simulation::moveParticle(Particle* particle){
 	matrix.matrix[2][1] = beta*B.x/(2*gamma*speed_of_light_normalized);
 	matrix.matrix[2][2] = 1;
 
-	Vector3d rightPart = particle->momentum + (E + (particle->momentum.vectorMult(B)/(2*gamma*speed_of_light_normalized)))*beta;
+	Matrix3d inverseMatrix = matrix.inverse();
+	Vector3d deltaMomentum = (E + (particle->momentum.vectorMult(B)/(2*gamma*speed_of_light_normalized)))*beta;
 
-	particle->momentum = matrix.Inverse()*rightPart;
+	Vector3d rightPart = particle->momentum + (E + (particle->momentum.vectorMult(B)/(2*particle->mass*gamma*speed_of_light_normalized)))*deltaT*particle->charge;
+
+	particle->momentum = matrix.inverse()*rightPart;
 
 	correctParticlePosition(particle);
 }
