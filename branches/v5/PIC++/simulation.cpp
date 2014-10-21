@@ -637,6 +637,8 @@ void Simulation::updateDeltaT() {
 	deltaT = 0.1 * delta / speed_of_light_normalized;
 	double B = B0.norm();
 	double E = E0.norm();
+	Particle* minElectron = electronMinMomentum();
+	double minMomentum = minElectron->momentum.norm();
 	for(int i = 0; i < xnumber; ++i) {
 		for(int j = 0; j < ynumber; ++j) {
 			for(int k = 0; k < znumber; ++k) {
@@ -663,7 +665,7 @@ void Simulation::updateDeltaT() {
 		deltaT = min2(deltaT, 0.005 * massElectron * speed_of_light_normalized / (electron_charge_normalized * B));
 	}
 	if(E > 0) {
-		deltaT = min2(deltaT, 0.005*massElectron * speed_of_light_normalized/(electron_charge_normalized*E));
+		deltaT = min2(deltaT, 0.005*minMomentum/(electron_charge_normalized*E));
 	}
 	//deltaT = 0.005 * massElectron * speed_of_light_normalized / (electron_charge_normalized * B0.norm());
 	//deltaT = min2(deltaT, 0.02);
@@ -1295,6 +1297,23 @@ double Simulation::evaluateFullChargeDensity() {
 	fullProtonconcentration2 /= (xsize*ysize*zsize);
 
 	return fullDensity;
+}
+
+Particle* Simulation::electronMinMomentum() {
+	Particle* minElectron = getFirstElectron();
+	double minMomentum = minElectron->momentum.norm();
+	for(int pcount = 0; pcount < particles.size(); ++pcount) {
+		Particle* particle = particles[pcount];
+		if(particle->type == ParticleTypes::ELECTRON){
+			double momentum = particle->momentum.norm();
+			if(momentum < minMomentum) {
+				minMomentum = momentum;
+				minElectron = particle;
+			}
+		}
+	}
+
+	return minElectron;
 }
 
 void Simulation::resetElectroMagneticParameters() {

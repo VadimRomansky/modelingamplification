@@ -181,6 +181,7 @@ public:
 	double cleanUpRightPart(int i, int j, int k);
 	void createDivergenceCleanupInternalEquation(int i, int j, int k);
 	void createDivergenceCleanupRightEquation(int j, int k);
+	void createDivergenceCleanupRightPeriodicEquation(int j, int k);
 	void updateEnergy();
 
 	double volume(int i, int j, int k);
@@ -200,6 +201,8 @@ public:
 	void addConcentration(int i, int j, int k, double weight, ParticleTypes particle_type);
 
 	double evaluateFullChargeDensity();
+
+	Particle* electronMinMomentum();
 };
 
 #endif
