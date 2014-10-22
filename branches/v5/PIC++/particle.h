@@ -41,7 +41,8 @@ public:
 	double gammaFactor(double c);
 	double energy(double c);
 
-	void setMomentumByV(Vector3d v, double c);
+	void setMomentumByV(Vector3d& v, double c);
+	void addVelocity(Vector3d& v, double c);
 };
 
 #endif

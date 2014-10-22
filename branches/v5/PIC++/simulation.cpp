@@ -245,6 +245,7 @@ Simulation::~Simulation() {
 			delete[] electronConcentration[i][j];
 			delete[] protonConcentration[i][j];
 			delete[] chargeDensity[i][j];
+			delete[] velocity[i][j];
 			delete[] divergenceCleaningPotential[i][j];
 			delete[] divergenceCleanUpMatrix[i][j];
 			delete[] divergenceCleanUpRightPart[i][j];
@@ -252,6 +253,7 @@ Simulation::~Simulation() {
 		delete[] electronConcentration[i];
 		delete[] protonConcentration[i];
 		delete[] chargeDensity[i];
+		delete[] velocity[i];
 		delete[] divergenceCleaningPotential[i];
 		delete[] divergenceCleanUpMatrix[i];
 		delete[] divergenceCleanUpRightPart[i];
@@ -260,6 +262,7 @@ Simulation::~Simulation() {
 	delete[] electronConcentration;
 	delete[] protonConcentration;
 	delete[] chargeDensity;
+	delete[] velocity;
 	delete[] divergenceCleaningPotential;
 	delete[] divergenceCleanUpMatrix;
 	delete[] divergenceCleanUpRightPart;
@@ -359,6 +362,7 @@ void Simulation::initialize() {
 				electronConcentration[i][j][k] = 0;
 				protonConcentration[i][j][k] = 0;
 				chargeDensity[i][j][k] = 0;
+				velocity[i][j][k] = Vector3d(0, 0, 0);
 				divergenceCleaningPotential[i][j][k] = 0;
 				divergenceCleanUpRightPart[i][j][k] = 0;
 			}
@@ -374,6 +378,8 @@ void Simulation::initializeSimpleElectroMagneticWave() {
 
 	double kw = 2 * pi / xsize;
 	double E = 1E-5;
+	double omega = kw*speed_of_light_normalized;
+	double t = 2*pi/omega;
 
 	for(int i = 0; i < xnumber; ++i) {
 		for(int j = 0; j < ynumber + 1; ++j) {
@@ -421,6 +427,77 @@ void Simulation::initializeSimpleElectroMagneticWave() {
 				BfieldZ[i][j][k] = 0;
 			}
 		}
+	}
+}
+
+void Simulation::initializeAlfvenWave() {
+	E0 = Vector3d(0, 0, 0);
+	B0 = Vector3d(2E-3, 0, 0);
+
+	double alfvenV = B0.norm()/sqrt(4*pi*density);
+	if(alfvenV > speed_of_light_normalized) {
+		printf("alfven velocity > c\n");
+		exit(0);
+	}
+
+	double kw = 1 * 2 * pi / xsize;
+
+	double omega = kw*alfvenV;
+	double t = 2*pi/omega;
+	double B = 1E-4;
+
+	for(int i = 0; i < xnumber; ++i) {
+		for(int j = 0; j < ynumber + 1; ++j) {
+			for(int k = 0; k < znumber + 1; ++k) {
+				EfieldX[i][j][k] = 0;
+			}
+		}
+	}
+
+	for(int i = 0; i < xnumber + 1; ++i) {
+		for(int j = 0; j < ynumber; ++j) {
+			for(int k = 0; k < znumber + 1; ++k) {
+				EfieldY[i][j][k] =0;
+			}
+		}
+	}
+
+	for(int i = 0; i < xnumber + 1; ++i) {
+		for(int j = 0; j < ynumber + 1; ++j) {
+			for(int k = 0; k < znumber; ++k) {
+				EfieldZ[i][j][k] = 0;
+			}
+		}
+	}
+
+	for(int i = 0; i < xnumber + 1; ++i) {
+		for(int j = 0; j < ynumber; ++j) {
+			for(int k = 0; k < znumber; ++k) {
+				BfieldX[i][j][k] = B0.x;
+			}
+		}
+	}
+
+	for(int i = 0; i < xnumber; ++i) {
+		for(int j = 0; j < ynumber + 1; ++j) {
+			for(int k = 0; k < znumber; ++k) {
+				BfieldY[i][j][k] = 0;
+			}
+		}
+	}
+
+	for(int i = 0; i < xnumber; ++i) {
+		for(int j = 0; j < ynumber; ++j) {
+			for(int k = 0; k < znumber + 1; ++k) {
+				BfieldZ[i][j][k] = -B*cos(kw*(xgrid[i] + deltaX/2));
+			}
+		}
+	}
+
+	for(int pcount = 0; pcount < particles.size(); ++pcount) {
+		Particle* particle = particles[pcount];
+		Vector3d velocity = Vector3d(0, 1, 0)*(B/sqrt(4*pi*density))*cos(kw*particle->coordinates.x);
+		particle->addVelocity(velocity, speed_of_light_normalized);
 	}
 }
 
@@ -508,6 +585,7 @@ void Simulation::createArrays() {
 	electronConcentration = new double**[xnumber+1];
 	protonConcentration = new double**[xnumber+1];
 	chargeDensity = new double**[xnumber+1];
+	velocity = new Vector3d**[xnumber + 1];
 	divergenceCleaningPotential = new double**[xnumber+1];
 	divergenceCleanUpMatrix = new std::vector<MatrixElement>**[xnumber+1];
 	divergenceCleanUpRightPart = new double**[xnumber + 1];
@@ -516,6 +594,7 @@ void Simulation::createArrays() {
 		electronConcentration[i] = new double*[ynumber+1];
 		protonConcentration[i] = new double*[ynumber+1];
 		chargeDensity[i] = new double*[ynumber+1];
+		velocity[i] = new Vector3d*[ynumber + 1];
 		divergenceCleaningPotential[i] = new double*[ynumber+1];
 		divergenceCleanUpMatrix[i] = new std::vector<MatrixElement>*[ynumber+1];
 		divergenceCleanUpRightPart[i] = new double*[ynumber + 1];
@@ -523,6 +602,7 @@ void Simulation::createArrays() {
 			electronConcentration[i][j] = new double[znumber+1];
 			protonConcentration[i][j] = new double[znumber+1];
 			chargeDensity[i][j] = new double[znumber+1];
+			velocity[i][j] = new Vector3d[znumber + 1];
 			divergenceCleaningPotential[i][j] = new double[znumber+1];
 			divergenceCleanUpMatrix[i][j] = new std::vector<MatrixElement>[znumber+1];
 			divergenceCleanUpRightPart[i][j] = new double[znumber + 1];
@@ -551,6 +631,8 @@ void Simulation::createFiles() {
 	fclose(generalFile);
 	densityFile = fopen("./output/concentrations.dat", "w");
 	fclose(densityFile);
+	velocityFile = fopen("./output/velocity.dat", "w");
+	fclose(velocityFile);
 	divergenceErrorFile = fopen("./output/divergence_error.dat", "w");
 	fclose(divergenceErrorFile);
 }
@@ -561,11 +643,9 @@ void Simulation::simulate() {
 	//initializeSimpleElectroMagneticWave();
 	createFiles();
 	createParticles();
+	initializeAlfvenWave();
 	updateEnergy();
 	updateElectroMagneticParameters();
-
-	//updateDeltaT();
-	//deltaT = 0;
 
 	while (time*plasma_period < maxTime && currentIteration < maxIteration) {
 		printf("iteration number %d time = %15.10g\n", currentIteration, time * plasma_period);
@@ -626,6 +706,9 @@ void Simulation::output() {
 	outputConcentrations(densityFile, electronConcentration, protonConcentration, chargeDensity, xnumber, ynumber, znumber, plasma_period, gyroradius);
 	fclose(densityFile);
 
+	velocityFile = fopen("./output/velocity.dat", "a");
+	outputVelocity(velocityFile, velocity, xnumber, ynumber, znumber, plasma_period, gyroradius):
+
 	divergenceErrorFile = fopen("./output/divergence_error.dat", "a");
 	outputDivergenceError(divergenceErrorFile, this);
 	fclose(divergenceErrorFile);
@@ -634,7 +717,7 @@ void Simulation::output() {
 void Simulation::updateDeltaT() {
 	printf("updating time step\n");
 	double delta = min3(deltaX, deltaY, deltaZ);
-	deltaT = 0.1 * delta / speed_of_light_normalized;
+	deltaT = 0.3 * delta / speed_of_light_normalized;
 	double B = B0.norm();
 	double E = E0.norm();
 	Particle* minElectron = electronMinMomentum();
@@ -662,10 +745,10 @@ void Simulation::updateDeltaT() {
 		}
 	}
 	if(B > 0){
-		deltaT = min2(deltaT, 0.005 * massElectron * speed_of_light_normalized / (electron_charge_normalized * B));
+		deltaT = min2(deltaT, 0.02 * massElectron * speed_of_light_normalized / (electron_charge_normalized * B));
 	}
 	if(E > 0) {
-		deltaT = min2(deltaT, 0.005*minMomentum/(electron_charge_normalized*E));
+		deltaT = min2(deltaT, 0.02*minMomentum/(electron_charge_normalized*E));
 	}
 	//deltaT = 0.005 * massElectron * speed_of_light_normalized / (electron_charge_normalized * B0.norm());
 	//deltaT = min2(deltaT, 0.02);
@@ -813,6 +896,14 @@ void Simulation::updateElectroMagneticParameters() {
 		updateElectroMagneticParameters(particle);
 	}
 
+	for(int i = 0; i < xnumber + 1; ++i) {
+		for(int j = 0; j < ynumber + 1; ++j) {
+			for(int k = 0; k < znumber + 1; ++k) {
+				velocity[i][j][k] = velocity[i][j][k]/((protonConcentration[i][j][k]*massProton + electronConcentration[i][j][k]*massProton)*volume(i, j, k));
+			}
+		}
+	}
+
 	updateBoundariesParameters();
 
 	double fullChargeDensity = evaluateFullChargeDensity();
@@ -911,6 +1002,7 @@ void Simulation::updateChargeDensity(Particle* particle) {
 				fullCorrelation += correlation;
 				addChargeDensity(i, j, k, correlation*charge);
 				addConcentration(i, j, k, correlation*particle->weight, particle->type);
+				addVelocity(i, j, k, particle->momentum*correlation*particle->weight);
 			}
 		}
 	}
@@ -1192,6 +1284,52 @@ void Simulation::addChargeDensity(int i, int j, int k, double charge) {
 	chargeDensity[i][j][k] += factor*charge/volume(i, j, k);
 
 	alertNaNOrInfinity(chargeDensity[i][j][k], "charge density = NaN\n");	
+}
+
+void Simulation::addVelocity(int i, int j, int k, Vector3d momentum) {
+	double factor = 1;
+	if(boundaryConditionType == BoundaryConditionTypes::SUPERCONDUCTERLEFT){
+		if(i < 0) {
+			i = 0;
+			//	todo!
+			return;
+		}
+
+		if(i == 0) {
+			factor *= 2;
+		}
+
+		if(i == xnumber) {
+			factor *= 2;
+		}
+
+		if(i > xnumber) {
+			return;
+		}
+	} else if(boundaryConditionType == BoundaryConditionTypes::PERIODIC){
+		if(i < 0) {
+			i = xnumber - 1;
+		}
+		if(i > xnumber) {
+			i = 1;
+		}
+	}
+
+	if(j < 0) {
+		j = ynumber - 1;
+	}
+	if(j > ynumber) {
+		j = 1;
+	}
+
+	if(k < 0) {
+		k = znumber - 1;
+	}
+	if(k > znumber) {
+		k = 1;
+	}
+
+	velocity[i][j][k] += momentum;
 }
 
 void Simulation::addConcentration(int i, int j, int k, double weight, ParticleTypes particle_type) {

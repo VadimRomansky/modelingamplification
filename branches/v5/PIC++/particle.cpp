@@ -91,13 +91,26 @@ double Particle::velocityZ(double c){
 	return momentum.z/(mass*gamma_factor);
 }
 
-void Particle::setMomentumByV(Vector3d v, double c){
+void Particle::setMomentumByV(Vector3d& v, double c){
 	if(v.norm() > c){
 		printf("ERROR v > c\n");
 		exit(0);
 	}
-	double gamma_factor = 1/sqrt(1 - v.scalarMult(v)/c);
+	double gamma_factor = 1/sqrt(1 - v.scalarMult(v)/(c*c));
 	momentum = v*(mass*gamma_factor);
+}
+
+void Particle::addVelocity(Vector3d& v, double c) {
+	if(v.norm() > c) {
+		printf("ERROR v > c\n");
+		exit(0);		
+	}
+
+	Vector3d vel = velocity(c);
+	vel += v;
+
+	//todo relativistic!
+	setMomentumByV(vel, c);
 }
 
 double Particle::gammaFactor(double c){
