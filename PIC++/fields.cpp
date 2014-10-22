@@ -96,7 +96,7 @@ void Simulation::updateEfieldX(int i, int j, int k, double dt) {
 void Simulation::updateEfieldY(int i, int j, int k, double dt) {
 	int middleI = i;
 	int prevI = i-1;
-	if(boundaryConditionType== BoundaryConditionTypes::SUPERCONDUCTERLEFT){
+	if(boundaryConditionType== SUPERCONDUCTERLEFT){
 		if(i == 0) {
 			EfieldY[i][j][k] = 0;
 			return;
@@ -105,7 +105,7 @@ void Simulation::updateEfieldY(int i, int j, int k, double dt) {
 			EfieldY[i][j][k] = E0.y;
 			return;
 		}
-	} else if(boundaryConditionType == BoundaryConditionTypes::PERIODIC) {
+	} else if(boundaryConditionType == PERIODIC) {
 		if(middleI >= xnumber) {
 			middleI = 0;
 		}
@@ -147,7 +147,7 @@ void Simulation::updateEfieldY(int i, int j, int k, double dt) {
 void Simulation::updateEfieldZ(int i, int j, int k, double dt) {
 	int middleI = i;
 	int prevI = i-1;
-	if(boundaryConditionType== BoundaryConditionTypes::SUPERCONDUCTERLEFT){
+	if(boundaryConditionType== SUPERCONDUCTERLEFT){
 		if(i == 0) {
 			EfieldZ[i][j][k] = 0;
 			return;
@@ -156,7 +156,7 @@ void Simulation::updateEfieldZ(int i, int j, int k, double dt) {
 			EfieldZ[i][j][k] = E0.z;
 			return;
 		}
-	} else if(boundaryConditionType == BoundaryConditionTypes::PERIODIC) {
+	} else if(boundaryConditionType == PERIODIC) {
 		if(middleI >= xnumber) {
 			middleI = 0;
 		}
@@ -293,7 +293,7 @@ void Simulation::updateBfieldZ(int i, int j, int k, double dt) {
 }
 
 void Simulation::updateBoundaries() {
-	if(boundaryConditionType == BoundaryConditionTypes::PERIODIC){
+	if(boundaryConditionType == PERIODIC){
 		for(int j = 0; j < ynumber; ++j) {
 			for(int k = 0; k < znumber; ++k) {
 				EfieldY[xnumber][j][k] = EfieldY[0][j][k];
@@ -351,7 +351,7 @@ double Simulation::evaluateDivE(int i, int j, int k) {
 		middleK = 0;
 	}
 
-	if(boundaryConditionType == BoundaryConditionTypes::SUPERCONDUCTERLEFT){
+	if(boundaryConditionType == SUPERCONDUCTERLEFT){
 		if(i == 0) {
 			return 0;
 		}
@@ -359,7 +359,7 @@ double Simulation::evaluateDivE(int i, int j, int k) {
 		if(i == xnumber) {
 			return ((E0.x - EfieldX[i-1][j][k])/deltaX) + ((EfieldY[i][middleJ][k] - EfieldY[i][prevJ][k])/deltaY) + ((EfieldZ[i][j][middleK] - EfieldZ[i][j][prevK])/deltaZ);
 		}
-	} else if(boundaryConditionType == BoundaryConditionTypes::PERIODIC){
+	} else if(boundaryConditionType == PERIODIC){
 		if(i == 0) {
 			return ((EfieldX[i][j][k] - EfieldX[xnumber - 1][j][k])/deltaX) + ((EfieldY[i][middleJ][k] - EfieldY[i][prevJ][k])/deltaY) + ((EfieldZ[i][j][middleK] - EfieldZ[i][j][prevK])/deltaZ);
 		} 

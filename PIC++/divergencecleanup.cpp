@@ -11,7 +11,7 @@ void Simulation::cleanupDivergence() {
 			for (int k = 0; k < znumber; ++k) {
 				divergenceCleanUpMatrix[i][j][k].clear();
 				divergenceCleanUpRightPart[i][j][k] = 0;
-				if(boundaryConditionType == BoundaryConditionTypes::SUPERCONDUCTERLEFT){
+				if(boundaryConditionType == SUPERCONDUCTERLEFT){
 					if(i == 0) {
 						divergenceCleanUpMatrix[i][j][k].push_back(MatrixElement(1.0, i, j, k));
 						divergenceCleanUpRightPart[i][j][k] = 0;				
@@ -20,7 +20,7 @@ void Simulation::cleanupDivergence() {
 					} else {
 						createDivergenceCleanupInternalEquation(i, j, k);
 					}
-				} else if(boundaryConditionType == BoundaryConditionTypes::PERIODIC) {
+				} else if(boundaryConditionType == PERIODIC) {
 					if(i == xnumber) {
 						divergenceCleanUpMatrix[i][j][k].push_back(MatrixElement(1.0, i, j, k));
 						divergenceCleanUpMatrix[i][j][k].push_back(MatrixElement(-1.0, 0, j, k));
@@ -42,13 +42,13 @@ void Simulation::cleanupDivergence() {
 		checkEquationMatrix(divergenceCleanUpMatrix);
 	}*/
 
-	if(boundaryConditionType == BoundaryConditionTypes::SUPERCONDUCTERLEFT){
+	if(boundaryConditionType == SUPERCONDUCTERLEFT){
 		generalizedMinimalResidualMethod(divergenceCleanUpMatrix, divergenceCleanUpRightPart, divergenceCleaningPotential, xnumber+1, ynumber, znumber);
-	} if(boundaryConditionType == BoundaryConditionTypes::PERIODIC) {
+	} if(boundaryConditionType == PERIODIC) {
 		generalizedMinimalResidualMethod(divergenceCleanUpMatrix, divergenceCleanUpRightPart, divergenceCleaningPotential, xnumber, ynumber, znumber);
 	}
 
-	if(boundaryConditionType == BoundaryConditionTypes::PERIODIC) {
+	if(boundaryConditionType == PERIODIC) {
 		for(int j = 0; j < ynumber+1; ++j) {
 			for(int k = 0; k < znumber+1; ++k) {
 				divergenceCleaningPotential[xnumber][j][k] = divergenceCleaningPotential[0][j][k];
