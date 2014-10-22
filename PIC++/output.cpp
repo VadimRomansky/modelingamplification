@@ -99,6 +99,16 @@ void outputConcentrations(FILE* outFile, double*** electronConcentration, double
 	}
 }
 
+void outputVelocity(FILE* outFile, Vector3d*** velocity, int xnumber, int ynumber, int znumber, double plasma_period, double gyroradius) {
+	for(int i = 0; i < xnumber; ++i) {
+		for(int j = 0; j < ynumber; ++j) {
+			for(int k = 0; k < znumber; ++k) {
+				fprintf(outFile, "%g %g %g\n", velocity[i][j][k].x*gyroradius/plasma_period, velocity[i][j][k].y*gyroradius/plasma_period, velocity[i][j][k].z*gyroradius/plasma_period);
+			}
+		}
+	}
+}
+
 void outputArrayParameter(FILE* outFile, double*** arrayParameter, int xnumber, int ynumber, int znumber) {
 	for(int i = 0; i < xnumber; ++i){
 		for(int j = 0; j < ynumber; ++j) {

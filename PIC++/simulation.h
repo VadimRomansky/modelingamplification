@@ -60,6 +60,7 @@ public:
 	double*** electronConcentration;
 	double*** protonConcentration;
 	double*** chargeDensity;
+	Vector3d*** velocity;
 
 
 	Vector3d V0;
@@ -107,6 +108,7 @@ public:
 	FILE* Zfile;
 	FILE* generalFile;
 	FILE* densityFile;
+	FILE* velocityFile;
 	FILE* divergenceErrorFile;
 
 	Simulation();
@@ -115,6 +117,7 @@ public:
 
 	void initialize();
 	void initializeSimpleElectroMagneticWave();
+	void initializeAlfvenWave();
 	void createArrays();
 	void createFiles();
 	void simulate();
@@ -198,6 +201,7 @@ public:
 	void addElectricFluxY(int i, int j, int k, double flux);
 	void addElectricFluxZ(int i, int j, int k, double flux);
 	void addChargeDensity(int i, int j, int k, double charge);
+	void addVelocity(int i, int j, int k, Vector3d momentum);
 	void addConcentration(int i, int j, int k, double weight, ParticleTypes particle_type);
 
 	double evaluateFullChargeDensity();
