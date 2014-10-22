@@ -73,7 +73,7 @@ void alertNegative(double value, const char* s){
 	}
 }
 
-int trunc(double value){
+int truncate(double value){
 	int round = value;
 	if(round > value){
 		round--;

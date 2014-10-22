@@ -43,9 +43,6 @@ void Simulation::moveParticle(Particle* particle){
 	matrix.matrix[2][1] = beta*B.x/(2*gamma*speed_of_light_normalized);
 	matrix.matrix[2][2] = 1;
 
-	Matrix3d inverseMatrix = matrix.inverse();
-	Vector3d deltaMomentum = (E + (particle->momentum.vectorMult(B)/(2*gamma*speed_of_light_normalized)))*beta;
-
 	Vector3d rightPart = particle->momentum + (E + (particle->momentum.vectorMult(B)/(2*particle->mass*gamma*speed_of_light_normalized)))*deltaT*particle->charge;
 
 	particle->momentum = matrix.inverse()*rightPart;
@@ -54,7 +51,7 @@ void Simulation::moveParticle(Particle* particle){
 }
 
 void Simulation::correctParticlePosition(Particle* particle) {
-	if(boundaryConditionType == BoundaryConditionTypes::SUPERCONDUCTERLEFT){
+	if(boundaryConditionType == SUPERCONDUCTERLEFT){
 		if(particle->coordinates.x < 0) {
 			particle->coordinates.x = -particle->coordinates.x;
 			particle->momentum.x = -particle->momentum.x;
@@ -73,7 +70,7 @@ void Simulation::correctParticlePosition(Particle* particle) {
 			delete particle;
 			return;
 		}
-	} else if(boundaryConditionType == BoundaryConditionTypes::PERIODIC) {
+	} else if(boundaryConditionType == PERIODIC) {
 		if(particle->coordinates.x < 0) {
 			particle->coordinates.x += xsize;
 		}

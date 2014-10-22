@@ -23,9 +23,9 @@ Vector3d Simulation::correlationBfield(Particle* particle) {
 }
 
 double Simulation::correlationEfieldX(Particle* particle) {
-	int xcount = trunc(particle->coordinates.x/deltaX);
-	int ycount = trunc((particle->coordinates.y/deltaY) + 0.5);
-	int zcount = trunc((particle->coordinates.z/deltaZ) + 0.5);
+	int xcount = truncate(particle->coordinates.x/deltaX);
+	int ycount = truncate((particle->coordinates.y/deltaY) + 0.5);
+	int zcount = truncate((particle->coordinates.z/deltaZ) + 0.5);
 
 	double Ex = 0;
 
@@ -41,9 +41,9 @@ double Simulation::correlationEfieldX(Particle* particle) {
 }
 
 double Simulation::correlationEfieldY(Particle* particle) {
-	int xcount = trunc((particle->coordinates.x/deltaX) + 0.5);
-	int ycount = trunc(particle->coordinates.y/deltaY);
-	int zcount = trunc((particle->coordinates.z/deltaZ) + 0.5);
+	int xcount = truncate((particle->coordinates.x/deltaX) + 0.5);
+	int ycount = truncate(particle->coordinates.y/deltaY);
+	int zcount = truncate((particle->coordinates.z/deltaZ) + 0.5);
 
 	double Ey = 0;
 
@@ -59,9 +59,9 @@ double Simulation::correlationEfieldY(Particle* particle) {
 }
 
 double Simulation::correlationEfieldZ(Particle* particle) {
-	int xcount = trunc((particle->coordinates.x/deltaX) + 0.5);
-	int ycount = trunc((particle->coordinates.y/deltaY) + 0.5);
-	int zcount = trunc(particle->coordinates.z/deltaZ);
+	int xcount = truncate((particle->coordinates.x/deltaX) + 0.5);
+	int ycount = truncate((particle->coordinates.y/deltaY) + 0.5);
+	int zcount = truncate(particle->coordinates.z/deltaZ);
 
 	double Ez = 0;
 
@@ -77,9 +77,9 @@ double Simulation::correlationEfieldZ(Particle* particle) {
 }
 
 double Simulation::correlationBfieldX(Particle* particle) {
-	int xcount = trunc((particle->coordinates.x/deltaX) + 0.5);
-	int ycount = trunc(particle->coordinates.y/deltaY);
-	int zcount = trunc(particle->coordinates.z/deltaZ);
+	int xcount = truncate((particle->coordinates.x/deltaX) + 0.5);
+	int ycount = truncate(particle->coordinates.y/deltaY);
+	int zcount = truncate(particle->coordinates.z/deltaZ);
 
 	double Bx = 0;
 
@@ -95,9 +95,9 @@ double Simulation::correlationBfieldX(Particle* particle) {
 }
 
 double Simulation::correlationBfieldY(Particle* particle) {
-	int xcount = trunc(particle->coordinates.x/deltaX);
-	int ycount = trunc((particle->coordinates.y/deltaY) + 0.5);
-	int zcount = trunc(particle->coordinates.z/deltaZ);
+	int xcount = truncate(particle->coordinates.x/deltaX);
+	int ycount = truncate((particle->coordinates.y/deltaY) + 0.5);
+	int zcount = truncate(particle->coordinates.z/deltaZ);
 
 	double By = 0;
 
@@ -113,9 +113,9 @@ double Simulation::correlationBfieldY(Particle* particle) {
 }
 
 double Simulation::correlationBfieldZ(Particle* particle) {
-	int xcount = trunc(particle->coordinates.x/deltaX);
-	int ycount = trunc(particle->coordinates.y/deltaY);
-	int zcount = trunc((particle->coordinates.z/deltaZ) + 0.5);
+	int xcount = truncate(particle->coordinates.x/deltaX);
+	int ycount = truncate(particle->coordinates.y/deltaY);
+	int zcount = truncate((particle->coordinates.z/deltaZ) + 0.5);
 
 	double Bz = 0;
 

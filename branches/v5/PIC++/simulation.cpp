@@ -44,7 +44,7 @@ Simulation::Simulation() {
 	B0 = Vector3d(1E-5, 0, 0);
 	E0 = Vector3d(1E-15, 0, 0);
 
-	boundaryConditionType = BoundaryConditionTypes::SUPERCONDUCTERLEFT;
+	boundaryConditionType = SUPERCONDUCTERLEFT;
 
 	double concentration = density / massProton;
 
@@ -773,9 +773,9 @@ void Simulation::createParticles() {
 				for (int l = 0; l < 2 * particlesPerBin; ++l) {
 					ParticleTypes type;
 					if (l % 2 == 0) {
-						type = ParticleTypes::PROTON;
+						type = PROTON;
 					} else {
-						type = ParticleTypes::ELECTRON;
+						type = ELECTRON;
 					}
 					Particle* particle = createParticle(i, j, k, weight, type);
 					if (l % 2 == 0) {
@@ -797,7 +797,7 @@ void Simulation::createParticles() {
 Particle* Simulation::getFirstProton() {
 	for(int pcount = 0; pcount < particles.size(); ++pcount) {
 		Particle* particle = particles[pcount];
-		if(particle->type == ParticleTypes::PROTON) {
+		if(particle->type == PROTON) {
 			return particle;
 		}
 	}
@@ -807,7 +807,7 @@ Particle* Simulation::getFirstProton() {
 Particle* Simulation::getFirstElectron() {
 	for(int pcount = 0; pcount < particles.size(); ++pcount) {
 		Particle* particle = particles[pcount];
-		if(particle->type == ParticleTypes::ELECTRON) {
+		if(particle->type == ELECTRON) {
 			return particle;
 		}
 	}
@@ -819,11 +819,11 @@ Particle* Simulation::createParticle(int i, int j, int k, double weight, Particl
 	double mass = 0;
 
 	switch (type) {
-	case ParticleTypes::PROTON:
+	case PROTON:
 		mass = massProton;
 		charge = electron_charge_normalized;
 		break;
-	case ParticleTypes::ELECTRON:
+	case ELECTRON:
 		mass = massElectron;
 		charge = -electron_charge_normalized;
 		break;
@@ -912,13 +912,13 @@ void Simulation::updateElectroMagneticParameters() {
 
 	updateBoundariesParameters();
 
-	double fullChargeDensity = evaluateFullChargeDensity();
+	//double fullChargeDensity = evaluateFullChargeDensity();
 }
 
 void Simulation::updateElectricFluxX(Particle* particle) {
-	int xcount = trunc(particle->coordinates.x/deltaX);
-	int ycount = trunc((particle->coordinates.y/deltaY) + 0.5);
-	int zcount = trunc((particle->coordinates.z/deltaZ) + 0.5);
+	int xcount = truncate(particle->coordinates.x/deltaX);
+	int ycount = truncate((particle->coordinates.y/deltaY) + 0.5);
+	int zcount = truncate((particle->coordinates.z/deltaZ) + 0.5);
 
 	double flux = particle->charge*particle->weight*particle->velocityX(speed_of_light_normalized);
 
@@ -933,9 +933,9 @@ void Simulation::updateElectricFluxX(Particle* particle) {
 }
 
 void Simulation::updateElectricFluxY(Particle* particle) {
-	int xcount = trunc((particle->coordinates.x/deltaX) + 0.5);
-	int ycount = trunc((particle->coordinates.y/deltaY));
-	int zcount = trunc((particle->coordinates.z/deltaZ) + 0.5);
+	int xcount = truncate((particle->coordinates.x/deltaX) + 0.5);
+	int ycount = truncate((particle->coordinates.y/deltaY));
+	int zcount = truncate((particle->coordinates.z/deltaZ) + 0.5);
 
 	double flux = particle->charge*particle->weight*particle->velocityY(speed_of_light_normalized);
 
@@ -950,9 +950,9 @@ void Simulation::updateElectricFluxY(Particle* particle) {
 }
 
 void Simulation::updateElectricFluxZ(Particle* particle) {
-	int xcount = trunc((particle->coordinates.x/deltaX) + 0.5);
-	int ycount = trunc((particle->coordinates.y/deltaY) + 0.5);
-	int zcount = trunc((particle->coordinates.z/deltaZ));
+	int xcount = truncate((particle->coordinates.x/deltaX) + 0.5);
+	int ycount = truncate((particle->coordinates.y/deltaY) + 0.5);
+	int zcount = truncate((particle->coordinates.z/deltaZ));
 
 	double flux = particle->charge*particle->weight*particle->velocityZ(speed_of_light_normalized);
 
@@ -967,9 +967,9 @@ void Simulation::updateElectricFluxZ(Particle* particle) {
 }
 
 void Simulation::updateChargeDensity(Particle* particle) {
-	int xcount = trunc((particle->coordinates.x/deltaX) + 0.5);
-	int ycount = trunc((particle->coordinates.y/deltaY) + 0.5);
-	int zcount = trunc((particle->coordinates.z/deltaZ) + 0.5);
+	int xcount = truncate((particle->coordinates.x/deltaX) + 0.5);
+	int ycount = truncate((particle->coordinates.y/deltaY) + 0.5);
+	int zcount = truncate((particle->coordinates.z/deltaZ) + 0.5);
 
 	if(xcount < 0) {
 		printf("xcount < 0\n");
@@ -1015,7 +1015,7 @@ void Simulation::updateChargeDensity(Particle* particle) {
 }
 
 void Simulation::updateBoundariesParameters() {
-	if(boundaryConditionType == BoundaryConditionTypes::PERIODIC){
+	if(boundaryConditionType == PERIODIC){
 		for(int j = 0; j < ynumber+1; ++j) {
 			for(int k = 0; k < znumber+1; ++k) {
 				if(j < ynumber){
@@ -1112,7 +1112,7 @@ void Simulation::updateElectroMagneticParameters(Particle* particle) {
 }
 
 void Simulation::addElectricFluxX(int i, int j, int k, double flux) {
-	if(boundaryConditionType == BoundaryConditionTypes::SUPERCONDUCTERLEFT){
+	if(boundaryConditionType == SUPERCONDUCTERLEFT){
 		if(i < 0) {
 			i = 0;
 			flux = -flux;
@@ -1120,7 +1120,7 @@ void Simulation::addElectricFluxX(int i, int j, int k, double flux) {
 		if(i >= xnumber) {
 			return;
 		}
-	}  else if(boundaryConditionType == BoundaryConditionTypes::PERIODIC){
+	}  else if(boundaryConditionType == PERIODIC){
 		if(i < 0) {
 			i = xnumber - 1;
 		}
@@ -1150,7 +1150,7 @@ void Simulation::addElectricFluxX(int i, int j, int k, double flux) {
 
 void Simulation::addElectricFluxY(int i, int j, int k, double flux) {
 	double factor = 1;
-	if(boundaryConditionType == BoundaryConditionTypes::SUPERCONDUCTERLEFT){
+	if(boundaryConditionType == SUPERCONDUCTERLEFT){
 		if(i < 0) {
 			i = 0;
 			//	todo!
@@ -1168,7 +1168,7 @@ void Simulation::addElectricFluxY(int i, int j, int k, double flux) {
 		if(i > xnumber) {
 			return;
 		}
-	} else if(boundaryConditionType == BoundaryConditionTypes::PERIODIC){
+	} else if(boundaryConditionType == PERIODIC){
 		if(i < 0) {
 			i = xnumber - 1;
 		}
@@ -1198,7 +1198,7 @@ void Simulation::addElectricFluxY(int i, int j, int k, double flux) {
 
 void Simulation::addElectricFluxZ(int i, int j, int k, double flux) {
 	double factor = 1;
-	if(boundaryConditionType == BoundaryConditionTypes::SUPERCONDUCTERLEFT){
+	if(boundaryConditionType == SUPERCONDUCTERLEFT){
 		if(i < 0) {
 			i = 0;
 			//	todo!
@@ -1216,7 +1216,7 @@ void Simulation::addElectricFluxZ(int i, int j, int k, double flux) {
 		if(i > xnumber) {
 			return;
 		}
-	} else if(boundaryConditionType == BoundaryConditionTypes::PERIODIC){
+	} else if(boundaryConditionType == PERIODIC){
 		if(i < 0) {
 			i = xnumber - 1;
 		}
@@ -1246,7 +1246,7 @@ void Simulation::addElectricFluxZ(int i, int j, int k, double flux) {
 
 void Simulation::addChargeDensity(int i, int j, int k, double charge) {
 	double factor = 1;
-	if(boundaryConditionType == BoundaryConditionTypes::SUPERCONDUCTERLEFT){
+	if(boundaryConditionType == SUPERCONDUCTERLEFT){
 		if(i < 0) {
 			i = 0;
 			//	todo!
@@ -1264,7 +1264,7 @@ void Simulation::addChargeDensity(int i, int j, int k, double charge) {
 		if(i > xnumber) {
 			return;
 		}
-	} else if(boundaryConditionType == BoundaryConditionTypes::PERIODIC){
+	} else if(boundaryConditionType == PERIODIC){
 		if(i < 0) {
 			i = xnumber - 1;
 		}
@@ -1294,7 +1294,7 @@ void Simulation::addChargeDensity(int i, int j, int k, double charge) {
 
 void Simulation::addVelocity(int i, int j, int k, Vector3d momentum) {
 	double factor = 1;
-	if(boundaryConditionType == BoundaryConditionTypes::SUPERCONDUCTERLEFT){
+	if(boundaryConditionType == SUPERCONDUCTERLEFT){
 		if(i < 0) {
 			i = 0;
 			//	todo!
@@ -1312,7 +1312,7 @@ void Simulation::addVelocity(int i, int j, int k, Vector3d momentum) {
 		if(i > xnumber) {
 			return;
 		}
-	} else if(boundaryConditionType == BoundaryConditionTypes::PERIODIC){
+	} else if(boundaryConditionType == PERIODIC){
 		if(i < 0) {
 			i = xnumber - 1;
 		}
@@ -1346,7 +1346,7 @@ void Simulation::addVelocity(int i, int j, int k, Vector3d momentum) {
 
 void Simulation::addConcentration(int i, int j, int k, double weight, ParticleTypes particle_type) {
 	double factor = 1;
-	if(boundaryConditionType == BoundaryConditionTypes::SUPERCONDUCTERLEFT){
+	if(boundaryConditionType == SUPERCONDUCTERLEFT){
 		if(i < 0) {
 			i = 0;
 			//	todo!
@@ -1364,7 +1364,7 @@ void Simulation::addConcentration(int i, int j, int k, double weight, ParticleTy
 		if(i > xnumber) {
 			return;
 		}
-	} else if(boundaryConditionType == BoundaryConditionTypes::PERIODIC){
+	} else if(boundaryConditionType == PERIODIC){
 		if(i < 0) {
 			i = xnumber - 1;
 		}
@@ -1388,10 +1388,10 @@ void Simulation::addConcentration(int i, int j, int k, double weight, ParticleTy
 	}
 
 	switch (particle_type){
-		case ParticleTypes::ELECTRON :
+		case ELECTRON :
 			electronConcentration[i][j][k] += factor*weight/volume(i, j, k);
 			break;
-		case ParticleTypes::PROTON :
+		case PROTON :
 			protonConcentration[i][j][k] += factor*weight/volume(i, j, k);
 			break;
 	}
@@ -1435,10 +1435,10 @@ double Simulation::evaluateFullChargeDensity() {
 	double fullProtonconcentration2 = 0;
 	for(int pcount = 0; pcount < particles.size(); ++pcount) {
 		fullChargeDensity2 += particles[pcount]->charge*particles[pcount]->weight;
-		if(particles[pcount]->type == ParticleTypes::ELECTRON){
+		if(particles[pcount]->type == ELECTRON){
 			fullElectronConcentration2 += particles[pcount]->weight;
 		}
-		if(particles[pcount]->type == ParticleTypes::PROTON) {
+		if(particles[pcount]->type == PROTON) {
 			fullProtonconcentration2 += particles[pcount]->weight;
 		}
 	}
@@ -1454,7 +1454,7 @@ Particle* Simulation::electronMinMomentum() {
 	double minMomentum = minElectron->momentum.norm();
 	for(int pcount = 0; pcount < particles.size(); ++pcount) {
 		Particle* particle = particles[pcount];
-		if(particle->type == ParticleTypes::ELECTRON){
+		if(particle->type == ELECTRON){
 			double momentum = particle->momentum.norm();
 			if(momentum < minMomentum) {
 				minMomentum = momentum;
