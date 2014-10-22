@@ -496,7 +496,8 @@ void Simulation::initializeAlfvenWave() {
 
 	for(int pcount = 0; pcount < particles.size(); ++pcount) {
 		Particle* particle = particles[pcount];
-		Vector3d velocity = Vector3d(0, 1, 0)*(B/sqrt(4*pi*density))*cos(kw*particle->coordinates.x);
+		Vector3d velocity = Vector3d(0, 0, 1)*(B/sqrt(4*pi*density))*cos(kw*particle->coordinates.x);
+		double beta = velocity.norm()/speed_of_light_normalized;
 		particle->addVelocity(velocity, speed_of_light_normalized);
 	}
 }
@@ -646,9 +647,10 @@ void Simulation::simulate() {
 	initializeAlfvenWave();
 	updateEnergy();
 	updateElectroMagneticParameters();
+	updateDeltaT();
 
 	while (time*plasma_period < maxTime && currentIteration < maxIteration) {
-		printf("iteration number %d time = %15.10g\n", currentIteration, time * plasma_period);
+		printf("iteration number %d time = %15.10g dt = %15.10g\n", currentIteration, time * plasma_period, deltaT * plasma_period);
 
 		if (currentIteration % writeParameter == 0) {
 			output();
@@ -707,7 +709,7 @@ void Simulation::output() {
 	fclose(densityFile);
 
 	velocityFile = fopen("./output/velocity.dat", "a");
-	outputVelocity(velocityFile, velocity, xnumber, ynumber, znumber, plasma_period, gyroradius):
+	outputVelocity(velocityFile, velocity, xnumber, ynumber, znumber, plasma_period, gyroradius);
 
 	divergenceErrorFile = fopen("./output/divergence_error.dat", "a");
 	outputDivergenceError(divergenceErrorFile, this);
@@ -748,8 +750,12 @@ void Simulation::updateDeltaT() {
 		deltaT = min2(deltaT, 0.02 * massElectron * speed_of_light_normalized / (electron_charge_normalized * B));
 	}
 	if(E > 0) {
-		deltaT = min2(deltaT, 0.02*minMomentum/(electron_charge_normalized*E));
+		deltaT = min2(deltaT, 0.02* massElectron * speed_of_light_normalized/(electron_charge_normalized*E));
 	}
+
+	//if(E > 0) {
+		//deltaT = min2(deltaT, 0.02*minMomentum/(electron_charge_normalized*E));
+	//}
 	//deltaT = 0.005 * massElectron * speed_of_light_normalized / (electron_charge_normalized * B0.norm());
 	//deltaT = min2(deltaT, 0.02);
 	deltaT = min2(deltaT, plasma_period2/10);
@@ -1330,6 +1336,12 @@ void Simulation::addVelocity(int i, int j, int k, Vector3d momentum) {
 	}
 
 	velocity[i][j][k] += momentum;
+
+	alertNaNOrInfinity(velocity[i][j][k].x, "velocity.x = NaN\n");
+
+	alertNaNOrInfinity(velocity[i][j][k].y, "velocity.y = NaN\n");
+
+	alertNaNOrInfinity(velocity[i][j][k].z, "velocity.z = NaN\n");
 }
 
 void Simulation::addConcentration(int i, int j, int k, double weight, ParticleTypes particle_type) {
