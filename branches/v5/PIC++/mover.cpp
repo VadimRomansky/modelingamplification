@@ -23,24 +23,24 @@ void Simulation::moveParticle(Particle* particle){
 	Vector3d B = correlationBfield(particle);
 
 	double gamma = particle->gammaFactor(speed_of_light_normalized);
-	Vector3d velocity = particle->velocity(speed_of_light_normalized);
+	Vector3d velocity = particle->momentum/(particle->mass*gamma);
 
 	particle->oldCoordinates = particle->coordinates;
 	particle->coordinates += velocity*deltaT;
 	Matrix3d matrix;
 
-	double beta = particle->charge*deltaT/particle->mass;
+	double beta = particle->charge*deltaT/(2*gamma*speed_of_light_normalized*particle->mass);
 
 	matrix.matrix[0][0] = 1;
-	matrix.matrix[0][1] = - beta*B.z/(2*gamma*speed_of_light_normalized);
-	matrix.matrix[0][2] = beta*B.y/(2*gamma*speed_of_light_normalized);
+	matrix.matrix[0][1] = - beta*B.z;
+	matrix.matrix[0][2] = beta*B.y;
 
-	matrix.matrix[1][0] = beta*B.z/(2*gamma*speed_of_light_normalized);
+	matrix.matrix[1][0] = beta*B.z;
 	matrix.matrix[1][1] = 1;
-	matrix.matrix[1][2] = - beta*B.x/(2*gamma*speed_of_light_normalized);
+	matrix.matrix[1][2] = - beta*B.x;
 
-	matrix.matrix[2][0] = - beta*B.y/(2*gamma*speed_of_light_normalized);
-	matrix.matrix[2][1] = beta*B.x/(2*gamma*speed_of_light_normalized);
+	matrix.matrix[2][0] = - beta*B.y;
+	matrix.matrix[2][1] = beta*B.x;
 	matrix.matrix[2][2] = 1;
 
 	Vector3d rightPart = particle->momentum + (E + (particle->momentum.vectorMult(B)/(2*particle->mass*gamma*speed_of_light_normalized)))*deltaT*particle->charge;
