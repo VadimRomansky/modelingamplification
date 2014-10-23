@@ -66,11 +66,6 @@ void Simulation::updateEfieldX(int i, int j, int k, double dt) {
 		k = 0;
 	}
 
-	if(i == xnumber) {
-		EfieldX[i][j][k] = E0.x;
-		return;
-	}
-
 	int middleJ = j;
 	if(middleJ >= ynumber) {
 		middleJ = 0;
@@ -96,7 +91,7 @@ void Simulation::updateEfieldX(int i, int j, int k, double dt) {
 void Simulation::updateEfieldY(int i, int j, int k, double dt) {
 	int middleI = i;
 	int prevI = i-1;
-	if(boundaryConditionType== SUPERCONDUCTERLEFT){
+	if(boundaryConditionType == SUPERCONDUCTERLEFT){
 		if(i == 0) {
 			EfieldY[i][j][k] = 0;
 			return;

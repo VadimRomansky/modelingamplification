@@ -424,7 +424,7 @@ void Simulation::initializeSimpleElectroMagneticWave() {
 	for(int i = 0; i < xnumber; ++i) {
 		for(int j = 0; j < ynumber; ++j) {
 			for(int k = 0; k < znumber + 1; ++k) {
-				BfieldZ[i][j][k] = 0;
+				BfieldZ[i][j][k] = E*sin(kw*(xgrid[i]+deltaX/2));
 			}
 		}
 	}
@@ -432,7 +432,7 @@ void Simulation::initializeSimpleElectroMagneticWave() {
 
 void Simulation::initializeAlfvenWave() {
 	E0 = Vector3d(0, 0, 0);
-	B0 = Vector3d(2E-3, 0, 0);
+	B0 = Vector3d(1E-3, 0, 0);
 
 	double alfvenV = B0.norm()/sqrt(4*pi*density);
 	if(alfvenV > speed_of_light_normalized) {
@@ -445,6 +445,15 @@ void Simulation::initializeAlfvenWave() {
 	double omega = kw*alfvenV;
 	double t = 2*pi/omega;
 	double B = 1E-4;
+
+	double qLog = 15;
+	double nuElectronIon = 4*sqrt(2*pi)*qLog*power(electron_charge_normalized, 4)*(density/massProton)/(3*sqrt(massElectron)*sqrt(cube(temperature)));
+	double collisionlessParameter = omega/nuElectronIon;
+	double conductivity = (3*massProton*sqrt(massElectron)*sqrt(cube(kBoltzman_normalized*temperature)))/(sqr(massElectron)*4*sqrt(2*pi)*qLog*sqr(electron_charge_normalized));
+
+	double alphaParameter = omega/conductivity;
+
+	double magneticReynolds = conductivity*alfvenV/(kw*speed_of_light_normalized_sqr);
 
 	for(int i = 0; i < xnumber; ++i) {
 		for(int j = 0; j < ynumber + 1; ++j) {
@@ -710,6 +719,7 @@ void Simulation::output() {
 
 	velocityFile = fopen("./output/velocity.dat", "a");
 	outputVelocity(velocityFile, velocity, xnumber, ynumber, znumber, plasma_period, gyroradius);
+	fclose(velocityFile);
 
 	divergenceErrorFile = fopen("./output/divergence_error.dat", "a");
 	outputDivergenceError(divergenceErrorFile, this);
@@ -767,8 +777,8 @@ void Simulation::createParticles() {
 	for (int i = 0; i < xnumber; ++i) {
 		for (int j = 0; j < ynumber; ++j) {
 			for (int k = 0; k < znumber; ++k) {
-				//double weight = (density / (massProton * particlesPerBin)) * volume(i, j, k);
-				double weight = (1.0 / particlesPerBin) * volume(i, j, k);
+				double weight = (density / (massProton * particlesPerBin)) * volume(i, j, k);
+				//double weight = (1.0 / particlesPerBin) * volume(i, j, k);
 				Vector3d coordinates;
 				for (int l = 0; l < 2 * particlesPerBin; ++l) {
 					ParticleTypes type;
@@ -833,9 +843,9 @@ Particle* Simulation::createParticle(int i, int j, int k, double weight, Particl
 	double y = ygrid[j] + deltaY * uniformDistribution();
 	double z = zgrid[k] + deltaZ * uniformDistribution();
 
-	double dx = deltaX / 4;
-	double dy = deltaY / 4;
-	double dz = deltaZ / 4;
+	double dx = deltaX / 2;
+	double dy = deltaY / 2;
+	double dz = deltaZ / 2;
 
 	double energy = mass * speed_of_light_normalized_sqr;
 
@@ -1497,6 +1507,7 @@ void Simulation::resetElectroMagneticParameters() {
 				chargeDensity[i][j][k] = 0;
 				electronConcentration[i][j][k] = 0;
 				protonConcentration[i][j][k] = 0;
+				velocity[i][j][k] = Vector3d(0, 0, 0);
 			}
 		}
 	}

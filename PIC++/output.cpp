@@ -93,7 +93,7 @@ void outputConcentrations(FILE* outFile, double*** electronConcentration, double
 	for(int i = 0; i < xnumber; ++i) {
 		for(int j = 0; j < ynumber; ++j) {
 			for(int k = 0; k < znumber; ++k) {
-				fprintf(outFile, "%g %g %g\n", electronConcentration[i][j][k]/cube(gyroradius), protonConcentration[i][j][k]/cube(gyroradius), chargeDensity[i][j][k]/(sqrt(cube(gyroradius))*plasma_period));
+				fprintf(outFile, "%15.10g %15.10g %15.10g\n", electronConcentration[i][j][k]/cube(gyroradius), protonConcentration[i][j][k]/cube(gyroradius), chargeDensity[i][j][k]/(sqrt(cube(gyroradius))*plasma_period));
 			}
 		}
 	}
@@ -103,7 +103,7 @@ void outputVelocity(FILE* outFile, Vector3d*** velocity, int xnumber, int ynumbe
 	for(int i = 0; i < xnumber; ++i) {
 		for(int j = 0; j < ynumber; ++j) {
 			for(int k = 0; k < znumber; ++k) {
-				fprintf(outFile, "%g %g %g\n", velocity[i][j][k].x*gyroradius/plasma_period, velocity[i][j][k].y*gyroradius/plasma_period, velocity[i][j][k].z*gyroradius/plasma_period);
+				fprintf(outFile, "%15.10g %15.10g %15.10g\n", velocity[i][j][k].x*gyroradius/plasma_period, velocity[i][j][k].y*gyroradius/plasma_period, velocity[i][j][k].z*gyroradius/plasma_period);
 			}
 		}
 	}
@@ -120,7 +120,7 @@ void outputArrayParameter(FILE* outFile, double*** arrayParameter, int xnumber, 
 }
 
 void outputGeneral(FILE* outFile, Simulation* simulation) {
-	fprintf(outFile, "%g %g %g %g %g %g %g %g %g\n", simulation->time, simulation->time*simulation->plasma_period, simulation->particleEnergy,
+	fprintf(outFile, "%15.10g %15.10g %15.10g %15.10g %15.10g %15.10g %15.10g %15.10g %15.10g\n", simulation->time, simulation->time*simulation->plasma_period, simulation->particleEnergy,
 		simulation->electricFieldEnergy, simulation->magneticFieldEnergy, simulation->energy, simulation->momentum.x, simulation->momentum.y, simulation->momentum.z);
 }
 
