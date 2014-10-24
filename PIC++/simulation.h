@@ -109,6 +109,7 @@ public:
 	FILE* generalFile;
 	FILE* densityFile;
 	FILE* velocityFile;
+	FILE* fluxFile;
 	FILE* divergenceErrorFile;
 
 	Simulation();

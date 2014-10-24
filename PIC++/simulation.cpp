@@ -643,6 +643,8 @@ void Simulation::createFiles() {
 	fclose(densityFile);
 	velocityFile = fopen("./output/velocity.dat", "w");
 	fclose(velocityFile);
+	fluxFile = fopen("./output/flux.dat", "w");
+	fclose(fluxFile);
 	divergenceErrorFile = fopen("./output/divergence_error.dat", "w");
 	fclose(divergenceErrorFile);
 }
@@ -653,7 +655,7 @@ void Simulation::simulate() {
 	//initializeSimpleElectroMagneticWave();
 	createFiles();
 	createParticles();
-	initializeAlfvenWave();
+	//initializeAlfvenWave();
 	updateEnergy();
 	updateElectroMagneticParameters();
 	updateDeltaT();
@@ -668,7 +670,7 @@ void Simulation::simulate() {
 
 		moveParticles();
 		updateElectroMagneticParameters();
-		evaluateFields();
+		//evaluateFields();
 		
 		updateEnergy();
 
@@ -720,6 +722,10 @@ void Simulation::output() {
 	velocityFile = fopen("./output/velocity.dat", "a");
 	outputVelocity(velocityFile, velocity, xnumber, ynumber, znumber, plasma_period, gyroradius);
 	fclose(velocityFile);
+
+	fluxFile = fopen("./output/flux.dat", "a");
+	outputFlux(fluxFile, electricFluxX, electricFluxY, electricFluxZ, xnumber, ynumber, znumber, plasma_period, gyroradius);
+	fclose(fluxFile);
 
 	divergenceErrorFile = fopen("./output/divergence_error.dat", "a");
 	outputDivergenceError(divergenceErrorFile, this);

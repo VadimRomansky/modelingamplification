@@ -109,6 +109,16 @@ void outputVelocity(FILE* outFile, Vector3d*** velocity, int xnumber, int ynumbe
 	}
 }
 
+void outputFlux(FILE* outFile, double*** electricFluxX, double*** electricFluxY, double*** electricFluxZ, int xnumber, int ynumber, int znumber, double plasma_period, double gyroradius) {
+	for(int i = 0; i < xnumber; ++i) {
+		for(int j = 0; j < ynumber; ++j) {
+			for(int k = 0; k < znumber; ++k) {
+				fprintf(outFile, "%15.10g %15.10g %15.10g\n", electricFluxX[i][j][k], electricFluxY[i][j][k], electricFluxZ[i][j][k]);
+			}
+		}
+	}
+}
+
 void outputArrayParameter(FILE* outFile, double*** arrayParameter, int xnumber, int ynumber, int znumber) {
 	for(int i = 0; i < xnumber; ++i){
 		for(int j = 0; j < ynumber; ++j) {
