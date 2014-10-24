@@ -29,6 +29,7 @@ void Simulation::updateEfield(double dt) {
 		for(int j = 0; j < ynumber + 1; ++j) {
 			for(int k = 0; k < znumber + 1; ++k) {
 				updateEfieldX(i, j, k, dt);
+				//EfieldX[i][j][k] = 0;
 			}
 		}
 	}
@@ -37,6 +38,7 @@ void Simulation::updateEfield(double dt) {
 		for(int j = 0; j < ynumber; ++j) {
 			for(int k = 0; k < znumber + 1; ++k) {
 				updateEfieldY(i, j, k, dt);
+				//EfieldY[i][j][k] = 0;
 			}
 		}
 	}
@@ -45,6 +47,7 @@ void Simulation::updateEfield(double dt) {
 		for(int j = 0; j < ynumber + 1; ++j) {
 			for(int k = 0; k < znumber; ++k) {
 				updateEfieldZ(i, j, k, dt);
+				//EfieldZ[i][j][k] = 0;
 			}
 		}
 	}
@@ -190,9 +193,9 @@ void Simulation::updateEfieldZ(int i, int j, int k, double dt) {
 	double BrightY = BfieldX[middleI][middleJ][middleK];
 	double BleftY = BfieldX[middleI][prevJ][middleK];
 
-	double rotBy = (BrightX - BleftX)/deltaX - (BrightY - BleftY)/deltaY;
+	double rotBz = (BrightX - BleftX)/deltaX - (BrightY - BleftY)/deltaY;
 
-	EfieldZ[i][j][k] += (speed_of_light_normalized*rotBy - 4*pi*electricFluxY[i][j][k])*dt;
+	EfieldZ[i][j][k] += (speed_of_light_normalized*rotBz - 4*pi*electricFluxZ[i][j][k])*dt;
 
 	alertNaNOrInfinity(EfieldZ[i][j][k], "EfieldZ = NaN\n");
 }

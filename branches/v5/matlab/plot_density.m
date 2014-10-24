@@ -4,6 +4,7 @@ load Xfile.dat;
 load Yfile.dat;
 load Zfile.dat;
 load divergence_error.dat;
+load flux.dat;
 
 Nx = size(Xfile, 1);
 Ny = size(Yfile, 1);
@@ -24,7 +25,9 @@ protonConcentration(1:Nx, 1:3) = 0;
 chargeDensity(1:Nx, 1:3) = 0;
 shiftChargeDensity(1:Nx, 1:3) = 0;
 divergenceError(1:Nx, 1:3) = 0;
-
+electricFluxX(1:Nx, 1:3) = 0;
+electricFluxY(1:Nx, 1:3) = 0;
+electricFluxZ(1:Nx, 1:3) = 0;
 
 for i=1:Nx,   
    electronConcentration(i, 1) = concentrations((Nz*Ny*(i-1) + Nz*(ynumber-1) + znumber) + a*N, 1);
@@ -39,6 +42,15 @@ for i=1:Nx,
    divergenceError(i, 1) = divergence_error((Nz*Ny*(i-1) + Nz*(ynumber-1) + znumber) + a*N, 2);
    divergenceError(i, 2) = divergence_error((Nz*Ny*(i-1) + Nz*(ynumber-1) + znumber) + b*N, 2);
    divergenceError(i, 3) = divergence_error((Nz*Ny*(i-1) + Nz*(ynumber-1) + znumber) + c*N, 2);
+   electricFluxX(i, 1) = flux((Nz*Ny*(i-1) + Nz*(ynumber-1) + znumber) + a*N, 1);
+   electricFluxX(i, 2) = flux((Nz*Ny*(i-1) + Nz*(ynumber-1) + znumber) + b*N, 1);
+   electricFluxX(i, 3) = flux((Nz*Ny*(i-1) + Nz*(ynumber-1) + znumber) + c*N, 1);
+   electricFluxY(i, 1) = flux((Nz*Ny*(i-1) + Nz*(ynumber-1) + znumber) + a*N, 2);
+   electricFluxY(i, 2) = flux((Nz*Ny*(i-1) + Nz*(ynumber-1) + znumber) + b*N, 2);
+   electricFluxY(i, 3) = flux((Nz*Ny*(i-1) + Nz*(ynumber-1) + znumber) + c*N, 2);
+   electricFluxZ(i, 1) = flux((Nz*Ny*(i-1) + Nz*(ynumber-1) + znumber) + a*N, 3);
+   electricFluxZ(i, 2) = flux((Nz*Ny*(i-1) + Nz*(ynumber-1) + znumber) + b*N, 3);
+   electricFluxZ(i, 3) = flux((Nz*Ny*(i-1) + Nz*(ynumber-1) + znumber) + c*N, 3);
 end;
 figure(1);
 plot (Xfile(1:Nx,1),electronConcentration(1:Nx,1), 'red',Xfile(1:Nx,1),electronConcentration(1:Nx,2), 'green',Xfile(1:Nx,1),electronConcentration(1:Nx,3), 'blue');
@@ -73,4 +85,25 @@ plot (Xfile(2:Nx,1),divergenceError(2:Nx, 1), 'red', Xfile(2:Nx,1), divergenceEr
 title ('divergence error');
 xlabel ('x/r_g');
 ylabel ('rho sgs*cm^-3');
+grid ;
+
+figure(6);
+plot (Xfile(1:Nx,1), electricFluxX(1:Nx, 1), 'red', Xfile(1:Nx,1), electricFluxX(1:Nx, 2), 'green', Xfile(1:Nx,1), electricFluxX(1:Nx, 3), 'blue');
+title ('electric flux');
+xlabel ('x/r_g');
+ylabel ('Jx');
+grid 
+
+figure(7);
+plot (Xfile(1:Nx,1), electricFluxY(1:Nx, 1), 'red', Xfile(1:Nx,1), electricFluxY(1:Nx, 2), 'green', Xfile(1:Nx,1), electricFluxY(1:Nx, 3), 'blue');
+title ('electric flux');
+xlabel ('x/r_g');
+ylabel ('Jy');
+grid ;
+
+figure(8);
+plot (Xfile(1:Nx,1), electricFluxZ(1:Nx, 1), 'red', Xfile(1:Nx,1), electricFluxZ(1:Nx, 2), 'green', Xfile(1:Nx,1), electricFluxZ(1:Nx, 3), 'blue');
+title ('electric flux');
+xlabel ('x/r_g');
+ylabel ('Jz');
 grid ;
