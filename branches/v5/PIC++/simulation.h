@@ -119,6 +119,7 @@ public:
 	void initialize();
 	void initializeSimpleElectroMagneticWave();
 	void initializeAlfvenWave();
+	void initializeMagnetSonicWave();
 	void createArrays();
 	void createFiles();
 	void simulate();
