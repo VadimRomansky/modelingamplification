@@ -149,6 +149,9 @@ Simulation::Simulation(double xn, double yn, double zn, double xsizev, double ys
 	{
 		printf("dx > Debye length\n");
 	}
+	if(dx > gyroradius) {
+		printf("dx > gyroradius\n");
+	}
 
 	plasma_period = 1.0;
 	gyroradius = 1.0;
@@ -444,16 +447,42 @@ void Simulation::initializeAlfvenWave() {
 
 	double omega = kw*alfvenV;
 	double t = 2*pi/omega;
-	double B = 1E-4;
+	double B = 1E-5;
 
 	double qLog = 15;
-	double nuElectronIon = 4*sqrt(2*pi)*qLog*power(electron_charge_normalized, 4)*(density/massProton)/(3*sqrt(massElectron)*sqrt(cube(temperature)));
+	double nuElectronIon = 4*sqrt(2*pi)*qLog*power(electron_charge_normalized, 4)*(density/massProton)/(3*sqrt(massElectron)*sqrt(cube(kBoltzman_normalized*temperature)));
 	double collisionlessParameter = omega/nuElectronIon;
 	double conductivity = (3*massProton*sqrt(massElectron)*sqrt(cube(kBoltzman_normalized*temperature)))/(sqr(massElectron)*4*sqrt(2*pi)*qLog*sqr(electron_charge_normalized));
 
+	double nu = speed_of_light_normalized_sqr/(4*pi*conductivity);
+
 	double alphaParameter = omega/conductivity;
 
-	double magneticReynolds = conductivity*alfvenV/(kw*speed_of_light_normalized_sqr);
+	double magneticReynolds = conductivity*alfvenV*0.01/(kw*speed_of_light_normalized_sqr);
+
+	double concentration = density / massProton;
+	plasma_period = sqrt(massElectron / (4 * pi * concentration * sqr(electron_charge))) / (2 * pi);
+	plasma_period2 = plasma_period;
+	double thermal_momentum;
+	if(kBoltzman*temperature > massElectron*speed_of_light*speed_of_light) {
+		thermal_momentum = kBoltzman*temperature/speed_of_light;
+	} else {
+		thermal_momentum = sqrt(2*massElectron*kBoltzman*temperature);
+	}
+	gyroradius = thermal_momentum*speed_of_light / (electron_charge * B0.norm());
+
+	if(gyroradius < deltaX) {
+		printf("gyroradius < dx\n");
+	}
+
+	if(gyroradius*sqrt(massProton/massElectron) > xsize) {
+		printf("gyroradius proton > xsize");
+	}
+
+	gyroradius = 1.0;
+	plasma_period = 1.0;
+
+	double epsilonAmplitude = 0.05;
 
 	for(int i = 0; i < xnumber; ++i) {
 		for(int j = 0; j < ynumber + 1; ++j) {
@@ -466,7 +495,7 @@ void Simulation::initializeAlfvenWave() {
 	for(int i = 0; i < xnumber + 1; ++i) {
 		for(int j = 0; j < ynumber; ++j) {
 			for(int k = 0; k < znumber + 1; ++k) {
-				EfieldY[i][j][k] =0;
+				EfieldY[i][j][k] = 0;
 			}
 		}
 	}
@@ -498,14 +527,177 @@ void Simulation::initializeAlfvenWave() {
 	for(int i = 0; i < xnumber; ++i) {
 		for(int j = 0; j < ynumber; ++j) {
 			for(int k = 0; k < znumber + 1; ++k) {
-				BfieldZ[i][j][k] = -B*cos(kw*(xgrid[i] + deltaX/2));
+				BfieldZ[i][j][k] = -B0.norm()*epsilonAmplitude*cos(kw*(xgrid[i] + deltaX/2));
 			}
 		}
 	}
 
 	for(int pcount = 0; pcount < particles.size(); ++pcount) {
 		Particle* particle = particles[pcount];
-		Vector3d velocity = Vector3d(0, 0, 1)*(B/sqrt(4*pi*density))*cos(kw*particle->coordinates.x);
+		Vector3d velocity;
+		if(particle->type == PROTON){
+			velocity = Vector3d(0, 0, 1)*(alfvenV*epsilonAmplitude)*cos(kw*particle->coordinates.x) - Vector3d(0, 1, 0)*(massProton*speed_of_light_normalized*B0.norm()*epsilonAmplitude*kw*sin(kw*particle->coordinates.x)/(4*pi*density*electron_charge_normalized))*massElectron/(massProton + massElectron);
+		}
+		if(particle->type == ELECTRON) {
+			velocity = Vector3d(0, 0, 1)*(alfvenV*epsilonAmplitude)*cos(kw*particle->coordinates.x) + Vector3d(0, 1, 0)*(massProton*speed_of_light_normalized*B0.norm()*epsilonAmplitude*kw*sin(kw*particle->coordinates.x)/(4*pi*density*electron_charge_normalized))*massProton/(massProton + massElectron);
+		}
+		double beta = velocity.norm()/speed_of_light_normalized;
+		particle->addVelocity(velocity, speed_of_light_normalized);
+	}
+}
+
+void Simulation::initializeMagnetSonicWave() {
+	E0 = Vector3d(0, 0, 0);
+	B0 = Vector3d(0, 0, 1E-3);
+
+	double alfvenV = B0.norm()/sqrt(4*pi*density);
+	if(alfvenV > speed_of_light_normalized) {
+		printf("alfven velocity > c\n");
+		exit(0);
+	}
+
+	double molarMass = 1;
+	molarMass = massProton/massProtonReal;
+	double soundV = sqrt(5.0*kBoltzman_normalized*(6.022E23)*temperature/molarMass);
+	if(soundV > speed_of_light_normalized) {
+		printf("sound speed > c\n");
+		exit(0);
+	}
+	double vplus = sqrt(alfvenV*alfvenV + soundV*soundV);
+	if(vplus > speed_of_light_normalized) {
+		printf("v+ > c\n");
+		exit(0);
+	}
+
+	double epsilonAmplitude = 0.05;
+
+	double kw = 1 * 2 * pi / xsize;
+
+	double omega = kw*vplus;
+	double t = 2*pi/omega;
+	double B = 1E-5;
+
+	double qLog = 15;
+	double nuElectronIon = 4*sqrt(2*pi)*qLog*power(electron_charge_normalized, 4)*(density/massProton)/(3*sqrt(massElectron)*sqrt(cube(kBoltzman_normalized*temperature)));
+	double collisionlessParameter = omega/nuElectronIon;
+	double conductivity = (3*massProton*sqrt(massElectron)*sqrt(cube(kBoltzman_normalized*temperature)))/(sqr(massElectron)*4*sqrt(2*pi)*qLog*sqr(electron_charge_normalized));
+
+	double nu = speed_of_light_normalized_sqr/(4*pi*conductivity);
+
+	double alphaParameter = omega/conductivity;
+
+	double magneticReynolds = conductivity*vplus*epsilonAmplitude/(kw*speed_of_light_normalized_sqr);
+
+	double concentration = density / massProton;
+
+	plasma_period = sqrt(massElectron / (4 * pi * concentration * sqr(electron_charge))) / (2 * pi);
+	plasma_period2 = plasma_period;
+	double thermal_momentum;
+	if(kBoltzman*temperature > massElectron*speed_of_light*speed_of_light) {
+		thermal_momentum = kBoltzman*temperature/speed_of_light;
+	} else {
+		thermal_momentum = sqrt(2*massElectron*kBoltzman*temperature);
+	}
+	gyroradius = thermal_momentum*speed_of_light / (electron_charge * B0.norm());
+
+	if(gyroradius < deltaX) {
+		printf("gyroradius < dx\n");
+	}
+
+	if(gyroradius*sqrt(massProton/massElectron) > xsize) {
+		printf("gyroradius proton > xsize");
+	}
+
+	gyroradius = 1.0;
+	plasma_period = 1.0;
+
+	for(int i = 0; i < xnumber; ++i) {
+		for(int j = 0; j < ynumber; ++j) {
+			for(int k = 0; k < znumber; ++k) {
+				int localParticlesPerBin = particlesPerBin*(1.0 + epsilonAmplitude*cos(kw*(xgrid[i] + deltaX/2)));
+				double weight = (density / (massProton * particlesPerBin)) * volume(i, j, k);
+				//double weight = (1.0 / particlesPerBin) * volume(i, j, k);
+				Vector3d coordinates;
+				for (int l = 0; l < 2 * localParticlesPerBin; ++l) {
+					ParticleTypes type;
+					if (l % 2 == 0) {
+						type = PROTON;
+					} else {
+						type = ELECTRON;
+					}
+					Particle* particle = createParticle(i, j, k, weight, type);
+					if (l % 2 == 0) {
+						coordinates = particle->coordinates;
+					} else {
+						particle->coordinates= coordinates;
+					}
+					particles.push_back(particle);
+					particlesNumber++;
+					if(particlesNumber % 1000 == 0){
+						printf("create particle number %d\n", particlesNumber);
+					}
+				}
+			}
+		}
+	}
+
+	for(int i = 0; i < xnumber; ++i) {
+		for(int j = 0; j < ynumber + 1; ++j) {
+			for(int k = 0; k < znumber + 1; ++k) {
+				EfieldX[i][j][k] = 0;
+			}
+		}
+	}
+
+	for(int i = 0; i < xnumber + 1; ++i) {
+		for(int j = 0; j < ynumber; ++j) {
+			for(int k = 0; k < znumber + 1; ++k) {
+				EfieldY[i][j][k] = 0;
+			}
+		}
+	}
+
+	for(int i = 0; i < xnumber + 1; ++i) {
+		for(int j = 0; j < ynumber + 1; ++j) {
+			for(int k = 0; k < znumber; ++k) {
+				EfieldZ[i][j][k] = 0;
+			}
+		}
+	}
+
+	for(int i = 0; i < xnumber + 1; ++i) {
+		for(int j = 0; j < ynumber; ++j) {
+			for(int k = 0; k < znumber; ++k) {
+				BfieldX[i][j][k] = 0;
+			}
+		}
+	}
+
+	for(int i = 0; i < xnumber; ++i) {
+		for(int j = 0; j < ynumber + 1; ++j) {
+			for(int k = 0; k < znumber; ++k) {
+				BfieldY[i][j][k] = epsilonAmplitude*B0.norm()*cos(kw*xgrid[i]);
+			}
+		}
+	}
+
+	for(int i = 0; i < xnumber; ++i) {
+		for(int j = 0; j < ynumber; ++j) {
+			for(int k = 0; k < znumber + 1; ++k) {
+				BfieldZ[i][j][k] = B0.z;
+			}
+		}
+	}
+
+	for(int pcount = 0; pcount < particles.size(); ++pcount) {
+		Particle* particle = particles[pcount];
+		Vector3d velocity;
+		if(particle->type == PROTON){
+			velocity = Vector3d(1, 0, 0)*epsilonAmplitude*vplus*cos(kw*particle->coordinates.x) - Vector3d(0, 0, 1)*(massProton*speed_of_light_normalized*B0.norm()*epsilonAmplitude*kw*sin(kw*particle->coordinates.x)/(4*pi*density*electron_charge_normalized))*massElectron/(massProton + massElectron);
+		}
+		if(particle->type == ELECTRON) {
+			velocity = Vector3d(1, 0, 0)*epsilonAmplitude*vplus*cos(kw*particle->coordinates.x) + Vector3d(0, 0, 1)*(massProton*speed_of_light_normalized*B0.norm()*epsilonAmplitude*kw*sin(kw*particle->coordinates.x)/(4*pi*density*electron_charge_normalized))*massProton/(massProton + massElectron);
+		}
 		double beta = velocity.norm()/speed_of_light_normalized;
 		particle->addVelocity(velocity, speed_of_light_normalized);
 	}
@@ -655,7 +847,8 @@ void Simulation::simulate() {
 	//initializeSimpleElectroMagneticWave();
 	createFiles();
 	createParticles();
-	//initializeAlfvenWave();
+	initializeAlfvenWave();
+	//initializeMagnetSonicWave();
 	updateEnergy();
 	updateElectroMagneticParameters();
 	updateDeltaT();
@@ -670,7 +863,7 @@ void Simulation::simulate() {
 
 		moveParticles();
 		updateElectroMagneticParameters();
-		//evaluateFields();
+		evaluateFields();
 		
 		updateEnergy();
 
@@ -763,10 +956,10 @@ void Simulation::updateDeltaT() {
 		}
 	}
 	if(B > 0){
-		deltaT = min2(deltaT, 0.02 * massElectron * speed_of_light_normalized / (electron_charge_normalized * B));
+		deltaT = min2(deltaT, 0.05 * massElectron * speed_of_light_normalized / (electron_charge_normalized * B));
 	}
 	if(E > 0) {
-		deltaT = min2(deltaT, 0.02* massElectron * speed_of_light_normalized/(electron_charge_normalized*E));
+		deltaT = min2(deltaT, 0.05* massElectron * speed_of_light_normalized/(electron_charge_normalized*E));
 	}
 
 	//if(E > 0) {
@@ -774,7 +967,7 @@ void Simulation::updateDeltaT() {
 	//}
 	//deltaT = 0.005 * massElectron * speed_of_light_normalized / (electron_charge_normalized * B0.norm());
 	//deltaT = min2(deltaT, 0.02);
-	deltaT = min2(deltaT, plasma_period2/10);
+	deltaT = min2(deltaT, plasma_period2/5);
 	//deltaT = min2(deltaT, 1E-1);
 }
 
@@ -1043,7 +1236,7 @@ void Simulation::updateBoundariesParameters() {
 				if(k < znumber){
 					electricFluxZ[xnumber][j][k] += electricFluxZ[0][j][k];
 					//electricFluxZ[xnumber][j][k] /= 2;
-					electricFluxZ[0][j][k] = electricFluxZ[znumber][j][k];
+					electricFluxZ[0][j][k] = electricFluxZ[xnumber][j][k];
 				}
 
 				chargeDensity[xnumber][j][k] += chargeDensity[0][j][k];
@@ -1121,7 +1314,7 @@ void Simulation::updateElectroMagneticParameters(Particle* particle) {
 	updateElectricFluxY(particle);
 	updateElectricFluxZ(particle);
 
-	delete tempParticle;
+	//delete tempParticle;
 
 	particle->weight *= 2;
 	updateChargeDensity(particle);
