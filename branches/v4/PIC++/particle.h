@@ -37,6 +37,7 @@ public:
 	double velocityX(double c);
 	double velocityY(double c);
 	double velocityZ(double c);
+	void addVelocity(Vector3d& v, double c);
 	double gammaFactor(double c);
 	double energy(double c);
 
