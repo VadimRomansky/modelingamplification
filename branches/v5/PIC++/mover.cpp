@@ -25,8 +25,8 @@ void Simulation::moveParticle(Particle* particle){
 	double gamma = particle->gammaFactor(speed_of_light_normalized);
 	Vector3d velocity = particle->momentum/(particle->mass*gamma);
 
-	particle->oldCoordinates = particle->coordinates;
-	particle->coordinates += velocity*deltaT;
+	//particle->oldCoordinates = particle->coordinates;
+	//particle->coordinates += velocity*deltaT;
 	Matrix3d matrix;
 
 	double beta = particle->charge*deltaT/(2*gamma*speed_of_light_normalized*particle->mass);
@@ -43,9 +43,16 @@ void Simulation::moveParticle(Particle* particle){
 	matrix.matrix[2][1] = beta*B.x;
 	matrix.matrix[2][2] = 1;
 
+	Vector3d lorentzForce = (particle->momentum.vectorMult(B)/(2*particle->mass*gamma*speed_of_light_normalized));
+
 	Vector3d rightPart = particle->momentum + (E + (particle->momentum.vectorMult(B)/(2*particle->mass*gamma*speed_of_light_normalized)))*deltaT*particle->charge;
 
+	//Vector3d rightPart = particle->momentum + ((particle->momentum.vectorMult(B)/(2*particle->mass*gamma*speed_of_light_normalized)))*deltaT*particle->charge;
+
 	particle->momentum = matrix.inverse()*rightPart;
+
+	particle->oldCoordinates = particle->coordinates;
+	particle->coordinates += velocity*deltaT;
 
 	correctParticlePosition(particle);
 }
