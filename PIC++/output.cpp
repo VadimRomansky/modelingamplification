@@ -80,9 +80,9 @@ void outputFields(FILE* outEfile, FILE* outBfile, Vector3d*** Efield, Vector3d**
 		}
 	}
 
-	for(int i = 0; i <= xnumber; ++i) {
-		for(int j = 0; j <= ynumber; ++j) {
-			for(int k = 0; k <= znumber; ++k) {
+	for(int i = 0; i < xnumber; ++i) {
+		for(int j = 0; j < ynumber; ++j) {
+			for(int k = 0; k < znumber; ++k) {
 				fprintf(outEfile, "%15.10g %15.10g %15.10g\n", scale*Efield[i][j][k].x, scale*Efield[i][j][k].y, scale*Efield[i][j][k].z);
 			}
 		}

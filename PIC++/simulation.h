@@ -8,6 +8,8 @@
 #include "matrixElement.h"
 #include "particle.h"
 
+enum BoundaryConditionTypes {SUPERCONDUCTERLEFT, PERIODIC};
+
 class Simulation{
 public:
 	int xnumber;
@@ -18,6 +20,8 @@ public:
 
 	double density;
 	double temperature;
+
+	BoundaryConditionTypes boundaryConditionType;
 
 	double plasma_period;
 	double plasma_period2;
@@ -119,6 +123,7 @@ public:
 
 	void initialize();
 	void initializeSimpleElectroMagneticWave();
+	void initializeAlfvenWave();
 	void createArrays();
 	void createFiles();
 	void simulate();
