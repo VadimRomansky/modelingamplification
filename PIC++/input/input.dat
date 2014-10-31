@@ -1,4 +1,4 @@
-100 3 3                 grid numbers
+50 3 3                 grid numbers
 1E5 3E3 3E3         gridsizes
 1E5                    temperature
 1.67E-24               density

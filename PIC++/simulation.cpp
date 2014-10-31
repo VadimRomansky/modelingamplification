@@ -626,11 +626,11 @@ void Simulation::initializeMagnetSonicWave() {
 						type = ELECTRON;
 					}
 					Particle* particle = createParticle(i, j, k, weight, type);
-					if (l % 2 == 0) {
+					/*if (l % 2 == 0) {
 						coordinates = particle->coordinates;
 					} else {
 						particle->coordinates= coordinates;
-					}
+					}*/
 					particles.push_back(particle);
 					particlesNumber++;
 					if(particlesNumber % 1000 == 0){
@@ -846,9 +846,9 @@ void Simulation::simulate() {
 	initialize();
 	//initializeSimpleElectroMagneticWave();
 	createFiles();
-	createParticles();
-	initializeAlfvenWave();
-	//initializeMagnetSonicWave();
+	//createParticles();
+	//initializeAlfvenWave();
+	initializeMagnetSonicWave();
 	updateEnergy();
 	updateElectroMagneticParameters();
 	updateDeltaT();
@@ -1314,7 +1314,7 @@ void Simulation::updateElectroMagneticParameters(Particle* particle) {
 	updateElectricFluxY(particle);
 	updateElectricFluxZ(particle);
 
-	//delete tempParticle;
+	delete tempParticle;
 
 	particle->weight *= 2;
 	updateChargeDensity(particle);
