@@ -60,6 +60,7 @@ public:
 	double*** electronConcentration;
 	double*** protonConcentration;
 	double*** chargeDensity;
+	Vector3d*** velocityBulk;
 
 
 	Vector3d V0;
@@ -116,6 +117,8 @@ public:
 	FILE* generalFile;
 	FILE* densityFile;
 	FILE* divergenceErrorFile;
+	FILE* velocityFile;
+	FILE* fluxFile;
 
 	Simulation();
 	Simulation(double xn, double yn, double zn, double xsizev, double ysizev, double zsizev, double temp, double rho, double Ex, double Ey, double Ez, double Bx, double By, double Bz, int maxIterations, double maxTimeV, int particlesPerBinV);
