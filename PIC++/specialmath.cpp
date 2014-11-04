@@ -146,10 +146,10 @@ void generalizedMinimalResidualMethod(std::vector<MatrixElement>**** matrix, dou
 					for(int l = 0; l < lnumber; ++l) {
 						outvector[i][j][k][l] = 0;
 					}
-					return;
 				}
 			}
 		}
+		return;
 	}
 
 	for (int i = 0; i < xnumber; ++i) {
@@ -229,7 +229,7 @@ void generalizedMinimalResidualMethod(std::vector<MatrixElement>**** matrix, dou
 	double module;
 
 	double relativeError = 1;
-	double maxRelativeError = 1/(matrixDimension*1E9);
+	double maxRelativeError = 1/(matrixDimension*1E12);
 
 	while (relativeError > maxRelativeError  && n < min2(maxGMRESIterations, matrixDimension)) {
 		printf("GMRES iteration %d\n", n);

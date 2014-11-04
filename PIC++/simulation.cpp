@@ -82,7 +82,8 @@ Simulation::Simulation() {
 	LeviCivita[2][0][1] = 1.0;
 	LeviCivita[2][1][0] = -1.0;
 
-	boundaryConditionType = PERIODIC;
+	//boundaryConditionType = PERIODIC;
+	boundaryConditionType = SUPERCONDUCTERLEFT;
 }
 
 Simulation::Simulation(double xn, double yn, double zn, double xsizev, double ysizev, double zsizev, double temp, double rho, double Ex, double Ey, double Ez, double Bx, double By, double Bz, int maxIterations, double maxTimeV, int particlesPerBinV) {
@@ -167,6 +168,7 @@ Simulation::Simulation(double xn, double yn, double zn, double xsizev, double ys
 	LeviCivita[2][1][0] = -1.0;
 
 	boundaryConditionType = PERIODIC;
+	//boundaryConditionType = SUPERCONDUCTERLEFT;
 }
 
 Simulation::~Simulation() {
@@ -190,6 +192,7 @@ Simulation::~Simulation() {
 			delete[] electronConcentration[i][j];
 			delete[] protonConcentration[i][j];
 			delete[] chargeDensity[i][j];
+			delete[] velocityBulk[i][j];
 		}
 		delete[] Bfield[i];
 		delete[] newBfield[i];
@@ -200,6 +203,7 @@ Simulation::~Simulation() {
 		delete[] electronConcentration[i];
 		delete[] protonConcentration[i];
 		delete[] chargeDensity[i];
+		delete[] velocityBulk[i];
 
 	}
 
@@ -274,6 +278,7 @@ Simulation::~Simulation() {
 	delete[] electronConcentration;
 	delete[] protonConcentration;
 	delete[] chargeDensity;
+	delete[] velocityBulk;
 
 	delete[] xgrid;
 	delete[] ygrid;
@@ -472,6 +477,7 @@ void Simulation::createArrays() {
 	electronConcentration = new double**[xnumber];
 	protonConcentration = new double**[xnumber];
 	chargeDensity = new double**[xnumber];
+	velocityBulk = new Vector3d**[xnumber];
 
 	electricFlux = new Vector3d**[xnumber + 1];
 	electricDensity = new double**[xnumber];
@@ -494,6 +500,7 @@ void Simulation::createArrays() {
 		electronConcentration[i] = new double*[ynumber];
 		protonConcentration[i] = new double*[ynumber];
 		chargeDensity[i] = new double*[ynumber];
+		velocityBulk[i] = new Vector3d*[ynumber];
 
 		for (int j = 0; j < ynumber; ++j) {
 			Bfield[i][j] = new Vector3d[znumber];
@@ -506,6 +513,7 @@ void Simulation::createArrays() {
 			electronConcentration[i][j] = new double[znumber];
 			protonConcentration[i][j] = new double[znumber];
 			chargeDensity[i][j] = new double[znumber];
+			velocityBulk[i][j] = new Vector3d[znumber];
 
 			for(int k = 0; k < znumber; ++k) {
 				Bfield[i][j][k] = Vector3d(0, 0, 0);
@@ -516,6 +524,7 @@ void Simulation::createArrays() {
 				electronConcentration[i][j][k] = 0;
 				protonConcentration[i][j][k] = 0;
 				chargeDensity[i][j][k] = 0;
+				velocityBulk[i][j][k] = Vector3d(0, 0, 0);
 			}
 		}
 	}
@@ -592,6 +601,10 @@ void Simulation::createFiles() {
 	fclose(EfieldFile);
 	BfieldFile = fopen("./output/Bfield.dat", "w");
 	fclose(BfieldFile);
+	velocityFile = fopen("./output/velocity.dat", "w");
+	fclose(velocityFile);
+	fluxFile = fopen("./output/flux.dat", "w");
+	fclose(fluxFile);
 	Xfile = fopen("./output/Xfile.dat", "w");
 	fclose(Xfile);
 	Yfile = fopen("./output/Yfile.dat", "w");
@@ -681,6 +694,14 @@ void Simulation::output() {
 	outputConcentrations(densityFile, electronConcentration, protonConcentration, chargeDensity, electricDensity, xnumber, ynumber, znumber, plasma_period, gyroradius);
 	fclose(densityFile);
 
+	velocityFile = fopen("./output/velocity.dat", "a");
+	outputVelocity(velocityFile, velocityBulk, xnumber, ynumber, znumber, plasma_period, gyroradius);
+	fclose(velocityFile);
+
+	fluxFile = fopen("./output/flux.dat", "a");
+	outputFlux(fluxFile, electricFlux, xnumber, ynumber, znumber, plasma_period, gyroradius);
+	fclose(fluxFile);
+
 	divergenceErrorFile = fopen("./output/divergence_error.dat", "a");
 	outputDivergenceError(divergenceErrorFile, this);
 	fclose(divergenceErrorFile);
@@ -728,9 +749,9 @@ void Simulation::updateDeltaT() {
 			}
 		}
 	}
-	for(int i = 0; i < xnumber+1; ++i) {
-		for(int j = 0; j < ynumber+1; ++j) {
-			for(int k = 0; k < znumber+1; ++k) {
+	for(int i = 0; i < xnumber; ++i) {
+		for(int j = 0; j < ynumber; ++j) {
+			for(int k = 0; k < znumber; ++k) {
 				if(Efield[i][j][k].norm() > E) {
 					E = Efield[i][j][k].norm();
 				}
@@ -1033,6 +1054,7 @@ void Simulation::updateDensityParameters() {
 				electronConcentration[i][j][k] = 0;
 				protonConcentration[i][j][k] = 0;
 				chargeDensity[i][j][k] = 0;
+				velocityBulk[i][j][k] = Vector3d(0, 0, 0);
 
 				for(int pcount = 0; pcount < particlesInBbin[i][j][k].size(); ++pcount) {
 					Particle* particle = particlesInBbin[i][j][k][pcount];
@@ -1048,7 +1070,10 @@ void Simulation::updateDensityParameters() {
 					} else if (particle->type == ParticleTypes::PROTON) {
 						protonConcentration[i][j][k] += correlation*particle->weight;
 					}
+					velocityBulk[i][j][k] += particle->velocity(speed_of_light_normalized)*correlation;
 				}
+
+				velocityBulk[i][j][k] = velocityBulk[i][j][k]/(electronConcentration[i][j][k]*massElectron + protonConcentration[i][j][k]*massProton);
 				if(i < xnumber - 1  && i > 0){
 					full_density += chargeDensity[i][j][k]*volume(i, j, k);
 					full_p_concentration += protonConcentration[i][j][k]*volume(i, j, k);

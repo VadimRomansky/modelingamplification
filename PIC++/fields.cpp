@@ -13,7 +13,7 @@ void Simulation::evaluateFields() {
 
 	updateElectroMagneticParameters();
 
-	evaluateMaxwellEquationMatrix();
+ 	evaluateMaxwellEquationMatrix();
 
 	double**** gmresOutput = new double***[xnumber];
 	for (int i = 0; i < xnumber; ++i) {
@@ -243,7 +243,9 @@ void Simulation::createInternalEquation(int i, int j, int k) {
 
 	//rightPart = rightPart + (evaluateRotB(i, j, k) - electricFlux[i][j][k] * 4 * pi / speed_of_light_normalized) * speed_of_light_normalized * theta * deltaT;
 	rightPart = rightPart - (evaluateRotB(i, j, k) - electricFlux[i][j][k] * 4 * pi / speed_of_light_normalized) * speed_of_light_normalized * theta * deltaT;
+	Vector3d a = (evaluateRotB(i, j, k) - electricFlux[i][j][k] * 4 * pi / speed_of_light_normalized) * speed_of_light_normalized * theta * deltaT;
 	rightPart = rightPart - evaluateGradDensity(i, j, k) * 4 * pi * sqr(speed_of_light_normalized * theta * deltaT);
+	Vector3d b = evaluateGradDensity(i, j, k) * 4 * pi * sqr(speed_of_light_normalized * theta * deltaT);
 
 	alertNaNOrInfinity(rightPart.x, "right part x = NaN");
 	alertNaNOrInfinity(rightPart.y, "right part y = NaN");
@@ -425,9 +427,9 @@ void Simulation::createInternalEquationX(int i, int j, int k, Vector3d& rightPar
 	elementX = cthetadt2 * (-(0.125 / (deltaX * deltaX)) - (0.125 / (deltaY * deltaY)) + (0.125 / (deltaZ * deltaZ)) - (0.125 * dielectricTensor[prevI][prevJ][k].matrix[0][0] / (deltaX * deltaX)) - (0.125 * dielectricTensor[prevI][prevJ][k].matrix[1][0] / (deltaX * deltaY)));
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(elementX, prevI, prevJ, k, 0));
 	elementY = cthetadt2 * (- (0.125 * dielectricTensor[prevI][prevJ][k].matrix[0][1] / (deltaX * deltaX)) - (0.125 * dielectricTensor[prevI][prevJ][k].matrix[1][1] / (deltaX * deltaY)));
-	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(elementY, i - 1, prevJ, k, 1));
+	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(elementY, prevI, prevJ, k, 1));
 	elementZ = cthetadt2 * (- (0.125 * dielectricTensor[prevI][prevJ][k].matrix[0][2] / (deltaX * deltaX)) - (0.125 * dielectricTensor[prevI][prevJ][k].matrix[1][2] / (deltaX * deltaY)));
-	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(elementZ, i - 1, prevJ, k, 2));
+	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(elementZ, prevI, prevJ, k, 2));
 
 	//E i+1 j k+1
 	if (boundaryConditionType == SUPERCONDUCTERLEFT) {
@@ -488,9 +490,9 @@ void Simulation::createInternalEquationX(int i, int j, int k, Vector3d& rightPar
 	//E i-1 j k-1
 	elementX = cthetadt2 * (-(0.125 / (deltaX * deltaX)) + (0.125 / (deltaY * deltaY)) - (0.125 / (deltaZ * deltaZ)) - (0.125 * dielectricTensor[prevI][j][prevK].matrix[0][0] / (deltaX * deltaX)) - (0.125 * dielectricTensor[prevI][j][prevK].matrix[2][0] / (deltaX * deltaZ)));
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(elementX, prevI, j, prevK, 0));
-	elementY = cthetadt2 * (- (0.125 * dielectricTensor[i - 1][j][prevK].matrix[0][1] / (deltaX * deltaX)) - (0.125 * dielectricTensor[prevI][j][prevK].matrix[2][1] / (deltaX * deltaZ)));
+	elementY = cthetadt2 * (- (0.125 * dielectricTensor[prevI][j][prevK].matrix[0][1] / (deltaX * deltaX)) - (0.125 * dielectricTensor[prevI][j][prevK].matrix[2][1] / (deltaX * deltaZ)));
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(elementY, prevI, j, prevK, 1));
-	elementZ = cthetadt2 * (- (0.125 * dielectricTensor[i - 1][j][prevK].matrix[0][2] / (deltaX * deltaX)) - (0.125 * dielectricTensor[prevI][j][prevK].matrix[2][2] / (deltaX * deltaZ)));
+	elementZ = cthetadt2 * (- (0.125 * dielectricTensor[prevI][j][prevK].matrix[0][2] / (deltaX * deltaX)) - (0.125 * dielectricTensor[prevI][j][prevK].matrix[2][2] / (deltaX * deltaZ)));
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(elementZ, prevI, j, prevK, 2));
 
 	//E i j+1 k+1
@@ -1291,9 +1293,9 @@ void Simulation::createInternalEquationZ(int i, int j, int k, Vector3d& rightPar
 		elementX = cthetadt2 * ((0.125 * dielectricTensor[i + 1][prevJ][k].matrix[2][0] / (deltaZ * deltaZ)));
 		elementY = cthetadt2 * ((0.125 * dielectricTensor[i + 1][prevJ][k].matrix[2][1] / (deltaZ * deltaZ)));
 		elementZ = cthetadt2 * (-(0.125 / (deltaX * deltaX)) - (0.125 / (deltaY * deltaY)) + (0.125 / (deltaZ * deltaZ)) + (0.125 * dielectricTensor[i + 1][prevJ][k].matrix[2][2] / (deltaZ * deltaZ)));
-		maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementX, i + 1, prevJ, k, 0));
-		maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementY, i + 1, prevJ, k, 1));
-		maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementZ, i + 1, prevJ, k, 2));
+		maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementX, nextI, prevJ, k, 0));
+		maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementY, nextI, prevJ, k, 1));
+		maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementZ, nextI, prevJ, k, 2));
 	}
 
 	//E i-1 j+1 k
@@ -1434,11 +1436,11 @@ void Simulation::createInternalEquationZ(int i, int j, int k, Vector3d& rightPar
 
 	//E i-1 j-1 k-1
 	elementX = cthetadt2 * (- (0.0625 * dielectricTensor[prevI][prevJ][prevK].matrix[2][0] / (deltaX * deltaX)) - (0.0625 * dielectricTensor[prevI][prevJ][prevK].matrix[1][0] / (deltaZ * deltaY)) - (0.0625 * dielectricTensor[prevI][prevJ][prevK].matrix[0][0] / (deltaX * deltaZ)));
-	maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementX, i - 1, prevJ, prevK, 0));
+	maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementX, prevI, prevJ, prevK, 0));
 	elementY = cthetadt2 * (- (0.0625 * dielectricTensor[prevI][prevJ][prevK].matrix[2][1] / (deltaX * deltaX)) - (0.0625 * dielectricTensor[prevI][prevJ][prevK].matrix[1][1] / (deltaZ * deltaY)) - (0.0625 * dielectricTensor[prevI][prevJ][prevK].matrix[0][1] / (deltaX * deltaZ)));
-	maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementY, i - 1, prevJ, prevK, 1));
+	maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementY, prevI, prevJ, prevK, 1));
 	elementZ = cthetadt2 * (-(0.0625 / (deltaX * deltaX)) - (0.0625 / (deltaY * deltaY)) - (0.0625 / (deltaZ * deltaZ)) - (0.0625 * dielectricTensor[prevI][prevJ][prevK].matrix[2][2] / (deltaX * deltaX)) - (0.0625 * dielectricTensor[prevI][prevJ][prevK].matrix[1][2] / (deltaZ * deltaY)) - (0.0625 * dielectricTensor[prevI][prevJ][prevK].matrix[0][2] / (deltaX * deltaZ)));
-	maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementZ, i - 1, prevJ, prevK, 2));
+	maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementZ, prevI, prevJ, prevK, 2));
 }
 
 void Simulation::evaluateMagneticField() {
@@ -1466,9 +1468,18 @@ void Simulation::updateBoundaries() {
 		}
 	}
 
-	for (int j = 0; j <= ynumber; ++j) {
-		for (int k = 0; k <= znumber; ++k) {
-			tempEfield[xnumber][j][k] = E0;
+	if(boundaryConditionType == PERIODIC) {
+		for(int j = 0; j < ynumber; ++j) {
+			for(int k = 0; k < znumber; ++k) {
+				tempEfield[xnumber][j][k] = tempEfield[0][j][k];
+			}
+		}
+	}
+	if(boundaryConditionType == SUPERCONDUCTERLEFT){
+		for (int j = 0; j <= ynumber; ++j) {
+			for (int k = 0; k <= znumber; ++k) {
+				tempEfield[xnumber][j][k] = E0;
+			}
 		}
 	}
 }
@@ -1487,9 +1498,18 @@ void Simulation::updateBoundariesOldField() {
 		}
 	}
 
-	for (int j = 0; j <= ynumber; ++j) {
-		for (int k = 0; k <= znumber; ++k) {
-			Efield[xnumber][j][k] = E0;
+	if(boundaryConditionType == PERIODIC) {
+		for(int j = 0; j < ynumber; ++j) {
+			for(int k = 0; k < znumber; ++k) {
+				Efield[xnumber][j][k] = Efield[0][j][k];
+			}
+		}
+	}
+	if(boundaryConditionType == SUPERCONDUCTERLEFT){
+		for (int j = 0; j <= ynumber; ++j) {
+			for (int k = 0; k <= znumber; ++k) {
+				Efield[xnumber][j][k] = E0;
+			}
 		}
 	}
 }
@@ -1581,6 +1601,20 @@ Vector3d Simulation::evaluateRotB(int i, int j, int k) {
 	Vector3d BleftZ;
 
 	if (i == 0) {
+		if(boundaryConditionType == PERIODIC) {
+			int prevI = i - 1;
+			if(prevI < 0) {
+				prevI = xnumber - 1;
+			}
+			BrightX = (getBfield(i, j, k) + getBfield(i, j - 1, k) + getBfield(i, j - 1, k - 1) + getBfield(i, j - 1, k - 1)) / 4;
+			BleftX = (getBfield(prevI, j, k) + getBfield(prevI, j - 1, k) + getBfield(prevI, j - 1, k - 1) + getBfield(prevI, j - 1, k - 1)) / 4;
+
+			BrightY = (getBfield(i, j, k) + getBfield(prevI, j, k) + getBfield(i, j, k - 1) + getBfield(prevI, j, k - 1)) / 4;
+			BleftY = (getBfield(i, j - 1, k) + getBfield(prevI, j - 1, k) + getBfield(i, j - 1, k - 1) + getBfield(prevI, j - 1, k - 1)) / 4;
+
+			BrightZ = (getBfield(i, j, k) + getBfield(prevI, j, k) + getBfield(i, j - 1, k) + getBfield(prevI, j - 1, k)) / 4;
+			BleftZ = (getBfield(i, j, k - 1) + getBfield(prevI, j, k - 1) + getBfield(i, j - 1, k - 1) + getBfield(prevI, j - 1, k - 1)) / 4;
+		}
 	} else {
 		BrightX = (getBfield(i, j, k) + getBfield(i, j - 1, k) + getBfield(i, j - 1, k - 1) + getBfield(i, j - 1, k - 1)) / 4;
 		BleftX = (getBfield(i - 1, j, k) + getBfield(i - 1, j - 1, k) + getBfield(i - 1, j - 1, k - 1) + getBfield(i - 1, j - 1, k - 1)) / 4;
@@ -1698,15 +1732,19 @@ Vector3d Simulation::evaluateDivPressureTensor(int i, int j, int k) {
 }
 
 Vector3d Simulation::evaluateGradDensity(int i, int j, int k) {
+	int prevI = i - 1;
+	if(prevI < 0) {
+		prevI = xnumber - 1;
+	}
 
-	double densityRightX = (getDensity(i + 1, j, k) + getDensity(i + 1, j + 1, k) + getDensity(i + 1, j, k + 1) + getDensity(i + 1, j + 1, k + 1)) / 4;
-	double densityLeftX = (getDensity(i, j, k) + getDensity(i, j + 1, k) + getDensity(i, j, k + 1) + getDensity(i, j + 1, k + 1)) / 4;
+	double densityRightX = (getDensity(i, j, k) + getDensity(i, j + 1, k) + getDensity(i, j, k + 1) + getDensity(i, j + 1, k + 1)) / 4;
+	double densityLeftX = (getDensity(prevI, j, k) + getDensity(prevI, j + 1, k) + getDensity(prevI, j, k + 1) + getDensity(prevI, j + 1, k + 1)) / 4;
 
-	double densityRightY = (getDensity(i, j + 1, k) + getDensity(i + 1, j + 1, k) + getDensity(1, j + 1, k + 1) + getDensity(i + 1, j + 1, k + 1)) / 4;
-	double densityLeftY = (getDensity(i, j, k) + getDensity(i + 1, j, k) + getDensity(1, j, k + 1) + getDensity(i + 1, j, k + 1)) / 4;
+	double densityRightY = (getDensity(prevI, j + 1, k) + getDensity(i, j + 1, k) + getDensity(prevI, j + 1, k + 1) + getDensity(i, j + 1, k + 1)) / 4;
+	double densityLeftY = (getDensity(prevI, j, k) + getDensity(i, j, k) + getDensity(prevI, j, k + 1) + getDensity(i, j, k + 1)) / 4;
 
-	double densityRightZ = (getDensity(i, j, k + 1) + getDensity(i + 1, j, k + 1) + getDensity(i, j + 1, k + 1) + getDensity(i + 1, j + 1, k + 1)) / 4;
-	double densityLeftZ = (getDensity(i, j, k) + getDensity(i + 1, j, k) + getDensity(i, j + 1, k) + getDensity(i + 1, j + 1, k)) / 4;
+	double densityRightZ = (getDensity(prevI, j, k + 1) + getDensity(i, j, k + 1) + getDensity(prevI, j + 1, k + 1) + getDensity(i, j + 1, k + 1)) / 4;
+	double densityLeftZ = (getDensity(prevI, j, k) + getDensity(i, j, k) + getDensity(prevI, j + 1, k) + getDensity(i, j + 1, k)) / 4;
 
 	double x = (densityRightX - densityLeftX) / deltaX;
 	double y = (densityRightY - densityLeftY) / deltaY;
