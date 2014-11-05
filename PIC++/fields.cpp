@@ -1469,8 +1469,8 @@ void Simulation::updateBoundaries() {
 	}
 
 	if(boundaryConditionType == PERIODIC) {
-		for(int j = 0; j < ynumber; ++j) {
-			for(int k = 0; k < znumber; ++k) {
+		for(int j = 0; j <= ynumber; ++j) {
+			for(int k = 0; k <= znumber; ++k) {
 				tempEfield[xnumber][j][k] = tempEfield[0][j][k];
 			}
 		}
@@ -1499,8 +1499,8 @@ void Simulation::updateBoundariesOldField() {
 	}
 
 	if(boundaryConditionType == PERIODIC) {
-		for(int j = 0; j < ynumber; ++j) {
-			for(int k = 0; k < znumber; ++k) {
+		for(int j = 0; j <= ynumber; ++j) {
+			for(int k = 0; k <= znumber; ++k) {
 				Efield[xnumber][j][k] = Efield[0][j][k];
 			}
 		}
