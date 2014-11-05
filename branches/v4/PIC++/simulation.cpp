@@ -373,6 +373,14 @@ void Simulation::initializeSimpleElectroMagneticWave() {
 		}
 	}
 
+	for(int i = 0; i < xnumber; ++i) {
+		for(int j = 0; j < ynumber; ++j) {
+			for(int k = 0; k < znumber; ++k) {
+				Bfield[i][j][k].z = E*sin(kw*(xgrid[i] + deltaX/2));
+			}
+		}
+	}
+
 	double t = 2 * pi / (kw * speed_of_light_normalized);
 }
 
@@ -628,6 +636,7 @@ void Simulation::simulate() {
 	initializeAlfvenWave();
 	collectParticlesIntoBins();
 	updateDensityParameters();
+	updateElectroMagneticParameters();
 	cleanupDivergence();
 	updateEnergy();
 
@@ -645,8 +654,8 @@ void Simulation::simulate() {
 		evaluateFields();
 		moveParticles();
 		updateFields();
-		//cleanupDivergence();
 		updateDensityParameters();
+		cleanupDivergence();
 		updateEnergy();
 
 		time += deltaT;
@@ -910,9 +919,15 @@ void Simulation::updateElectroMagneticParameters() {
 				for (int pcount = 0; pcount < particlesInEbin[i][j][k].size(); ++pcount) {
 					Particle* particle = particlesInEbin[i][j][k][pcount];
 					double correlation = correlationWithEbin(*particle, i, j, k) / volume(i, j, k);
-					if(i == 0) {
+					//if(i == 0 && boundaryConditionType == SUPERCONDUCTERLEFT) {
+					if(i == 0){
 						correlation = correlation * 2; //because smaller volume
 					}
+					if(i == xnumber && boundaryConditionType == SUPERCONDUCTERLEFT) {
+					//if(i == xnumber)
+						correlation = correlation*2;
+					}
+
 					Vector3d velocity = particle->velocity(speed_of_light_normalized);
 					double gamma = particle->gammaFactor(speed_of_light_normalized);
 					Vector3d rotatedVelocity = particle->rotationTensor * velocity * gamma;
@@ -931,32 +946,70 @@ void Simulation::updateElectroMagneticParameters() {
 	//for i = 0
 	for(int j = 0; j < ynumber + 1; ++j) {
 		for(int k = 0; k < znumber + 1; ++k) {
-			double rho = 0;
-			for(int pcount = 0; pcount < particlesInEbin[0][j][k].size(); ++pcount) {
-				Particle* particle = particlesInEbin[0][j][k][pcount];
-				Particle tempParticle = Particle(*particle);
+			if(boundaryConditionType == SUPERCONDUCTERLEFT){
+				for(int pcount = 0; pcount < particlesInEbin[0][j][k].size(); ++pcount) {
+					Particle* particle = particlesInEbin[0][j][k][pcount];
+					Particle tempParticle = Particle(*particle);
 
-				double correlation = 2*correlationWithEbin(tempParticle, -1, j, k)/volume(0, j, k);
-				tempParticle.momentum.x = - tempParticle.momentum.x;
-				double beta = tempParticle.charge*deltaT/tempParticle.mass;
-				Vector3d velocity = tempParticle.velocity(speed_of_light_normalized);
+					double correlation = 2*correlationWithEbin(tempParticle, -1, j, k)/volume(0, j, k);
+					tempParticle.momentum.x = - fabs(tempParticle.momentum.x);
+					double beta = tempParticle.charge*deltaT/tempParticle.mass;
+					Vector3d velocity = tempParticle.velocity(speed_of_light_normalized);
 
-				Vector3d oldE = correlationEfield(particle);
-				Vector3d oldB = correlationBfield(particle);
+					Vector3d oldE = correlationEfield(particle);
+					Vector3d oldB = correlationBfield(particle);
 
-				tempParticle.rotationTensor = evaluateAlphaRotationTensor(beta, velocity, oldE, oldB);
+					tempParticle.rotationTensor = evaluateAlphaRotationTensor(beta, velocity, oldE, oldB);
 
-				double gamma = tempParticle.gammaFactor(speed_of_light_normalized);
-				Vector3d rotatedVelocity = tempParticle.rotationTensor * velocity * gamma;
+					double gamma = tempParticle.gammaFactor(speed_of_light_normalized);
+					Vector3d rotatedVelocity = tempParticle.rotationTensor * velocity * gamma;
 
-				electricFlux[0][j][k] += rotatedVelocity * tempParticle.charge * tempParticle.weight * correlation;
-				dielectricTensor[0][j][k] = dielectricTensor[0][j][k] - tempParticle.rotationTensor * (theta * deltaT * deltaT * 2 * pi * tempParticle.charge * tempParticle.charge * correlation / tempParticle.mass);
+					electricFlux[0][j][k] += rotatedVelocity * tempParticle.charge * tempParticle.weight * correlation;
+					dielectricTensor[0][j][k] = dielectricTensor[0][j][k] - tempParticle.rotationTensor * (theta * deltaT * deltaT * 2 * pi * tempParticle.charge * tempParticle.charge * correlation / tempParticle.mass);
+				}
+			}
+			if(boundaryConditionType == PERIODIC) {
+				for(int pcount = 0; pcount < particlesInEbin[0][j][k].size(); ++pcount) {
+					Particle* particle = particlesInEbin[0][j][k][pcount];
+					double correlation = correlationWithEbin(*particle, -1, j, k)/volume(0, j, k);
 
+					Vector3d velocity = particle->velocity(speed_of_light_normalized);
+
+					double gamma = particle->gammaFactor(speed_of_light_normalized);
+					Vector3d rotatedVelocity = particle->rotationTensor * velocity * gamma;
+
+					electricFlux[xnumber - 1][j][k] += rotatedVelocity * particle->charge * particle->weight * correlation;
+					dielectricTensor[xnumber - 1][j][k] = dielectricTensor[xnumber - 1][j][k] - particle->rotationTensor * (theta * deltaT * deltaT * 2 * pi * particle->charge * particle->charge * correlation / particle->mass);
+				}
+				for(int pcount = 0; pcount < particlesInEbin[xnumber][j][k].size(); ++pcount) {
+					Particle* particle = particlesInEbin[xnumber][j][k][pcount];
+					double correlation = correlationWithEbin(*particle, xnumber + 1, j, k)/volume(0, j, k);
+
+					Vector3d velocity = particle->velocity(speed_of_light_normalized);
+
+					double gamma = particle->gammaFactor(speed_of_light_normalized);
+					Vector3d rotatedVelocity = particle->rotationTensor * velocity * gamma;
+
+					electricFlux[1][j][k] += rotatedVelocity * particle->charge * particle->weight * correlation;
+					dielectricTensor[1][j][k] = dielectricTensor[1][j][k] - particle->rotationTensor * (theta * deltaT * deltaT * 2 * pi * particle->charge * particle->charge * correlation / particle->mass);
+				}
 			}
 		}
 	}
 
 	//for periodic conditions we must summ sides parameters
+	if(boundaryConditionType == PERIODIC) {
+		for(int j = 0; j < ynumber + 1; ++j) {
+			for(int k = 0; k < znumber + 1; ++k) {
+				electricFlux[0][j][k] = electricFlux[0][j][k] + electricFlux[xnumber][j][k];
+				electricFlux[xnumber][j][k] = electricFlux[0][j][k];
+
+				dielectricTensor[0][j][k] = dielectricTensor[0][j][k] + dielectricTensor[xnumber][j][k];
+				dielectricTensor[xnumber][j][k] = dielectricTensor[0][j][k];
+			}	
+		}
+	}
+
 	for (int i = 0; i < xnumber + 1; ++i) {
 		for (int j = 0; j < ynumber + 1; ++j) {
 			electricFlux[i][j][0] = electricFlux[i][j][0] + electricFlux[i][j][znumber];

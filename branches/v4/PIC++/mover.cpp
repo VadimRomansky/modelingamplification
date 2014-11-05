@@ -69,23 +69,32 @@ void Simulation::moveParticle(Particle* particle){
 }
 
 void Simulation::correctParticlePosition(Particle* particle) {
-	if(particle->coordinates.x < 0) {
-		particle->coordinates.x = -particle->coordinates.x;
-		particle->momentum.x = -particle->momentum.x;
-	}
-	if(particle->coordinates.x > xsize) {
-		std::vector<Particle*>::iterator it = particles.begin();
-
-		while(it != particles.end()) {
-			if(*it == particle) {
-				break;
-			}
-			++it;
+	if(boundaryConditionType == SUPERCONDUCTERLEFT){
+		if(particle->coordinates.x < 0) {
+			particle->coordinates.x = -particle->coordinates.x;
+			particle->momentum.x = -particle->momentum.x;
 		}
-		particles.erase(it);
-		particlesNumber--;
-		delete particle;
-		return;
+		if(particle->coordinates.x > xsize) {
+			std::vector<Particle*>::iterator it = particles.begin();
+			while(it != particles.end()) {
+				if(*it == particle) {
+					break;
+				}
+				++it;
+			}
+			particles.erase(it);
+			particlesNumber--;
+			delete particle;
+			return;
+		}
+	}
+	if(boundaryConditionType == PERIODIC) {
+		if(particle->coordinates.x < 0) {
+			particle->coordinates.x = particle->coordinates.x + xsize;
+		}
+		if(particle->coordinates.x > xsize) {
+			particle->coordinates.x = particle->coordinates.x - xsize;
+		}		
 	}
 	if(particle->coordinates.y < 0) {
 		particle->coordinates.y += ysize;
