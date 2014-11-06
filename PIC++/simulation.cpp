@@ -244,22 +244,22 @@ Simulation::~Simulation() {
 	delete[] maxwellEquationMatrix;
 	delete[] maxwellEquationRightPart;
 
-	for(int i = 0; i < xnumber + 1; ++i) {
+	for(int i = 0; i < xnumber; ++i) {
 		for(int j = 0; j < ynumber; ++j) {
 			for(int k = 0; k < znumber; ++k) {
-				delete[] divergenceCleaningPotential[i][j][k];
+				delete[] divergenceCleaningField[i][j][k];
 				delete[] divergenceCleanUpMatrix[i][j][k];
 				delete[] divergenceCleanUpRightPart[i][j][k];
 			}
-			delete[] divergenceCleaningPotential[i][j];
+			delete[] divergenceCleaningField[i][j];
 			delete[] divergenceCleanUpMatrix[i][j];
 			delete[] divergenceCleanUpRightPart[i][j];
 		}
-		delete[] divergenceCleaningPotential[i];
+		delete[] divergenceCleaningField[i];
 		delete[] divergenceCleanUpMatrix[i];
 		delete[] divergenceCleanUpRightPart[i];
 	}
-	delete[] divergenceCleaningPotential;
+	delete[] divergenceCleaningField;
 	delete[] divergenceCleanUpMatrix;
 	delete[] divergenceCleanUpRightPart;
 
@@ -492,7 +492,7 @@ void Simulation::createArrays() {
 	dielectricTensor = new Matrix3d**[xnumber + 1];
 	pressureTensor = new Matrix3d**[xnumber];
 
-	divergenceCleaningPotential = new double***[xnumber+1];
+	divergenceCleaningField = new double***[xnumber];
 
 	particlesInEbin = new std::vector<Particle*>**[xnumber + 1];
 	particlesInBbin = new std::vector<Particle*>**[xnumber];
@@ -578,21 +578,21 @@ void Simulation::createArrays() {
 		}
 	}
 
-	divergenceCleanUpMatrix = new std::vector<MatrixElement>***[xnumber+1];
-	divergenceCleanUpRightPart = new double***[xnumber+1];
+	divergenceCleanUpMatrix = new std::vector<MatrixElement>***[xnumber];
+	divergenceCleanUpRightPart = new double***[xnumber];
 
-	for(int i = 0; i < xnumber + 1; ++i) {
-		divergenceCleaningPotential[i] = new double**[ynumber];
+	for(int i = 0; i < xnumber; ++i) {
+		divergenceCleaningField[i] = new double**[ynumber];
 		divergenceCleanUpMatrix[i] = new std::vector<MatrixElement>**[ynumber];
 		divergenceCleanUpRightPart[i] = new double**[ynumber];
 		for(int j = 0; j < ynumber; ++j) {
-			divergenceCleaningPotential[i][j] = new double*[znumber];
+			divergenceCleaningField[i][j] = new double*[znumber];
 			divergenceCleanUpMatrix[i][j] = new std::vector<MatrixElement>*[znumber];
 			divergenceCleanUpRightPart[i][j] = new double*[znumber];
 			for(int k = 0; k < znumber; ++k) {
-				divergenceCleaningPotential[i][j][k] = new double[1];
-				divergenceCleanUpMatrix[i][j][k] = new std::vector<MatrixElement>[1];
-				divergenceCleanUpRightPart[i][j][k] = new double[1];
+				divergenceCleaningField[i][j][k] = new double[3];
+				divergenceCleanUpMatrix[i][j][k] = new std::vector<MatrixElement>[3];
+				divergenceCleanUpRightPart[i][j][k] = new double[3];
 			}
 		}
 	}
@@ -630,14 +630,14 @@ void Simulation::createFiles() {
 void Simulation::simulate() {
 	createArrays();
 	initialize();
-	//initializeSimpleElectroMagneticWave();
+	initializeSimpleElectroMagneticWave();
 	createFiles();
 	createParticles();
-	initializeAlfvenWave();
+	//initializeAlfvenWave();
 	collectParticlesIntoBins();
 	updateDensityParameters();
 	updateElectroMagneticParameters();
-	cleanupDivergence();
+	//cleanupDivergence();
 	updateEnergy();
 
 	//updateDeltaT();

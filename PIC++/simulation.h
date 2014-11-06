@@ -96,7 +96,7 @@ public:
 	Vector3d*** tempEfield;
 	//Vector3d*** tempBfield;
 
-	double**** divergenceCleaningPotential;
+	double**** divergenceCleaningField;
 
 	std::vector<Particle*> particles;
 
@@ -173,7 +173,7 @@ public:
 	void updateBoundariesOldField();
 
 	void cleanupDivergence();
-	void updateFieldByPotential();
+	void updateFieldByCleaning();
 	void createDivergenceCleanupInternalEquation(int i, int j, int k);
 	void createDivergenceCleanupLeftEquation(int j, int k);
 	void createDivergenceCleanupRightEquation(int j, int k);
@@ -199,7 +199,7 @@ public:
 	double evaluateDivTempE(int i, int j, int k);
 	Vector3d evaluateDivPressureTensor(int i, int j, int k);
 	Vector3d evaluateGradDensity(int i, int j, int k);
-	Vector3d evaluateGradPotential(int i, int j, int k);
+	//Vector3d evaluateGradPotential(int i, int j, int k);
 
 	Vector3d getBfield(int i, int j, int k);
 	Vector3d getTempEfield(int i, int j, int k);

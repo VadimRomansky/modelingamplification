@@ -1753,7 +1753,7 @@ Vector3d Simulation::evaluateGradDensity(int i, int j, int k) {
 	return Vector3d(x, y, z);
 }
 
-Vector3d Simulation::evaluateGradPotential(int i, int j, int k) {
+/*Vector3d Simulation::evaluateGradPotential(int i, int j, int k) {
 	int prevJ = j - 1;
 	if (prevJ < 0) {
 		prevJ = ynumber - 1;
@@ -1784,4 +1784,4 @@ Vector3d Simulation::evaluateGradPotential(int i, int j, int k) {
 	}
 
 	return gradient;
-}
+}*/
