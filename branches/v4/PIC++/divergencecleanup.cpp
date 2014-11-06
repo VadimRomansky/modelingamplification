@@ -7,17 +7,18 @@
 void Simulation::cleanupDivergence() {
 	printf("cleaning up divergence\n");
 
-	for (int i = 0; i <= xnumber; ++i) {
+	for (int i = 0; i < xnumber; ++i) {
 		for (int j = 0; j < ynumber; ++j) {
 			for (int k = 0; k < znumber; ++k) {
 				divergenceCleanUpMatrix[i][j][k][0].clear();
+				divergenceCleanUpMatrix[i][j][k][1].clear();
+				divergenceCleanUpMatrix[i][j][k][2].clear();
 				divergenceCleanUpRightPart[i][j][k][0] = 0;
-				if(i == 0) {
-					divergenceCleanUpMatrix[i][j][k][0].push_back(MatrixElement(1.0, i, j, k, 0));
-					divergenceCleanUpRightPart[i][j][k][0] = 0;				
-				} else if(i == 1) {
+				divergenceCleanUpRightPart[i][j][k][1] = 0;
+				divergenceCleanUpRightPart[i][j][k][2] = 0;
+				if(i == 0 && boundaryConditionType == SUPERCONDUCTERLEFT){
 					createDivergenceCleanupLeftEquation(j, k);
-				} else if(i == xnumber) {
+				} else if((i == xnumber - 1) && (boundaryConditionType == SUPERCONDUCTERLEFT)) {
 					createDivergenceCleanupRightEquation(j, k);
 				} else {
 					createDivergenceCleanupInternalEquation(i, j, k);
@@ -26,22 +27,24 @@ void Simulation::cleanupDivergence() {
 		}
 	}
 
-	/*if(debugMode) {
+	if(debugMode) {
 		checkEquationMatrix(divergenceCleanUpMatrix);
-	}*/
+	}
 
-	generalizedMinimalResidualMethod(divergenceCleanUpMatrix, divergenceCleanUpRightPart, divergenceCleaningPotential, xnumber+1, ynumber, znumber, 1);
+	generalizedMinimalResidualMethod(divergenceCleanUpMatrix, divergenceCleanUpRightPart, divergenceCleaningField, xnumber, ynumber, znumber, 3);
 
-	updateFieldByPotential();
+	updateFieldByCleaning();
 
 	updateBoundariesOldField();
 }
 
-void Simulation::updateFieldByPotential() {
+void Simulation::updateFieldByCleaning() {
 	for(int i = 0; i < xnumber; ++i) {
 		for(int j = 0; j < ynumber; ++j) {
 			for(int k = 0; k < znumber; ++k) {
-				Efield[i][j][k] -= evaluateGradPotential(i, j, k);
+				Efield[i][j][k].x += divergenceCleaningField[i][j][k][0];
+				Efield[i][j][k].y += divergenceCleaningField[i][j][k][1];
+				Efield[i][j][k].z += divergenceCleaningField[i][j][k][2];
 			}
 		}
 	}
@@ -66,80 +69,115 @@ void Simulation::createDivergenceCleanupInternalEquation(int i, int j, int k) {
 		nextK = 0;
 	}
 
-	double dx2 = deltaX*deltaX;
-	double dy2 = deltaY*deltaY;
-	double dz2 = deltaZ*deltaZ;
+	int nextI = i+1;
+	if(nextI >= xnumber) {
+		nextI = 0;
+	}
 
-	MatrixElement element;
-	
-	element = MatrixElement(-(1/(2*dx2)) - (1/(2*dy2)) - (1/(2*dz2)), i, j, k, 0);
+	//div for x
+	MatrixElement element = MatrixElement( -0.25/deltaX, i, j, k, 0);
 	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-
-	element = MatrixElement((1/(4*dx2)) - (1/(4*dy2)) - (1/(4*dz2)), i+1, j, k, 0);
+	element = MatrixElement(-0.25/deltaX, i, nextJ, k, 0);
 	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-	element = MatrixElement((1/(4*dx2)) - (1/(4*dy2)) - (1/(4*dz2)), i-1, j, k, 0);
+	element = MatrixElement(-0.25/deltaX, i, j, nextK, 0);
 	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-
-	element = MatrixElement(-(1/(4*dx2)) + (1/(4*dy2)) - (1/(4*dz2)), i, nextJ, k, 0);
-	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-	element = MatrixElement(-(1/(4*dx2)) + (1/(4*dy2)) - (1/(4*dz2)), i, prevJ, k, 0);
+	element = MatrixElement(-0.25/deltaX, i, nextJ, nextK, 0);
 	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
 
-	element = MatrixElement(-(1/(4*dx2)) - (1/(4*dy2)) + (1/(4*dz2)), i, j, nextK, 0);
+	element = MatrixElement(0.25/deltaX, nextI, j, k, 0);
 	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-	element = MatrixElement(-(1/(4*dx2)) - (1/(4*dy2)) + (1/(4*dz2)), i, j, prevK, 0);
+	element = MatrixElement(0.25/deltaX, nextI, nextJ, k, 0);
 	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-
-	element = MatrixElement((1/(8*dx2)) + (1/(8*dy2)) - (1/(4*dz2)), i+1, nextJ, k, 0);
+	element = MatrixElement(0.25/deltaX, nextI, j, nextK, 0);
 	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-	element = MatrixElement((1/(8*dx2)) + (1/(8*dy2)) - (1/(4*dz2)), i+1, prevJ, k, 0);
+	element = MatrixElement(0.25/deltaX, nextI, nextJ, nextK, 0);
 	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-	element = MatrixElement((1/(8*dx2)) + (1/(8*dy2)) - (1/(4*dz2)), i-1, nextJ, k, 0);
-	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-	element = MatrixElement((1/(8*dx2)) + (1/(8*dy2)) - (1/(4*dz2)), i-1, prevJ, k, 0);
-	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-
-	element = MatrixElement((1/(8*dx2)) + (1/(8*dz2)) - (1/(4*dy2)), i+1, j, nextK, 0);
-	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-	element = MatrixElement((1/(8*dx2)) + (1/(8*dz2)) - (1/(4*dy2)), i+1, j, prevK, 0);
-	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-	element = MatrixElement((1/(8*dx2)) + (1/(8*dz2)) - (1/(4*dy2)), i-1, j, nextK, 0);
-	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-	element = MatrixElement((1/(8*dx2)) + (1/(8*dz2)) - (1/(4*dy2)), i-1, j, prevK, 0);
-	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-
-	element = MatrixElement((1/(8*dy2)) + (1/(8*dz2)) - (1/(4*dx2)), i, nextJ, nextK, 0);
-	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-	element = MatrixElement((1/(8*dy2)) + (1/(8*dz2)) - (1/(4*dx2)), i, nextJ, prevK, 0);
-	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-	element = MatrixElement((1/(8*dy2)) + (1/(8*dz2)) - (1/(4*dx2)), i, prevJ, nextK, 0);
-	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-	element = MatrixElement((1/(8*dy2)) + (1/(8*dz2)) - (1/(4*dx2)), i, prevJ, prevJ, 0);
-	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-
-	element = MatrixElement((1/(16*dx2)) + (1/(16*dy2)) + (1/(16*dz2)), i+1, nextJ, nextK, 0);
-	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-	element = MatrixElement((1/(16*dx2)) + (1/(16*dy2)) + (1/(16*dz2)), i+1, nextJ, prevK, 0);
-	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-	element = MatrixElement((1/(16*dx2)) + (1/(16*dy2)) + (1/(16*dz2)), i+1, prevJ, nextK, 0);
-	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-	element = MatrixElement((1/(16*dx2)) + (1/(16*dy2)) + (1/(16*dz2)), i+1, prevJ, prevK, 0);
-	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-	element = MatrixElement((1/(16*dx2)) + (1/(16*dy2)) + (1/(16*dz2)), i-1, nextJ, nextK, 0);
-	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-	element = MatrixElement((1/(16*dx2)) + (1/(16*dy2)) + (1/(16*dz2)), i-1, nextJ, prevK, 0);
-	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-	element = MatrixElement((1/(16*dx2)) + (1/(16*dy2)) + (1/(16*dz2)), i-1, prevJ, nextK, 0);
-	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-	element = MatrixElement((1/(16*dx2)) + (1/(16*dy2)) + (1/(16*dz2)), i-1, prevJ, prevK, 0);
-	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-
 
 	divergenceCleanUpRightPart[i][j][k][0] = cleanUpRightPart(i, j, k);
+
+	//rot x for y
+
+	element = MatrixElement(-0.25/deltaY, i, j, k, 2);
+	divergenceCleanUpMatrix[i][j][k][1].push_back(element);
+	element = MatrixElement(-0.25/deltaY, i, j, nextK, 2);
+	divergenceCleanUpMatrix[i][j][k][1].push_back(element);
+	element = MatrixElement(-0.25/deltaY, nextI, j, k, 2);
+	divergenceCleanUpMatrix[i][j][k][1].push_back(element);
+	element = MatrixElement(-0.25/deltaY, nextI, j, nextK, 2);
+	divergenceCleanUpMatrix[i][j][k][1].push_back(element);
+
+	element = MatrixElement(0.25/deltaY, i, nextJ, k, 2);
+	divergenceCleanUpMatrix[i][j][k][1].push_back(element);
+	element = MatrixElement(0.25/deltaY, i, nextJ, nextK, 2);
+	divergenceCleanUpMatrix[i][j][k][1].push_back(element);
+	element = MatrixElement(0.25/deltaY, nextI, nextJ, k, 2);
+	divergenceCleanUpMatrix[i][j][k][1].push_back(element);
+	element = MatrixElement(0.25/deltaY, nextI, nextJ, nextK, 2);
+	divergenceCleanUpMatrix[i][j][k][1].push_back(element);
+
+	element = MatrixElement(-0.25/deltaZ, i, j, nextK, 1);
+	divergenceCleanUpMatrix[i][j][k][1].push_back(element);
+	element = MatrixElement(-0.25/deltaZ, i, nextJ, nextK, 1);
+	divergenceCleanUpMatrix[i][j][k][1].push_back(element);
+	element = MatrixElement(-0.25/deltaZ, nextI, j, nextK, 1);
+	divergenceCleanUpMatrix[i][j][k][1].push_back(element);
+	element = MatrixElement(-0.25/deltaZ, nextI, nextJ, nextK, 1);
+	divergenceCleanUpMatrix[i][j][k][1].push_back(element);
+
+	element = MatrixElement(0.25/deltaZ, i, j, k, 1);
+	divergenceCleanUpMatrix[i][j][k][1].push_back(element);
+	element = MatrixElement(0.25/deltaZ, i, nextJ, k, 1);
+	divergenceCleanUpMatrix[i][j][k][1].push_back(element);
+	element = MatrixElement(0.25/deltaZ, nextI, j, k, 1);
+	divergenceCleanUpMatrix[i][j][k][1].push_back(element);
+	element = MatrixElement(0.25/deltaZ, nextI, nextJ, k, 1);
+	divergenceCleanUpMatrix[i][j][k][1].push_back(element);
+
+	divergenceCleanUpRightPart[i][j][k][1] = 0;
+
+	//rot y for z;
+
+	element = MatrixElement(-0.25/deltaZ, i, j, k, 0);
+	divergenceCleanUpMatrix[i][j][k][2].push_back(element);
+	element = MatrixElement(-0.25/deltaZ, i, nextJ, k, 0);
+	divergenceCleanUpMatrix[i][j][k][2].push_back(element);
+	element = MatrixElement(-0.25/deltaZ, nextI, j, k, 0);
+	divergenceCleanUpMatrix[i][j][k][2].push_back(element);
+	element = MatrixElement(-0.25/deltaZ, nextI, nextJ, k, 0);
+	divergenceCleanUpMatrix[i][j][k][2].push_back(element);
+
+	element = MatrixElement(0.25/deltaZ, i, j, nextK, 0);
+	divergenceCleanUpMatrix[i][j][k][2].push_back(element);
+	element = MatrixElement(0.25/deltaZ, i, nextJ, nextK, 0);
+	divergenceCleanUpMatrix[i][j][k][2].push_back(element);
+	element = MatrixElement(0.25/deltaZ, nextI, j, nextK, 0);
+	divergenceCleanUpMatrix[i][j][k][2].push_back(element);
+	element = MatrixElement(0.25/deltaZ, nextI, nextJ, nextK, 0);
+	divergenceCleanUpMatrix[i][j][k][2].push_back(element);
+
+	element = MatrixElement(0.25/deltaX, i, j, k, 2);
+	divergenceCleanUpMatrix[i][j][k][2].push_back(element);
+	element = MatrixElement(0.25/deltaX, i, nextJ, k, 2);
+	divergenceCleanUpMatrix[i][j][k][2].push_back(element);
+	element = MatrixElement(0.25/deltaX, i, j, nextK, 2);
+	divergenceCleanUpMatrix[i][j][k][2].push_back(element);
+	element = MatrixElement(0.25/deltaX, i, nextJ, nextK, 2);
+	divergenceCleanUpMatrix[i][j][k][2].push_back(element);
+
+	element = MatrixElement(-0.25/deltaX, nextI, j, k, 2);
+	divergenceCleanUpMatrix[i][j][k][2].push_back(element);
+	element = MatrixElement(-0.25/deltaX, nextI, nextJ, k, 2);
+	divergenceCleanUpMatrix[i][j][k][2].push_back(element);
+	element = MatrixElement(-0.25/deltaX, nextI, j, nextK, 2);
+	divergenceCleanUpMatrix[i][j][k][2].push_back(element);
+	element = MatrixElement(-0.25/deltaX, nextI, nextJ, nextK, 2);
+	divergenceCleanUpMatrix[i][j][k][2].push_back(element);
+
+	divergenceCleanUpRightPart[i][j][k][2] = 0;
 }
 
 void Simulation::createDivergenceCleanupLeftEquation(int j, int k) {
-	int i = 1;
+	int i = 0;
 
 	int prevJ = j - 1;
 	if(prevJ < 0) {
@@ -158,154 +196,192 @@ void Simulation::createDivergenceCleanupLeftEquation(int j, int k) {
 		nextK = 0;
 	}
 
-	double dx2 = deltaX*deltaX;
-	double dy2 = deltaY*deltaY;
-	double dz2 = deltaZ*deltaZ;
+	int nextI = i+1;
 
-	MatrixElement element;
-
-	element = MatrixElement(-(3/(4*dx2)) - (1/(4*dy2)) - (1/(4*dz2)), i, j, k, 0);
+	//div for x
+	MatrixElement element = MatrixElement( -0.25/deltaX, i, j, k, 0);
 	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-
-	element = MatrixElement((1/(4*dx2)) - (1/(4*dy2)) - (1/(4*dz2)), i+1, j, k, 0);
+	element = MatrixElement(-0.25/deltaX, i, nextJ, k, 0);
 	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-	element = MatrixElement((1/(2*dx2)) - (1/(2*dy2)) - (1/(2*dz2)), i-1, j, k, 0);
+	element = MatrixElement(-0.25/deltaX, i, j, nextK, 0);
+	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
+	element = MatrixElement(-0.25/deltaX, i, nextJ, nextK, 0);
 	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
 
-	element = MatrixElement(-(3/(8*dx2)) + (1/(8*dy2)) - (1/(8*dz2)), i, nextJ, k, 0);
+	element = MatrixElement(0.25/deltaX, nextI, j, k, 0);
 	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-	element = MatrixElement(-(3/(8*dx2)) + (1/(8*dy2)) - (1/(8*dz2)), i, prevJ, k, 0);
+	element = MatrixElement(0.25/deltaX, nextI, nextJ, k, 0);
 	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-
-	element = MatrixElement(-(3/(8*dx2)) - (1/(8*dy2)) + (1/(8*dz2)), i, j, nextK, 0);
+	element = MatrixElement(0.25/deltaX, nextI, j, nextK, 0);
 	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-	element = MatrixElement(-(3/(8*dx2)) - (1/(8*dy2)) + (1/(8*dz2)), i, j, prevK, 0);
+	element = MatrixElement(0.25/deltaX, nextI, nextJ, nextK, 0);
 	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-
-	element = MatrixElement((1/(8*dx2)) + (1/(8*dy2)) - (1/(4*dz2)), i+1, nextJ, k, 0);
-	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-	element = MatrixElement((1/(8*dx2)) + (1/(8*dy2)) - (1/(4*dz2)), i+1, prevJ, k, 0);
-	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-	element = MatrixElement((1/(4*dx2)) + (1/(4*dy2)) - (1/(2*dz2)), i-1, nextJ, k, 0);
-	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-	element = MatrixElement((1/(4*dx2)) + (1/(4*dy2)) - (1/(2*dz2)), i-1, prevJ, k, 0);
-	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-
-	element = MatrixElement((1/(8*dx2)) + (1/(8*dz2)) - (1/(4*dy2)), i+1, j, nextK, 0);
-	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-	element = MatrixElement((1/(8*dx2)) + (1/(8*dz2)) - (1/(4*dy2)), i+1, j, prevK, 0);
-	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-	element = MatrixElement((1/(4*dx2)) + (1/(4*dz2)) - (1/(2*dy2)), i-1, j, nextK, 0);
-	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-	element = MatrixElement((1/(4*dx2)) + (1/(4*dz2)) - (1/(2*dy2)), i-1, j, prevK, 0);
-	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-
-	element = MatrixElement((1/(16*dy2)) + (1/(16*dz2)) - (3/(8*dx2)), i, nextJ, nextK, 0);
-	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-	element = MatrixElement((1/(16*dy2)) + (1/(16*dz2)) - (3/(8*dx2)), i, nextJ, prevK, 0);
-	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-	element = MatrixElement((1/(16*dy2)) + (1/(16*dz2)) - (3/(8*dx2)), i, prevJ, nextK, 0);
-	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-	element = MatrixElement((1/(16*dy2)) + (1/(16*dz2)) - (3/(8*dx2)), i, prevJ, prevJ, 0);
-	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-
-	element = MatrixElement((1/(16*dx2)) + (1/(16*dy2)) + (1/(16*dz2)), i+1, nextJ, nextK, 0);
-	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-	element = MatrixElement((1/(16*dx2)) + (1/(16*dy2)) + (1/(16*dz2)), i+1, nextJ, prevK, 0);
-	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-	element = MatrixElement((1/(16*dx2)) + (1/(16*dy2)) + (1/(16*dz2)), i+1, prevJ, nextK, 0);
-	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-	element = MatrixElement((1/(16*dx2)) + (1/(16*dy2)) + (1/(16*dz2)), i+1, prevJ, prevK, 0);
-	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-	element = MatrixElement((1/(8*dx2)) + (1/(8*dy2)) + (1/(8*dz2)), i-1, nextJ, nextK, 0);
-	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-	element = MatrixElement((1/(8*dx2)) + (1/(8*dy2)) + (1/(8*dz2)), i-1, nextJ, prevK, 0);
-	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-	element = MatrixElement((1/(8*dx2)) + (1/(8*dy2)) + (1/(8*dz2)), i-1, prevJ, nextK, 0);
-	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-	element = MatrixElement((1/(8*dx2)) + (1/(8*dy2)) + (1/(8*dz2)), i-1, prevJ, prevK, 0);
-	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-
-	divergenceCleanUpRightPart[1][j][k][0] = cleanUpRightPart(1, j, k);
-}
-
-void Simulation::createDivergenceCleanupRightEquation(int j, int k) {
-	int i = xnumber;
-	int prevJ = j - 1;
-	if(prevJ < 0) {
-		prevJ = ynumber - 1;
-	}
-	int prevK = k - 1;
-	if(prevK < 0) {
-		prevK = znumber - 1;
-	}
-	int nextJ = j + 1;
-	if(nextJ >= ynumber) {
-		nextJ = 0;
-	}
-	int nextK = k + 1;
-	if(nextK >= znumber) {
-		nextK = 0;
-	}
-
-	double dx2 = deltaX*deltaX;
-	double dy2 = deltaY*deltaY;
-	double dz2 = deltaZ*deltaZ;
-
-	MatrixElement element;
-	
-	element = MatrixElement(-(1/(dx2)) - (1/(2*dy2)) - (1/(2*dz2)), i, j, k, 0);
-	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-
-	element = MatrixElement((1/(4*dx2)) - (1/(4*dy2)) - (1/(4*dz2)), i-1, j, k, 0);
-	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-
-	element = MatrixElement(-(1/(8*dx2)) + (1/(4*dy2)) - (1/(4*dz2)), i, nextJ, k, 0);
-	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-	element = MatrixElement(-(1/(8*dx2)) + (1/(4*dy2)) - (1/(4*dz2)), i, prevJ, k, 0);
-	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-
-	element = MatrixElement(-(1/(8*dx2)) - (1/(4*dy2)) + (1/(4*dz2)), i, j, nextK, 0);
-	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-	element = MatrixElement(-(1/(8*dx2)) - (1/(4*dy2)) + (1/(4*dz2)), i, j, prevK, 0);
-	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-
-	element = MatrixElement((1/(8*dx2)) + (1/(8*dy2)) - (1/(4*dz2)), i-1, nextJ, k, 0);
-	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-	element = MatrixElement((1/(8*dx2)) + (1/(8*dy2)) - (1/(4*dz2)), i-1, prevJ, k, 0);
-	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-
-	element = MatrixElement((1/(8*dx2)) + (1/(8*dz2)) - (1/(4*dy2)), i-1, j, nextK, 0);
-	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-	element = MatrixElement((1/(8*dx2)) + (1/(8*dz2)) - (1/(4*dy2)), i-1, j, prevK, 0);
-	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-
-	element = MatrixElement((1/(8*dy2)) + (1/(8*dz2)) - (1/(8*dx2)), i, nextJ, nextK, 0);
-	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-	element = MatrixElement((1/(8*dy2)) + (1/(8*dz2)) - (1/(8*dx2)), i, nextJ, prevK, 0);
-	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-	element = MatrixElement((1/(8*dy2)) + (1/(8*dz2)) - (1/(8*dx2)), i, prevJ, nextK, 0);
-	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-	element = MatrixElement((1/(8*dy2)) + (1/(8*dz2)) - (1/(8*dx2)), i, prevJ, prevJ, 0);
-	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-
-	element = MatrixElement((1/(16*dx2)) + (1/(16*dy2)) + (1/(16*dz2)), i-1, nextJ, nextK, 0);
-	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-	element = MatrixElement((1/(16*dx2)) + (1/(16*dy2)) + (1/(16*dz2)), i-1, nextJ, prevK, 0);
-	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-	element = MatrixElement((1/(16*dx2)) + (1/(16*dy2)) + (1/(16*dz2)), i-1, prevJ, nextK, 0);
-	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-	element = MatrixElement((1/(16*dx2)) + (1/(16*dy2)) + (1/(16*dz2)), i-1, prevJ, prevK, 0);
-	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
-
 
 	divergenceCleanUpRightPart[i][j][k][0] = cleanUpRightPart(i, j, k);
 
+	//rot x for y
 
+	element = MatrixElement(-0.25/deltaY, i, j, k, 2);
+	divergenceCleanUpMatrix[i][j][k][1].push_back(element);
+	element = MatrixElement(-0.25/deltaY, i, j, nextK, 2);
+	divergenceCleanUpMatrix[i][j][k][1].push_back(element);
+	element = MatrixElement(-0.25/deltaY, nextI, j, k, 2);
+	divergenceCleanUpMatrix[i][j][k][1].push_back(element);
+	element = MatrixElement(-0.25/deltaY, nextI, j, nextK, 2);
+	divergenceCleanUpMatrix[i][j][k][1].push_back(element);
+
+	element = MatrixElement(0.25/deltaY, i, nextJ, k, 2);
+	divergenceCleanUpMatrix[i][j][k][1].push_back(element);
+	element = MatrixElement(0.25/deltaY, i, nextJ, nextK, 2);
+	divergenceCleanUpMatrix[i][j][k][1].push_back(element);
+	element = MatrixElement(0.25/deltaY, nextI, nextJ, k, 2);
+	divergenceCleanUpMatrix[i][j][k][1].push_back(element);
+	element = MatrixElement(0.25/deltaY, nextI, nextJ, nextK, 2);
+	divergenceCleanUpMatrix[i][j][k][1].push_back(element);
+
+	element = MatrixElement(-0.25/deltaZ, i, j, nextK, 1);
+	divergenceCleanUpMatrix[i][j][k][1].push_back(element);
+	element = MatrixElement(-0.25/deltaZ, i, nextJ, nextK, 1);
+	divergenceCleanUpMatrix[i][j][k][1].push_back(element);
+	element = MatrixElement(-0.25/deltaZ, nextI, j, nextK, 1);
+	divergenceCleanUpMatrix[i][j][k][1].push_back(element);
+	element = MatrixElement(-0.25/deltaZ, nextI, nextJ, nextK, 1);
+	divergenceCleanUpMatrix[i][j][k][1].push_back(element);
+
+	element = MatrixElement(0.25/deltaZ, i, j, k, 1);
+	divergenceCleanUpMatrix[i][j][k][1].push_back(element);
+	element = MatrixElement(0.25/deltaZ, i, nextJ, k, 1);
+	divergenceCleanUpMatrix[i][j][k][1].push_back(element);
+	element = MatrixElement(0.25/deltaZ, nextI, j, k, 1);
+	divergenceCleanUpMatrix[i][j][k][1].push_back(element);
+	element = MatrixElement(0.25/deltaZ, nextI, nextJ, k, 1);
+	divergenceCleanUpMatrix[i][j][k][1].push_back(element);
+
+	divergenceCleanUpRightPart[i][j][k][1] = 0;
+
+	//rot y for z;
+
+	element = MatrixElement(-0.25/deltaZ, i, j, k, 0);
+	divergenceCleanUpMatrix[i][j][k][2].push_back(element);
+	element = MatrixElement(-0.25/deltaZ, i, nextJ, k, 0);
+	divergenceCleanUpMatrix[i][j][k][2].push_back(element);
+	element = MatrixElement(-0.25/deltaZ, nextI, j, k, 0);
+	divergenceCleanUpMatrix[i][j][k][2].push_back(element);
+	element = MatrixElement(-0.25/deltaZ, nextI, nextJ, k, 0);
+	divergenceCleanUpMatrix[i][j][k][2].push_back(element);
+
+	element = MatrixElement(0.25/deltaZ, i, j, nextK, 0);
+	divergenceCleanUpMatrix[i][j][k][2].push_back(element);
+	element = MatrixElement(0.25/deltaZ, i, nextJ, nextK, 0);
+	divergenceCleanUpMatrix[i][j][k][2].push_back(element);
+	element = MatrixElement(0.25/deltaZ, nextI, j, nextK, 0);
+	divergenceCleanUpMatrix[i][j][k][2].push_back(element);
+	element = MatrixElement(0.25/deltaZ, nextI, nextJ, nextK, 0);
+	divergenceCleanUpMatrix[i][j][k][2].push_back(element);
+
+	element = MatrixElement(0.25/deltaX, i, j, k, 2);
+	divergenceCleanUpMatrix[i][j][k][2].push_back(element);
+	element = MatrixElement(0.25/deltaX, i, nextJ, k, 2);
+	divergenceCleanUpMatrix[i][j][k][2].push_back(element);
+	element = MatrixElement(0.25/deltaX, i, j, nextK, 2);
+	divergenceCleanUpMatrix[i][j][k][2].push_back(element);
+	element = MatrixElement(0.25/deltaX, i, nextJ, nextK, 2);
+	divergenceCleanUpMatrix[i][j][k][2].push_back(element);
+
+	element = MatrixElement(-0.25/deltaX, nextI, j, k, 2);
+	divergenceCleanUpMatrix[i][j][k][2].push_back(element);
+	element = MatrixElement(-0.25/deltaX, nextI, nextJ, k, 2);
+	divergenceCleanUpMatrix[i][j][k][2].push_back(element);
+	element = MatrixElement(-0.25/deltaX, nextI, j, nextK, 2);
+	divergenceCleanUpMatrix[i][j][k][2].push_back(element);
+	element = MatrixElement(-0.25/deltaX, nextI, nextJ, nextK, 2);
+	divergenceCleanUpMatrix[i][j][k][2].push_back(element);
+
+	divergenceCleanUpRightPart[i][j][k][2] = 0;
+}
+
+void Simulation::createDivergenceCleanupRightEquation(int j, int k) {
+	int i = xnumber - 1;
+
+	int prevJ = j - 1;
+	if(prevJ < 0) {
+		prevJ = ynumber - 1;
+	}
+	int prevK = k - 1;
+	if(prevK < 0) {
+		prevK = znumber - 1;
+	}
+	int nextJ = j + 1;
+	if(nextJ >= ynumber) {
+		nextJ = 0;
+	}
+	int nextK = k + 1;
+	if(nextK >= znumber) {
+		nextK = 0;
+	}
+
+	//div for x
+	MatrixElement element = MatrixElement( -0.25/deltaX, i, j, k, 0);
+	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
+	element = MatrixElement(-0.25/deltaX, i, nextJ, k, 0);
+	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
+	element = MatrixElement(-0.25/deltaX, i, j, nextK, 0);
+	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
+	element = MatrixElement(-0.25/deltaX, i, nextJ, nextK, 0);
+	divergenceCleanUpMatrix[i][j][k][0].push_back(element);
+
+	divergenceCleanUpRightPart[i][j][k][0] = cleanUpRightPart(i, j, k);
+
+	//rot x for y
+
+	element = MatrixElement(-0.25/deltaY, i, j, k, 2);
+	divergenceCleanUpMatrix[i][j][k][1].push_back(element);
+	element = MatrixElement(-0.25/deltaY, i, j, nextK, 2);
+	divergenceCleanUpMatrix[i][j][k][1].push_back(element);
+
+	element = MatrixElement(0.25/deltaY, i, nextJ, k, 2);
+	divergenceCleanUpMatrix[i][j][k][1].push_back(element);
+	element = MatrixElement(0.25/deltaY, i, nextJ, nextK, 2);
+	divergenceCleanUpMatrix[i][j][k][1].push_back(element);
+
+	element = MatrixElement(-0.25/deltaZ, i, j, nextK, 1);
+	divergenceCleanUpMatrix[i][j][k][1].push_back(element);
+	element = MatrixElement(-0.25/deltaZ, i, nextJ, nextK, 1);
+	divergenceCleanUpMatrix[i][j][k][1].push_back(element);
+
+	element = MatrixElement(0.25/deltaZ, i, j, k, 1);
+	divergenceCleanUpMatrix[i][j][k][1].push_back(element);
+	element = MatrixElement(0.25/deltaZ, i, nextJ, k, 1);
+	divergenceCleanUpMatrix[i][j][k][1].push_back(element);
+
+	divergenceCleanUpRightPart[i][j][k][1] = 0;
+
+	//rot y for z;
+
+	element = MatrixElement(-0.25/deltaZ, i, j, k, 0);
+	divergenceCleanUpMatrix[i][j][k][2].push_back(element);
+	element = MatrixElement(-0.25/deltaZ, i, nextJ, k, 0);
+	divergenceCleanUpMatrix[i][j][k][2].push_back(element);
+
+	element = MatrixElement(0.25/deltaZ, i, j, nextK, 0);
+	divergenceCleanUpMatrix[i][j][k][2].push_back(element);
+	element = MatrixElement(0.25/deltaZ, i, nextJ, nextK, 0);
+	divergenceCleanUpMatrix[i][j][k][2].push_back(element);
+
+	element = MatrixElement(0.25/deltaX, i, j, k, 2);
+	divergenceCleanUpMatrix[i][j][k][2].push_back(element);
+	element = MatrixElement(0.25/deltaX, i, nextJ, k, 2);
+	divergenceCleanUpMatrix[i][j][k][2].push_back(element);
+	element = MatrixElement(0.25/deltaX, i, j, nextK, 2);
+	divergenceCleanUpMatrix[i][j][k][2].push_back(element);
+	element = MatrixElement(0.25/deltaX, i, nextJ, nextK, 2);
+	divergenceCleanUpMatrix[i][j][k][2].push_back(element);
+
+	divergenceCleanUpRightPart[i][j][k][2] = 0;
 }
 
 double Simulation::cleanUpRightPart(int i, int j, int k) {
-	double div = evaluateDivE(i-1, j, k);
+	double div = evaluateDivE(i, j, k);
 
-	return -4*pi*chargeDensity[i-1][j][k] + div;
+	return 4*pi*chargeDensity[i][j][k] - div;
 }

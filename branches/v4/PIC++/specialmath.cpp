@@ -157,11 +157,11 @@ void generalizedMinimalResidualMethod(std::vector<MatrixElement>**** matrix, dou
 			for (int k = 0; k < znumber; ++k) {
 				for (int l = 0; l < lnumber; ++l) {
 					rightPart[i][j][k][l] /= norm;
-					/*for (int m = 0; m < matrix[i][j][k][l].size(); ++m) {
+					for (int m = 0; m < matrix[i][j][k][l].size(); ++m) {
 						double value = matrix[i][j][k][l][m].value;
 						matrix[i][j][k][l][m].value /= norm;
 						value = matrix[i][j][k][l][m].value;
-					}*/
+					}
 				}
 			}
 		}
@@ -205,17 +205,6 @@ void generalizedMinimalResidualMethod(std::vector<MatrixElement>**** matrix, dou
 		}
 	}
 	double***** newBasis;
-
-	double**** tempResult = new double***[xnumber];
-	for(int i = 0; i < xnumber; ++i) {
-		tempResult[i] = new double**[ynumber];
-		for(int j = 0; j < ynumber; ++j) {
-			tempResult[i][j] = new double*[znumber];
-			for(int k = 0; k < znumber; ++k) {
-				tempResult[i][j][k] = new double[lnumber];
-			}
-		}
-	}
 
 	int n = 2;
 	double beta = 1.0;
@@ -397,7 +386,8 @@ void generalizedMinimalResidualMethod(std::vector<MatrixElement>**** matrix, dou
 				for(int l = 0; l < lnumber; ++l){
 					outvector[i][j][k][l] = 0;
 					for (int m = 0; m < n; ++m) {
-						outvector[i][j][k][l] += basis[m][i][j][k][l] * y[m]*norm;
+						//outvector[i][j][k][l] += basis[m][i][j][k][l] * y[m]*norm;
+						outvector[i][j][k][l] += basis[m][i][j][k][l] * y[m];
 					}
 				}
 			}

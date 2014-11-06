@@ -8,57 +8,78 @@
 
 double** arnoldiIterations(double** matrix, double** outHessenbergMatrix, int n, double** prevBasis, double** prevHessenbergMatrix){
 	double** resultBasis = new double*[n];
-	for(int m = 0; m < n-1; ++m){
+	for (int m = 0; m < n - 1; ++m) {
 		resultBasis[m] = prevBasis[m];
 	}
 	delete[] prevBasis;
 
-	for(int i = 0; i < n; ++i){
-		if(i < n - 1){
-			for(int j = 0; j < n-2; ++j){
+	for (int i = 0; i < n; ++i) {
+		if (i < n - 1) {
+			for (int j = 0; j < n - 2; ++j) {
 				outHessenbergMatrix[i][j] = prevHessenbergMatrix[i][j];
 			}
 			delete[] prevHessenbergMatrix[i];
 		} else {
-			for(int j= 0; j < n-2; ++j){
+			for (int j = 0; j < n - 2; ++j) {
 				outHessenbergMatrix[i][j] = 0;
 			}
 		}
 	}
 	delete[] prevHessenbergMatrix;
 
-	double* tempVector = multiplyMatrixVector(matrix, resultBasis[n-2]);
+	double* tempVector = multiplyMatrixVector(matrix, resultBasis[n - 2]);
 
-	for(int m = 0; m < n-1; ++m){
-		outHessenbergMatrix[m][n-2] = scalarMultiplyLargeVectors(resultBasis[m], tempVector);
-		for(int i = 0; i < number ; ++i){
-			tempVector[i] -= outHessenbergMatrix[m][n-2]*resultBasis[m][i];
+	for (int m = 0; m < n - 1; ++m) {
+		outHessenbergMatrix[m][n - 2] = scalarMultiplyLargeVectors(resultBasis[m], tempVector);
+		for (int i = 0; i < number; ++i) {
+						tempVector[i] -= outHessenbergMatrix[m][n - 2] * resultBasis[m][i];
+						//alertNaNOrInfinity(tempVector[i][j][k][l], "tempVector = NaN\n");
 		}
 	}
-	outHessenbergMatrix[n-1][n-2] = sqrt(scalarMultiplyLargeVectors(tempVector, tempVector));
-	for(int i = 0; i < number; ++i){
-		tempVector[i] /= outHessenbergMatrix[n-1][n-2];
+	double a = scalarMultiplyLargeVectors(resultBasis[0], tempVector);
+	outHessenbergMatrix[n - 1][n - 2] = sqrt(scalarMultiplyLargeVectors(tempVector, tempVector));
+	if (outHessenbergMatrix[n - 1][n - 2] > 0) {
+		for (int i = 0; i < number ; ++i) {
+						tempVector[i] /= outHessenbergMatrix[n - 1][n - 2];
+						//alertNaNOrInfinity(tempVector[i][j][k][l], "tempVector = NaN\n");
+		}
+		a = scalarMultiplyLargeVectors(resultBasis[0], tempVector);
+		a = scalarMultiplyLargeVectors(tempVector, tempVector);
+	} else {
+		printf("outHessenbergMatrix[n-1][n-2] == 0\n");
 	}
 
-	resultBasis[n-1] = tempVector;
+	resultBasis[n - 1] = tempVector;
 
 	return resultBasis;
 }
 
-void generalizedMinimalResidualMethod(double** matrix, double* rightPart){
+double* generalizedMinimalResidualMethod(double** matrix, double* rightPart){
 	double norm = sqrt(scalarMultiplyLargeVectors(rightPart, rightPart));
 
-	for(int i = 0; i < number; ++i){
-		rightPart[i] /= norm;
-		for(int m = 0; m < number; ++m){
-			matrix[i][m] /= norm;
+	double* outvector = new double[number];
+
+	if(norm == 0) {
+		for(int i = 0; i < number; ++i) {
+						outvector[i] = 0;
+		}
+		return outvector;
+	}
+
+	for (int i = 0; i < number; ++i) {
+					rightPart[i] /= norm;
+					for (int m = 0; m < number; ++m) {
+						double value = matrix[i][m];
+						matrix[i][m] /= norm;
+						value = matrix[i][m];
 		}
 	}
 
-	double maxError = 1E-7;
+	int matrixDimension = number;
+	//double maxError = 1/(matrixDimension * 1E5);
 
 	double** hessenbergMatrix;
-	double** newHessenbergMatrix = NULL;
+	double** newHessenbergMatrix;
 	hessenbergMatrix = new double*[1];
 	hessenbergMatrix[0] = new double[1];
 
@@ -67,7 +88,7 @@ void generalizedMinimalResidualMethod(double** matrix, double* rightPart){
 	double** oldQmatrix = new double*[2];
 	double** oldRmatrix = new double*[2];
 
-	for(int i = 0; i < 2; ++i){
+	for (int i = 0; i < 2; ++i) {
 		Qmatrix[i] = new double[2];
 		oldQmatrix[i] = new double[2];
 	}
@@ -79,9 +100,10 @@ void generalizedMinimalResidualMethod(double** matrix, double* rightPart){
 
 	double** basis = new double*[1];
 	basis[0] = new double[number];
-	for(int i = 0; i < number; ++i){
-		basis[0][i] = rightPart[i];
+	for (int i = 0; i < number; ++i) {
+					basis[0][i] = rightPart[i];
 	}
+
 	double** newBasis;
 
 	int n = 2;
@@ -95,25 +117,28 @@ void generalizedMinimalResidualMethod(double** matrix, double* rightPart){
 	double sinn;
 	double module;
 
-	while(error > maxError && n <= number+1){
-		printf("iteration %d\n", n);
+	double relativeError = 1;
+	double maxRelativeError = 1/(matrixDimension*1E12);
+
+	while (relativeError > maxRelativeError && n < matrixDimension) {
+		printf("GMRES iteration %d\n", n);
 		newHessenbergMatrix = new double*[n];
-		for(int i = 0; i < n; ++i){
-			newHessenbergMatrix[i] = new double[n-1];
+		for (int i = 0; i < n; ++i) {
+			newHessenbergMatrix[i] = new double[n - 1];
 		}
 		newBasis = arnoldiIterations(matrix, newHessenbergMatrix, n, basis, hessenbergMatrix);
 
 		hessenbergMatrix = newHessenbergMatrix;
 		basis = newBasis;
 
-		if(n == 2){
+		if (n == 2) {
 			rho = hessenbergMatrix[0][0];
 			sigma = hessenbergMatrix[1][0];
 
-			module = sqrt(rho*rho + sigma*sigma);
-			
-			cosn = rho/module;
-			sinn = sigma/module;
+			module = sqrt(rho * rho + sigma * sigma);
+
+			cosn = rho / module;
+			sinn = sigma / module;
 
 			Qmatrix[0][0] = cosn;
 			Qmatrix[0][1] = sinn;
@@ -133,74 +158,97 @@ void generalizedMinimalResidualMethod(double** matrix, double* rightPart){
 
 		} else {
 			Rmatrix = new double*[n];
-			for(int i = 0; i < n; ++i){
-				Rmatrix[i] = new double[n-1];
-				if(i < n-1){
-					for(int j = 0; j < n-2; ++j){
+			for (int i = 0; i < n; ++i) {
+				Rmatrix[i] = new double[n - 1];
+				if (i < n - 1) {
+					for (int j = 0; j < n - 2; ++j) {
 						Rmatrix[i][j] = oldRmatrix[i][j];
 					}
 				} else {
-					for(int j = 0; j < n-2; ++j){
+					for (int j = 0; j < n - 2; ++j) {
 						Rmatrix[i][j] = 0;
 					}
 				}
 			}
 
 			Qmatrix = new double*[n];
-			for(int i = 0; i < n;++i){
+			for (int i = 0; i < n;++i) {
 				Qmatrix[i] = new double[n];
-				if(i < n-1){
-					for(int j = 0; j < n-1; ++j){
+				if (i < n - 1) {
+					for (int j = 0; j < n - 1; ++j) {
 						Qmatrix[i][j] = oldQmatrix[i][j];
 					}
-					Qmatrix[i][n-1] = 0;
+					Qmatrix[i][n - 1] = 0;
 				} else {
-					for(int j = 0; j < n-1; ++j){
+					for (int j = 0; j < n - 1; ++j) {
 						Qmatrix[i][j] = 0;
 					}
-					Qmatrix[n-1][n-1] = 1;
+					Qmatrix[n - 1][n - 1] = 1;
 				}
 			}
 
-			for(int i = 0; i < n; ++i){
-				Rmatrix[i][n-2] = 0;
-				for(int j = 0; j < n; ++j){
-					Rmatrix[i][n-2] += Qmatrix[i][j]*hessenbergMatrix[j][n-2];
+			for (int i = 0; i < n; ++i) {
+				Rmatrix[i][n - 2] = 0;
+				for (int j = 0; j < n; ++j) {
+					Rmatrix[i][n - 2] += Qmatrix[i][j] * hessenbergMatrix[j][n - 2];
 				}
 			}
-			rho = Rmatrix[n-2][n-2];
-			sigma = Rmatrix[n-1][n-2];
+			rho = Rmatrix[n - 2][n - 2];
+			sigma = Rmatrix[n - 1][n - 2];
 
-			module = sqrt(rho*rho + sigma*sigma);
+			module = sqrt(rho * rho + sigma * sigma);
 
-			cosn = rho/module;
-			sinn = sigma/module;
+			cosn = rho / module;
+			sinn = sigma / module;
 
-			Rmatrix[n-2][n-2] = module;
-			Rmatrix[n-1][n-2] = 0;
+			Rmatrix[n - 2][n - 2] = module;
+			Rmatrix[n - 1][n - 2] = 0;
 
-			for(int j = 0; j < n-1; ++j){
-				Qmatrix[n-2][j] = cosn*oldQmatrix[n-2][j];
-				Qmatrix[n-1][j] = -sinn*oldQmatrix[n-2][j];
+			for (int j = 0; j < n - 1; ++j) {
+				Qmatrix[n - 2][j] = cosn * oldQmatrix[n - 2][j];
+				Qmatrix[n - 1][j] = -sinn * oldQmatrix[n - 2][j];
 			}
-			Qmatrix[n-2][n-1] = sinn;
-			Qmatrix[n-1][n-1] = cosn;
+			Qmatrix[n - 2][n - 1] = sinn;
+			Qmatrix[n - 1][n - 1] = cosn;
 		}
 
 		delete[] y;
-		y = new double[n-1];
+		y = new double[n - 1];
 
-		for(int i = n-2; i >=0; --i){
-			y[i] = beta*Qmatrix[i][0];
-			for(int j = n-2; j > i; --j){
-				y[i] -= Rmatrix[i][j]*y[j];
+		for (int i = n - 2; i >= 0; --i) {
+			y[i] = beta * Qmatrix[i][0];
+			for (int j = n - 2; j > i; --j) {
+				y[i] -= Rmatrix[i][j] * y[j];
 			}
-			y[i] /= Rmatrix[i][i];
+			if(Rmatrix[i][i] > 0){
+				y[i] /= Rmatrix[i][i];
+			} else {
+				y[i] = 0;
+				printf("Rmatrix[%d][%d] = 0\n", i, i);
+			}
+			//alertNaNOrInfinity(y[i], "y = NaN\n");
 		}
 
-		error = fabs(beta*Qmatrix[n-1][0]);
+		error = fabs(beta * Qmatrix[n - 1][0]);
+		for (int i = 0; i < number; ++i) {
+						outvector[i] = 0;
+						for (int m = 0; m < n; ++m) {
+							outvector[i] += basis[m][i] * y[m];
+						}
+		}
 
-		for(int i = 0; i < n-1; ++i){
+		double* leftPart1 = multiplyMatrixVector(matrix, outvector);
+		double error1 = 0;
+		for (int i = 0; i < number; ++i) {
+						error1 += (leftPart1[i] - rightPart[i])*(leftPart1[i] - rightPart[i]);
+		}
+		delete[] leftPart1;
+		error1 = sqrt(error1);
+
+		double normRightPart = sqrt(scalarMultiplyLargeVectors(rightPart, rightPart));
+		relativeError = error/normRightPart;
+
+		for (int i = 0; i < n - 1; ++i) {
 			delete[] oldQmatrix[i];
 			delete[] oldRmatrix[i];
 		}
@@ -213,29 +261,28 @@ void generalizedMinimalResidualMethod(double** matrix, double* rightPart){
 		n++;
 	}
 
-	n = n-1;
+	n = n - 1;
 
 	//out result
-	double a[number];
 
-	for(int i = 0; i < number; ++i){
-		a[i] = 0;
-		for(int m = 0; m < n; ++m){
-			a[i] += basis[m][i]*y[m];
-		}
-		printf("%lf\n", a[i]);
+	for (int i = 0; i < number; ++i) {
+					outvector[i] = 0;
+					for (int m = 0; m < n; ++m) {
+						//outvector[i][j][k][l] += basis[m][i][j][k][l] * y[m]*norm;
+						outvector[i] += basis[m][i] * y[m];
+					}
 	}
 
+	double* leftPart = multiplyMatrixVector(matrix, outvector);
 	error = 0;
-	for(int i = 0; i < number; ++i) {
-		double b = 0;
-		for(int j = 0; j < number; ++j) {
-			b += matrix[i][j]*a[i];
-		}
-		error += abs(b - rightPart[i]);
+	for (int i = 0; i < number; ++i) {
+					error += (leftPart[i] - rightPart[i])*(leftPart[i] - rightPart[i]);
 	}
+	delete[] leftPart;
 
-	for(int i = 0; i < n; ++i){
+	error = sqrt(error);
+
+	for (int i = 0; i < n; ++i) {
 		delete[] Qmatrix[i];
 		delete[] Rmatrix[i];
 		delete[] hessenbergMatrix[i];
@@ -244,12 +291,14 @@ void generalizedMinimalResidualMethod(double** matrix, double* rightPart){
 	delete[] Rmatrix;
 	delete[] hessenbergMatrix;
 
-	for(int m = 0; m < n; ++m){
+	for (int m = 0; m < n; ++m) {
 		delete[] basis[m];
 	}
 	delete[] basis;
 
 	delete[] y;
+
+	return outvector;
 }
 
 double scalarMultiplyLargeVectors(double* a, double* b){
