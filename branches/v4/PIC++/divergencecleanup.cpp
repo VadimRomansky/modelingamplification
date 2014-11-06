@@ -3,6 +3,7 @@
 #include "constants.h"
 #include "specialmath.h"
 
+
 void Simulation::cleanupDivergence() {
 	printf("cleaning up divergence\n");
 
