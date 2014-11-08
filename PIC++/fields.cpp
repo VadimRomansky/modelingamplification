@@ -1704,6 +1704,19 @@ double Simulation::evaluateDivE(int i, int j, int k) {
 	return ((ErightX - EleftX) / deltaX) + ((ErightY - EleftY) / deltaY) + ((ErightZ - EleftZ) / deltaZ);
 }
 
+double Simulation::evaluateDivCleaningE(int i, int j, int k) {
+	double ErightX = (divergenceCleaningField[i + 1][j][k][0] + divergenceCleaningField[i + 1][j + 1][k][0] + divergenceCleaningField[i + 1][j][k + 1][0] + divergenceCleaningField[i + 1][j + 1][k + 1][0]) / 4;
+	double EleftX = (divergenceCleaningField[i][j][k][0] + divergenceCleaningField[i][j + 1][k][0] + divergenceCleaningField[i][j][k + 1][0] + divergenceCleaningField[i][j + 1][k + 1][0]) / 4;
+
+	double ErightY = (divergenceCleaningField[i][j + 1][k][1] + divergenceCleaningField[i + 1][j + 1][k][1] + divergenceCleaningField[i][j + 1][k + 1][1] + divergenceCleaningField[i + 1][j + 1][k + 1][1]) / 4;
+	double EleftY = (divergenceCleaningField[i][j][k][1] + divergenceCleaningField[i + 1][j][k][1] + divergenceCleaningField[i][j][k + 1][1] + divergenceCleaningField[i + 1][j][k + 1][1]) / 4;
+
+	double ErightZ = (divergenceCleaningField[i][j][k + 1][2] + divergenceCleaningField[i + 1][j][k + 1][2] + divergenceCleaningField[i][j + 1][k + 1][2] + divergenceCleaningField[i + 1][j + 1][k + 1][2]) / 4;
+	double EleftZ = (divergenceCleaningField[i][j][k][2] + divergenceCleaningField[i + 1][j][k][2] + divergenceCleaningField[i][j + 1][k][2] + divergenceCleaningField[i + 1][j + 1][k][2]) / 4;
+
+	return ((ErightX - EleftX) / deltaX) + ((ErightY - EleftY) / deltaY) + ((ErightZ - EleftZ) / deltaZ);
+}
+
 double Simulation::evaluateDivTempE(int i, int j, int k) {
 	double ErightX = (tempEfield[i + 1][j][k].x + tempEfield[i + 1][j + 1][k].x + tempEfield[i + 1][j][k + 1].x + tempEfield[i + 1][j + 1][k + 1].x) / 4;
 	double EleftX = (tempEfield[i][j][k].x + tempEfield[i][j + 1][k].x + tempEfield[i][j][k + 1].x + tempEfield[i][j + 1][k + 1].x) / 4;

@@ -196,6 +196,7 @@ public:
 	Vector3d evaluateRotB(int i, int j, int k);
 	Vector3d evaluateRotE(int i, int j, int k);
 	double evaluateDivE(int i, int j, int k);
+	double evaluateDivCleaningE(int i, int j, int k);
 	double evaluateDivTempE(int i, int j, int k);
 	Vector3d evaluateDivPressureTensor(int i, int j, int k);
 	Vector3d evaluateGradDensity(int i, int j, int k);
