@@ -124,11 +124,11 @@ void generalizedMinimalResidualMethod(std::vector<MatrixElement>*** matrix, doub
 		for (int j = 0; j < ynumber; ++j) {
 			for (int k = 0; k < znumber; ++k) {
 					rightPart[i][j][k] /= norm;
-					/*for (int m = 0; m < matrix[i][j][k][l].size(); ++m) {
-						double value = matrix[i][j][k][l][m].value;
-						matrix[i][j][k][l][m].value /= norm;
-						value = matrix[i][j][k][l][m].value;
-					}*/
+					for (int m = 0; m < matrix[i][j][k].size(); ++m) {
+						double value = matrix[i][j][k][m].value;
+						matrix[i][j][k][m].value /= norm;
+						value = matrix[i][j][k][m].value;
+					}
 			}
 		}
 	}
@@ -191,7 +191,7 @@ void generalizedMinimalResidualMethod(std::vector<MatrixElement>*** matrix, doub
 	double relativeError = 1;
 	double maxRelativeError = 1/(matrixDimension*1E9);
 
-	while (relativeError > maxRelativeError  && n < min2(maxGMRESIterations, matrixDimension)) {
+	while (relativeError > maxRelativeError  && n < min2(maxGMRESIterations, matrixDimension + 2)) {
 		printf("GMRES iteration %d\n", n);
 		newHessenbergMatrix = new double*[n];
 		for (int i = 0; i < n; ++i) {
@@ -351,7 +351,8 @@ void generalizedMinimalResidualMethod(std::vector<MatrixElement>*** matrix, doub
 			for (int k = 0; k < znumber; ++k) {
 				outvector[i][j][k] = 0;
 				for (int m = 0; m < n; ++m) {
-					outvector[i][j][k] += basis[m][i][j][k] * y[m]*norm;
+					//outvector[i][j][k] += basis[m][i][j][k] * y[m]*norm;
+					outvector[i][j][k] += basis[m][i][j][k] * y[m];
 				}
 			}
 		}
