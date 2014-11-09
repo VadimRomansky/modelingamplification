@@ -846,8 +846,8 @@ void Simulation::simulate() {
 	initialize();
 	//initializeSimpleElectroMagneticWave();
 	createFiles();
-	//createParticles();
-	//initializeAlfvenWave();
+	createParticles();
+	initializeAlfvenWave();
 	initializeMagnetSonicWave();
 	updateEnergy();
 	updateElectroMagneticParameters();
