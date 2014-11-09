@@ -630,7 +630,7 @@ void Simulation::createFiles() {
 void Simulation::simulate() {
 	createArrays();
 	initialize();
-	initializeSimpleElectroMagneticWave();
+	//initializeSimpleElectroMagneticWave();
 	createFiles();
 	createParticles();
 	//initializeAlfvenWave();
@@ -655,7 +655,7 @@ void Simulation::simulate() {
 		moveParticles();
 		updateFields();
 		updateDensityParameters();
-		cleanupDivergence();
+		//cleanupDivergence();
 		updateEnergy();
 
 		time += deltaT;

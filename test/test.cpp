@@ -17,21 +17,23 @@ int main()
 		matrix[i] = new double[number];
 		for(int j = 0; j < number; ++j){
 			if(i == j){
-				matrix[i][j] = 10;
+				matrix[i][j] = 0.01;
 			} else {
-				matrix[i][j] = 1;
+				matrix[i][j] = 0;
 			}
 		}
 	}
-	matrix[1][2] = 2;
-	matrix[5][3] = 2;
-	matrix[2][4] = 2;
+	matrix[0][1] = 1;
+	matrix[1][2] = 1;
+	matrix[2][3] = 1;
+	matrix[3][4] = 1;
+	matrix[4][5] = 1;
+	matrix[5][6] = 1;
 
 	for(int i = 0; i < number; ++i){
 		rightPart[i] = 0;
 	}
-	rightPart[0] = 1/sqrt(2.0);
-	rightPart[1] = 1/sqrt(2.0);
+	rightPart[number-1] = 1;
 
 	/*for(int i = 0; i < number; ++i) {
 		matrix[i] = new double[number];
@@ -52,7 +54,7 @@ int main()
 
 	printf("result\n");
 	for(int i = 0; i < number; ++i) {
-		printf("%lf\n", result[i]);
+		printf("%15.10lf\n", result[i]);
 	}
 
 
