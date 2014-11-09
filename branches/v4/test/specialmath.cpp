@@ -120,7 +120,7 @@ double* generalizedMinimalResidualMethod(double** matrix, double* rightPart){
 	double relativeError = 1;
 	double maxRelativeError = 1/(matrixDimension*1E12);
 
-	while (relativeError > maxRelativeError && n < matrixDimension) {
+	while (relativeError > maxRelativeError && n < matrixDimension + 2) {
 		printf("GMRES iteration %d\n", n);
 		newHessenbergMatrix = new double*[n];
 		for (int i = 0; i < n; ++i) {

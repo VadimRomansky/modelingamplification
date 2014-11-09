@@ -159,11 +159,11 @@ void generalizedMinimalResidualMethod(std::vector<MatrixElement>**** matrix, dou
 			for (int k = 0; k < znumber; ++k) {
 				for (int l = 0; l < lnumber; ++l) {
 					rightPart[i][j][k][l] /= norm;
-					/*for (int m = 0; m < matrix[i][j][k][l].size(); ++m) {
+					for (int m = 0; m < matrix[i][j][k][l].size(); ++m) {
 						double value = matrix[i][j][k][l][m].value;
 						matrix[i][j][k][l][m].value /= norm;
 						value = matrix[i][j][k][l][m].value;
-					}*/
+					}
 				}
 			}
 		}
@@ -222,7 +222,7 @@ void generalizedMinimalResidualMethod(std::vector<MatrixElement>**** matrix, dou
 	double relativeError = 1;
 	double maxRelativeError = 1/(matrixDimension*1E12);
 
-	while (relativeError > maxRelativeError  && n < min2(maxGMRESIterations, matrixDimension)) {
+	while (relativeError > maxRelativeError  && n < min2(maxGMRESIterations, matrixDimension + 2)) {
 		printf("GMRES iteration %d\n", n);
 		newHessenbergMatrix = new double*[n];
 		for (int i = 0; i < n; ++i) {
@@ -338,8 +338,8 @@ void generalizedMinimalResidualMethod(std::vector<MatrixElement>**** matrix, dou
 					for(int l = 0; l < lnumber; ++l){
 						outvector[i][j][k][l] = 0;
 						for (int m = 0; m < n; ++m) {
-							outvector[i][j][k][l] += basis[m][i][j][k][l] * y[m]*norm;
-							//outvector[i][j][k][l] += basis[m][i][j][k][l] * y[m];
+							//outvector[i][j][k][l] += basis[m][i][j][k][l] * y[m]*norm;
+							outvector[i][j][k][l] += basis[m][i][j][k][l] * y[m];
 						}
 					}
 				}
@@ -389,8 +389,8 @@ void generalizedMinimalResidualMethod(std::vector<MatrixElement>**** matrix, dou
 				for(int l = 0; l < lnumber; ++l){
 					outvector[i][j][k][l] = 0;
 					for (int m = 0; m < n; ++m) {
-						outvector[i][j][k][l] += basis[m][i][j][k][l] * y[m]*norm;
-						//outvector[i][j][k][l] += basis[m][i][j][k][l] * y[m];
+						//outvector[i][j][k][l] += basis[m][i][j][k][l] * y[m]*norm;
+						outvector[i][j][k][l] += basis[m][i][j][k][l] * y[m];
 					}
 				}
 			}
@@ -445,11 +445,11 @@ void generalizedMinimalResidualMethod(std::vector<MatrixElement>**** matrix, dou
 			for (int k = 0; k < znumber; ++k) {
 				for (int l = 0; l < lnumber; ++l) {
 					rightPart[i][j][k][l] *= norm;
-					/*for (int m = 0; m < matrix[i][j][k][l].size(); ++m) {
+					for (int m = 0; m < matrix[i][j][k][l].size(); ++m) {
 						double value = matrix[i][j][k][l][m].value;
 						matrix[i][j][k][l][m].value *= norm;
 						value = matrix[i][j][k][l][m].value;
-					}*/
+					}
 				}
 			}
 		}
