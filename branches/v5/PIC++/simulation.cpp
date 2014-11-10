@@ -152,6 +152,9 @@ Simulation::Simulation(double xn, double yn, double zn, double xsizev, double ys
 	if(dx > gyroradius) {
 		printf("dx > gyroradius\n");
 	}
+	if(gyroradius*sqrt(massProton/massElectron) > xsize) {
+		printf("gyriradius > size\n");
+	}
 
 	plasma_period = 1.0;
 	gyroradius = 1.0;
@@ -435,7 +438,7 @@ void Simulation::initializeSimpleElectroMagneticWave() {
 
 void Simulation::initializeAlfvenWave() {
 	E0 = Vector3d(0, 0, 0);
-	B0 = Vector3d(1E-3, 0, 0);
+	B0 = Vector3d(1E-2, 0, 0);
 
 	double alfvenV = B0.norm()/sqrt(4*pi*density);
 	if(alfvenV > speed_of_light_normalized) {
@@ -611,6 +614,11 @@ void Simulation::initializeMagnetSonicWave() {
 	gyroradius = 1.0;
 	plasma_period = 1.0;
 
+	for(int pcount = 0; pcount < particles.size(); ++pcount) {
+		delete particles[pcount];
+	}
+	particles.clear();
+
 	for(int i = 0; i < xnumber; ++i) {
 		for(int j = 0; j < ynumber; ++j) {
 			for(int k = 0; k < znumber; ++k) {
@@ -626,11 +634,12 @@ void Simulation::initializeMagnetSonicWave() {
 						type = ELECTRON;
 					}
 					Particle* particle = createParticle(i, j, k, weight, type);
-					/*if (l % 2 == 0) {
+					if (l % 2 == 0) {
 						coordinates = particle->coordinates;
 					} else {
-						particle->coordinates= coordinates;
-					}*/
+						particle->coordinates = coordinates;
+						particle->oldCoordinates = coordinates;
+					}
 					particles.push_back(particle);
 					particlesNumber++;
 					if(particlesNumber % 1000 == 0){
@@ -848,7 +857,7 @@ void Simulation::simulate() {
 	createFiles();
 	createParticles();
 	initializeAlfvenWave();
-	initializeMagnetSonicWave();
+	//initializeMagnetSonicWave();
 	updateEnergy();
 	updateElectroMagneticParameters();
 	updateDeltaT();
@@ -990,7 +999,8 @@ void Simulation::createParticles() {
 					if (l % 2 == 0) {
 						coordinates = particle->coordinates;
 					} else {
-						particle->coordinates= coordinates;
+						particle->coordinates = coordinates;
+						particle->oldCoordinates = coordinates;
 					}
 					particles.push_back(particle);
 					particlesNumber++;
