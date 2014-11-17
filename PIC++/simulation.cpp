@@ -873,6 +873,7 @@ void Simulation::simulate() {
 		moveParticles();
 		updateElectroMagneticParameters();
 		evaluateFields();
+		filterHighHarmonics();
 		
 		updateEnergy();
 
@@ -1052,9 +1053,9 @@ Particle* Simulation::createParticle(int i, int j, int k, double weight, Particl
 	double y = ygrid[j] + deltaY * uniformDistribution();
 	double z = zgrid[k] + deltaZ * uniformDistribution();
 
-	double dx = deltaX / 2;
-	double dy = deltaY / 2;
-	double dz = deltaZ / 2;
+	double dx = deltaX;
+	double dy = deltaY;
+	double dz = deltaZ;
 
 	double energy = mass * speed_of_light_normalized_sqr;
 

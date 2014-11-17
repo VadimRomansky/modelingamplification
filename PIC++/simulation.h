@@ -181,6 +181,9 @@ public:
 	void updateBoundaries();
 	double evaluateDivE(int i, int j, int k);
 
+	void filterHighHarmonics();
+	void filterHarmonic(Vector3d k, Vector3d E);
+
 	void cleanupDivergence();
 	void updateFieldByPotential();
 	double cleanUpRightPart(int i, int j, int k);
