@@ -85,6 +85,7 @@
   <ItemGroup>
     <ClCompile Include="correlation.cpp" />
     <ClCompile Include="divergencecleanup.cpp" />
+    <ClCompile Include="fieldfiltering.cpp" />
     <ClCompile Include="fields.cpp" />
     <ClCompile Include="input.cpp" />
     <ClCompile Include="main.cpp" />
