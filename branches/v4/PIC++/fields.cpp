@@ -104,15 +104,15 @@ void Simulation::evaluateMaxwellEquationMatrix() {
 	}
 
 	if (debugMode) {
-		checkEquationMatrix(maxwellEquationMatrix);
+		checkEquationMatrix(maxwellEquationMatrix, 3);
 	}
 }
 
-void Simulation::checkEquationMatrix(std::vector<MatrixElement>**** matrix) {
+void Simulation::checkEquationMatrix(std::vector<MatrixElement>**** matrix, int lnumber) {
 	for (int i = 0; i < xnumber; ++i) {
 		for (int j = 0; j < ynumber; ++j) {
 			for (int k = 0; k < znumber; ++k) {
-				for (int l = 0; l < 3; ++l) {
+				for (int l = 0; l < lnumber; ++l) {
 					for (int m = 0; m < matrix[i][j][k][l].size(); ++m) {
 						MatrixElement element = matrix[i][j][k][l][m];
 						if (element.i < 0) {

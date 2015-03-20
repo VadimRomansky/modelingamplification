@@ -6,7 +6,9 @@
 #include "particle.h"
 #include "util.h"
 
-Particle::Particle(double m, double q, double w, ParticleTypes t, double x0, double y0, double z0, double px0, double py0, double pz0, double dx0, double dy0, double dz0){
+Particle::Particle(int n, double m, double q, double w, ParticleTypes t, double x0, double y0, double z0, double px0, double py0, double pz0, double dx0, double dy0, double dz0){
+	number = n;
+
 	mass = m;
 	charge = q;
 	weight = w;
@@ -26,6 +28,8 @@ Particle::Particle(double m, double q, double w, ParticleTypes t, double x0, dou
 }
 
 Particle::Particle(const Particle& particle){
+	number = -1; //todo
+
 	mass = particle.mass;
 	charge = particle.charge;
 	weight = particle.weight;

@@ -46,6 +46,10 @@ public:
 	double deltaY;
 	double deltaZ;
 
+	double deltaX2;
+	double deltaY2;
+	double deltaZ2;
+
 	double theta;
 
 	bool debugMode;
@@ -97,6 +101,7 @@ public:
 	//Vector3d*** tempBfield;
 
 	double**** divergenceCleaningField;
+	double**** divergenceCleaningPotential;
 
 	std::vector<Particle*> particles;
 
@@ -134,7 +139,7 @@ public:
 
 	void updateDeltaT();
 	void createParticles();
-	Particle* createParticle(int i, int j, int k, double weight, ParticleTypes type);
+	Particle* createParticle(int n, int i, int j, int k, double weight, ParticleTypes type);
 	Particle* getFirstProton();
 	Particle* getFirstElectron();
 
@@ -161,7 +166,7 @@ public:
 	void evaluateParticlesRotationTensor();
 
 	void evaluateFields();
-	void checkEquationMatrix(std::vector<MatrixElement>**** matrix);
+	void checkEquationMatrix(std::vector<MatrixElement>**** matrix, int lnumber);
 	void createPerfectConductaryBoundaryCondition(int j, int k);
 	void createInternalEquationX(int i, int j, int k, Vector3d& rightPart);
 	void createInternalEquationY(int i, int j, int k, Vector3d& rightPart);
@@ -174,6 +179,7 @@ public:
 
 	void cleanupDivergence();
 	void updateFieldByCleaning();
+	void evaluateDivergenceCleaningField();
 	void createDivergenceCleanupInternalEquation(int i, int j, int k);
 	void createDivergenceCleanupLeftEquation(int j, int k);
 	void createDivergenceCleanupRightEquation(int j, int k);
