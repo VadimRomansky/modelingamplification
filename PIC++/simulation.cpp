@@ -82,8 +82,8 @@ Simulation::Simulation() {
 	LeviCivita[2][0][1] = 1.0;
 	LeviCivita[2][1][0] = -1.0;
 
-	//boundaryConditionType = PERIODIC;
-	boundaryConditionType = SUPERCONDUCTERLEFT;
+	boundaryConditionType = PERIODIC;
+	//boundaryConditionType = SUPERCONDUCTERLEFT;
 }
 
 Simulation::Simulation(double xn, double yn, double zn, double xsizev, double ysizev, double zsizev, double temp, double rho, double Ex, double Ey, double Ez, double Bx, double By, double Bz, int maxIterations, double maxTimeV, int particlesPerBinV) {
@@ -248,18 +248,22 @@ Simulation::~Simulation() {
 		for(int j = 0; j < ynumber; ++j) {
 			for(int k = 0; k < znumber; ++k) {
 				delete[] divergenceCleaningField[i][j][k];
+				delete[] divergenceCleaningPotential[i][j][k];
 				delete[] divergenceCleanUpMatrix[i][j][k];
 				delete[] divergenceCleanUpRightPart[i][j][k];
 			}
 			delete[] divergenceCleaningField[i][j];
+			delete[] divergenceCleaningPotential[i][j];
 			delete[] divergenceCleanUpMatrix[i][j];
 			delete[] divergenceCleanUpRightPart[i][j];
 		}
 		delete[] divergenceCleaningField[i];
+		delete[] divergenceCleaningPotential[i];
 		delete[] divergenceCleanUpMatrix[i];
 		delete[] divergenceCleanUpRightPart[i];
 	}
 	delete[] divergenceCleaningField;
+	delete[] divergenceCleaningPotential;
 	delete[] divergenceCleanUpMatrix;
 	delete[] divergenceCleanUpRightPart;
 
@@ -293,6 +297,10 @@ void Simulation::initialize() {
 	deltaX = xsize / (xnumber);
 	deltaY = ysize / (ynumber);
 	deltaZ = zsize / (znumber);
+
+	deltaX2 = deltaX*deltaX;
+	deltaY2 = deltaY*deltaY;
+	deltaZ2 = deltaZ*deltaZ;
 
 	for (int i = 0; i <= xnumber; ++i) {
 		xgrid[i] = i * deltaX;
@@ -493,6 +501,7 @@ void Simulation::createArrays() {
 	pressureTensor = new Matrix3d**[xnumber];
 
 	divergenceCleaningField = new double***[xnumber];
+	divergenceCleaningPotential = new double***[xnumber];
 
 	particlesInEbin = new std::vector<Particle*>**[xnumber + 1];
 	particlesInBbin = new std::vector<Particle*>**[xnumber];
@@ -583,14 +592,17 @@ void Simulation::createArrays() {
 
 	for(int i = 0; i < xnumber; ++i) {
 		divergenceCleaningField[i] = new double**[ynumber];
+		divergenceCleaningPotential[i] = new double**[ynumber];
 		divergenceCleanUpMatrix[i] = new std::vector<MatrixElement>**[ynumber];
 		divergenceCleanUpRightPart[i] = new double**[ynumber];
 		for(int j = 0; j < ynumber; ++j) {
 			divergenceCleaningField[i][j] = new double*[znumber];
+			divergenceCleaningPotential[i][j] = new double*[znumber];
 			divergenceCleanUpMatrix[i][j] = new std::vector<MatrixElement>*[znumber];
 			divergenceCleanUpRightPart[i][j] = new double*[znumber];
 			for(int k = 0; k < znumber; ++k) {
 				divergenceCleaningField[i][j][k] = new double[3];
+				divergenceCleaningPotential[i][j][k] = new double[1];
 				divergenceCleanUpMatrix[i][j][k] = new std::vector<MatrixElement>[3];
 				divergenceCleanUpRightPart[i][j][k] = new double[3];
 			}
@@ -636,8 +648,8 @@ void Simulation::simulate() {
 	//initializeAlfvenWave();
 	collectParticlesIntoBins();
 	updateDensityParameters();
-	updateElectroMagneticParameters();
-	//cleanupDivergence();
+	//updateElectroMagneticParameters();
+	cleanupDivergence();
 	updateEnergy();
 
 	//updateDeltaT();
@@ -651,6 +663,7 @@ void Simulation::simulate() {
 		}
 		updateDeltaT();
 		evaluateParticlesRotationTensor();
+		updateElectroMagneticParameters();
 		evaluateFields();
 		moveParticles();
 		updateFields();
@@ -781,6 +794,7 @@ void Simulation::updateDeltaT() {
 
 void Simulation::createParticles() {
 	printf("creating particles\n");
+	int n = 0;
 	for (int i = 0; i < xnumber; ++i) {
 		for (int j = 0; j < ynumber; ++j) {
 			for (int k = 0; k < znumber; ++k) {
@@ -794,7 +808,8 @@ void Simulation::createParticles() {
 					} else {
 						type = ParticleTypes::ELECTRON;
 					}
-					Particle* particle = createParticle(i, j, k, weight, type);
+					Particle* particle = createParticle(n, i, j, k, weight, type);
+					n++;
 					if (l % 2 == 0) {
 						coordinates = particle->coordinates;
 					} else {
@@ -831,7 +846,7 @@ Particle* Simulation::getFirstElectron() {
 	return NULL;
 }
 
-Particle* Simulation::createParticle(int i, int j, int k, double weight, ParticleTypes type) {
+Particle* Simulation::createParticle(int n, int i, int j, int k, double weight, ParticleTypes type) {
 	double charge = 0;
 	double mass = 0;
 
@@ -846,9 +861,9 @@ Particle* Simulation::createParticle(int i, int j, int k, double weight, Particl
 		break;
 	}
 
-	double x = xgrid[i] + deltaX * uniformDistribution();
-	double y = ygrid[j] + deltaY * uniformDistribution();
-	double z = zgrid[k] + deltaZ * uniformDistribution();
+	double x = xgrid[i] + 0.5*deltaX * uniformDistribution() + 0.5*deltaX;
+	double y = ygrid[j] + 0.5*deltaY * uniformDistribution() + 0.5*deltaY;
+	double z = zgrid[k] + 0.5*deltaZ * uniformDistribution() + 0.5*deltaZ;
 
 	double dx = deltaX / 4;
 	double dy = deltaY / 4;
@@ -872,7 +887,7 @@ Particle* Simulation::createParticle(int i, int j, int k, double weight, Particl
 	double px = pnormal * cos(phi);
 	double py = pnormal * sin(phi);
 
-	Particle* particle = new Particle(mass, charge, weight, type, x, y, z, px, py, pz, dx, dy, dz);
+	Particle* particle = new Particle(n, mass, charge, weight, type, x, y, z, px, py, pz, dx, dy, dz);
 
 	return particle;
 }
@@ -1050,29 +1065,31 @@ void Simulation::updateElectroMagneticParameters() {
 	}
 
 	//for i = 0
-	for(int j = 0; j < ynumber; ++j) {
-		for(int k = 0; k < znumber; ++k) {
-			double rho = 0;
-			for(int pcount = 0; pcount < particlesInBbin[0][j][k].size(); ++pcount) {
-				Particle* particle = particlesInBbin[0][j][k][pcount];
-				Particle tempParticle = Particle(*particle);
+	if(boundaryConditionType == SUPERCONDUCTERLEFT){
+		for(int j = 0; j < ynumber; ++j) {
+			for(int k = 0; k < znumber; ++k) {
+				double rho = 0;
+				for(int pcount = 0; pcount < particlesInBbin[0][j][k].size(); ++pcount) {
+					Particle* particle = particlesInBbin[0][j][k][pcount];
+					Particle tempParticle = Particle(*particle);
 
-				double correlation = correlationWithBbin(tempParticle, -1, j, k)/volume(0, j, k);
-				tempParticle.momentum.x = - tempParticle.momentum.x;
-				double beta = tempParticle.charge*deltaT/tempParticle.mass;
-				Vector3d velocity = tempParticle.velocity(speed_of_light_normalized);
+					double correlation = correlationWithBbin(tempParticle, -1, j, k)/volume(0, j, k);
+					tempParticle.momentum.x = - tempParticle.momentum.x;
+					double beta = tempParticle.charge*deltaT/tempParticle.mass;
+					Vector3d velocity = tempParticle.velocity(speed_of_light_normalized);
 
-				Vector3d oldE = correlationEfield(particle);
-				Vector3d oldB = correlationBfield(particle);
+					Vector3d oldE = correlationEfield(particle);
+					Vector3d oldB = correlationBfield(particle);
 
-				tempParticle.rotationTensor = evaluateAlphaRotationTensor(beta, velocity, oldE, oldB);
+					tempParticle.rotationTensor = evaluateAlphaRotationTensor(beta, velocity, oldE, oldB);
 
-				double gamma = tempParticle.gammaFactor(speed_of_light_normalized);
-				Vector3d rotatedVelocity = tempParticle.rotationTensor * velocity * gamma;
+					double gamma = tempParticle.gammaFactor(speed_of_light_normalized);
+					Vector3d rotatedVelocity = tempParticle.rotationTensor * velocity * gamma;
 
-				electricDensity[0][j][k] += tempParticle.weight*tempParticle.charge*correlation;
-				pressureTensor[0][j][k] += rotatedVelocity.tensorMult(rotatedVelocity)*tempParticle.weight*tempParticle.charge*correlation;
+					electricDensity[0][j][k] += tempParticle.weight*tempParticle.charge*correlation;
+					pressureTensor[0][j][k] += rotatedVelocity.tensorMult(rotatedVelocity)*tempParticle.weight*tempParticle.charge*correlation;
 
+				}
 			}
 		}
 	}
@@ -1101,6 +1118,7 @@ void Simulation::updateDensityParameters() {
 	double full_density = 0;
 	double full_p_concentration = 0;
 	double full_e_concentration = 0;
+	FILE* debugFile = fopen("./output/particleCorrelations.dat","w");
 	for(int i = 0; i < xnumber; ++i) {
 		for(int j = 0; j < ynumber; ++j) {
 			for(int k = 0; k < znumber; ++k) {
@@ -1108,12 +1126,12 @@ void Simulation::updateDensityParameters() {
 				protonConcentration[i][j][k] = 0;
 				chargeDensity[i][j][k] = 0;
 				velocityBulk[i][j][k] = Vector3d(0, 0, 0);
-
+				fprintf(debugFile, "%d %d %d\n", i, j, k);
 				for(int pcount = 0; pcount < particlesInBbin[i][j][k].size(); ++pcount) {
 					Particle* particle = particlesInBbin[i][j][k][pcount];
 
 					double correlation = correlationWithBbin(*particle, i, j, k)/volume(i, j, k);
-					if(i == 0) {
+					if(i == 0 && boundaryConditionType == SUPERCONDUCTERLEFT) {
 						correlation += correlationWithBbin(*particle, i-1, j, k)/volume(i-1, j, k);
 					}
 
@@ -1123,25 +1141,30 @@ void Simulation::updateDensityParameters() {
 					} else if (particle->type == ParticleTypes::PROTON) {
 						protonConcentration[i][j][k] += correlation*particle->weight;
 					}
-					velocityBulk[i][j][k] += particle->velocity(speed_of_light_normalized)*correlation;
+					velocityBulk[i][j][k] += particle->momentum*particle->weight*correlation;
+
+					fprintf(debugFile, "%d %15.10g\n", particle->number, correlation*volume(i, j, k));
 				}
 
+				fprintf(debugFile, "charge %15.10g proton %15.10g electron %15.10g\n", chargeDensity[i][j][k], protonConcentration[i][j][k], electronConcentration[i][j][k]);
+
 				velocityBulk[i][j][k] = velocityBulk[i][j][k]/(electronConcentration[i][j][k]*massElectron + protonConcentration[i][j][k]*massProton);
-				if(i < xnumber - 1  && i > 0){
+				//if(i < xnumber - 1  && i > 0){
 					full_density += chargeDensity[i][j][k]*volume(i, j, k);
 					full_p_concentration += protonConcentration[i][j][k]*volume(i, j, k);
 					full_e_concentration += electronConcentration[i][j][k]*volume(i, j, k);
 					//electronConcentration[i][j][k] /= cube(gyroradius);
 					//protonConcentration[i][j][k] /= cube(gyroradius);
 					//chargeDensity[i][j][k] /= (sqrt(cube(gyroradius))*plasma_period);
-				}
+				//}
 			}
 		}
 	}
-
-	full_density/= ((xsize-2*deltaX)*ysize*zsize);
-	full_p_concentration /= ((xsize-2*deltaX)*ysize*zsize*cube(gyroradius));
-	full_e_concentration /= ((xsize-2*deltaX)*ysize*zsize*cube(gyroradius));
+	full_density/= (xsize*ysize*zsize);
+	full_p_concentration /= (xsize*ysize*zsize*cube(gyroradius));
+	full_e_concentration /= (xsize*ysize*zsize*cube(gyroradius));
+	fprintf(debugFile, "charge %15.10g proton %15.10g electron %15.10g\n", full_density, full_p_concentration, full_e_concentration);
+	fclose(debugFile);
 }
 
 void Simulation::updateEnergy() {

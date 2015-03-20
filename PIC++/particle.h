@@ -7,6 +7,8 @@ enum ParticleTypes {PROTON, ELECTRON};
 
 class Particle{
 public:
+	int number;
+
 	double mass;
 	double charge;
 	double weight;
@@ -23,7 +25,7 @@ public:
 	double dy;
 	double dz;
 
-	Particle(double m, double q, double w, ParticleTypes type, double x0, double y0, double z0, double px0, double py0, double pz0, double dx0, double dy0, double dz0);
+	Particle(int n, double m, double q, double w, ParticleTypes type, double x0, double y0, double z0, double px0, double py0, double pz0, double dx0, double dy0, double dz0);
 	Particle(const Particle& particle);
 
 	double shapeFunctionX(const double& xvalue);

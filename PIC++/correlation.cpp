@@ -2,6 +2,17 @@
 #include "simulation.h"
 
 void Simulation::collectParticlesIntoBins() {
+	double*** correlations = new double**[xnumber];
+	for(int i = 0; i < xnumber; ++i){
+		correlations[i] = new double*[ynumber];
+		for(int j = 0; j < ynumber; ++j){
+			correlations[i][j] = new double[znumber];
+			for(int k = 0; k < znumber; ++k){
+				correlations[i][j][k] = 0;
+			}
+		}
+	}
+
 	for (int i = 0; i < xnumber; ++i) {
 		for (int j = 0; j < ynumber; ++j) {
 			for (int k = 0; k < znumber; ++k) {
@@ -18,6 +29,7 @@ void Simulation::collectParticlesIntoBins() {
 		}
 	}
 
+	double fullSum = 0;
 	for (int pcount = 0; pcount < particles.size(); ++pcount) {
 		Particle* particle = particles[pcount];
 		checkParticleInBox(*particle);
@@ -27,22 +39,54 @@ void Simulation::collectParticlesIntoBins() {
 		int zcount = trunc(particle->coordinates.z / deltaZ);
 
 		double correlationSum = 0;
+		int counter = 0;
 		for (int i = xcount - 1; i <= xcount + 1; ++i) {
 			for (int j = ycount - 1; j <= ycount + 1; ++j) {
 				for (int k = zcount - 1; k <= zcount + 1; ++k) {
 					if (particleCrossBbin(*particle, i, j, k)) {
 						double correlation = correlationWithBbin(*particle, i, j, k);
 						pushParticleIntoBbin(particle, i, j, k);
-
+						int tempi = i;
+						if(i < 0){
+							tempi = xnumber - 1;
+						}
+						if(i >= xnumber){
+							tempi = 0;
+						}
+						int tempj = j;
+						if(j < 0){
+							tempj = ynumber - 1;
+						}
+						if(j >= ynumber){
+							tempj = 0;
+						}
+						int tempk = k;
+						if(k < 0){
+							tempk = znumber - 1;
+						}
+						if(k >= znumber){
+							tempk = 0;
+						}
+						correlations[tempi][tempj][tempk] += correlation*particle->charge*particle->weight/(deltaX*deltaY*deltaZ);
 						/*if((i == xcount - 1) || (j = ycount - 1) || (k == zcount - 1)) {
 							printf("aaa\n");
 						}
 						bool f = particleCrossBbin(*particle, i, j, k);*/
 						correlationSum += correlation;
+						counter++;
+						if(counter > 8){
+							printf("aaaa\n");
+						}
 					}
 				}
 			}
 		}
+
+		if(abs(correlationSum - 1) > 0.000000001){
+			printf("aaa\n");
+		}
+
+		fullSum += correlationSum*particle->weight*particle->charge/(xsize*ysize*zsize);
 
 		xcount = trunc((particle->coordinates.x / deltaX) + 0.5);
 		ycount = trunc((particle->coordinates.y / deltaY) + 0.5);
@@ -58,6 +102,24 @@ void Simulation::collectParticlesIntoBins() {
 			}
 		}
 	}
+
+	double fullSum2 = 0;
+	for(int i = 0; i < xnumber; ++i){
+		for(int j = 0; j < ynumber; ++j){
+			for(int k = 0; k < znumber; ++k){
+				fullSum2 += correlations[i][j][k]*deltaX*deltaY*deltaZ;
+			}
+		}
+	}
+	fullSum2 /= (xsize*ysize*zsize);
+
+	for(int i = 0; i < xnumber; ++i){
+		for(int j = 0; j < ynumber; ++j){
+			delete[] correlations[i][j];
+		}
+		delete[] correlations[i];
+	}
+	delete[] correlations;
 
 }
 
@@ -78,8 +140,22 @@ void Simulation::pushParticleIntoEbin(Particle* particle, int i, int j, int k) {
 }
 
 void Simulation::pushParticleIntoBbin(Particle* particle, int i, int j, int k) {
-	if (i < 0) return;
-	if (i >= xnumber) return;
+	if (i < 0){
+		if(boundaryConditionType == SUPERCONDUCTERLEFT){
+			return;
+		}
+		if(boundaryConditionType == PERIODIC){
+			i = xnumber - 1;
+		}
+	}
+	if (i >= xnumber){
+		if(boundaryConditionType == SUPERCONDUCTERLEFT){
+			return;
+		}
+		if(boundaryConditionType == PERIODIC){
+			i = 0;
+		}
+	}
 	if (j < 0) {
 		j = ynumber - 1;
 	} else if (j >= ynumber) {
@@ -105,13 +181,27 @@ bool Simulation::particleCrossBbin(Particle& particle, int i, int j, int k) {
 	} else if(k >= znumber) {
 		k = 0;
 	}
-
-	if(i < 0) {
-		if(particle.coordinates.x - particle.dx > 0)
-			return false;
-	} else {
-		if ((xgrid[i] > particle.coordinates.x + particle.dx) || (xgrid[i + 1] < particle.coordinates.x - particle.dx))
-			return false;
+	
+	if(boundaryConditionType == SUPERCONDUCTERLEFT){
+		if(i < 0) {
+			if(particle.coordinates.x - particle.dx > 0)
+				return false;
+		} else {
+			if ((xgrid[i] > particle.coordinates.x + particle.dx) || (xgrid[i + 1] < particle.coordinates.x - particle.dx))
+				return false;
+		}
+	}
+	if(boundaryConditionType == PERIODIC){
+		if(i < 0){
+			if((particle.coordinates.x - particle.dx > 0) && (particle.coordinates.x + particle.dx < xsize))
+				return false;
+		} else if(i >= xnumber){
+			if((particle.coordinates.x - particle.dx > 0) && (particle.coordinates.x + particle.dx < xsize))
+				return false;
+		} else {
+			if ((xgrid[i] > particle.coordinates.x + particle.dx) || (xgrid[i + 1] < particle.coordinates.x - particle.dx))
+				return false;
+		}
 	}
 
 	if (j == 0) {
@@ -140,8 +230,21 @@ bool Simulation::particleCrossBbin(Particle& particle, int i, int j, int k) {
 }
 
 bool Simulation::particleCrossEbin(Particle& particle, int i, int j, int k) {
-	if ((xgrid[i] - (deltaX / 2) > particle.coordinates.x + particle.dx) || (xgrid[i + 1] - (deltaX / 2) < particle.coordinates.x - particle.dx))
-		return false;
+	if(boundaryConditionType == SUPERCONDUCTERLEFT){
+		if ((xgrid[i] - (deltaX / 2) > particle.coordinates.x + particle.dx) || (xgrid[i] + (deltaX / 2) < particle.coordinates.x - particle.dx))
+			return false;
+	}
+	if(boundaryConditionType == PERIODIC){
+		if(i == 0){
+			if(xgrid[0] + (deltaX/2) < particle.coordinates.x - particle.dx && xgrid[xnumber] - (deltaX/2) > particle.coordinates.x + particle.dx)
+				return false;
+		} else if(i == xnumber){
+			return false;
+		} else {
+			if ((xgrid[i] - (deltaX / 2) > particle.coordinates.x + particle.dx) || (xgrid[i + 1] - (deltaX / 2) < particle.coordinates.x - particle.dx))
+				return false;
+		}
+	}
 	if ((ygrid[j] - (deltaY / 2) > particle.coordinates.y + particle.dy) || (ygrid[j + 1] - (deltaY / 2) < particle.coordinates.y - particle.dy))
 		return false;
 	if ((zgrid[k] - (deltaZ / 2) > particle.coordinates.z + particle.dz) || (zgrid[k + 1] - (deltaZ / 2) < particle.coordinates.z - particle.dz))
@@ -412,11 +515,27 @@ double Simulation::correlationWithBbin(Particle& particle, int i, int j, int k) 
 	double rightz;
 
 	if (i < 0) {
-		leftx = particle.coordinates.x - 2 * deltaX;
+		leftx = particle.coordinates.x - deltaX;
 		rightx = xgrid[0];
 	} else if (i >= xnumber) {
 		leftx = xgrid[xnumber];
-		rightx = particle.coordinates.x + 2 * deltaX;
+		rightx = particle.coordinates.x + deltaX;
+	} else if(i == 0 && boundaryConditionType == PERIODIC){
+		if (particle.coordinates.x - particle.dx > xgrid[1]) {
+			leftx = xgrid[xnumber];
+			rightx = xgrid[xnumber] + deltaX;
+		} else {
+			leftx = xgrid[0];
+			rightx = xgrid[1];
+		}
+	} else if(i == xnumber - 1 && boundaryConditionType == PERIODIC){
+		if (particle.coordinates.x + particle.dx < xgrid[xnumber - 1]) {
+			leftx = xgrid[0] - deltaX;
+			rightx = xgrid[0];
+		} else {
+			leftx = xgrid[xnumber - 1];
+			rightx = xgrid[xnumber];
+		}
 	} else {
 		leftx = xgrid[i];
 		rightx = xgrid[i + 1];
