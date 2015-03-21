@@ -668,7 +668,7 @@ void Simulation::simulate() {
 		moveParticles();
 		updateFields();
 		updateDensityParameters();
-		//cleanupDivergence();
+		cleanupDivergence();
 		updateEnergy();
 
 		time += deltaT;
