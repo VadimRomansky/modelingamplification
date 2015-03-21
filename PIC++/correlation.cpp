@@ -206,7 +206,7 @@ bool Simulation::particleCrossBbin(Particle& particle, int i, int j, int k) {
 		if (i == 0) {
 			if ((xgrid[i + 1] < particle.coordinates.x - particle.dx) && (xgrid[xnumber] > particle.coordinates.x + particle.dx))
 				return false;
-		} else if (i == ynumber - 1) {
+		} else if (i == xnumber - 1) {
 			if ((xgrid[i] > particle.coordinates.x + particle.dx) && (xgrid[0] < particle.coordinates.x - particle.dx))
 				return false;
 		} else {
