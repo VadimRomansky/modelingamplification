@@ -29,6 +29,7 @@ void Simulation::collectParticlesIntoBins() {
 		}
 	}
 
+	FILE* debugFile = fopen("./output/particleCorrelations1.dat","w");
 	double fullSum = 0;
 	for (int pcount = 0; pcount < particles.size(); ++pcount) {
 		Particle* particle = particles[pcount];
@@ -67,6 +68,7 @@ void Simulation::collectParticlesIntoBins() {
 						if(k >= znumber){
 							tempk = 0;
 						}
+						fprintf(debugFile, "particle %d i %d j %d k %d correlation %15.10g\n", particle->number, tempi, tempj, tempk, correlation);
 						correlations[tempi][tempj][tempk] += correlation*particle->charge*particle->weight/(deltaX*deltaY*deltaZ);
 						/*if((i == xcount - 1) || (j = ycount - 1) || (k == zcount - 1)) {
 							printf("aaa\n");
@@ -107,6 +109,7 @@ void Simulation::collectParticlesIntoBins() {
 	for(int i = 0; i < xnumber; ++i){
 		for(int j = 0; j < ynumber; ++j){
 			for(int k = 0; k < znumber; ++k){
+				fprintf(debugFile, "charge %15.10g\n", correlations[i][j][k]);
 				fullSum2 += correlations[i][j][k]*deltaX*deltaY*deltaZ;
 			}
 		}
@@ -120,7 +123,7 @@ void Simulation::collectParticlesIntoBins() {
 		delete[] correlations[i];
 	}
 	delete[] correlations;
-
+	fclose(debugFile);
 }
 
 void Simulation::pushParticleIntoEbin(Particle* particle, int i, int j, int k) {
@@ -181,6 +184,14 @@ bool Simulation::particleCrossBbin(Particle& particle, int i, int j, int k) {
 	} else if(k >= znumber) {
 		k = 0;
 	}
+
+	if(boundaryConditionType == PERIODIC){
+		if(i < 0) {
+				i = xnumber - 1;
+		} else if(i >= xnumber) {
+			i = 0;
+		}
+	}
 	
 	if(boundaryConditionType == SUPERCONDUCTERLEFT){
 		if(i < 0) {
@@ -192,11 +203,11 @@ bool Simulation::particleCrossBbin(Particle& particle, int i, int j, int k) {
 		}
 	}
 	if(boundaryConditionType == PERIODIC){
-		if(i < 0){
-			if((particle.coordinates.x - particle.dx > 0) && (particle.coordinates.x + particle.dx < xsize))
+		if (i == 0) {
+			if ((xgrid[i + 1] < particle.coordinates.x - particle.dx) && (xgrid[xnumber] > particle.coordinates.x + particle.dx))
 				return false;
-		} else if(i >= xnumber){
-			if((particle.coordinates.x - particle.dx > 0) && (particle.coordinates.x + particle.dx < xsize))
+		} else if (i == ynumber - 1) {
+			if ((xgrid[i] > particle.coordinates.x + particle.dx) && (xgrid[0] < particle.coordinates.x - particle.dx))
 				return false;
 		} else {
 			if ((xgrid[i] > particle.coordinates.x + particle.dx) || (xgrid[i + 1] < particle.coordinates.x - particle.dx))

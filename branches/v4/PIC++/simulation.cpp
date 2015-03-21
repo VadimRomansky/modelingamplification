@@ -1118,6 +1118,7 @@ void Simulation::updateDensityParameters() {
 	double full_density = 0;
 	double full_p_concentration = 0;
 	double full_e_concentration = 0;
+	collectParticlesIntoBins();
 	FILE* debugFile = fopen("./output/particleCorrelations.dat","w");
 	for(int i = 0; i < xnumber; ++i) {
 		for(int j = 0; j < ynumber; ++j) {
@@ -1142,6 +1143,10 @@ void Simulation::updateDensityParameters() {
 						protonConcentration[i][j][k] += correlation*particle->weight;
 					}
 					velocityBulk[i][j][k] += particle->momentum*particle->weight*correlation;
+
+					if(correlation == 0){
+						printf("aaa\n");
+					}
 
 					fprintf(debugFile, "%d %15.10g\n", particle->number, correlation*volume(i, j, k));
 				}
