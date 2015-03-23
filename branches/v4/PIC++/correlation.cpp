@@ -250,7 +250,8 @@ bool Simulation::particleCrossEbin(Particle& particle, int i, int j, int k) {
 			if(xgrid[0] + (deltaX/2) < particle.coordinates.x - particle.dx && xgrid[xnumber] - (deltaX/2) > particle.coordinates.x + particle.dx)
 				return false;
 		} else if(i == xnumber){
-			return false;
+			if(xgrid[0] + (deltaX/2) < particle.coordinates.x - particle.dx && xgrid[xnumber] - (deltaX/2) > particle.coordinates.x + particle.dx)
+				return false;
 		} else {
 			if ((xgrid[i] - (deltaX / 2) > particle.coordinates.x + particle.dx) || (xgrid[i + 1] - (deltaX / 2) < particle.coordinates.x - particle.dx))
 				return false;
