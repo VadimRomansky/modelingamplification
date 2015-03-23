@@ -12,8 +12,8 @@ Nz = size(Zfile, 1);
 N = Nx*Ny*Nz;
 Nt = size(concentrations, 1)/N;
 
-ynumber = 3;
-znumber = 3;
+ynumber = 1;
+znumber = 1;
 
 a = 0;
 b = fix(Nt/2);

@@ -23,7 +23,7 @@ void Simulation::cleanupDivergence() {
 	for(int i = 0; i < xnumber; ++i) {
 		for(int j = 0; j < ynumber; ++j) {
 			for(int k = 0; k < znumber; ++k) {
-				chargeDensity[i][j][k] -= (fullDensity);
+				//chargeDensity[i][j][k] -= (fullDensity);
 			}
 		}
 	}

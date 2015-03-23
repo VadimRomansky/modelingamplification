@@ -810,11 +810,11 @@ void Simulation::createParticles() {
 					}
 					Particle* particle = createParticle(n, i, j, k, weight, type);
 					n++;
-					if (l % 2 == 0) {
-						coordinates = particle->coordinates;
-					} else {
-						particle->coordinates= coordinates;
-					}
+					//if (l % 2 == 0) {
+						//coordinates = particle->coordinates;
+					//} else {
+						//particle->coordinates= coordinates;
+					//}
 					particles.push_back(particle);
 					particlesNumber++;
 					if(particlesNumber % 1000 == 0){
@@ -865,9 +865,9 @@ Particle* Simulation::createParticle(int n, int i, int j, int k, double weight, 
 	double y = ygrid[j] + 0.5*deltaY * uniformDistribution() + 0.5*deltaY;
 	double z = zgrid[k] + 0.5*deltaZ * uniformDistribution() + 0.5*deltaZ;
 
-	double dx = deltaX / 4;
-	double dy = deltaY / 4;
-	double dz = deltaZ / 4;
+	double dx = deltaX / 2;
+	double dy = deltaY / 2;
+	double dz = deltaZ / 2;
 
 	double energy = mass * speed_of_light_normalized_sqr;
 
@@ -935,7 +935,7 @@ void Simulation::updateElectroMagneticParameters() {
 					Particle* particle = particlesInEbin[i][j][k][pcount];
 					double correlation = correlationWithEbin(*particle, i, j, k) / volume(i, j, k);
 					//if(i == 0 && boundaryConditionType == SUPERCONDUCTERLEFT) {
-					if(i == 0){
+					if(i == 0 && boundaryConditionType == SUPERCONDUCTERLEFT){
 						correlation = correlation * 2; //because smaller volume
 					}
 					if(i == xnumber && boundaryConditionType == SUPERCONDUCTERLEFT) {
@@ -1235,10 +1235,22 @@ void Simulation::updateEnergy() {
 }
 
 Vector3d Simulation::getBfield(int i, int j, int k) {
-	if (i < 0) {
-		return Vector3d(0.0, 0.0, 0.0);
-	} else if (i >= xnumber) {
-		return B0;
+	if(boundaryConditionType == SUPERCONDUCTERLEFT){
+		if (i < 0) {
+			return Vector3d(0.0, 0.0, 0.0);
+		} else if (i >= xnumber) {
+			return B0;
+		}
+	}
+	if(boundaryConditionType == PERIODIC){
+		if(i == -1){
+			i = xnumber - 1;
+		} else if (i == xnumber){
+			i = 0;
+		} else if(i < -1 || i > xnumber){
+			printf("i < -1 || i > xnumber in getBfied i = %d\n", i);
+			exit(0);
+		}
 	}
 
 	if (j < 0) {
