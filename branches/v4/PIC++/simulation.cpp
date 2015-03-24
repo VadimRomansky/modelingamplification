@@ -442,10 +442,15 @@ void Simulation::initializeAlfvenWave() {
 
 	double epsilonAmplitude = 0.05;
 
+	double Bamplitude = B0.norm()*epsilonAmplitude;
+	double Eamplitude = Bamplitude*alfvenV/speed_of_light_normalized;
+
 	for(int i = 0; i < xnumber + 1; ++i) {
 		for(int j = 0; j < ynumber + 1; ++j) {
 			for(int k = 0; k < znumber + 1; ++k) {
-				Efield[i][j][k] = Vector3d(0, 0, 0);
+				Efield[i][j][k].x = 0;
+				Efield[i][j][k].y = Eamplitude*cos(kw*xgrid[i]);
+				Efield[i][j][k].z = 0;
 			}
 		}
 	}
@@ -455,7 +460,7 @@ void Simulation::initializeAlfvenWave() {
 			for(int k = 0; k < znumber; ++k) {
 				Bfield[i][j][k].x = B0.x;
 				Bfield[i][j][k].y = 0;
-				Bfield[i][j][k].z = B0.norm()*epsilonAmplitude*cos(kw*middleXgrid[i]);
+				Bfield[i][j][k].z = Bamplitude*cos(kw*middleXgrid[i]);
 			}
 		}
 	}
@@ -645,7 +650,7 @@ void Simulation::simulate() {
 	//initializeSimpleElectroMagneticWave();
 	createFiles();
 	createParticles();
-	//initializeAlfvenWave();
+	initializeAlfvenWave();
 	collectParticlesIntoBins();
 	updateDensityParameters();
 	//updateElectroMagneticParameters();
