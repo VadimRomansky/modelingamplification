@@ -6,4 +6,4 @@
 0 0 0                  magneticField
 1000000                max iterations
 1E15                   max time
-2000                 particles per bin
+200                 particles per bin

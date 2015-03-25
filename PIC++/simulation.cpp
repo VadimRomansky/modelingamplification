@@ -449,7 +449,7 @@ void Simulation::initializeAlfvenWave() {
 		for(int j = 0; j < ynumber + 1; ++j) {
 			for(int k = 0; k < znumber + 1; ++k) {
 				Efield[i][j][k].x = 0;
-				Efield[i][j][k].y = Eamplitude*cos(kw*xgrid[i]);
+				Efield[i][j][k].y = -Eamplitude*cos(kw*xgrid[i]);
 				Efield[i][j][k].z = 0;
 			}
 		}
@@ -469,10 +469,10 @@ void Simulation::initializeAlfvenWave() {
 		Particle* particle = particles[pcount];
 		Vector3d velocity;
 		if(particle->type == PROTON){
-			velocity = Vector3d(0, 0, 1)*(alfvenV*epsilonAmplitude)*cos(kw*particle->coordinates.x) - Vector3d(0, 1, 0)*(massProton*speed_of_light_normalized*B0.norm()*epsilonAmplitude*kw*sin(kw*particle->coordinates.x)/(4*pi*density*electron_charge_normalized))*massElectron/(massProton + massElectron);
+			velocity = Vector3d(0, 0, 1)*(alfvenV*epsilonAmplitude)*cos(kw*particle->coordinates.x) + Vector3d(0, 1, 0)*(kw*Bamplitude*(1.0 - sqr(alfvenV/speed_of_light_normalized))*sin(kw*particle->coordinates.x))*massElectron/(massProton + massElectron);
 		}
 		if(particle->type == ELECTRON) {
-			velocity = Vector3d(0, 0, 1)*(alfvenV*epsilonAmplitude)*cos(kw*particle->coordinates.x) + Vector3d(0, 1, 0)*(massProton*speed_of_light_normalized*B0.norm()*epsilonAmplitude*kw*sin(kw*particle->coordinates.x)/(4*pi*density*electron_charge_normalized))*massProton/(massProton + massElectron);
+			velocity = Vector3d(0, 0, 1)*(alfvenV*epsilonAmplitude)*cos(kw*particle->coordinates.x) - Vector3d(0, 1, 0)*(kw*Bamplitude*(1.0 - sqr(alfvenV/speed_of_light_normalized))*sin(kw*particle->coordinates.x))*massProton/(massProton + massElectron);
 		}
 		double beta = velocity.norm()/speed_of_light_normalized;
 		particle->addVelocity(velocity, speed_of_light_normalized);
