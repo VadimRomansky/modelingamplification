@@ -402,15 +402,16 @@ void Simulation::initializeAlfvenWave() {
 		exit(0);
 	}
 
+	double weight = volume(0,0,0)*density/(massProton*particlesPerBin);
 	double kw = 1 * 2 * pi / xsize;
 
 	double omega = kw*alfvenV;
 	double t = 2*pi/omega;
 
 	double qLog = 15;
-	double nuElectronIon = 4*sqrt(2*pi)*qLog*power(electron_charge_normalized, 4)*(density/massProton)/(3*sqrt(massElectron)*sqrt(cube(kBoltzman_normalized*temperature)));
+	double nuElectronIon = 4*sqrt(2*pi)*qLog*power(electron_charge_normalized*weight, 4)*(density/(massProton*weight))/(3*sqrt(massElectron*weight)*sqrt(cube(kBoltzman_normalized*temperature)));
 	double collisionlessParameter = omega/nuElectronIon;
-	double conductivity = (3*massProton*sqrt(massElectron)*sqrt(cube(kBoltzman_normalized*temperature)))/(sqr(massElectron)*4*sqrt(2*pi)*qLog*sqr(electron_charge_normalized));
+	double conductivity = (3*massProton*weight*sqrt(massElectron*weight)*sqrt(cube(kBoltzman_normalized*temperature)))/(sqr(massElectron*weight)*4*sqrt(2*pi)*qLog*sqr(electron_charge_normalized*weight));
 
 	double nu = speed_of_light_normalized_sqr/(4*pi*conductivity);
 
@@ -469,10 +470,10 @@ void Simulation::initializeAlfvenWave() {
 		Particle* particle = particles[pcount];
 		Vector3d velocity;
 		if(particle->type == PROTON){
-			velocity = Vector3d(0, 0, 1)*(alfvenV*epsilonAmplitude)*cos(kw*particle->coordinates.x) + Vector3d(0, 1, 0)*(kw*Bamplitude*(1.0 - sqr(alfvenV/speed_of_light_normalized))*sin(kw*particle->coordinates.x))*massElectron/(massProton + massElectron);
+			velocity = Vector3d(0, 0, 1)*(alfvenV*epsilonAmplitude)*cos(kw*particle->coordinates.x) + Vector3d(0, 1, 0)*(kw*Bamplitude*(1.0 - sqr(alfvenV/speed_of_light_normalized))*sin(kw*particle->coordinates.x))*(1.0/(4*pi*density*electron_charge_normalized))*massElectron/(particle->weight);
 		}
 		if(particle->type == ELECTRON) {
-			velocity = Vector3d(0, 0, 1)*(alfvenV*epsilonAmplitude)*cos(kw*particle->coordinates.x) - Vector3d(0, 1, 0)*(kw*Bamplitude*(1.0 - sqr(alfvenV/speed_of_light_normalized))*sin(kw*particle->coordinates.x))*massProton/(massProton + massElectron);
+			velocity = Vector3d(0, 0, 1)*(alfvenV*epsilonAmplitude)*cos(kw*particle->coordinates.x) - Vector3d(0, 1, 0)*(kw*Bamplitude*(1.0 - sqr(alfvenV/speed_of_light_normalized))*sin(kw*particle->coordinates.x))*(1.0/(4*pi*density*electron_charge_normalized))*massProton/(particle->weight);
 		}
 		double beta = velocity.norm()/speed_of_light_normalized;
 		particle->addVelocity(velocity, speed_of_light_normalized);
