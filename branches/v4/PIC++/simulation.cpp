@@ -417,7 +417,7 @@ void Simulation::initializeAlfvenWave() {
 
 	double alphaParameter = omega/conductivity;
 
-	double magneticReynolds = conductivity*alfvenV*0.01/(kw*speed_of_light_normalized_sqr);
+	double magneticReynolds = conductivity*alfvenV/kw;
 
 	double concentration = density / massProton;
 	plasma_period = sqrt(massElectron / (4 * pi * concentration * sqr(electron_charge))) / (2 * pi);
