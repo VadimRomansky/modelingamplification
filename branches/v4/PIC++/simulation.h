@@ -8,7 +8,10 @@
 #include "matrixElement.h"
 #include "particle.h"
 
+enum ParticleTypes;
+
 enum BoundaryConditionTypes {SUPERCONDUCTERLEFT, PERIODIC};
+
 
 class Simulation{
 public:
@@ -157,7 +160,7 @@ public:
 	double correlationWithEbin(Particle& particle, int i, int , int k);
 	double correlationBspline(const double& x, const double&  dx, const double& leftx, const double& rightx);
 
-	Matrix3d Simulation::evaluateAlphaRotationTensor(double beta, Vector3d velocity, Vector3d EField, Vector3d BField); //see Noguchi
+    Matrix3d evaluateAlphaRotationTensor(double beta, Vector3d velocity, Vector3d EField, Vector3d BField); //see Noguchi
 
 	void moveParticles();
 	void correctParticlePosition(Particle* particle);

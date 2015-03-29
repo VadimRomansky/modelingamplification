@@ -1,9 +1,9 @@
 #include "math.h"
+#include "stdlib.h"
+#include "stdio.h"
 
 #include "vector3d.h"
 #include "matrix3d.h"
-#include <utility>
-#include <stdexcept>
 
 Vector3d::Vector3d() {
 	x = 0;

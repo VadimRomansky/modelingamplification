@@ -1,3 +1,5 @@
+#include <cmath>
+
 #include "util.h"
 #include "simulation.h"
 
@@ -35,9 +37,9 @@ void Simulation::collectParticlesIntoBins() {
 		Particle* particle = particles[pcount];
 		checkParticleInBox(*particle);
 
-		int xcount = trunc(particle->coordinates.x / deltaX);
-		int ycount = trunc(particle->coordinates.y / deltaY);
-		int zcount = trunc(particle->coordinates.z / deltaZ);
+		int xcount = floor(particle->coordinates.x / deltaX);
+		int ycount = floor(particle->coordinates.y / deltaY);
+		int zcount = floor(particle->coordinates.z / deltaZ);
 
 		double correlationSum = 0;
 		int counter = 0;
@@ -90,9 +92,9 @@ void Simulation::collectParticlesIntoBins() {
 
 		fullSum += correlationSum*particle->weight*particle->charge/(xsize*ysize*zsize);
 
-		xcount = trunc((particle->coordinates.x / deltaX) + 0.5);
-		ycount = trunc((particle->coordinates.y / deltaY) + 0.5);
-		zcount = trunc((particle->coordinates.z / deltaZ) + 0.5);
+		xcount = floor((particle->coordinates.x / deltaX) + 0.5);
+		ycount = floor((particle->coordinates.y / deltaY) + 0.5);
+		zcount = floor((particle->coordinates.z / deltaZ) + 0.5);
 
 		for (int i = xcount - 1; i <= xcount + 1; ++i) {
 			for (int j = ycount - 1; j <= ycount + 1; ++j) {
@@ -280,9 +282,9 @@ Vector3d Simulation::correlationEfield(Particle* particle) {
 Vector3d Simulation::correlationTempEfield(Particle& particle) {
 	//checkParticleInBox(particle);
 
-	int xcount = trunc((particle.coordinates.x / deltaX) + 0.5);
-	int ycount = trunc((particle.coordinates.y / deltaY) + 0.5);
-	int zcount = trunc((particle.coordinates.z / deltaZ) + 0.5);
+	int xcount = floor((particle.coordinates.x / deltaX) + 0.5);
+	int ycount = floor((particle.coordinates.y / deltaY) + 0.5);
+	int zcount = floor((particle.coordinates.z / deltaZ) + 0.5);
 
 	/*if (xcount < 0) {
 		printf("xcount < 0\n");
@@ -330,9 +332,9 @@ Vector3d Simulation::correlationTempEfield(Particle& particle) {
 Vector3d Simulation::correlationBfield(Particle& particle) {
 	//checkParticleInBox(particle);
 
-	int xcount = trunc(particle.coordinates.x / deltaX);
-	int ycount = trunc(particle.coordinates.y / deltaY);
-	int zcount = trunc(particle.coordinates.z / deltaZ);
+	int xcount = floor(particle.coordinates.x / deltaX);
+	int ycount = floor(particle.coordinates.y / deltaY);
+	int zcount = floor(particle.coordinates.z / deltaZ);
 
 	/*if (xcount < 0) {
 		printf("xcount < 0\n");
@@ -380,9 +382,9 @@ Vector3d Simulation::correlationBfield(Particle& particle) {
 Vector3d Simulation::correlationEfield(Particle& particle) {
 	//checkParticleInBox(particle);
 
-	int xcount = trunc((particle.coordinates.x / deltaX) + 0.5);
-	int ycount = trunc((particle.coordinates.y / deltaY) + 0.5);
-	int zcount = trunc((particle.coordinates.z / deltaZ) + 0.5);
+	int xcount = floor((particle.coordinates.x / deltaX) + 0.5);
+	int ycount = floor((particle.coordinates.y / deltaY) + 0.5);
+	int zcount = floor((particle.coordinates.z / deltaZ) + 0.5);
 
 	/*if (xcount < 0) {
 		printf("xcount < 0\n");

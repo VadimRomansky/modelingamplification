@@ -1,5 +1,6 @@
 #include "stdlib.h"
 #include "stdio.h"
+#include "cmath"
 
 #include "simulation.h"
 #include "util.h"

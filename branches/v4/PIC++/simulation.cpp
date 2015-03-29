@@ -1,5 +1,6 @@
 #include "stdlib.h"
 #include "stdio.h"
+#include <cmath>
 
 #include "simulation.h"
 #include "util.h"
@@ -687,7 +688,7 @@ void Simulation::output() {
 	printf("outputing\n");
 	if (particles.size() > 0) {
 		distributionFile = fopen("./output/distribution_protons.dat", "a");
-		outputDistribution(distributionFile, particles, ParticleTypes::PROTON);
+		outputDistribution(distributionFile, particles, PROTON);
 		fclose(distributionFile);
 		protonTraectoryFile = fopen("./output/traectory_proton.dat", "a");
 		outputTraectory(protonTraectoryFile, getFirstProton(), time);
@@ -810,9 +811,9 @@ void Simulation::createParticles() {
 				for (int l = 0; l < 2 * particlesPerBin; ++l) {
 					ParticleTypes type;
 					if (l % 2 == 0) {
-						type = ParticleTypes::PROTON;
+						type = PROTON;
 					} else {
-						type = ParticleTypes::ELECTRON;
+						type = ELECTRON;
 					}
 					Particle* particle = createParticle(n, i, j, k, weight, type);
 					n++;
@@ -835,7 +836,7 @@ void Simulation::createParticles() {
 Particle* Simulation::getFirstProton() {
 	for(int pcount = 0; pcount < particles.size(); ++pcount) {
 		Particle* particle = particles[pcount];
-		if(particle->type == ParticleTypes::PROTON) {
+		if(particle->type == PROTON) {
 			return particle;
 		}
 	}
@@ -845,7 +846,7 @@ Particle* Simulation::getFirstProton() {
 Particle* Simulation::getFirstElectron() {
 	for(int pcount = 0; pcount < particles.size(); ++pcount) {
 		Particle* particle = particles[pcount];
-		if(particle->type == ParticleTypes::ELECTRON) {
+		if(particle->type == ELECTRON) {
 			return particle;
 		}
 	}
@@ -857,11 +858,11 @@ Particle* Simulation::createParticle(int n, int i, int j, int k, double weight, 
 	double mass = 0;
 
 	switch (type) {
-	case ParticleTypes::PROTON:
+	case PROTON:
 		mass = massProton;
 		charge = electron_charge_normalized;
 		break;
-	case ParticleTypes::ELECTRON:
+	case ELECTRON:
 		mass = massElectron;
 		charge = -electron_charge_normalized;
 		break;
@@ -1143,9 +1144,9 @@ void Simulation::updateDensityParameters() {
 					}
 
 					chargeDensity[i][j][k] += correlation*particle->charge*particle->weight;
-					if(particle->type == ParticleTypes::ELECTRON) {
+					if(particle->type == ELECTRON) {
 						electronConcentration[i][j][k] += correlation*particle->weight;
-					} else if (particle->type == ParticleTypes::PROTON) {
+					} else if (particle->type == PROTON) {
 						protonConcentration[i][j][k] += correlation*particle->weight;
 					}
 					velocityBulk[i][j][k] += particle->momentum*particle->weight*correlation;
