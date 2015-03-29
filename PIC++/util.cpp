@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <math.h>
 #include "util.h"
-#include "constants.h"
 
 double power(double v, double p){
 	return exp(p*log(v));
@@ -73,13 +72,13 @@ void alertNegative(double value, const char* s){
 	}
 }
 
-int trunc(double value){
+/*int trunc(double value){
 	int round = value;
 	if(round > value){
 		round--;
 	}
 	return round;
-}
+}*/
 
 void solveSpecialMatrix(double** const leftHalf, double* const rightPart, double* const output){
 	for(int j = 0; j < 2; ++j){
