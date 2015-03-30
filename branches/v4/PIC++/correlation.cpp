@@ -31,7 +31,7 @@ void Simulation::collectParticlesIntoBins() {
 		}
 	}
 
-	FILE* debugFile = fopen("./output/particleCorrelations1.dat","w");
+	//FILE* debugFile = fopen("./output/particleCorrelations1.dat","w");
 	double fullSum = 0;
 	for (int pcount = 0; pcount < particles.size(); ++pcount) {
 		Particle* particle = particles[pcount];
@@ -70,7 +70,7 @@ void Simulation::collectParticlesIntoBins() {
 						if(k >= znumber){
 							tempk = 0;
 						}
-						fprintf(debugFile, "particle %d i %d j %d k %d correlation %15.10g\n", particle->number, tempi, tempj, tempk, correlation);
+						//fprintf(debugFile, "particle %d i %d j %d k %d correlation %15.10g\n", particle->number, tempi, tempj, tempk, correlation);
 						correlations[tempi][tempj][tempk] += correlation*particle->charge*particle->weight/(deltaX*deltaY*deltaZ);
 						/*if((i == xcount - 1) || (j = ycount - 1) || (k == zcount - 1)) {
 							printf("aaa\n");
@@ -111,7 +111,7 @@ void Simulation::collectParticlesIntoBins() {
 	for(int i = 0; i < xnumber; ++i){
 		for(int j = 0; j < ynumber; ++j){
 			for(int k = 0; k < znumber; ++k){
-				fprintf(debugFile, "charge %15.10g\n", correlations[i][j][k]);
+				//fprintf(debugFile, "charge %15.10g\n", correlations[i][j][k]);
 				fullSum2 += correlations[i][j][k]*deltaX*deltaY*deltaZ;
 			}
 		}
@@ -125,7 +125,7 @@ void Simulation::collectParticlesIntoBins() {
 		delete[] correlations[i];
 	}
 	delete[] correlations;
-	fclose(debugFile);
+	//fclose(debugFile);
 }
 
 void Simulation::pushParticleIntoEbin(Particle* particle, int i, int j, int k) {
