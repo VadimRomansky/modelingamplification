@@ -13,7 +13,7 @@ void outputTraectory(FILE* outFile, Particle* particle, double time);
 void outputGrid(FILE* outFile, double* grid, int number);
 void outputFields(FILE* outEfile, FILE* outBfile, Vector3d*** Efield, Vector3d*** Bfield, int xnumber, int ynumber, int znumber, double plasma_priod, double gyroradius);
 void outputConcentrations(FILE* outFile, double*** electronConcentration, double*** protonConcentration, double*** chargeDensity, double*** shiftChargeDensity, int xnumber, int ynumber, int znumber, double plasma_period, double gyroradius);
-void outputVelocity(FILE* outFile, Vector3d*** velocity, int xnumber, int ynumber, int znumber, double plasma_period, double gyroradius);
+void outputVelocity(FILE* outFile, FILE* outElectronFile, Vector3d*** velocity, Vector3d*** electronVelocity, int xnumber, int ynumber, int znumber, double plasma_period, double gyroradius);
 void outputFlux(FILE* outFile, Vector3d*** electricFlux, int xnumber, int ynumber, int znumber, double plasma_period, double gyroradius);
 void outputArrayParameter(FILE* outFile, double*** arrayParameter, int xnumber, int ynumber, int znumber);
 void outputGeneral(FILE* outFile, Simulation* simulatiom);

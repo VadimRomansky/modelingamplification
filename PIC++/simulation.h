@@ -68,6 +68,7 @@ public:
 	double*** protonConcentration;
 	double*** chargeDensity;
 	Vector3d*** velocityBulk;
+	Vector3d*** velocityBulkElectron;
 
 
 	Vector3d V0;
@@ -126,6 +127,7 @@ public:
 	FILE* densityFile;
 	FILE* divergenceErrorFile;
 	FILE* velocityFile;
+	FILE* velocityElectronFile;
 	FILE* fluxFile;
 
 	Simulation();
