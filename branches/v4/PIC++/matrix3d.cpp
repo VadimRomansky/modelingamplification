@@ -1,5 +1,6 @@
 #include "math.h"
 #include "stdio.h"
+#include "cmath"
 
 #include "matrix3d.h"
 #include "vector3d.h"

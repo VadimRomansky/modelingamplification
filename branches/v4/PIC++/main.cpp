@@ -151,10 +151,11 @@
 
 int main()
 {	
+	printf("start\n");
     srand (time(NULL));
 
 	FILE* inputFile = fopen("./input/input.dat","r");
-	Simulation simulation = readInput(inputFile);;
+	Simulation simulation = readInput(inputFile);
 	fclose(inputFile);
 
 	simulation.simulate();
