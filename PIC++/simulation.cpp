@@ -297,6 +297,7 @@ Simulation::~Simulation() {
 }
 
 void Simulation::initialize() {
+	printf("initialization\n");
 
 	deltaX = xsize / (xnumber);
 	deltaY = ysize / (ynumber);
@@ -397,6 +398,7 @@ void Simulation::initializeSimpleElectroMagneticWave() {
 }
 
 void Simulation::initializeAlfvenWave() {
+	printf("initialization alfven wave\n");
 	E0 = Vector3d(0, 0, 0);
 	B0 = Vector3d(1E-3, 0, 0);
 
@@ -485,6 +487,7 @@ void Simulation::initializeAlfvenWave() {
 }
 
 void Simulation::createArrays() {
+	printf("creating arrays\n");
 	xgrid = new double[xnumber + 1];
 	ygrid = new double[ynumber + 1];
 	zgrid = new double[znumber + 1];
@@ -625,6 +628,7 @@ void Simulation::createArrays() {
 }
 
 void Simulation::createFiles() {
+	printf("creating files\n");
 	protonTraectoryFile = fopen("./output/traectory_proton.dat", "w");
 	fclose(protonTraectoryFile);
 	electronTraectoryFile = fopen("./output/traectory_electron.dat", "w");
