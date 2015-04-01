@@ -122,7 +122,7 @@ Simulation::Simulation(double xn, double yn, double zn, double xsizev, double ys
 	B0 = Vector3d(Bx, By, Bz);
 	E0 = Vector3d(Ex, Ey, Ez);
 
-	double concentration = density / massProton;
+	double concentration = density / (massProton + massElectron);
 
 	plasma_period = sqrt(massElectron / (4 * pi * concentration * sqr(electron_charge))) / (2 * pi);
 	plasma_period2 = plasma_period;
@@ -357,6 +357,8 @@ void Simulation::initialize() {
 		}
 	}
 
+	checkDebyeParameter();
+
 	//electricDensity[xnumber/2][ynumber/2][znumber/2] = 1;
 }
 
@@ -408,24 +410,12 @@ void Simulation::initializeAlfvenWave() {
 		exit(0);
 	}
 
-	double weight = volume(0,0,0)*density/(massProton*particlesPerBin);
 	double kw = 1 * 2 * pi / xsize;
 
 	double omega = kw*alfvenV;
 	double t = 2*pi/omega;
 
-	double qLog = 15;
-	double nuElectronIon = 4*sqrt(2*pi)*qLog*power(electron_charge_normalized*weight, 4)*(density/(massProton*weight))/(3*sqrt(massElectron*weight)*sqrt(cube(kBoltzman_normalized*temperature)));
-	double collisionlessParameter = omega/nuElectronIon;
-	double conductivity = (3*massProton*weight*sqrt(massElectron*weight)*sqrt(cube(kBoltzman_normalized*temperature)))/(sqr(massElectron*weight)*4*sqrt(2*pi)*qLog*sqr(electron_charge_normalized*weight));
-
-	double nu = speed_of_light_normalized_sqr/(4*pi*conductivity);
-
-	double alphaParameter = omega/conductivity;
-
-	double magneticReynolds = conductivity*alfvenV/kw;
-
-	double concentration = density / massProton;
+	double concentration = density / (massProton + massElectron);
 	plasma_period = sqrt(massElectron / (4 * pi * concentration * sqr(electron_charge))) / (2 * pi);
 	plasma_period2 = plasma_period;
 	double thermal_momentum;
@@ -441,11 +431,15 @@ void Simulation::initializeAlfvenWave() {
 	}
 
 	if(gyroradius*sqrt(massProton/massElectron) > xsize) {
-		printf("gyroradius proton > xsize");
+		printf("gyroradius proton > xsize\n");
 	}
 
 	gyroradius = 1.0;
 	plasma_period = 1.0;
+
+	checkDebyeParameter();
+	checkCollisionTime(omega);
+	checkMagneticReynolds(alfvenV);
 
 	double epsilonAmplitude = 0.05;
 
@@ -751,6 +745,93 @@ void Simulation::output() {
 	fclose(divergenceErrorFile);
 }
 
+void Simulation::checkDebyeParameter(){
+	double concentration = density/(massProton + massElectron);
+	double weight = concentration*volume(0,0,0)/particlesPerBin;
+	double superParticleCharge = electron_charge_normalized*weight;
+	double superParticleConcentration = concentration/weight;
+	double superParticleTemperature = temperature*weight;
+
+	double debyeLength = 1/sqrt(4*pi*electron_charge*electron_charge_normalized*concentration/(kBoltzman_normalized*temperature));
+	double debyeNumber = 4*pi*cube(debyeLength)*concentration/3;
+
+	if(debyeNumber < 1.0){\
+		printf("debye number < 1\n");
+	} else if(debyeNumber < 100.0){
+		printf("debye number < 100\n");
+	}
+	printf("debye number = %g\n", debyeNumber);
+
+	double superParticleDebyeLength = 1/sqrt(4*pi*superParticleCharge*superParticleCharge*superParticleConcentration/(kBoltzman_normalized*superParticleTemperature));
+	double superParticleDebyeNumber = 4*pi*cube(superParticleDebyeLength)*superParticleConcentration/3;
+
+	if(superParticleDebyeNumber < 1.0){\
+		printf("superparticle debye number < 1\n");
+	} else if(superParticleDebyeNumber < 100.0){
+		printf("superparticle debye number < 100\n");
+	}
+	printf("superparticle debye number = %g\n", superParticleDebyeNumber);
+}
+
+void Simulation::checkCollisionTime(double omega){
+	double concentration = density/(massProton + massElectron);
+	double weight = concentration*volume(0,0,0)/particlesPerBin;
+	double superParticleCharge = electron_charge_normalized*weight;
+	double superParticleConcentration = concentration/weight;
+	double superParticleTemperature = temperature*weight;
+
+	double qLog = 15;
+	double nuElectronIon = 4*sqrt(2*pi)*qLog*power(electron_charge_normalized, 4)*(concentration)/(3*sqrt(massElectron)*sqrt(cube(kBoltzman_normalized*temperature)));
+	double collisionlessParameter = omega/nuElectronIon;
+
+	if(collisionlessParameter < 1.0){
+		printf("collisionlessParameter < 1\n");
+	} else if(collisionlessParameter < 100.0){
+		printf("collisionlessParameter < 100\n");
+	}
+	printf("collisionlessParameter = %g\n", collisionlessParameter);
+
+	double superParticleNuElectronIon = 4*sqrt(2*pi)*qLog*power(electron_charge_normalized*weight, 4)*(superParticleConcentration)/(3*sqrt(massElectron*weight)*sqrt(cube(kBoltzman_normalized*superParticleTemperature)));
+	double superParticleCollisionlessParameter = omega/superParticleNuElectronIon;
+
+	if(superParticleCollisionlessParameter < 1.0){
+		printf("superParticleCollisionlessParameter < 1\n");
+	} else if(superParticleCollisionlessParameter < 100.0){
+		printf("superParticleCollisionlessParameter < 100\n");
+	}
+	printf("superParticleCollisionlessParameter = %g\n", superParticleCollisionlessParameter);
+}
+
+void Simulation::checkMagneticReynolds(double v){
+	double concentration = density/(massProton + massElectron);
+	double weight = concentration*volume(0,0,0)/particlesPerBin;
+	double superParticleCharge = electron_charge_normalized*weight;
+	double superParticleConcentration = concentration/weight;
+	double superParticleTemperature = temperature*weight;
+
+	double qLog = 15;
+	double conductivity = (3*massProton*sqrt(massElectron)*sqrt(cube(kBoltzman_normalized*temperature)))/(sqr(massElectron)*4*sqrt(2*pi)*qLog*sqr(electron_charge_normalized));
+
+	double magneticReynolds = conductivity*v*0.1*xsize;
+
+	if(magneticReynolds < 1.0){
+		printf("magneticReynolds < 1\n");
+	} else if(magneticReynolds <100.0){
+		printf("magneticReynolds < 100\n");
+	}
+	printf("magnetic Reynolds = %g\n", magneticReynolds);
+
+	double superParticleConductivity = (3*massProton*weight*sqrt(massElectron*weight)*sqrt(cube(kBoltzman_normalized*superParticleTemperature)))/(sqr(massElectron*weight)*4*sqrt(2*pi)*qLog*sqr(electron_charge_normalized*weight));
+
+	double superParticleMagneticReynolds = superParticleConductivity*v*0.1*xsize;
+
+	if(superParticleMagneticReynolds < 1.0){
+		printf("superParticleMagneticReynolds < 1\n");
+	} else if(superParticleMagneticReynolds <100.0){
+		printf("superParticleMagneticReynolds < 100\n");
+	}
+	printf("superparticle magnetic Reynolds = %g\n", superParticleMagneticReynolds);
+}
 
 Matrix3d Simulation::evaluateAlphaRotationTensor(double beta, Vector3d velocity, Vector3d EField, Vector3d BField) {
 	Matrix3d result;

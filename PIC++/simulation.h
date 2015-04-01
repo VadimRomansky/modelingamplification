@@ -142,6 +142,10 @@ public:
 	void simulate();
 	void output();
 
+	void checkDebyeParameter();
+	void checkCollisionTime(double omega);
+	void checkMagneticReynolds(double v);
+
 	void updateDeltaT();
 	void createParticles();
 	Particle* createParticle(int n, int i, int j, int k, double weight, ParticleTypes type);
