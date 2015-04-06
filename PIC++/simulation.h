@@ -77,6 +77,11 @@ public:
 	Vector3d E0;
 	Matrix3d pressureTensor0;
 
+	double omegaPlasmaProton;
+	double omegaPlasmaElectron;
+	double omegaGyroProton;
+	double omegaGyroElectron;
+
 	double* xgrid;
 	double* ygrid;
 	double* zgrid;
@@ -129,6 +134,7 @@ public:
 	FILE* velocityFile;
 	FILE* velocityElectronFile;
 	FILE* fluxFile;
+	FILE* informationFile;
 
 	Simulation();
 	Simulation(double xn, double yn, double zn, double xsizev, double ysizev, double zsizev, double temp, double rho, double Ex, double Ey, double Ez, double Bx, double By, double Bz, int maxIterations, double maxTimeV, int particlesPerBinV);
@@ -145,6 +151,7 @@ public:
 	void checkDebyeParameter();
 	void checkCollisionTime(double omega);
 	void checkMagneticReynolds(double v);
+	void checkDissipation(double k, double alfvenV);
 
 	void updateDeltaT();
 	void createParticles();

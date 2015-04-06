@@ -359,6 +359,14 @@ void Simulation::initialize() {
 
 	checkDebyeParameter();
 
+	double concentration = density / (massProton + massElectron);
+
+	omegaPlasmaProton = sqrt(4*pi*concentration*electron_charge*electron_charge/massProton);
+	omegaPlasmaElectron = sqrt(4*pi*concentration*electron_charge*electron_charge/massElectron);
+
+	omegaGyroProton = electron_charge*B0.norm()/(massProton*speed_of_light);
+	omegaGyroProton = electron_charge*B0.norm()/(massElectron*speed_of_light);
+
 	//electricDensity[xnumber/2][ynumber/2][znumber/2] = 1;
 }
 
@@ -414,10 +422,13 @@ void Simulation::initializeAlfvenWave() {
 
 	double omega = kw*alfvenV;
 	double t = 2*pi/omega;
+	double concentration = density/(massProton + massElectron);
+	double weight = concentration*volume(0,0,0)/particlesPerBin;
 
-	double concentration = density / (massProton + massElectron);
 	plasma_period = sqrt(massElectron / (4 * pi * concentration * sqr(electron_charge))) / (2 * pi);
+	double superParticlePlasmaPeriod = sqrt(massElectron*weight / (4 * pi * (concentration/weight) * sqr(electron_charge*weight))) / (2 * pi);
 	plasma_period2 = plasma_period;
+
 	double thermal_momentum;
 	if(kBoltzman*temperature > massElectron*speed_of_light*speed_of_light) {
 		thermal_momentum = kBoltzman*temperature/speed_of_light;
@@ -425,6 +436,8 @@ void Simulation::initializeAlfvenWave() {
 		thermal_momentum = sqrt(2*massElectron*kBoltzman*temperature);
 	}
 	gyroradius = thermal_momentum*speed_of_light / (electron_charge * B0.norm());
+
+	double gyroperiod = gyroradius*massElectron/(thermal_momentum);
 
 	if(gyroradius < deltaX) {
 		printf("gyroradius < dx\n");
@@ -440,8 +453,9 @@ void Simulation::initializeAlfvenWave() {
 	checkDebyeParameter();
 	checkCollisionTime(omega);
 	checkMagneticReynolds(alfvenV);
+	checkDissipation(kw, alfvenV);
 
-	double epsilonAmplitude = 0.05;
+	double epsilonAmplitude = 0.01;
 
 	double Bamplitude = B0.norm()*epsilonAmplitude;
 	double Eamplitude = Bamplitude*alfvenV/speed_of_light_normalized;
@@ -651,6 +665,8 @@ void Simulation::createFiles() {
 	fclose(densityFile);
 	divergenceErrorFile = fopen("./output/divergence_error.dat", "w");
 	fclose(divergenceErrorFile);
+	informationFile = fopen("./output/information.dat", "w");
+	fclose(informationFile);
 }
 
 void Simulation::simulate() {
@@ -746,6 +762,7 @@ void Simulation::output() {
 }
 
 void Simulation::checkDebyeParameter(){
+	informationFile = fopen("./output/information.dat", "a");
 	double concentration = density/(massProton + massElectron);
 	double weight = concentration*volume(0,0,0)/particlesPerBin;
 	double superParticleCharge = electron_charge_normalized*weight;
@@ -757,23 +774,31 @@ void Simulation::checkDebyeParameter(){
 
 	if(debyeNumber < 1.0){\
 		printf("debye number < 1\n");
+		fprintf(informationFile, "debye number < 1\n");
 	} else if(debyeNumber < 100.0){
 		printf("debye number < 100\n");
+		fprintf(informationFile, "debye number < 100\n");
 	}
 	printf("debye number = %g\n", debyeNumber);
+	fprintf(informationFile, "debye number = %g\n", debyeNumber);
 
 	double superParticleDebyeLength = 1/sqrt(4*pi*superParticleCharge*superParticleCharge*superParticleConcentration/(kBoltzman_normalized*superParticleTemperature));
 	double superParticleDebyeNumber = 4*pi*cube(superParticleDebyeLength)*superParticleConcentration/3;
 
 	if(superParticleDebyeNumber < 1.0){\
 		printf("superparticle debye number < 1\n");
+		fprintf(informationFile, "superparticle debye number < 1\n");
 	} else if(superParticleDebyeNumber < 100.0){
 		printf("superparticle debye number < 100\n");
+		fprintf(informationFile, "superparticle debye number < 100\n");
 	}
 	printf("superparticle debye number = %g\n", superParticleDebyeNumber);
+	fprintf(informationFile, "superparticle debye number = %g\n", superParticleDebyeNumber);
+	fclose(informationFile);
 }
 
 void Simulation::checkCollisionTime(double omega){
+	informationFile = fopen("./output/information.dat", "a");
 	double concentration = density/(massProton + massElectron);
 	double weight = concentration*volume(0,0,0)/particlesPerBin;
 	double superParticleCharge = electron_charge_normalized*weight;
@@ -786,23 +811,31 @@ void Simulation::checkCollisionTime(double omega){
 
 	if(collisionlessParameter < 1.0){
 		printf("collisionlessParameter < 1\n");
+		fprintf(informationFile, "collisionlessParameter < 1\n");
 	} else if(collisionlessParameter < 100.0){
 		printf("collisionlessParameter < 100\n");
+		fprintf(informationFile, "collisionlessParameter < 100\n");
 	}
 	printf("collisionlessParameter = %g\n", collisionlessParameter);
+	fprintf(informationFile, "collisionlessParameter = %g\n", collisionlessParameter);
 
 	double superParticleNuElectronIon = 4*sqrt(2*pi)*qLog*power(electron_charge_normalized*weight, 4)*(superParticleConcentration)/(3*sqrt(massElectron*weight)*sqrt(cube(kBoltzman_normalized*superParticleTemperature)));
 	double superParticleCollisionlessParameter = omega/superParticleNuElectronIon;
 
 	if(superParticleCollisionlessParameter < 1.0){
 		printf("superParticleCollisionlessParameter < 1\n");
+		fprintf(informationFile, "superParticleCollisionlessParameter < 1\n");
 	} else if(superParticleCollisionlessParameter < 100.0){
 		printf("superParticleCollisionlessParameter < 100\n");
+		fprintf(informationFile, "superParticleCollisionlessParameter < 100\n");
 	}
 	printf("superParticleCollisionlessParameter = %g\n", superParticleCollisionlessParameter);
+	fprintf(informationFile, "superParticleCollisionlessParameter = %g\n", superParticleCollisionlessParameter);
+	fclose(informationFile);
 }
 
 void Simulation::checkMagneticReynolds(double v){
+	informationFile = fopen("./output/information.dat", "a");
 	double concentration = density/(massProton + massElectron);
 	double weight = concentration*volume(0,0,0)/particlesPerBin;
 	double superParticleCharge = electron_charge_normalized*weight;
@@ -816,10 +849,13 @@ void Simulation::checkMagneticReynolds(double v){
 
 	if(magneticReynolds < 1.0){
 		printf("magneticReynolds < 1\n");
+		fprintf(informationFile, "magneticReynolds < 1\n");
 	} else if(magneticReynolds <100.0){
 		printf("magneticReynolds < 100\n");
+		fprintf(informationFile, "magneticReynolds < 100\n");
 	}
 	printf("magnetic Reynolds = %g\n", magneticReynolds);
+	fprintf(informationFile, "magnetic Reynolds = %g\n", magneticReynolds);
 
 	double superParticleConductivity = (3*massProton*weight*sqrt(massElectron*weight)*sqrt(cube(kBoltzman_normalized*superParticleTemperature)))/(sqr(massElectron*weight)*4*sqrt(2*pi)*qLog*sqr(electron_charge_normalized*weight));
 
@@ -827,10 +863,59 @@ void Simulation::checkMagneticReynolds(double v){
 
 	if(superParticleMagneticReynolds < 1.0){
 		printf("superParticleMagneticReynolds < 1\n");
+		fprintf(informationFile, "superParticleMagneticReynolds < 1\n");
 	} else if(superParticleMagneticReynolds <100.0){
 		printf("superParticleMagneticReynolds < 100\n");
+		fprintf(informationFile, "superParticleMagneticReynolds < 100\n");
 	}
 	printf("superparticle magnetic Reynolds = %g\n", superParticleMagneticReynolds);
+	fprintf(informationFile, "superparticle magnetic Reynolds = %g\n", superParticleMagneticReynolds);
+	fclose(informationFile);
+}
+
+void Simulation::checkDissipation(double k, double alfvenV){
+	informationFile = fopen("./output/information.dat", "a");
+	double omega = k*alfvenV;
+
+	double concentration = density/(massProton + massElectron);
+	double weight = concentration*volume(0,0,0)/particlesPerBin;
+	double superParticleCharge = electron_charge_normalized*weight;
+	double superParticleConcentration = concentration/weight;
+	double superParticleTemperature = temperature*weight;
+
+	double qLog = 15;
+	double conductivity = (3*massProton*sqrt(massElectron)*sqrt(cube(kBoltzman_normalized*temperature)))/(sqr(massElectron)*4*sqrt(2*pi)*qLog*sqr(electron_charge_normalized));
+
+	double nuMagnetic = speed_of_light_normalized_sqr/(4*pi*conductivity);
+
+	double kdissipation = omega*omega*nuMagnetic/(2*cube(alfvenV));
+
+	if(kdissipation > k){
+		printf("kdissipation > k\n");
+		fprintf(informationFile, "kdissipation > k\n");
+	} else if(kdissipation > 0.1*k){
+		printf("kdissipation > 0.1*k\n");
+		fprintf(informationFile, "kdissipation > 0.1*k\n");
+	}
+	printf("kdissipation/k = %g\n", kdissipation/k);
+	fprintf(informationFile, "kdissipation/k = %g\n", kdissipation/k);
+
+	double superParticleConductivity = (3*massProton*weight*sqrt(massElectron*weight)*sqrt(cube(kBoltzman_normalized*superParticleTemperature)))/(sqr(massElectron*weight)*4*sqrt(2*pi)*qLog*sqr(electron_charge_normalized*weight));
+
+	double superParticleNuMagnetic = speed_of_light_normalized_sqr/(4*pi*superParticleConductivity);
+
+	double superParticleKdissipation = omega*omega*superParticleNuMagnetic/(2*cube(alfvenV));
+
+	if(superParticleKdissipation > k){
+		printf("super particle kdissipation > k\n");
+		fprintf(informationFile, "super particle kdissipation > k\n");
+	} else if(superParticleKdissipation > 0.1*k){
+		printf("super particle kdissipation > 0.1*k\n");
+		fprintf(informationFile, "super particle kdissipation > 0.1*k\n");
+	}
+	printf("super particle kdissipation/k = %g\n", superParticleKdissipation/k);
+	fprintf(informationFile, "super particle kdissipation/k = %g\n", superParticleKdissipation/k);
+	fclose(informationFile);
 }
 
 Matrix3d Simulation::evaluateAlphaRotationTensor(double beta, Vector3d velocity, Vector3d EField, Vector3d BField) {
@@ -883,6 +968,15 @@ void Simulation::updateDeltaT() {
 			}
 		}
 	}
+
+	double concentration = density/(massProton + massElectron);
+
+	omegaPlasmaProton = sqrt(4*pi*concentration*electron_charge*electron_charge/massProton);
+	omegaPlasmaElectron = sqrt(4*pi*concentration*electron_charge*electron_charge/massElectron);
+
+	omegaGyroProton = electron_charge*B/(massProton*speed_of_light);
+	omegaGyroElectron = electron_charge*B/(massElectron*speed_of_light);
+
 	if(B > 0){
 		deltaT = min2(deltaT, 0.005 * massElectron * speed_of_light_normalized / (electron_charge_normalized * B));
 	}
@@ -891,7 +985,7 @@ void Simulation::updateDeltaT() {
 	}
 	//deltaT = 0.005 * massElectron * speed_of_light_normalized / (electron_charge_normalized * B0.norm());
 	//deltaT = min2(deltaT, 0.02);
-	deltaT = min2(deltaT, plasma_period2/10);
+	deltaT = min2(deltaT, 0.05/(omegaPlasmaElectron));
 	//deltaT = min2(deltaT, 1E-1);
 }
 

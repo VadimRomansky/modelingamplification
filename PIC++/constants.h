@@ -3,9 +3,10 @@
 
 const int randomSeed = 1024;
 
-const double massProton = 1.67262177E-24;
+const double massProtonReal = 1.67262177E-24;
 const double massElectronReal = 0.910938291E-27;
-const double massElectron = massProton/10;
+const double massElectron = massElectronReal;
+const double massProton = massElectronReal*30;
 const double kBoltzman = 1.3806488E-16;
 const double speed_of_light = 2.99792458E10;
 const double electron_charge = 4.803529695E-10;
