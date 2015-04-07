@@ -1,6 +1,7 @@
 #include "stdlib.h"
 #include "stdio.h"
 #include <cmath>
+#include <omp.h>
 
 #include "simulation.h"
 #include "util.h"
@@ -978,10 +979,10 @@ void Simulation::updateDeltaT() {
 	omegaGyroElectron = electron_charge*B/(massElectron*speed_of_light);
 
 	if(B > 0){
-		deltaT = min2(deltaT, 0.005 * massElectron * speed_of_light_normalized / (electron_charge_normalized * B));
+		deltaT = min2(deltaT, 0.1 * massElectron * speed_of_light_normalized / (electron_charge_normalized * B));
 	}
 	if(E > 0) {
-		deltaT = min2(deltaT, 0.005*massElectron * speed_of_light_normalized/(electron_charge_normalized*E));
+		deltaT = min2(deltaT, 0.1*massElectron * speed_of_light_normalized/(electron_charge_normalized*E));
 	}
 	//deltaT = 0.005 * massElectron * speed_of_light_normalized / (electron_charge_normalized * B0.norm());
 	//deltaT = min2(deltaT, 0.02);

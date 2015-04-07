@@ -1,6 +1,7 @@
 #include "stdlib.h"
 #include "stdio.h"
 #include "cmath"
+#include <omp.h>
 
 #include "simulation.h"
 #include "util.h"
@@ -10,10 +11,13 @@
 
 void Simulation::moveParticles(){
 	printf("moving particles\n");
+#pragma omp parallel for
 	for(int i = 0; i < particles.size(); ++i){
 	//for(int i = 0; i < 1; ++i){
 		if(i % 100000 == 0) {
 			printf("particle number %d\n", i);
+			//int currentThread = omp_get_thread_num();
+			//printf("thread num = %d\n", currentThread);
 		}
 		moveParticle(particles[i]);
 	}

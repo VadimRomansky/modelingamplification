@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <omp.h>
 
 #include "simulation.h"
 #include "util.h"
@@ -32,6 +33,7 @@ double evaluateError(double** hessenbergMatrix, double* vector, double beta, int
 
 double**** multiplySpecialMatrixVector(std::vector<MatrixElement>**** matrix, Vector3d*** vector, int xnumber, int ynumber, int znumber, int lnumber) {
 	double**** result = new double***[xnumber];
+#pragma omp parallel for
 	for (int i = 0; i < xnumber; ++i) {
 		result[i] = new double**[ynumber];
 		for (int j = 0; j < ynumber; ++j) {
@@ -55,6 +57,7 @@ double**** multiplySpecialMatrixVector(std::vector<MatrixElement>**** matrix, Ve
 
 double**** multiplySpecialMatrixVector(std::vector<MatrixElement>**** matrix, double**** vector, int xnumber, int ynumber, int znumber, int lnumber) {
 	double**** result = new double***[xnumber];
+#pragma omp parallel for
 	for (int i = 0; i < xnumber; ++i) {
 		result[i] = new double**[ynumber];
 		for (int j = 0; j < ynumber; ++j) {
@@ -83,6 +86,7 @@ double***** arnoldiIterations(std::vector<MatrixElement>**** matrix,double** out
 	}
 	delete[] prevBasis;
 
+#pragma omp parallel for
 	for (int i = 0; i < n; ++i) {
 		if (i < n - 1) {
 			for (int j = 0; j < n - 2; ++j) {
@@ -100,9 +104,11 @@ double***** arnoldiIterations(std::vector<MatrixElement>**** matrix,double** out
 	double**** tempVector = multiplySpecialMatrixVector(matrix, resultBasis[n - 2], xnumber, ynumber, znumber, lnumber);
 	double b = sqrt(scalarMultiplyLargeVectors(tempVector, tempVector, xnumber, ynumber, znumber, lnumber));
 
+
 	for (int m = 0; m < n - 1; ++m) {
 		double a = scalarMultiplyLargeVectors(resultBasis[m], tempVector, xnumber, ynumber, znumber, lnumber);
 		outHessenbergMatrix[m][n - 2] = scalarMultiplyLargeVectors(resultBasis[m], tempVector, xnumber, ynumber, znumber, lnumber);
+		#pragma omp parallel for
 		for (int i = 0; i < xnumber; ++i) {
 			for (int j = 0; j < ynumber; ++j) {
 				for (int k = 0; k < znumber; ++k) {
@@ -117,6 +123,7 @@ double***** arnoldiIterations(std::vector<MatrixElement>**** matrix,double** out
 	double a = scalarMultiplyLargeVectors(resultBasis[0], tempVector, xnumber, ynumber, znumber, lnumber);
 	outHessenbergMatrix[n - 1][n - 2] = sqrt(scalarMultiplyLargeVectors(tempVector, tempVector, xnumber, ynumber, znumber, lnumber));
 	if (outHessenbergMatrix[n - 1][n - 2] > 0) {
+		#pragma omp parallel for
 		for (int i = 0; i < xnumber ; ++i) {
 			for (int j = 0; j < ynumber; ++j) {
 				for (int k = 0; k < znumber; ++k) {
@@ -154,6 +161,7 @@ void generalizedMinimalResidualMethod(std::vector<MatrixElement>**** matrix, dou
 		return;
 	}
 
+	#pragma omp parallel for
 	for (int i = 0; i < xnumber; ++i) {
 		for (int j = 0; j < ynumber; ++j) {
 			for (int k = 0; k < znumber; ++k) {
@@ -472,6 +480,7 @@ double scalarMultiplyLargeVectors(double**** a, double**** b, int xnumber, int y
 
 double scalarMultiplyLargeVectors(Vector3d*** a, Vector3d*** b, int xnumber, int ynumber, int znumber, int lnumber) {
 	double result = 0;
+	#pragma omp parallel for
 	for (int i = 0; i < xnumber; ++i) {
 		for (int j = 0; j < ynumber; ++j) {
 			for (int k = 0; k < znumber; ++k) {

@@ -1,6 +1,7 @@
 #include "stdio.h"
 #include <stdlib.h>
-#include <time.h>   
+#include <time.h>
+#include <omp.h>
 
 #include "constants.h"
 #include "matrix3d.h"
@@ -151,6 +152,7 @@
 
 int main()
 {	
+	//omp_set_num_threads(numThreads);
 	printf("start\n");
     srand (time(NULL));
 
