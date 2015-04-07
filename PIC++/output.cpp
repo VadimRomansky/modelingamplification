@@ -131,7 +131,7 @@ void outputArrayParameter(FILE* outFile, double*** arrayParameter, int xnumber, 
 }
 
 void outputGeneral(FILE* outFile, Simulation* simulation) {
-	fprintf(outFile, "%g %g %g %g %g %g %g %g %g\n", simulation->time, simulation->time*simulation->plasma_period, simulation->particleEnergy,
+	fprintf(outFile, "%d %g %g %g %g %g %g %g %g %g\n", simulation->currentIteration, simulation->time, simulation->time*simulation->plasma_period, simulation->particleEnergy,
 		simulation->electricFieldEnergy, simulation->magneticFieldEnergy, simulation->energy, simulation->momentum.x, simulation->momentum.y, simulation->momentum.z);
 }
 

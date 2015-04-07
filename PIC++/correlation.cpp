@@ -33,6 +33,7 @@ void Simulation::collectParticlesIntoBins() {
 
 	//FILE* debugFile = fopen("./output/particleCorrelations1.dat","w");
 	double fullSum = 0;
+	#pragma omp parallel for
 	for (int pcount = 0; pcount < particles.size(); ++pcount) {
 		Particle* particle = particles[pcount];
 		checkParticleInBox(*particle);

@@ -1,5 +1,6 @@
 #include "stdlib.h"
 #include "stdio.h"
+#include <omp.h>
 
 #include "simulation.h"
 #include "util.h"
@@ -16,6 +17,7 @@ void Simulation::evaluateFields() {
  	evaluateMaxwellEquationMatrix();
 
 	double**** gmresOutput = new double***[xnumber];
+#pragma omp parallel for
 	for (int i = 0; i < xnumber; ++i) {
 		gmresOutput[i] = new double**[ynumber];
 		for (int j = 0; j < ynumber; ++j) {
@@ -27,7 +29,7 @@ void Simulation::evaluateFields() {
 	}
 
 	generalizedMinimalResidualMethod(maxwellEquationMatrix, maxwellEquationRightPart, gmresOutput, xnumber, ynumber, znumber, 3);
-
+#pragma omp parallel for
 	for (int i = 0; i < xnumber; ++i) {
 		for (int j = 0; j < ynumber; ++j) {
 			for (int k = 0; k < znumber; ++k) {
@@ -46,7 +48,7 @@ void Simulation::evaluateFields() {
 
 	evaluateMagneticField();
 
-
+#pragma omp parallel for
 	for (int i = 0; i < xnumber + 1; ++i) {
 		for (int j = 0; j < ynumber + 1; ++j) {
 			for (int k = 0; k < znumber + 1; ++k) {
@@ -57,6 +59,7 @@ void Simulation::evaluateFields() {
 }
 
 void Simulation::updateFields() {
+#pragma omp parallel for
 	for (int i = 0; i < xnumber + 1; ++i) {
 		for (int j = 0; j < ynumber + 1; ++j) {
 			for (int k = 0; k < znumber + 1; ++k) {
@@ -64,7 +67,7 @@ void Simulation::updateFields() {
 			}
 		}
 	}
-
+#pragma omp parallel for
 	for (int i = 0; i < xnumber ; ++i) {
 		for (int j = 0; j < ynumber; ++j) {
 			for (int k = 0; k < znumber ; ++k) {
@@ -75,6 +78,7 @@ void Simulation::updateFields() {
 }
 
 void Simulation::evaluateMaxwellEquationMatrix() {
+#pragma omp parallel for
 	for (int i = 0; i < xnumber; ++i) {
 		for (int j = 0; j < ynumber; ++j) {
 			for (int k = 0; k < znumber; ++k) {
@@ -85,6 +89,7 @@ void Simulation::evaluateMaxwellEquationMatrix() {
 		}
 	}
 
+#pragma omp parallel for
 	for (int i = 0; i < xnumber; ++i) {
 		for (int j = 0; j < ynumber; ++j) {
 			for (int k = 0; k < znumber; ++k) {
@@ -109,6 +114,7 @@ void Simulation::evaluateMaxwellEquationMatrix() {
 }
 
 void Simulation::checkEquationMatrix(std::vector<MatrixElement>**** matrix, int lnumber) {
+#pragma omp parallel for
 	for (int i = 0; i < xnumber; ++i) {
 		for (int j = 0; j < ynumber; ++j) {
 			for (int k = 0; k < znumber; ++k) {

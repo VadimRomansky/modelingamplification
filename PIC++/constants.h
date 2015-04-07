@@ -2,6 +2,7 @@
 #define CONSTANTS_H
 
 const int randomSeed = 1024;
+const int numThreads = 2;
 
 const double massProtonReal = 1.67262177E-24;
 const double massElectronReal = 0.910938291E-27;
@@ -17,7 +18,5 @@ const int pnumber = 1000;
 const int writeParameter = 1;
 const int maxNewtonIterations = 1;
 const int maxGMRESIterations = 1000;
-
-const int numThreads = 12;
 
 #endif
