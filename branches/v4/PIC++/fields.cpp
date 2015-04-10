@@ -299,7 +299,7 @@ void Simulation::createInternalEquationX(int i, int j, int k, Vector3d& rightPar
 	double elementZ;
 
 	//E i j k
-	elementX = 1 + dielectricTensor[i][j][k].matrix[0][0] + cthetadt2 * ((0.5 / (deltaX * deltaX)) + (0.5 / (deltaY * deltaY)) + (0.5 / (deltaZ * deltaZ)) + (0.5 * dielectricTensor[i][j][k].matrix[0][0] / (deltaX * deltaX)));
+	elementX = 1 + dielectricTensor[i][j][k].matrix[0][0] + cthetadt2 * ((2 / (deltaX * deltaX)) + (2 / (deltaY * deltaY)) + (2 / (deltaZ * deltaZ)) + (0.5 * dielectricTensor[i][j][k].matrix[0][0] / (deltaX * deltaX)));
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(elementX, i, j, k, 0));
 	elementY = dielectricTensor[i][j][k].matrix[0][1] + cthetadt2 * (0.5 * dielectricTensor[i][j][k].matrix[0][1] / (deltaX * deltaX));
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(elementY, i, j, k, 1));
@@ -309,7 +309,7 @@ void Simulation::createInternalEquationX(int i, int j, int k, Vector3d& rightPar
 	//E i+1 j k
 
 	if (boundaryConditionType == SUPERCONDUCTERLEFT) {
-		elementX = cthetadt2 * (-(0.25 / (deltaX * deltaX)) + (0.25 / (deltaY * deltaY)) + (0.25 / (deltaZ * deltaZ)) - (0.25 * dielectricTensor[i + 1][j][k].matrix[0][0] / (deltaX * deltaX)));
+		elementX = cthetadt2 * (-(1 / (deltaX * deltaX))  - (0.25 * dielectricTensor[i + 1][j][k].matrix[0][0] / (deltaX * deltaX)));
 		elementY = cthetadt2 * (-0.25 * dielectricTensor[i + 1][j][k].matrix[0][1] / (deltaX * deltaX));
 		elementZ = cthetadt2 * (-0.25 * dielectricTensor[i + 1][j][k].matrix[0][2] / (deltaX * deltaX));
 		if (i < xnumber - 1) {
@@ -323,7 +323,7 @@ void Simulation::createInternalEquationX(int i, int j, int k, Vector3d& rightPar
 		}
 	}
 	if (boundaryConditionType == PERIODIC) {
-		elementX = cthetadt2 * (-(0.25 / (deltaX * deltaX)) + (0.25 / (deltaY * deltaY)) + (0.25 / (deltaZ * deltaZ)) - (0.25 * dielectricTensor[nextI][j][k].matrix[0][0] / (deltaX * deltaX)));
+		elementX = cthetadt2 * (-(1 / (deltaX * deltaX)) - (0.25 * dielectricTensor[nextI][j][k].matrix[0][0] / (deltaX * deltaX)));
 		elementY = cthetadt2 * (-0.25 * dielectricTensor[nextI][j][k].matrix[0][1] / (deltaX * deltaX));
 		elementZ = cthetadt2 * (-0.25 * dielectricTensor[nextI][j][k].matrix[0][2] / (deltaX * deltaX));
 		maxwellEquationMatrix[i][j][k][0].push_back((MatrixElement(elementX, nextI, j, k, 0)));
@@ -332,7 +332,7 @@ void Simulation::createInternalEquationX(int i, int j, int k, Vector3d& rightPar
 	}
 
 	//E i-1 j k
-	elementX = cthetadt2 * ((-0.25 / (deltaX * deltaX)) + (0.25 / (deltaY * deltaY)) + (0.25 / (deltaZ * deltaZ)) - (0.25 * dielectricTensor[prevI][j][k].matrix[0][0] / (deltaX * deltaX)));
+	elementX = cthetadt2 * ((1 / (deltaX * deltaX)) - (0.25 * dielectricTensor[prevI][j][k].matrix[0][0] / (deltaX * deltaX)));
 	maxwellEquationMatrix[i][j][k][0].push_back((MatrixElement(elementX, prevI, j, k, 0)));
 	elementY = cthetadt2 * (-0.25 * dielectricTensor[prevI][j][k].matrix[0][1] / (deltaX * deltaX));
 	maxwellEquationMatrix[i][j][k][0].push_back((MatrixElement(elementY, prevI, j, k, 1)));
@@ -340,7 +340,7 @@ void Simulation::createInternalEquationX(int i, int j, int k, Vector3d& rightPar
 	maxwellEquationMatrix[i][j][k][0].push_back((MatrixElement(elementZ, prevI, j, k, 2)));
 
 	//E i j+1 k
-	elementX = cthetadt2 * ((0.25 / (deltaX * deltaX)) - (0.25 / (deltaY * deltaY)) + (0.25 / (deltaZ * deltaZ)) + (0.25 * dielectricTensor[i][nextJ][k].matrix[0][0] / (deltaX * deltaX)));
+	elementX = cthetadt2 * ( - (1 / (deltaY * deltaY)) + (0.25 * dielectricTensor[i][nextJ][k].matrix[0][0] / (deltaX * deltaX)));
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(elementX, i, nextJ, k, 0));
 	elementY = cthetadt2 * ((0.25 * dielectricTensor[i][nextJ][k].matrix[0][1]) / (deltaX * deltaX));
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(elementY, i, nextJ, k, 1));
@@ -348,7 +348,7 @@ void Simulation::createInternalEquationX(int i, int j, int k, Vector3d& rightPar
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(elementZ, i, nextJ, k, 2));
 
 	//E i j-1 k
-	elementX = cthetadt2 * ((0.25 / (deltaX * deltaX)) - (0.25 / (deltaY * deltaY)) + (0.25 / (deltaZ * deltaZ)) + (0.25 * dielectricTensor[i][prevJ][k].matrix[0][0] / (deltaX * deltaX)));
+	elementX = cthetadt2 * ( - (1 / (deltaY * deltaY)) + (0.25 * dielectricTensor[i][prevJ][k].matrix[0][0] / (deltaX * deltaX)));
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(elementX, i, prevJ, k, 0));
 	elementY = cthetadt2 * ((0.25 * dielectricTensor[i][prevJ][k].matrix[0][1]) / (deltaX * deltaX));
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(elementY, i, prevJ, k, 1));
@@ -356,7 +356,7 @@ void Simulation::createInternalEquationX(int i, int j, int k, Vector3d& rightPar
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(elementZ, i, prevJ, k, 2));
 
 	//E i j k+1
-	elementX = cthetadt2 * ((0.25 / (deltaX * deltaX)) + (0.25 / (deltaY * deltaY)) - (0.25 / (deltaZ * deltaZ)) + (0.25 * dielectricTensor[i][j][nextK].matrix[0][0] / (deltaX * deltaX)));
+	elementX = cthetadt2 * ( - (1 / (deltaZ * deltaZ)) + (0.25 * dielectricTensor[i][j][nextK].matrix[0][0] / (deltaX * deltaX)));
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(elementX, i, j, nextK, 0));
 	elementY = cthetadt2 * ((0.25 * dielectricTensor[i][j][nextK].matrix[0][1]) / (deltaX * deltaX));
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(elementY, i, j, nextK, 1));
@@ -364,7 +364,7 @@ void Simulation::createInternalEquationX(int i, int j, int k, Vector3d& rightPar
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(elementZ, i, j, nextK, 2));
 
 	//E i j k-1
-	elementX = cthetadt2 * ((0.25 / (deltaX * deltaX)) + (0.25 / (deltaY * deltaY)) - (0.25 / (deltaZ * deltaZ)) + (0.25 * dielectricTensor[i][j][nextK].matrix[0][0] / (deltaX * deltaX)));
+	elementX = cthetadt2 * ( - (1 / (deltaZ * deltaZ)) + (0.25 * dielectricTensor[i][j][nextK].matrix[0][0] / (deltaX * deltaX)));
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(elementX, i, j, prevK, 0));
 	elementY = cthetadt2 * ((0.25 * dielectricTensor[i][j][prevK].matrix[0][1]) / (deltaX * deltaX));
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(elementY, i, j, prevK, 1));
@@ -373,7 +373,7 @@ void Simulation::createInternalEquationX(int i, int j, int k, Vector3d& rightPar
 
 	//E i+1 j+1 k
 	if (boundaryConditionType == SUPERCONDUCTERLEFT) {
-		elementX = cthetadt2 * (-(0.125 / (deltaX * deltaX)) - (0.125 / (deltaY * deltaY)) + (0.125 / (deltaZ * deltaZ)) - (0.125 * dielectricTensor[i + 1][nextJ][k].matrix[0][0] / (deltaX * deltaX)) - (0.125 * dielectricTensor[i + 1][nextJ][k].matrix[1][0] / (deltaX * deltaY)));
+		elementX = cthetadt2 * ( - (0.125 * dielectricTensor[i + 1][nextJ][k].matrix[0][0] / (deltaX * deltaX)) - (0.125 * dielectricTensor[i + 1][nextJ][k].matrix[1][0] / (deltaX * deltaY)));
 		elementY = cthetadt2 * (- (0.125 * dielectricTensor[i + 1][nextJ][k].matrix[0][1] / (deltaX * deltaX)) - (0.125 * dielectricTensor[i + 1][nextJ][k].matrix[1][1] / (deltaX * deltaY)));
 		elementZ = cthetadt2 * (- (0.125 * dielectricTensor[i + 1][nextJ][k].matrix[0][2] / (deltaX * deltaX)) - (0.125 * dielectricTensor[i + 1][nextJ][k].matrix[1][2] / (deltaX * deltaY)));
 		if (i < xnumber - 1) {
@@ -387,7 +387,7 @@ void Simulation::createInternalEquationX(int i, int j, int k, Vector3d& rightPar
 		}
 	}
 	if (boundaryConditionType == PERIODIC) {
-		elementX = cthetadt2 * (-(0.125 / (deltaX * deltaX)) - (0.125 / (deltaY * deltaY)) + (0.125 / (deltaZ * deltaZ)) - (0.125 * dielectricTensor[nextI][nextJ][k].matrix[0][0] / (deltaX * deltaX)) - (0.125 * dielectricTensor[nextI][nextJ][k].matrix[1][0] / (deltaX * deltaY)));
+		elementX = cthetadt2 * ( - (0.125 * dielectricTensor[nextI][nextJ][k].matrix[0][0] / (deltaX * deltaX)) - (0.125 * dielectricTensor[nextI][nextJ][k].matrix[1][0] / (deltaX * deltaY)));
 		elementY = cthetadt2 * (- (0.125 * dielectricTensor[nextI][nextJ][k].matrix[0][1] / (deltaX * deltaX)) - (0.125 * dielectricTensor[nextI][nextJ][k].matrix[1][1] / (deltaX * deltaY)));
 		elementZ = cthetadt2 * (- (0.125 * dielectricTensor[nextI][nextJ][k].matrix[0][2] / (deltaX * deltaX)) - (0.125 * dielectricTensor[nextI][nextJ][k].matrix[1][2] / (deltaX * deltaY)));
 		maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(elementX, nextI, nextJ, k, 0));
@@ -397,7 +397,7 @@ void Simulation::createInternalEquationX(int i, int j, int k, Vector3d& rightPar
 
 	//E i+1 j-1 k
 	if (boundaryConditionType == SUPERCONDUCTERLEFT) {
-		elementX = cthetadt2 * (-(0.125 / (deltaX * deltaX)) - (0.125 / (deltaY * deltaY)) + (0.125 / (deltaZ * deltaZ)) - (0.125 * dielectricTensor[i + 1][prevJ][k].matrix[0][0] / (deltaX * deltaX)) + (0.125 * dielectricTensor[i + 1][prevJ][k].matrix[1][0] / (deltaX * deltaY)));
+		elementX = cthetadt2 * ( - (0.125 * dielectricTensor[i + 1][prevJ][k].matrix[0][0] / (deltaX * deltaX)) + (0.125 * dielectricTensor[i + 1][prevJ][k].matrix[1][0] / (deltaX * deltaY)));
 		elementY = cthetadt2 * (- (0.125 * dielectricTensor[i + 1][prevJ][k].matrix[0][1] / (deltaX * deltaX)) + (0.125 * dielectricTensor[i + 1][prevJ][k].matrix[1][1] / (deltaX * deltaY)));
 		elementZ = cthetadt2 * (- (0.125 * dielectricTensor[i + 1][prevJ][k].matrix[0][2] / (deltaX * deltaX)) + (0.125 * dielectricTensor[i + 1][prevJ][k].matrix[1][2] / (deltaX * deltaY)));
 		if (i < xnumber - 1) {
@@ -411,7 +411,7 @@ void Simulation::createInternalEquationX(int i, int j, int k, Vector3d& rightPar
 		}
 	}
 	if (boundaryConditionType == PERIODIC) {
-		elementX = cthetadt2 * (-(0.125 / (deltaX * deltaX)) - (0.125 / (deltaY * deltaY)) + (0.125 / (deltaZ * deltaZ)) - (0.125 * dielectricTensor[nextI][prevJ][k].matrix[0][0] / (deltaX * deltaX)) + (0.125 * dielectricTensor[nextI][prevJ][k].matrix[1][0] / (deltaX * deltaY)));
+		elementX = cthetadt2 * ( - (0.125 * dielectricTensor[nextI][prevJ][k].matrix[0][0] / (deltaX * deltaX)) + (0.125 * dielectricTensor[nextI][prevJ][k].matrix[1][0] / (deltaX * deltaY)));
 		elementY = cthetadt2 * (- (0.125 * dielectricTensor[nextI][prevJ][k].matrix[0][1] / (deltaX * deltaX)) + (0.125 * dielectricTensor[nextI][prevJ][k].matrix[1][1] / (deltaX * deltaY)));
 		elementZ = cthetadt2 * (- (0.125 * dielectricTensor[nextI][prevJ][k].matrix[0][2] / (deltaX * deltaX)) + (0.125 * dielectricTensor[nextI][prevJ][k].matrix[1][2] / (deltaX * deltaY)));
 
@@ -421,7 +421,7 @@ void Simulation::createInternalEquationX(int i, int j, int k, Vector3d& rightPar
 	}
 
 	//E i-1 j+1 k
-	elementX = cthetadt2 * (-(0.125 / (deltaX * deltaX)) - (0.125 / (deltaY * deltaY)) + (0.125 / (deltaZ * deltaZ)) - (0.125 * dielectricTensor[prevI][nextJ][k].matrix[0][0] / (deltaX * deltaX)) + (0.125 * dielectricTensor[prevI][nextJ][k].matrix[1][0] / (deltaX * deltaY)));
+	elementX = cthetadt2 * ( - (0.125 * dielectricTensor[prevI][nextJ][k].matrix[0][0] / (deltaX * deltaX)) + (0.125 * dielectricTensor[prevI][nextJ][k].matrix[1][0] / (deltaX * deltaY)));
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(elementX, prevI, nextJ, k, 0));
 	elementY = cthetadt2 * (- (0.125 * dielectricTensor[prevI][nextJ][k].matrix[0][1] / (deltaX * deltaX)) + (0.125 * dielectricTensor[prevI][nextJ][k].matrix[1][1] / (deltaX * deltaY)));
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(elementY, prevI, nextJ, k, 1));
@@ -429,7 +429,7 @@ void Simulation::createInternalEquationX(int i, int j, int k, Vector3d& rightPar
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(elementZ, prevI, nextJ, k, 2));
 
 	//E i-1 j-1 k
-	elementX = cthetadt2 * (-(0.125 / (deltaX * deltaX)) - (0.125 / (deltaY * deltaY)) + (0.125 / (deltaZ * deltaZ)) - (0.125 * dielectricTensor[prevI][prevJ][k].matrix[0][0] / (deltaX * deltaX)) - (0.125 * dielectricTensor[prevI][prevJ][k].matrix[1][0] / (deltaX * deltaY)));
+	elementX = cthetadt2 * ( - (0.125 * dielectricTensor[prevI][prevJ][k].matrix[0][0] / (deltaX * deltaX)) - (0.125 * dielectricTensor[prevI][prevJ][k].matrix[1][0] / (deltaX * deltaY)));
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(elementX, prevI, prevJ, k, 0));
 	elementY = cthetadt2 * (- (0.125 * dielectricTensor[prevI][prevJ][k].matrix[0][1] / (deltaX * deltaX)) - (0.125 * dielectricTensor[prevI][prevJ][k].matrix[1][1] / (deltaX * deltaY)));
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(elementY, prevI, prevJ, k, 1));
@@ -438,7 +438,7 @@ void Simulation::createInternalEquationX(int i, int j, int k, Vector3d& rightPar
 
 	//E i+1 j k+1
 	if (boundaryConditionType == SUPERCONDUCTERLEFT) {
-		elementX = cthetadt2 * (-(0.125 / (deltaX * deltaX)) + (0.125 / (deltaY * deltaY)) - (0.125 / (deltaZ * deltaZ)) - (0.125 * dielectricTensor[i + 1][j][nextK].matrix[0][0] / (deltaX * deltaX)) - (0.125 * dielectricTensor[i + 1][j][nextK].matrix[2][0] / (deltaX * deltaZ)));
+		elementX = cthetadt2 * ( - (0.125 * dielectricTensor[i + 1][j][nextK].matrix[0][0] / (deltaX * deltaX)) - (0.125 * dielectricTensor[i + 1][j][nextK].matrix[2][0] / (deltaX * deltaZ)));
 		elementY = cthetadt2 * (- (0.125 * dielectricTensor[i + 1][j][nextK].matrix[0][1] / (deltaX * deltaX)) - (0.125 * dielectricTensor[i + 1][j][nextK].matrix[2][1] / (deltaX * deltaZ)));
 		elementZ = cthetadt2 * (- (0.125 * dielectricTensor[i + 1][j][nextK].matrix[0][2] / (deltaX * deltaX)) - (0.125 * dielectricTensor[i + 1][j][nextK].matrix[2][2] / (deltaX * deltaZ)));
 		if (i < xnumber - 1) {
@@ -452,7 +452,7 @@ void Simulation::createInternalEquationX(int i, int j, int k, Vector3d& rightPar
 		}
 	}
 	if (boundaryConditionType == PERIODIC) {
-		elementX = cthetadt2 * (-(0.125 / (deltaX * deltaX)) + (0.125 / (deltaY * deltaY)) - (0.125 / (deltaZ * deltaZ)) - (0.125 * dielectricTensor[nextI][j][nextK].matrix[0][0] / (deltaX * deltaX)) - (0.125 * dielectricTensor[nextI][j][nextK].matrix[2][0] / (deltaX * deltaZ)));
+		elementX = cthetadt2 * ( - (0.125 * dielectricTensor[nextI][j][nextK].matrix[0][0] / (deltaX * deltaX)) - (0.125 * dielectricTensor[nextI][j][nextK].matrix[2][0] / (deltaX * deltaZ)));
 		elementY = cthetadt2 * (- (0.125 * dielectricTensor[nextI][j][nextK].matrix[0][1] / (deltaX * deltaX)) - (0.125 * dielectricTensor[nextI][j][nextK].matrix[2][1] / (deltaX * deltaZ)));
 		elementZ = cthetadt2 * (- (0.125 * dielectricTensor[nextI][j][nextK].matrix[0][2] / (deltaX * deltaX)) - (0.125 * dielectricTensor[nextI][j][nextK].matrix[2][2] / (deltaX * deltaZ)));
 		maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(elementX, nextI, j, nextK, 0));
@@ -462,7 +462,7 @@ void Simulation::createInternalEquationX(int i, int j, int k, Vector3d& rightPar
 
 	//E i+1 j k-1
 	if (boundaryConditionType == SUPERCONDUCTERLEFT) {
-		elementX = cthetadt2 * (-(0.125 / (deltaX * deltaX)) + (0.125 / (deltaY * deltaY)) - (0.125 / (deltaZ * deltaZ)) - (0.125 * dielectricTensor[i + 1][j][prevK].matrix[0][0] / (deltaX * deltaX)) + (0.125 * dielectricTensor[i + 1][j][prevK].matrix[2][0] / (deltaX * deltaZ)));
+		elementX = cthetadt2 * ( - (0.125 * dielectricTensor[i + 1][j][prevK].matrix[0][0] / (deltaX * deltaX)) + (0.125 * dielectricTensor[i + 1][j][prevK].matrix[2][0] / (deltaX * deltaZ)));
 		elementY = cthetadt2 * (- (0.125 * dielectricTensor[i + 1][j][prevK].matrix[0][1] / (deltaX * deltaX)) + (0.125 * dielectricTensor[i + 1][j][prevK].matrix[2][1] / (deltaX * deltaZ)));
 		elementZ = cthetadt2 * (- (0.125 * dielectricTensor[i + 1][j][prevK].matrix[0][2] / (deltaX * deltaX)) + (0.125 * dielectricTensor[i + 1][j][prevK].matrix[2][2] / (deltaX * deltaZ)));
 		if (i < xnumber - 1) {
@@ -476,7 +476,7 @@ void Simulation::createInternalEquationX(int i, int j, int k, Vector3d& rightPar
 		}
 	}
 	if (boundaryConditionType == PERIODIC) {
-		elementX = cthetadt2 * (-(0.125 / (deltaX * deltaX)) + (0.125 / (deltaY * deltaY)) - (0.125 / (deltaZ * deltaZ)) - (0.125 * dielectricTensor[nextI][j][prevK].matrix[0][0] / (deltaX * deltaX)) + (0.125 * dielectricTensor[nextI][j][prevK].matrix[2][0] / (deltaX * deltaZ)));
+		elementX = cthetadt2 * ( - (0.125 * dielectricTensor[nextI][j][prevK].matrix[0][0] / (deltaX * deltaX)) + (0.125 * dielectricTensor[nextI][j][prevK].matrix[2][0] / (deltaX * deltaZ)));
 		elementY = cthetadt2 * (- (0.125 * dielectricTensor[nextI][j][prevK].matrix[0][1] / (deltaX * deltaX)) + (0.125 * dielectricTensor[nextI][j][prevK].matrix[2][1] / (deltaX * deltaZ)));
 		elementZ = cthetadt2 * (- (0.125 * dielectricTensor[nextI][j][prevK].matrix[0][2] / (deltaX * deltaX)) + (0.125 * dielectricTensor[nextI][j][prevK].matrix[2][2] / (deltaX * deltaZ)));
 		maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(elementX, nextI, j, prevK, 0));
@@ -485,7 +485,7 @@ void Simulation::createInternalEquationX(int i, int j, int k, Vector3d& rightPar
 	}
 
 	//E i-1 j k+1
-	elementX = cthetadt2 * (-(0.125 / (deltaX * deltaX)) + (0.125 / (deltaY * deltaY)) - (0.125 / (deltaZ * deltaZ)) - (0.125 * dielectricTensor[prevI][j][nextK].matrix[0][0] / (deltaX * deltaX)) + (0.125 * dielectricTensor[prevI][j][nextK].matrix[2][0] / (deltaX * deltaZ)));
+	elementX = cthetadt2 * ( - (0.125 * dielectricTensor[prevI][j][nextK].matrix[0][0] / (deltaX * deltaX)) + (0.125 * dielectricTensor[prevI][j][nextK].matrix[2][0] / (deltaX * deltaZ)));
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(elementX, prevI, j, nextK, 0));
 	elementY = cthetadt2 * (- (0.125 * dielectricTensor[prevI][j][nextK].matrix[0][1] / (deltaX * deltaX)) + (0.125 * dielectricTensor[prevI][j][nextK].matrix[2][1] / (deltaX * deltaZ)));
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(elementY, prevI, j, nextK, 1));
@@ -493,7 +493,7 @@ void Simulation::createInternalEquationX(int i, int j, int k, Vector3d& rightPar
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(elementZ, prevI, j, nextK, 2));
 
 	//E i-1 j k-1
-	elementX = cthetadt2 * (-(0.125 / (deltaX * deltaX)) + (0.125 / (deltaY * deltaY)) - (0.125 / (deltaZ * deltaZ)) - (0.125 * dielectricTensor[prevI][j][prevK].matrix[0][0] / (deltaX * deltaX)) - (0.125 * dielectricTensor[prevI][j][prevK].matrix[2][0] / (deltaX * deltaZ)));
+	elementX = cthetadt2 * ( - (0.125 * dielectricTensor[prevI][j][prevK].matrix[0][0] / (deltaX * deltaX)) - (0.125 * dielectricTensor[prevI][j][prevK].matrix[2][0] / (deltaX * deltaZ)));
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(elementX, prevI, j, prevK, 0));
 	elementY = cthetadt2 * (- (0.125 * dielectricTensor[prevI][j][prevK].matrix[0][1] / (deltaX * deltaX)) - (0.125 * dielectricTensor[prevI][j][prevK].matrix[2][1] / (deltaX * deltaZ)));
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(elementY, prevI, j, prevK, 1));
@@ -501,7 +501,7 @@ void Simulation::createInternalEquationX(int i, int j, int k, Vector3d& rightPar
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(elementZ, prevI, j, prevK, 2));
 
 	//E i j+1 k+1
-	elementX = cthetadt2 * ((0.125 / (deltaX * deltaX)) - (0.125 / (deltaY * deltaY)) - (0.125 / (deltaZ * deltaZ)) + (0.125 * dielectricTensor[i][nextJ][nextK].matrix[0][0] / (deltaX * deltaX)));
+	elementX = cthetadt2 * ( + (0.125 * dielectricTensor[i][nextJ][nextK].matrix[0][0] / (deltaX * deltaX)));
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(elementX, i, nextJ, nextK, 0));
 	elementY = cthetadt2 * (0.125 * dielectricTensor[i][nextJ][nextK].matrix[0][1] / (deltaX * deltaX));
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(elementY, i, nextJ, nextK, 1));
@@ -509,7 +509,7 @@ void Simulation::createInternalEquationX(int i, int j, int k, Vector3d& rightPar
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(elementZ, i, nextJ, nextK, 2));
 
 	//E i j+1 k-1
-	elementX = cthetadt2 * ((0.125 / (deltaX * deltaX)) - (0.125 / (deltaY * deltaY)) - (0.125 / (deltaZ * deltaZ)) + (0.125 * dielectricTensor[i][nextJ][prevK].matrix[0][0] / (deltaX * deltaX)));
+	elementX = cthetadt2 * ( + (0.125 * dielectricTensor[i][nextJ][prevK].matrix[0][0] / (deltaX * deltaX)));
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(elementX, i, nextJ, prevK, 0));
 	elementY = cthetadt2 * (0.125 * dielectricTensor[i][nextJ][prevK].matrix[0][1] / (deltaX * deltaX));
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(elementY, i, nextJ, prevK, 1));
@@ -517,7 +517,7 @@ void Simulation::createInternalEquationX(int i, int j, int k, Vector3d& rightPar
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(elementZ, i, nextJ, prevK, 2));
 
 	//E i j-1 k+1
-	elementX = cthetadt2 * ((0.125 / (deltaX * deltaX)) - (0.125 / (deltaY * deltaY)) - (0.125 / (deltaZ * deltaZ)) + (0.125 * dielectricTensor[i][prevJ][nextK].matrix[0][0] / (deltaX * deltaX)));
+	elementX = cthetadt2 * ( + (0.125 * dielectricTensor[i][prevJ][nextK].matrix[0][0] / (deltaX * deltaX)));
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(elementX, i, prevJ, nextK, 0));
 	elementY = cthetadt2 * (0.125 * dielectricTensor[i][prevJ][nextK].matrix[0][1] / (deltaX * deltaX));
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(elementY, i, prevJ, nextK, 1));
@@ -525,7 +525,7 @@ void Simulation::createInternalEquationX(int i, int j, int k, Vector3d& rightPar
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(elementZ, i, prevJ, nextK, 2));
 
 	//E i j-1 k-1
-	elementX = cthetadt2 * ((0.125 / (deltaX * deltaX)) - (0.125 / (deltaY * deltaY)) - (0.125 / (deltaZ * deltaZ)) + (0.125 * dielectricTensor[i][prevJ][prevK].matrix[0][0] / (deltaX * deltaX)));
+	elementX = cthetadt2 * ( + (0.125 * dielectricTensor[i][prevJ][prevK].matrix[0][0] / (deltaX * deltaX)));
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(elementX, i, prevJ, prevK, 0));
 	elementY = cthetadt2 * (0.125 * dielectricTensor[i][prevJ][prevK].matrix[0][1] / (deltaX * deltaX));
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(elementY, i, prevJ, prevK, 1));
@@ -534,7 +534,7 @@ void Simulation::createInternalEquationX(int i, int j, int k, Vector3d& rightPar
 
 	//E i+1 j+1 k+1
 	if (boundaryConditionType == SUPERCONDUCTERLEFT) {
-		elementX = cthetadt2 * (-(0.0625 / (deltaX * deltaX)) - (0.0625 / (deltaY * deltaY)) - (0.0625 / (deltaZ * deltaZ)) - (0.0625 * dielectricTensor[i + 1][nextJ][nextK].matrix[0][0] / (deltaX * deltaX)) - (0.0625 * dielectricTensor[i + 1][nextJ][nextK].matrix[1][0] / (deltaX * deltaY)) - (0.0625 * dielectricTensor[i + 1][nextJ][nextK].matrix[2][0] / (deltaX * deltaZ)));
+		elementX = cthetadt2 * ( - (0.0625 * dielectricTensor[i + 1][nextJ][nextK].matrix[0][0] / (deltaX * deltaX)) - (0.0625 * dielectricTensor[i + 1][nextJ][nextK].matrix[1][0] / (deltaX * deltaY)) - (0.0625 * dielectricTensor[i + 1][nextJ][nextK].matrix[2][0] / (deltaX * deltaZ)));
 		elementY = cthetadt2 * (-(0.0625 * dielectricTensor[i + 1][nextJ][nextK].matrix[0][1] / (deltaX * deltaX)) - (0.0625 * dielectricTensor[i + 1][nextJ][nextK].matrix[1][1] / (deltaX * deltaY)) - (0.0625 * dielectricTensor[i + 1][nextJ][nextK].matrix[2][1] / (deltaX * deltaZ)));
 		elementZ = cthetadt2 * (-(0.0625 * dielectricTensor[i + 1][nextJ][nextK].matrix[0][2] / (deltaX * deltaX)) - (0.0625 * dielectricTensor[i + 1][nextJ][nextK].matrix[1][2] / (deltaX * deltaY)) - (0.0625 * dielectricTensor[i + 1][nextJ][nextK].matrix[2][2] / (deltaX * deltaZ)));
 		if (i < xnumber - 1) {
@@ -548,7 +548,7 @@ void Simulation::createInternalEquationX(int i, int j, int k, Vector3d& rightPar
 		}
 	}
 	if (boundaryConditionType == PERIODIC) {
-		elementX = cthetadt2 * (-(0.0625 / (deltaX * deltaX)) - (0.0625 / (deltaY * deltaY)) - (0.0625 / (deltaZ * deltaZ)) - (0.0625 * dielectricTensor[nextI][nextJ][nextK].matrix[0][0] / (deltaX * deltaX)) - (0.0625 * dielectricTensor[nextI][nextJ][nextK].matrix[1][0] / (deltaX * deltaY)) - (0.0625 * dielectricTensor[nextI][nextJ][nextK].matrix[2][0] / (deltaX * deltaZ)));
+		elementX = cthetadt2 * ( - (0.0625 * dielectricTensor[nextI][nextJ][nextK].matrix[0][0] / (deltaX * deltaX)) - (0.0625 * dielectricTensor[nextI][nextJ][nextK].matrix[1][0] / (deltaX * deltaY)) - (0.0625 * dielectricTensor[nextI][nextJ][nextK].matrix[2][0] / (deltaX * deltaZ)));
 		elementY = cthetadt2 * (-(0.0625 * dielectricTensor[nextI][nextJ][nextK].matrix[0][1] / (deltaX * deltaX)) - (0.0625 * dielectricTensor[nextI][nextJ][nextK].matrix[1][1] / (deltaX * deltaY)) - (0.0625 * dielectricTensor[nextI][nextJ][nextK].matrix[2][1] / (deltaX * deltaZ)));
 		elementZ = cthetadt2 * (-(0.0625 * dielectricTensor[nextI][nextJ][nextK].matrix[0][2] / (deltaX * deltaX)) - (0.0625 * dielectricTensor[nextI][nextJ][nextK].matrix[1][2] / (deltaX * deltaY)) - (0.0625 * dielectricTensor[nextI][nextJ][nextK].matrix[2][2] / (deltaX * deltaZ)));
 		maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(elementX, nextI, nextJ, nextK, 0));
@@ -558,7 +558,7 @@ void Simulation::createInternalEquationX(int i, int j, int k, Vector3d& rightPar
 
 	//E i+1 j+1 k-1
 	if (boundaryConditionType == SUPERCONDUCTERLEFT) {
-		elementX = cthetadt2 * (-(0.0625 / (deltaX * deltaX)) - (0.0625 / (deltaY * deltaY)) - (0.0625 / (deltaZ * deltaZ)) - (0.0625 * dielectricTensor[i + 1][nextJ][prevK].matrix[0][0] / (deltaX * deltaX)) - (0.0625 * dielectricTensor[i + 1][nextJ][prevK].matrix[1][0] / (deltaX * deltaY)) + (0.0625 * dielectricTensor[i + 1][nextJ][prevK].matrix[2][0] / (deltaX * deltaZ)));
+		elementX = cthetadt2 * ( - (0.0625 * dielectricTensor[i + 1][nextJ][prevK].matrix[0][0] / (deltaX * deltaX)) - (0.0625 * dielectricTensor[i + 1][nextJ][prevK].matrix[1][0] / (deltaX * deltaY)) + (0.0625 * dielectricTensor[i + 1][nextJ][prevK].matrix[2][0] / (deltaX * deltaZ)));
 		elementY = cthetadt2 * (-(0.0625 * dielectricTensor[i + 1][nextJ][nextK].matrix[0][1] / (deltaX * deltaX)) - (0.0625 * dielectricTensor[i + 1][nextJ][prevK].matrix[1][1] / (deltaX * deltaY)) + (0.0625 * dielectricTensor[i + 1][nextJ][prevK].matrix[2][1] / (deltaX * deltaZ)));
 		elementZ = cthetadt2 * (-(0.0625 * dielectricTensor[i + 1][nextJ][nextK].matrix[0][2] / (deltaX * deltaX)) - (0.0625 * dielectricTensor[i + 1][nextJ][prevK].matrix[1][2] / (deltaX * deltaY)) + (0.0625 * dielectricTensor[i + 1][nextJ][prevK].matrix[2][2] / (deltaX * deltaZ)));
 		if (i < xnumber - 1) {
@@ -572,7 +572,7 @@ void Simulation::createInternalEquationX(int i, int j, int k, Vector3d& rightPar
 		}
 	}
 	if (boundaryConditionType == PERIODIC) {
-		elementX = cthetadt2 * (-(0.0625 / (deltaX * deltaX)) - (0.0625 / (deltaY * deltaY)) - (0.0625 / (deltaZ * deltaZ)) - (0.0625 * dielectricTensor[nextI][nextJ][prevK].matrix[0][0] / (deltaX * deltaX)) - (0.0625 * dielectricTensor[nextI][nextJ][prevK].matrix[1][0] / (deltaX * deltaY)) + (0.0625 * dielectricTensor[nextI][nextJ][prevK].matrix[2][0] / (deltaX * deltaZ)));
+		elementX = cthetadt2 * ( - (0.0625 * dielectricTensor[nextI][nextJ][prevK].matrix[0][0] / (deltaX * deltaX)) - (0.0625 * dielectricTensor[nextI][nextJ][prevK].matrix[1][0] / (deltaX * deltaY)) + (0.0625 * dielectricTensor[nextI][nextJ][prevK].matrix[2][0] / (deltaX * deltaZ)));
 		elementY = cthetadt2 * (-(0.0625 * dielectricTensor[nextI][nextJ][nextK].matrix[0][1] / (deltaX * deltaX)) - (0.0625 * dielectricTensor[nextI][nextJ][prevK].matrix[1][1] / (deltaX * deltaY)) + (0.0625 * dielectricTensor[nextI][nextJ][prevK].matrix[2][1] / (deltaX * deltaZ)));
 		elementZ = cthetadt2 * (-(0.0625 * dielectricTensor[nextI][nextJ][nextK].matrix[0][2] / (deltaX * deltaX)) - (0.0625 * dielectricTensor[nextI][nextJ][prevK].matrix[1][2] / (deltaX * deltaY)) + (0.0625 * dielectricTensor[nextI][nextJ][prevK].matrix[2][2] / (deltaX * deltaZ)));
 		maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(elementX, nextI, nextJ, prevK, 0));
@@ -582,7 +582,7 @@ void Simulation::createInternalEquationX(int i, int j, int k, Vector3d& rightPar
 
 	//E i+1 j-1 k+1
 	if (boundaryConditionType == SUPERCONDUCTERLEFT) {
-		elementX = cthetadt2 * (-(0.0625 / (deltaX * deltaX)) - (0.0625 / (deltaY * deltaY)) - (0.0625 / (deltaZ * deltaZ)) - (0.0625 * dielectricTensor[i + 1][prevJ][nextK].matrix[0][0] / (deltaX * deltaX)) + (0.0625 * dielectricTensor[i + 1][prevJ][nextK].matrix[1][0] / (deltaX * deltaY)) - (0.0625 * dielectricTensor[i + 1][prevJ][nextK].matrix[2][0] / (deltaX * deltaZ)));
+		elementX = cthetadt2 * ( - (0.0625 * dielectricTensor[i + 1][prevJ][nextK].matrix[0][0] / (deltaX * deltaX)) + (0.0625 * dielectricTensor[i + 1][prevJ][nextK].matrix[1][0] / (deltaX * deltaY)) - (0.0625 * dielectricTensor[i + 1][prevJ][nextK].matrix[2][0] / (deltaX * deltaZ)));
 		elementY = cthetadt2 * (-(0.0625 * dielectricTensor[i + 1][prevJ][nextK].matrix[0][1] / (deltaX * deltaX)) + (0.0625 * dielectricTensor[i + 1][prevJ][nextK].matrix[1][1] / (deltaX * deltaY)) - (0.0625 * dielectricTensor[i + 1][prevJ][nextK].matrix[2][1] / (deltaX * deltaZ)));
 		elementZ = cthetadt2 * (-(0.0625 * dielectricTensor[i + 1][prevJ][nextK].matrix[0][2] / (deltaX * deltaX)) + (0.0625 * dielectricTensor[i + 1][prevJ][nextK].matrix[1][2] / (deltaX * deltaY)) - (0.0625 * dielectricTensor[i + 1][prevJ][nextK].matrix[2][2] / (deltaX * deltaZ)));
 		if (i < xnumber - 1) {
@@ -596,7 +596,7 @@ void Simulation::createInternalEquationX(int i, int j, int k, Vector3d& rightPar
 		}
 	}
 	if (boundaryConditionType == PERIODIC) {
-		elementX = cthetadt2 * (-(0.0625 / (deltaX * deltaX)) - (0.0625 / (deltaY * deltaY)) - (0.0625 / (deltaZ * deltaZ)) - (0.0625 * dielectricTensor[nextI][prevJ][nextK].matrix[0][0] / (deltaX * deltaX)) + (0.0625 * dielectricTensor[nextI][prevJ][nextK].matrix[1][0] / (deltaX * deltaY)) - (0.0625 * dielectricTensor[nextI][prevJ][nextK].matrix[2][0] / (deltaX * deltaZ)));
+		elementX = cthetadt2 * ( - (0.0625 * dielectricTensor[nextI][prevJ][nextK].matrix[0][0] / (deltaX * deltaX)) + (0.0625 * dielectricTensor[nextI][prevJ][nextK].matrix[1][0] / (deltaX * deltaY)) - (0.0625 * dielectricTensor[nextI][prevJ][nextK].matrix[2][0] / (deltaX * deltaZ)));
 		elementY = cthetadt2 * (-(0.0625 * dielectricTensor[nextI][prevJ][nextK].matrix[0][1] / (deltaX * deltaX)) + (0.0625 * dielectricTensor[nextI][prevJ][nextK].matrix[1][1] / (deltaX * deltaY)) - (0.0625 * dielectricTensor[nextI][prevJ][nextK].matrix[2][1] / (deltaX * deltaZ)));
 		elementZ = cthetadt2 * (-(0.0625 * dielectricTensor[nextI][prevJ][nextK].matrix[0][2] / (deltaX * deltaX)) + (0.0625 * dielectricTensor[nextI][prevJ][nextK].matrix[1][2] / (deltaX * deltaY)) - (0.0625 * dielectricTensor[nextI][prevJ][nextK].matrix[2][2] / (deltaX * deltaZ)));
 		maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(elementX, nextI, prevJ, nextK, 0));
@@ -606,7 +606,7 @@ void Simulation::createInternalEquationX(int i, int j, int k, Vector3d& rightPar
 
 	//E i+1 j-1 k-1
 	if (boundaryConditionType == SUPERCONDUCTERLEFT) {
-		elementX = cthetadt2 * (-(0.0625 / (deltaX * deltaX)) - (0.0625 / (deltaY * deltaY)) - (0.0625 / (deltaZ * deltaZ)) - (0.0625 * dielectricTensor[i + 1][prevJ][prevK].matrix[0][0] / (deltaX * deltaX)) + (0.0625 * dielectricTensor[i + 1][prevJ][prevK].matrix[1][0] / (deltaX * deltaY)) + (0.0625 * dielectricTensor[i + 1][prevJ][prevK].matrix[2][0] / (deltaX * deltaZ)));
+		elementX = cthetadt2 * ( - (0.0625 * dielectricTensor[i + 1][prevJ][prevK].matrix[0][0] / (deltaX * deltaX)) + (0.0625 * dielectricTensor[i + 1][prevJ][prevK].matrix[1][0] / (deltaX * deltaY)) + (0.0625 * dielectricTensor[i + 1][prevJ][prevK].matrix[2][0] / (deltaX * deltaZ)));
 		elementY = cthetadt2 * (-(0.0625 * dielectricTensor[i + 1][prevJ][nextK].matrix[0][1] / (deltaX * deltaX)) + (0.0625 * dielectricTensor[i + 1][prevJ][prevK].matrix[1][1] / (deltaX * deltaY)) + (0.0625 * dielectricTensor[i + 1][prevJ][prevK].matrix[2][1] / (deltaX * deltaZ)));
 		elementZ = cthetadt2 * (-(0.0625 * dielectricTensor[i + 1][prevJ][nextK].matrix[0][2] / (deltaX * deltaX)) + (0.0625 * dielectricTensor[i + 1][prevJ][prevK].matrix[1][2] / (deltaX * deltaY)) + (0.0625 * dielectricTensor[i + 1][prevJ][prevK].matrix[2][2] / (deltaX * deltaZ)));
 		if (i < xnumber - 1) {
@@ -620,7 +620,7 @@ void Simulation::createInternalEquationX(int i, int j, int k, Vector3d& rightPar
 		}
 	}
 	if (boundaryConditionType == PERIODIC) {
-		elementX = cthetadt2 * (-(0.0625 / (deltaX * deltaX)) - (0.0625 / (deltaY * deltaY)) - (0.0625 / (deltaZ * deltaZ)) - (0.0625 * dielectricTensor[nextI][prevJ][prevK].matrix[0][0] / (deltaX * deltaX)) + (0.0625 * dielectricTensor[nextI][prevJ][prevK].matrix[1][0] / (deltaX * deltaY)) + (0.0625 * dielectricTensor[nextI][prevJ][prevK].matrix[2][0] / (deltaX * deltaZ)));
+		elementX = cthetadt2 * ( - (0.0625 * dielectricTensor[nextI][prevJ][prevK].matrix[0][0] / (deltaX * deltaX)) + (0.0625 * dielectricTensor[nextI][prevJ][prevK].matrix[1][0] / (deltaX * deltaY)) + (0.0625 * dielectricTensor[nextI][prevJ][prevK].matrix[2][0] / (deltaX * deltaZ)));
 		elementY = cthetadt2 * (-(0.0625 * dielectricTensor[nextI][prevJ][nextK].matrix[0][1] / (deltaX * deltaX)) + (0.0625 * dielectricTensor[nextI][prevJ][prevK].matrix[1][1] / (deltaX * deltaY)) + (0.0625 * dielectricTensor[nextI][prevJ][prevK].matrix[2][1] / (deltaX * deltaZ)));
 		elementZ = cthetadt2 * (-(0.0625 * dielectricTensor[nextI][prevJ][nextK].matrix[0][2] / (deltaX * deltaX)) + (0.0625 * dielectricTensor[nextI][prevJ][prevK].matrix[1][2] / (deltaX * deltaY)) + (0.0625 * dielectricTensor[nextI][prevJ][prevK].matrix[2][2] / (deltaX * deltaZ)));
 		maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(elementX, nextI, prevJ, prevK, 0));
@@ -629,7 +629,7 @@ void Simulation::createInternalEquationX(int i, int j, int k, Vector3d& rightPar
 	}
 
 	//E i-1 j+1 k+1
-	elementX = cthetadt2 * (-(0.0625 / (deltaX * deltaX)) - (0.0625 / (deltaY * deltaY)) - (0.0625 / (deltaZ * deltaZ)) - (0.0625 * dielectricTensor[prevI][nextJ][nextK].matrix[0][0] / (deltaX * deltaX)) + (0.0625 * dielectricTensor[prevI][nextJ][nextK].matrix[1][0] / (deltaX * deltaY)) + (0.0625 * dielectricTensor[prevI][nextJ][nextK].matrix[2][0] / (deltaX * deltaZ)));
+	elementX = cthetadt2 * ( - (0.0625 * dielectricTensor[prevI][nextJ][nextK].matrix[0][0] / (deltaX * deltaX)) + (0.0625 * dielectricTensor[prevI][nextJ][nextK].matrix[1][0] / (deltaX * deltaY)) + (0.0625 * dielectricTensor[prevI][nextJ][nextK].matrix[2][0] / (deltaX * deltaZ)));
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(elementX, prevI, nextJ, nextK, 0));
 	elementY = cthetadt2 * (-(0.0625 * dielectricTensor[prevI][nextJ][nextK].matrix[0][1] / (deltaX * deltaX)) + (0.0625 * dielectricTensor[prevI][nextJ][nextK].matrix[1][1] / (deltaX * deltaY)) + (0.0625 * dielectricTensor[prevI][nextJ][nextK].matrix[2][1] / (deltaX * deltaZ)));
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(elementY, prevI, nextJ, nextK, 1));
@@ -637,7 +637,7 @@ void Simulation::createInternalEquationX(int i, int j, int k, Vector3d& rightPar
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(elementZ, prevI, nextJ, nextK, 2));
 
 	//E i-1 j+1 k-1
-	elementX = cthetadt2 * (-(0.0625 / (deltaX * deltaX)) - (0.0625 / (deltaY * deltaY)) - (0.0625 / (deltaZ * deltaZ)) - (0.0625 * dielectricTensor[prevI][nextJ][prevK].matrix[0][0] / (deltaX * deltaX)) + (0.0625 * dielectricTensor[prevI][nextJ][prevK].matrix[1][0] / (deltaX * deltaY)) - (0.0625 * dielectricTensor[prevI][nextJ][prevK].matrix[2][0] / (deltaX * deltaZ)));
+	elementX = cthetadt2 * ( - (0.0625 * dielectricTensor[prevI][nextJ][prevK].matrix[0][0] / (deltaX * deltaX)) + (0.0625 * dielectricTensor[prevI][nextJ][prevK].matrix[1][0] / (deltaX * deltaY)) - (0.0625 * dielectricTensor[prevI][nextJ][prevK].matrix[2][0] / (deltaX * deltaZ)));
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(elementX, prevI, nextJ, prevK, 0));
 	elementY = cthetadt2 * (-(0.0625 * dielectricTensor[prevI][nextJ][prevK].matrix[0][1] / (deltaX * deltaX)) + (0.0625 * dielectricTensor[prevI][nextJ][prevK].matrix[1][1] / (deltaX * deltaY)) - (0.0625 * dielectricTensor[prevI][nextJ][prevK].matrix[2][1] / (deltaX * deltaZ)));
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(elementY, prevI, nextJ, prevK, 1));
@@ -645,7 +645,7 @@ void Simulation::createInternalEquationX(int i, int j, int k, Vector3d& rightPar
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(elementZ, prevI, nextJ, prevK, 2));
 
 	//E i-1 j-1 k+1
-	elementX = cthetadt2 * (-(0.0625 / (deltaX * deltaX)) - (0.0625 / (deltaY * deltaY)) - (0.0625 / (deltaZ * deltaZ)) - (0.0625 * dielectricTensor[prevI][prevJ][nextK].matrix[0][0] / (deltaX * deltaX)) - (0.0625 * dielectricTensor[prevI][prevJ][nextK].matrix[1][0] / (deltaX * deltaY)) + (0.0625 * dielectricTensor[prevI][prevJ][nextK].matrix[2][0] / (deltaX * deltaZ)));
+	elementX = cthetadt2 * ( - (0.0625 * dielectricTensor[prevI][prevJ][nextK].matrix[0][0] / (deltaX * deltaX)) - (0.0625 * dielectricTensor[prevI][prevJ][nextK].matrix[1][0] / (deltaX * deltaY)) + (0.0625 * dielectricTensor[prevI][prevJ][nextK].matrix[2][0] / (deltaX * deltaZ)));
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(elementX, prevI, prevJ, nextK, 0));
 	elementY = cthetadt2 * (-(0.0625 * dielectricTensor[prevI][prevJ][nextK].matrix[0][1] / (deltaX * deltaX)) - (0.0625 * dielectricTensor[prevI][prevJ][nextK].matrix[1][1] / (deltaX * deltaY)) + (0.0625 * dielectricTensor[prevI][prevJ][nextK].matrix[2][1] / (deltaX * deltaZ)));
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(elementY, prevI, prevJ, nextK, 1));
@@ -653,7 +653,7 @@ void Simulation::createInternalEquationX(int i, int j, int k, Vector3d& rightPar
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(elementZ, prevI, prevJ, nextK, 2));
 
 	//E i-1 j-1 k-1
-	elementX = cthetadt2 * (-(0.0625 / (deltaX * deltaX)) - (0.0625 / (deltaY * deltaY)) - (0.0625 / (deltaZ * deltaZ)) - (0.0625 * dielectricTensor[prevI][prevJ][prevK].matrix[0][0] / (deltaX * deltaX)) - (0.0625 * dielectricTensor[prevI][prevJ][prevK].matrix[1][0] / (deltaX * deltaY)) - (0.0625 * dielectricTensor[prevI][prevJ][prevK].matrix[2][0] / (deltaX * deltaZ)));
+	elementX = cthetadt2 * ( - (0.0625 * dielectricTensor[prevI][prevJ][prevK].matrix[0][0] / (deltaX * deltaX)) - (0.0625 * dielectricTensor[prevI][prevJ][prevK].matrix[1][0] / (deltaX * deltaY)) - (0.0625 * dielectricTensor[prevI][prevJ][prevK].matrix[2][0] / (deltaX * deltaZ)));
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(elementX, prevI, prevJ, prevK, 0));
 	elementY = cthetadt2 * (-(0.0625 * dielectricTensor[prevI][prevJ][prevK].matrix[0][1] / (deltaX * deltaX)) - (0.0625 * dielectricTensor[prevI][prevJ][prevK].matrix[1][1] / (deltaX * deltaY)) - (0.0625 * dielectricTensor[prevI][prevJ][prevK].matrix[2][1] / (deltaX * deltaZ)));
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(elementY, prevI, prevJ, prevK, 1));
@@ -697,7 +697,7 @@ void Simulation::createInternalEquationY(int i, int j, int k, Vector3d& rightPar
 	//E i j k
 	elementX = dielectricTensor[i][j][k].matrix[1][0] + cthetadt2 * (0.5 * dielectricTensor[i][j][k].matrix[1][0] / (deltaY * deltaY));
 	maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementX, i, j, k, 0));
-	elementY = 1 + dielectricTensor[i][j][k].matrix[1][1] + cthetadt2 * ((0.5 / (deltaX * deltaX)) + (0.5 / (deltaY * deltaY)) + (0.5 / (deltaZ * deltaZ)) + (0.5 * dielectricTensor[i][j][k].matrix[1][1] / (deltaY * deltaY)));
+	elementY = 1 + dielectricTensor[i][j][k].matrix[1][1] + cthetadt2 * ((2 / (deltaX * deltaX)) + (2 / (deltaY * deltaY)) + (2 / (deltaZ * deltaZ)) + (0.5 * dielectricTensor[i][j][k].matrix[1][1] / (deltaY * deltaY)));
 	maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementY, i, j, k, 1));
 	elementZ = dielectricTensor[i][j][k].matrix[1][2] + cthetadt2 * (0.5 * dielectricTensor[i][j][k].matrix[1][2] / (deltaY * deltaY));
 	maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementZ, i, j, k, 2));
@@ -705,7 +705,7 @@ void Simulation::createInternalEquationY(int i, int j, int k, Vector3d& rightPar
 	//E i j+1 k
 	elementX = cthetadt2 * (- (0.25 * dielectricTensor[i][nextJ][k].matrix[1][0] / (deltaY * deltaY)));
 	maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementX, i, nextJ, k, 0));
-	elementY = cthetadt2 * ((0.25 / (deltaX * deltaX)) - (0.25 / (deltaY * deltaY)) + (0.25 / (deltaZ * deltaZ)) - (0.25 * dielectricTensor[i][nextJ][k].matrix[1][1] / (deltaY * deltaY)));
+	elementY = cthetadt2 * ( - (1 / (deltaY * deltaY)) - (0.25 * dielectricTensor[i][nextJ][k].matrix[1][1] / (deltaY * deltaY)));
 	maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementY, i, nextJ, k, 1));
 	elementZ = cthetadt2 * (- (0.25 * dielectricTensor[i][nextJ][k].matrix[1][2] / (deltaY * deltaY)));
 	maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementZ, i, nextJ, k, 2));
@@ -713,7 +713,7 @@ void Simulation::createInternalEquationY(int i, int j, int k, Vector3d& rightPar
 	//E i j-1 k
 	elementX = cthetadt2 * (- (0.25 * dielectricTensor[i][prevJ][k].matrix[1][0] / (deltaY * deltaY)));
 	maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementX, i, prevJ, k, 0));
-	elementY = cthetadt2 * ((0.25 / (deltaX * deltaX)) - (0.25 / (deltaY * deltaY)) + (0.25 / (deltaZ * deltaZ)) - (0.25 * dielectricTensor[i][prevJ][k].matrix[1][1] / (deltaY * deltaY)));
+	elementY = cthetadt2 * ( - (1 / (deltaY * deltaY))  - (0.25 * dielectricTensor[i][prevJ][k].matrix[1][1] / (deltaY * deltaY)));
 	maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementY, i, prevJ, k, 1));
 	elementZ = cthetadt2 * (- (0.25 * dielectricTensor[i][prevJ][k].matrix[1][2] / (deltaY * deltaY)));
 	maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementZ, i, prevJ, k, 2));
@@ -721,7 +721,7 @@ void Simulation::createInternalEquationY(int i, int j, int k, Vector3d& rightPar
 	//E i+1 j k
 	if (boundaryConditionType == SUPERCONDUCTERLEFT) {
 		elementX = cthetadt2 * ((0.25 * dielectricTensor[i + 1][j][k].matrix[1][0] / (deltaY * deltaY)));
-		elementY = cthetadt2 * ((-0.25 / (deltaX * deltaX)) + (0.25 / (deltaY * deltaY)) + (0.25 / (deltaZ * deltaZ)) + (0.25 * dielectricTensor[i + 1][j][k].matrix[1][1] / (deltaY * deltaY)));
+		elementY = cthetadt2 * ((-1 / (deltaX * deltaX)) + (0.25 * dielectricTensor[i + 1][j][k].matrix[1][1] / (deltaY * deltaY)));
 		elementZ = cthetadt2 * ((0.25 * dielectricTensor[i + 1][j][k].matrix[1][2] / (deltaY * deltaY)));
 		if (i < xnumber - 1) {
 			maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementX, i + 1, j, k, 0));
@@ -735,7 +735,7 @@ void Simulation::createInternalEquationY(int i, int j, int k, Vector3d& rightPar
 	}
 	if (boundaryConditionType == PERIODIC) {
 		elementX = cthetadt2 * ((0.25 * dielectricTensor[nextI][j][k].matrix[1][0] / (deltaY * deltaY)));
-		elementY = cthetadt2 * ((-0.25 / (deltaX * deltaX)) + (0.25 / (deltaY * deltaY)) + (0.25 / (deltaZ * deltaZ)) + (0.25 * dielectricTensor[nextI][j][k].matrix[1][1] / (deltaY * deltaY)));
+		elementY = cthetadt2 * ((-1 / (deltaX * deltaX)) + (0.25 * dielectricTensor[nextI][j][k].matrix[1][1] / (deltaY * deltaY)));
 		elementZ = cthetadt2 * ((0.25 * dielectricTensor[nextI][j][k].matrix[1][2] / (deltaY * deltaY)));
 		maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementX, nextI, j, k, 0));
 		maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementY, nextI, j, k, 1));
@@ -745,7 +745,7 @@ void Simulation::createInternalEquationY(int i, int j, int k, Vector3d& rightPar
 	//E i-1 j k
 	elementX = cthetadt2 * ((0.25 * dielectricTensor[prevI][j][k].matrix[1][0] / (deltaY * deltaY)));
 	maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementX, prevI, j, k, 0));
-	elementY = cthetadt2 * ((-0.25 / (deltaX * deltaX)) + (0.25 / (deltaY * deltaY)) + (0.25 / (deltaZ * deltaZ)) + (0.25 * dielectricTensor[prevI][j][k].matrix[1][1] / (deltaY * deltaY)));
+	elementY = cthetadt2 * ((-1 / (deltaX * deltaX)) + (0.25 * dielectricTensor[prevI][j][k].matrix[1][1] / (deltaY * deltaY)));
 	maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementY, prevI, j, k, 1));
 	elementZ = cthetadt2 * ((0.25 * dielectricTensor[prevI][j][k].matrix[1][2] / (deltaY * deltaY)));
 	maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementZ, prevI, j, k, 2));
@@ -753,7 +753,7 @@ void Simulation::createInternalEquationY(int i, int j, int k, Vector3d& rightPar
 	//E i j k+1
 	elementX = cthetadt2 * ((0.25 * dielectricTensor[i][j][nextK].matrix[1][0] / (deltaY * deltaY)));
 	maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementX, i, j, nextK, 0));
-	elementY = cthetadt2 * ((0.25 / (deltaX * deltaX)) + (0.25 / (deltaY * deltaY)) - (0.25 / (deltaZ * deltaZ)) + (0.25 * dielectricTensor[i][j][nextK].matrix[1][1] / (deltaY * deltaY)));
+	elementY = cthetadt2 * ( - (1 / (deltaZ * deltaZ)) + (0.25 * dielectricTensor[i][j][nextK].matrix[1][1] / (deltaY * deltaY)));
 	maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementY, i, j, nextK, 1));
 	elementZ = cthetadt2 * ((0.25 * dielectricTensor[i][j][nextK].matrix[1][2] / (deltaY * deltaY)));
 	maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementZ, i, j, nextK, 2));
@@ -761,7 +761,7 @@ void Simulation::createInternalEquationY(int i, int j, int k, Vector3d& rightPar
 	//E i j k-1
 	elementX = cthetadt2 * ((0.25 * dielectricTensor[i][j][prevK].matrix[1][0] / (deltaY * deltaY)));
 	maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementX, i, j, prevK, 0));
-	elementY = cthetadt2 * ((0.25 / (deltaX * deltaX)) + (0.25 / (deltaY * deltaY)) - (0.25 / (deltaZ * deltaZ)) + (0.25 * dielectricTensor[i][j][prevK].matrix[1][1] / (deltaY * deltaY)));
+	elementY = cthetadt2 * ( - (1 / (deltaZ * deltaZ)) + (0.25 * dielectricTensor[i][j][prevK].matrix[1][1] / (deltaY * deltaY)));
 	maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementY, i, j, prevK, 1));
 	elementZ = cthetadt2 * ((0.25 * dielectricTensor[i][j][prevK].matrix[1][2] / (deltaY * deltaY)));
 	maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementZ, i, j, prevK, 2));
@@ -769,7 +769,7 @@ void Simulation::createInternalEquationY(int i, int j, int k, Vector3d& rightPar
 	//E i+1 j+1 k
 	if (boundaryConditionType == SUPERCONDUCTERLEFT) {
 		elementX = cthetadt2 * (- (0.125 * dielectricTensor[i + 1][nextJ][k].matrix[1][0] / (deltaY * deltaY)) - (0.125 * dielectricTensor[i + 1][nextJ][k].matrix[0][0] / (deltaX * deltaY)));
-		elementY = cthetadt2 * (-(0.125 / (deltaX * deltaX)) - (0.125 / (deltaY * deltaY)) + (0.125 / (deltaZ * deltaZ)) - (0.125 * dielectricTensor[i + 1][nextJ][k].matrix[1][1] / (deltaY * deltaY)) - (0.125 * dielectricTensor[i + 1][nextJ][k].matrix[0][1] / (deltaX * deltaY)));
+		elementY = cthetadt2 * ( - (0.125 * dielectricTensor[i + 1][nextJ][k].matrix[1][1] / (deltaY * deltaY)) - (0.125 * dielectricTensor[i + 1][nextJ][k].matrix[0][1] / (deltaX * deltaY)));
 		elementZ = cthetadt2 * (- (0.125 * dielectricTensor[i + 1][nextJ][k].matrix[1][2] / (deltaY * deltaY)) - (0.125 * dielectricTensor[i + 1][nextJ][k].matrix[0][2] / (deltaX * deltaY)));
 		if (i < xnumber - 1) {
 			maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementX, i + 1, nextJ, k, 0));
@@ -783,7 +783,7 @@ void Simulation::createInternalEquationY(int i, int j, int k, Vector3d& rightPar
 	}
 	if (boundaryConditionType == PERIODIC) {
 		elementX = cthetadt2 * (- (0.125 * dielectricTensor[nextI][nextJ][k].matrix[1][0] / (deltaY * deltaY)) - (0.125 * dielectricTensor[nextI][nextJ][k].matrix[0][0] / (deltaX * deltaY)));
-		elementY = cthetadt2 * (-(0.125 / (deltaX * deltaX)) - (0.125 / (deltaY * deltaY)) + (0.125 / (deltaZ * deltaZ)) - (0.125 * dielectricTensor[nextI][nextJ][k].matrix[1][1] / (deltaY * deltaY)) - (0.125 * dielectricTensor[nextI][nextJ][k].matrix[0][1] / (deltaX * deltaY)));
+		elementY = cthetadt2 * ( - (0.125 * dielectricTensor[nextI][nextJ][k].matrix[1][1] / (deltaY * deltaY)) - (0.125 * dielectricTensor[nextI][nextJ][k].matrix[0][1] / (deltaX * deltaY)));
 		elementZ = cthetadt2 * (- (0.125 * dielectricTensor[nextI][nextJ][k].matrix[1][2] / (deltaY * deltaY)) - (0.125 * dielectricTensor[nextI][nextJ][k].matrix[0][2] / (deltaX * deltaY)));
 		maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementX, nextI, nextJ, k, 0));
 		maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementY, nextI, nextJ, k, 1));
@@ -792,7 +792,7 @@ void Simulation::createInternalEquationY(int i, int j, int k, Vector3d& rightPar
 	//E i+1 j-1 k
 	if (boundaryConditionType == SUPERCONDUCTERLEFT) {
 		elementX = cthetadt2 * (- (0.125 * dielectricTensor[i + 1][prevJ][k].matrix[1][0] / (deltaY * deltaY)) + (0.125 * dielectricTensor[i + 1][prevJ][k].matrix[0][0] / (deltaX * deltaY)));
-		elementY = cthetadt2 * (-(0.125 / (deltaX * deltaX)) - (0.125 / (deltaY * deltaY)) + (0.125 / (deltaZ * deltaZ)) - (0.125 * dielectricTensor[i + 1][prevJ][k].matrix[1][1] / (deltaY * deltaY)) + (0.125 * dielectricTensor[i + 1][prevJ][k].matrix[0][1] / (deltaX * deltaY)));
+		elementY = cthetadt2 * ( - (0.125 * dielectricTensor[i + 1][prevJ][k].matrix[1][1] / (deltaY * deltaY)) + (0.125 * dielectricTensor[i + 1][prevJ][k].matrix[0][1] / (deltaX * deltaY)));
 		elementZ = cthetadt2 * (- (0.125 * dielectricTensor[i + 1][prevJ][k].matrix[1][2] / (deltaY * deltaY)) + (0.125 * dielectricTensor[i + 1][prevJ][k].matrix[0][2] / (deltaX * deltaY)));
 		if (i < xnumber - 1) {
 			maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementX, i + 1, prevJ, k, 0));
@@ -806,7 +806,7 @@ void Simulation::createInternalEquationY(int i, int j, int k, Vector3d& rightPar
 	}
 	if (boundaryConditionType == PERIODIC) {
 		elementX = cthetadt2 * (- (0.125 * dielectricTensor[nextI][prevJ][k].matrix[1][0] / (deltaY * deltaY)) + (0.125 * dielectricTensor[nextI][prevJ][k].matrix[0][0] / (deltaX * deltaY)));
-		elementY = cthetadt2 * (-(0.125 / (deltaX * deltaX)) - (0.125 / (deltaY * deltaY)) + (0.125 / (deltaZ * deltaZ)) - (0.125 * dielectricTensor[nextI][prevJ][k].matrix[1][1] / (deltaY * deltaY)) + (0.125 * dielectricTensor[nextI][prevJ][k].matrix[0][1] / (deltaX * deltaY)));
+		elementY = cthetadt2 * ( - (0.125 * dielectricTensor[nextI][prevJ][k].matrix[1][1] / (deltaY * deltaY)) + (0.125 * dielectricTensor[nextI][prevJ][k].matrix[0][1] / (deltaX * deltaY)));
 		elementZ = cthetadt2 * (- (0.125 * dielectricTensor[nextI][prevJ][k].matrix[1][2] / (deltaY * deltaY)) + (0.125 * dielectricTensor[nextI][prevJ][k].matrix[0][2] / (deltaX * deltaY)));
 		maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementX, nextI, prevJ, k, 0));
 		maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementY, nextI, prevJ, k, 1));
@@ -816,7 +816,7 @@ void Simulation::createInternalEquationY(int i, int j, int k, Vector3d& rightPar
 	//E i-1 j+1 k
 	elementX = cthetadt2 * (- (0.125 * dielectricTensor[prevI][nextJ][k].matrix[1][0] / (deltaY * deltaY)) + (0.125 * dielectricTensor[prevI][nextJ][k].matrix[0][0] / (deltaX * deltaY)));
 	maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementX, prevI, nextJ, k, 0));
-	elementY = cthetadt2 * (-(0.125 / (deltaX * deltaX)) - (0.125 / (deltaY * deltaY)) + (0.125 / (deltaZ * deltaZ)) - (0.125 * dielectricTensor[prevI][nextJ][k].matrix[1][1] / (deltaY * deltaY)) + (0.125 * dielectricTensor[prevI][nextJ][k].matrix[0][1] / (deltaX * deltaY)));
+	elementY = cthetadt2 * ( - (0.125 * dielectricTensor[prevI][nextJ][k].matrix[1][1] / (deltaY * deltaY)) + (0.125 * dielectricTensor[prevI][nextJ][k].matrix[0][1] / (deltaX * deltaY)));
 	maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementY, prevI, nextJ, k, 1));
 	elementZ = cthetadt2 * (- (0.125 * dielectricTensor[prevI][nextJ][k].matrix[1][2] / (deltaY * deltaY)) + (0.125 * dielectricTensor[prevI][nextJ][k].matrix[0][2] / (deltaX * deltaY)));
 	maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementZ, prevI, nextJ, k, 2));
@@ -824,7 +824,7 @@ void Simulation::createInternalEquationY(int i, int j, int k, Vector3d& rightPar
 	//E i-1 j-1 k
 	elementX = cthetadt2 * (- (0.125 * dielectricTensor[prevI][prevJ][k].matrix[1][0] / (deltaY * deltaY)) - (0.125 * dielectricTensor[prevI][prevJ][k].matrix[0][0] / (deltaX * deltaY)));
 	maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementX, prevI, prevJ, k, 0));
-	elementY = cthetadt2 * (-(0.125 / (deltaX * deltaX)) - (0.125 / (deltaY * deltaY)) + (0.125 / (deltaZ * deltaZ)) - (0.125 * dielectricTensor[prevI][prevJ][k].matrix[1][1] / (deltaY * deltaY)) - (0.125 * dielectricTensor[prevI][prevJ][k].matrix[0][1] / (deltaX * deltaY)));
+	elementY = cthetadt2 * ( - (0.125 * dielectricTensor[prevI][prevJ][k].matrix[1][1] / (deltaY * deltaY)) - (0.125 * dielectricTensor[prevI][prevJ][k].matrix[0][1] / (deltaX * deltaY)));
 	maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementY, prevI, prevJ, k, 1));
 	elementZ = cthetadt2 * (- (0.125 * dielectricTensor[prevI][prevJ][k].matrix[1][2] / (deltaY * deltaY)) - (0.125 * dielectricTensor[prevI][prevJ][k].matrix[0][2] / (deltaX * deltaY)));
 	maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementZ, prevI, prevJ, k, 2));
@@ -832,7 +832,7 @@ void Simulation::createInternalEquationY(int i, int j, int k, Vector3d& rightPar
 	//E i j+1 k+1
 	elementX = cthetadt2 * (- (0.125 * dielectricTensor[i][nextJ][nextK].matrix[1][0] / (deltaY * deltaY)) - (0.125 * dielectricTensor[i][nextJ][nextK].matrix[2][0] / (deltaZ * deltaY)));
 	maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementX, i, nextJ, nextK, 0));
-	elementY = cthetadt2 * ((0.125 / (deltaX * deltaX)) - (0.125 / (deltaY * deltaY)) - (0.125 / (deltaZ * deltaZ)) - (0.125 * dielectricTensor[i][nextJ][nextK].matrix[1][1] / (deltaY * deltaY)) - (0.125 * dielectricTensor[i][nextJ][nextK].matrix[2][1] / (deltaZ * deltaY)));
+	elementY = cthetadt2 * ( - (0.125 * dielectricTensor[i][nextJ][nextK].matrix[1][1] / (deltaY * deltaY)) - (0.125 * dielectricTensor[i][nextJ][nextK].matrix[2][1] / (deltaZ * deltaY)));
 	maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementY, i, nextJ, nextK, 1));
 	elementZ = cthetadt2 * (- (0.125 * dielectricTensor[i][nextJ][nextK].matrix[1][2] / (deltaY * deltaY)) - (0.125 * dielectricTensor[i][nextJ][nextK].matrix[2][2] / (deltaZ * deltaY)));
 	maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementZ, i, nextJ, nextK, 2));
@@ -840,7 +840,7 @@ void Simulation::createInternalEquationY(int i, int j, int k, Vector3d& rightPar
 	//E i j+1 k-1
 	elementX = cthetadt2 * (- (0.125 * dielectricTensor[i][nextJ][prevK].matrix[1][0] / (deltaY * deltaY)) + (0.125 * dielectricTensor[i][nextJ][prevK].matrix[2][0] / (deltaZ * deltaY)));
 	maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementX, i, nextJ, prevK, 0));
-	elementY = cthetadt2 * ((0.125 / (deltaX * deltaX)) - (0.125 / (deltaY * deltaY)) - (0.125 / (deltaZ * deltaZ)) - (0.125 * dielectricTensor[i][nextJ][prevK].matrix[1][1] / (deltaY * deltaY)) + (0.125 * dielectricTensor[i][nextJ][prevK].matrix[2][1] / (deltaZ * deltaY)));
+	elementY = cthetadt2 * ( - (0.125 * dielectricTensor[i][nextJ][prevK].matrix[1][1] / (deltaY * deltaY)) + (0.125 * dielectricTensor[i][nextJ][prevK].matrix[2][1] / (deltaZ * deltaY)));
 	maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementY, i, nextJ, prevK, 1));
 	elementZ = cthetadt2 * (- (0.125 * dielectricTensor[i][nextJ][prevK].matrix[1][2] / (deltaY * deltaY)) + (0.125 * dielectricTensor[i][nextJ][prevK].matrix[2][2] / (deltaZ * deltaY)));
 	maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementZ, i, nextJ, prevK, 2));
@@ -848,7 +848,7 @@ void Simulation::createInternalEquationY(int i, int j, int k, Vector3d& rightPar
 	//E i j-1 k+1
 	elementX = cthetadt2 * (- (0.125 * dielectricTensor[i][prevJ][nextK].matrix[1][0] / (deltaY * deltaY)) + (0.125 * dielectricTensor[i][nextJ][nextK].matrix[2][0] / (deltaZ * deltaY)));
 	maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementX, i, prevJ, nextK, 0));
-	elementY = cthetadt2 * ((0.125 / (deltaX * deltaX)) - (0.125 / (deltaY * deltaY)) - (0.125 / (deltaZ * deltaZ)) - (0.125 * dielectricTensor[i][prevJ][nextK].matrix[1][1] / (deltaY * deltaY)) + (0.125 * dielectricTensor[i][prevJ][nextK].matrix[2][1] / (deltaZ * deltaY)));
+	elementY = cthetadt2 * ( - (0.125 * dielectricTensor[i][prevJ][nextK].matrix[1][1] / (deltaY * deltaY)) + (0.125 * dielectricTensor[i][prevJ][nextK].matrix[2][1] / (deltaZ * deltaY)));
 	maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementY, i, prevJ, nextK, 1));
 	elementZ = cthetadt2 * (- (0.125 * dielectricTensor[i][nextJ][nextK].matrix[1][2] / (deltaY * deltaY)) + (0.125 * dielectricTensor[i][prevJ][nextK].matrix[2][2] / (deltaZ * deltaY)));
 	maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementZ, i, prevJ, nextK, 2));
@@ -856,7 +856,7 @@ void Simulation::createInternalEquationY(int i, int j, int k, Vector3d& rightPar
 	//E i j-1 k-1
 	elementX = cthetadt2 * (- (0.125 * dielectricTensor[i][prevJ][prevK].matrix[1][0] / (deltaY * deltaY)) - (0.125 * dielectricTensor[i][nextJ][prevK].matrix[2][0] / (deltaZ * deltaY)));
 	maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementX, i, prevJ, prevK, 0));
-	elementY = cthetadt2 * ((0.125 / (deltaX * deltaX)) - (0.125 / (deltaY * deltaY)) - (0.125 / (deltaZ * deltaZ)) - (0.125 * dielectricTensor[i][prevJ][prevK].matrix[1][1] / (deltaY * deltaY)) - (0.125 * dielectricTensor[i][prevJ][prevK].matrix[2][1] / (deltaZ * deltaY)));
+	elementY = cthetadt2 * ( - (0.125 * dielectricTensor[i][prevJ][prevK].matrix[1][1] / (deltaY * deltaY)) - (0.125 * dielectricTensor[i][prevJ][prevK].matrix[2][1] / (deltaZ * deltaY)));
 	maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementY, i, prevJ, prevK, 1));
 	elementZ = cthetadt2 * (- (0.125 * dielectricTensor[i][nextJ][prevK].matrix[1][2] / (deltaY * deltaY)) - (0.125 * dielectricTensor[i][prevJ][prevK].matrix[2][2] / (deltaZ * deltaY)));
 	maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementZ, i, prevJ, prevK, 2));
@@ -864,7 +864,7 @@ void Simulation::createInternalEquationY(int i, int j, int k, Vector3d& rightPar
 	//E i+1 j k+1
 	if (boundaryConditionType == SUPERCONDUCTERLEFT) {
 		elementX = cthetadt2 * ((0.125 * dielectricTensor[i + 1][j][nextK].matrix[1][0] / (deltaY * deltaY)));
-		elementY = cthetadt2 * (-(0.125 / (deltaX * deltaX)) + (0.125 / (deltaY * deltaY)) - (0.125 / (deltaZ * deltaZ)) + (0.125 * dielectricTensor[i + 1][j][nextK].matrix[1][1] / (deltaY * deltaY)));
+		elementY = cthetadt2 * ( + (0.125 * dielectricTensor[i + 1][j][nextK].matrix[1][1] / (deltaY * deltaY)));
 		elementZ = cthetadt2 * ((0.125 * dielectricTensor[i + 1][j][nextK].matrix[1][2] / (deltaY * deltaY)));
 		if (i < xnumber - 1) {
 			maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementX, i + 1, j, nextK, 0));
@@ -878,7 +878,7 @@ void Simulation::createInternalEquationY(int i, int j, int k, Vector3d& rightPar
 	}
 	if (boundaryConditionType == PERIODIC) {
 		elementX = cthetadt2 * ((0.125 * dielectricTensor[nextI][j][nextK].matrix[1][0] / (deltaY * deltaY)));
-		elementY = cthetadt2 * (-(0.125 / (deltaX * deltaX)) + (0.125 / (deltaY * deltaY)) - (0.125 / (deltaZ * deltaZ)) + (0.125 * dielectricTensor[nextI][j][nextK].matrix[1][1] / (deltaY * deltaY)));
+		elementY = cthetadt2 * ( + (0.125 * dielectricTensor[nextI][j][nextK].matrix[1][1] / (deltaY * deltaY)));
 		elementZ = cthetadt2 * ((0.125 * dielectricTensor[nextI][j][nextK].matrix[1][2] / (deltaY * deltaY)));
 		maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementX, nextI, j, nextK, 0));
 		maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementY, nextI, j, nextK, 1));
@@ -888,7 +888,7 @@ void Simulation::createInternalEquationY(int i, int j, int k, Vector3d& rightPar
 	//E i+1 j k-1
 	if (boundaryConditionType == SUPERCONDUCTERLEFT) {
 		elementX = cthetadt2 * ((0.125 * dielectricTensor[i + 1][j][prevK].matrix[1][0] / (deltaY * deltaY)));
-		elementY = cthetadt2 * (-(0.125 / (deltaX * deltaX)) + (0.125 / (deltaY * deltaY)) - (0.125 / (deltaZ * deltaZ)) + (0.125 * dielectricTensor[i + 1][j][prevK].matrix[1][1] / (deltaY * deltaY)));
+		elementY = cthetadt2 * ( + (0.125 * dielectricTensor[i + 1][j][prevK].matrix[1][1] / (deltaY * deltaY)));
 		elementZ = cthetadt2 * ((0.125 * dielectricTensor[i + 1][j][prevK].matrix[1][2] / (deltaY * deltaY)));
 		if (i < xnumber - 1) {
 			maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementX, i + 1, j, prevK, 0));
@@ -902,7 +902,7 @@ void Simulation::createInternalEquationY(int i, int j, int k, Vector3d& rightPar
 	}
 	if (boundaryConditionType == PERIODIC) {
 		elementX = cthetadt2 * ((0.125 * dielectricTensor[nextI][j][prevK].matrix[1][0] / (deltaY * deltaY)));
-		elementY = cthetadt2 * (-(0.125 / (deltaX * deltaX)) + (0.125 / (deltaY * deltaY)) - (0.125 / (deltaZ * deltaZ)) + (0.125 * dielectricTensor[nextI][j][prevK].matrix[1][1] / (deltaY * deltaY)));
+		elementY = cthetadt2 * ( + (0.125 * dielectricTensor[nextI][j][prevK].matrix[1][1] / (deltaY * deltaY)));
 		elementZ = cthetadt2 * ((0.125 * dielectricTensor[nextI][j][prevK].matrix[1][2] / (deltaY * deltaY)));
 		maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementX, nextI, j, prevK, 0));
 		maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementY, nextI, j, prevK, 1));
@@ -912,7 +912,7 @@ void Simulation::createInternalEquationY(int i, int j, int k, Vector3d& rightPar
 	//E i-1 j k+1
 	elementX = cthetadt2 * ((0.125 * dielectricTensor[prevI][j][nextK].matrix[1][0] / (deltaY * deltaY)));
 	maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementX, prevI, j, nextK, 0));
-	elementY = cthetadt2 * (-(0.125 / (deltaX * deltaX)) + (0.125 / (deltaY * deltaY)) - (0.125 / (deltaZ * deltaZ)) + (0.125 * dielectricTensor[prevI][j][nextK].matrix[1][1] / (deltaY * deltaY)));
+	elementY = cthetadt2 * ( + (0.125 * dielectricTensor[prevI][j][nextK].matrix[1][1] / (deltaY * deltaY)));
 	maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementY, prevI, j, nextK, 1));
 	elementZ = cthetadt2 * ((0.125 * dielectricTensor[prevI][j][nextK].matrix[1][2] / (deltaY * deltaY)));
 	maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementZ, prevI, j, nextK, 2));
@@ -920,7 +920,7 @@ void Simulation::createInternalEquationY(int i, int j, int k, Vector3d& rightPar
 	//E i-1 j k-1
 	elementX = cthetadt2 * ((0.125 * dielectricTensor[prevI][j][prevK].matrix[1][0] / (deltaY * deltaY)));
 	maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementX, prevI, j, prevK, 0));
-	elementY = cthetadt2 * (-(0.125 / (deltaX * deltaX)) + (0.125 / (deltaY * deltaY)) - (0.125 / (deltaZ * deltaZ)) + (0.125 * dielectricTensor[prevI][j][prevK].matrix[1][1] / (deltaY * deltaY)));
+	elementY = cthetadt2 * ( + (0.125 * dielectricTensor[prevI][j][prevK].matrix[1][1] / (deltaY * deltaY)));
 	maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementY, prevI, j, prevK, 1));
 	elementZ = cthetadt2 * ((0.125 * dielectricTensor[prevI][j][prevK].matrix[1][2] / (deltaY * deltaY)));
 	maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementZ, prevI, j, prevK, 2));
@@ -928,7 +928,7 @@ void Simulation::createInternalEquationY(int i, int j, int k, Vector3d& rightPar
 	//E i+1 j+1 k+1
 	if (boundaryConditionType == SUPERCONDUCTERLEFT) {
 		elementX = cthetadt2 * (-(0.0625 * dielectricTensor[i + 1][nextJ][nextK].matrix[1][0] / (deltaY * deltaY)) - (0.0625 * dielectricTensor[i + 1][nextJ][nextK].matrix[0][0] / (deltaX * deltaY)) - (0.0625 * dielectricTensor[i + 1][nextJ][nextK].matrix[2][0] / (deltaY * deltaZ)));
-		elementY = cthetadt2 * (-(0.0625 / (deltaX * deltaX)) - (0.0625 / (deltaY * deltaY)) - (0.0625 / (deltaZ * deltaZ)) - (0.0625 * dielectricTensor[i + 1][nextJ][nextK].matrix[1][1] / (deltaY * deltaY)) - (0.0625 * dielectricTensor[i + 1][nextJ][nextK].matrix[0][1] / (deltaX * deltaY)) - (0.0625 * dielectricTensor[i + 1][nextJ][nextK].matrix[2][1] / (deltaY * deltaZ)));
+		elementY = cthetadt2 * ( - (0.0625 * dielectricTensor[i + 1][nextJ][nextK].matrix[1][1] / (deltaY * deltaY)) - (0.0625 * dielectricTensor[i + 1][nextJ][nextK].matrix[0][1] / (deltaX * deltaY)) - (0.0625 * dielectricTensor[i + 1][nextJ][nextK].matrix[2][1] / (deltaY * deltaZ)));
 		elementZ = cthetadt2 * (-(0.0625 * dielectricTensor[i + 1][nextJ][nextK].matrix[1][2] / (deltaY * deltaY)) - (0.0625 * dielectricTensor[i + 1][nextJ][nextK].matrix[0][2] / (deltaX * deltaY)) - (0.0625 * dielectricTensor[i + 1][nextJ][nextK].matrix[2][2] / (deltaY * deltaZ)));
 		if (i < xnumber - 1) {
 			maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementX, i + 1, nextJ, nextK, 0));
@@ -942,7 +942,7 @@ void Simulation::createInternalEquationY(int i, int j, int k, Vector3d& rightPar
 	}
 	if (boundaryConditionType == PERIODIC) {
 		elementX = cthetadt2 * (-(0.0625 * dielectricTensor[nextI][nextJ][nextK].matrix[1][0] / (deltaY * deltaY)) - (0.0625 * dielectricTensor[nextI][nextJ][nextK].matrix[0][0] / (deltaX * deltaY)) - (0.0625 * dielectricTensor[nextI][nextJ][nextK].matrix[2][0] / (deltaY * deltaZ)));
-		elementY = cthetadt2 * (-(0.0625 / (deltaX * deltaX)) - (0.0625 / (deltaY * deltaY)) - (0.0625 / (deltaZ * deltaZ)) - (0.0625 * dielectricTensor[nextI][nextJ][nextK].matrix[1][1] / (deltaY * deltaY)) - (0.0625 * dielectricTensor[nextI][nextJ][nextK].matrix[0][1] / (deltaX * deltaY)) - (0.0625 * dielectricTensor[nextI][nextJ][nextK].matrix[2][1] / (deltaY * deltaZ)));
+		elementY = cthetadt2 * ( - (0.0625 * dielectricTensor[nextI][nextJ][nextK].matrix[1][1] / (deltaY * deltaY)) - (0.0625 * dielectricTensor[nextI][nextJ][nextK].matrix[0][1] / (deltaX * deltaY)) - (0.0625 * dielectricTensor[nextI][nextJ][nextK].matrix[2][1] / (deltaY * deltaZ)));
 		elementZ = cthetadt2 * (-(0.0625 * dielectricTensor[nextI][nextJ][nextK].matrix[1][2] / (deltaY * deltaY)) - (0.0625 * dielectricTensor[nextI][nextJ][nextK].matrix[0][2] / (deltaX * deltaY)) - (0.0625 * dielectricTensor[nextI][nextJ][nextK].matrix[2][2] / (deltaY * deltaZ)));
 		maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementX, nextI, nextJ, nextK, 0));
 		maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementY, nextI, nextJ, nextK, 1));
@@ -952,7 +952,7 @@ void Simulation::createInternalEquationY(int i, int j, int k, Vector3d& rightPar
 	//E i+1 j+1 k-1
 	if (boundaryConditionType == SUPERCONDUCTERLEFT) {
 		elementX = cthetadt2 * (-(0.0625 * dielectricTensor[i + 1][nextJ][prevK].matrix[1][0] / (deltaY * deltaY)) - (0.0625 * dielectricTensor[i + 1][nextJ][prevK].matrix[0][0] / (deltaX * deltaY)) + (0.0625 * dielectricTensor[i + 1][nextJ][prevK].matrix[2][0] / (deltaY * deltaZ)));
-		elementY = cthetadt2 * (-(0.0625 / (deltaX * deltaX)) - (0.0625 / (deltaY * deltaY)) - (0.0625 / (deltaZ * deltaZ)) - (0.0625 * dielectricTensor[i + 1][nextJ][prevK].matrix[1][1] / (deltaY * deltaY)) - (0.0625 * dielectricTensor[i + 1][nextJ][prevK].matrix[0][1] / (deltaX * deltaY)) + (0.0625 * dielectricTensor[i + 1][nextJ][prevK].matrix[2][1] / (deltaY * deltaZ)));
+		elementY = cthetadt2 * ( - (0.0625 * dielectricTensor[i + 1][nextJ][prevK].matrix[1][1] / (deltaY * deltaY)) - (0.0625 * dielectricTensor[i + 1][nextJ][prevK].matrix[0][1] / (deltaX * deltaY)) + (0.0625 * dielectricTensor[i + 1][nextJ][prevK].matrix[2][1] / (deltaY * deltaZ)));
 		elementZ = cthetadt2 * (-(0.0625 * dielectricTensor[i + 1][nextJ][prevK].matrix[1][2] / (deltaY * deltaY)) - (0.0625 * dielectricTensor[i + 1][nextJ][prevK].matrix[0][2] / (deltaX * deltaY)) + (0.0625 * dielectricTensor[i + 1][nextJ][prevK].matrix[2][2] / (deltaY * deltaZ)));
 		if (i < xnumber - 1) {
 			maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementX, i + 1, nextJ, prevK, 0));
@@ -966,7 +966,7 @@ void Simulation::createInternalEquationY(int i, int j, int k, Vector3d& rightPar
 	}
 	if (boundaryConditionType == PERIODIC) {
 		elementX = cthetadt2 * (-(0.0625 * dielectricTensor[nextI][nextJ][prevK].matrix[1][0] / (deltaY * deltaY)) - (0.0625 * dielectricTensor[nextI][nextJ][prevK].matrix[0][0] / (deltaX * deltaY)) + (0.0625 * dielectricTensor[nextI][nextJ][prevK].matrix[2][0] / (deltaY * deltaZ)));
-		elementY = cthetadt2 * (-(0.0625 / (deltaX * deltaX)) - (0.0625 / (deltaY * deltaY)) - (0.0625 / (deltaZ * deltaZ)) - (0.0625 * dielectricTensor[nextI][nextJ][prevK].matrix[1][1] / (deltaY * deltaY)) - (0.0625 * dielectricTensor[nextI][nextJ][prevK].matrix[0][1] / (deltaX * deltaY)) + (0.0625 * dielectricTensor[nextI][nextJ][prevK].matrix[2][1] / (deltaY * deltaZ)));
+		elementY = cthetadt2 * ( - (0.0625 * dielectricTensor[nextI][nextJ][prevK].matrix[1][1] / (deltaY * deltaY)) - (0.0625 * dielectricTensor[nextI][nextJ][prevK].matrix[0][1] / (deltaX * deltaY)) + (0.0625 * dielectricTensor[nextI][nextJ][prevK].matrix[2][1] / (deltaY * deltaZ)));
 		elementZ = cthetadt2 * (-(0.0625 * dielectricTensor[nextI][nextJ][prevK].matrix[1][2] / (deltaY * deltaY)) - (0.0625 * dielectricTensor[nextI][nextJ][prevK].matrix[0][2] / (deltaX * deltaY)) + (0.0625 * dielectricTensor[nextI][nextJ][prevK].matrix[2][2] / (deltaY * deltaZ)));
 		maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementX, nextI, nextJ, prevK, 0));
 		maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementY, nextI, nextJ, prevK, 1));
@@ -976,7 +976,7 @@ void Simulation::createInternalEquationY(int i, int j, int k, Vector3d& rightPar
 	//E i+1 j-1 k+1
 	if (boundaryConditionType == SUPERCONDUCTERLEFT) {
 		elementX = cthetadt2 * (-(0.0625 * dielectricTensor[i + 1][prevJ][nextK].matrix[1][0] / (deltaY * deltaY)) + (0.0625 * dielectricTensor[i + 1][prevJ][nextK].matrix[0][0] / (deltaX * deltaY)) + (0.0625 * dielectricTensor[i + 1][prevJ][nextK].matrix[2][0] / (deltaY * deltaZ)));
-		elementY = cthetadt2 * (-(0.0625 / (deltaX * deltaX)) - (0.0625 / (deltaY * deltaY)) - (0.0625 / (deltaZ * deltaZ)) + (0.0625 * dielectricTensor[i + 1][prevJ][nextK].matrix[1][1] / (deltaY * deltaY)) - (0.0625 * dielectricTensor[i + 1][prevJ][nextK].matrix[0][1] / (deltaX * deltaY)) + (0.0625 * dielectricTensor[i + 1][prevJ][nextK].matrix[2][1] / (deltaY * deltaZ)));
+		elementY = cthetadt2 * ( + (0.0625 * dielectricTensor[i + 1][prevJ][nextK].matrix[1][1] / (deltaY * deltaY)) - (0.0625 * dielectricTensor[i + 1][prevJ][nextK].matrix[0][1] / (deltaX * deltaY)) + (0.0625 * dielectricTensor[i + 1][prevJ][nextK].matrix[2][1] / (deltaY * deltaZ)));
 		elementZ = cthetadt2 * (-(0.0625 * dielectricTensor[i + 1][prevJ][nextK].matrix[1][2] / (deltaY * deltaY)) + (0.0625 * dielectricTensor[i + 1][prevJ][nextK].matrix[0][2] / (deltaX * deltaY)) + (0.0625 * dielectricTensor[i + 1][prevJ][nextK].matrix[2][2] / (deltaY * deltaZ)));
 		if (i < xnumber - 1) {
 			maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementX, i + 1, prevJ, nextK, 0));
@@ -990,7 +990,7 @@ void Simulation::createInternalEquationY(int i, int j, int k, Vector3d& rightPar
 	}
 	if (boundaryConditionType == PERIODIC) {
 		elementX = cthetadt2 * (-(0.0625 * dielectricTensor[nextI][prevJ][nextK].matrix[1][0] / (deltaY * deltaY)) + (0.0625 * dielectricTensor[nextI][prevJ][nextK].matrix[0][0] / (deltaX * deltaY)) + (0.0625 * dielectricTensor[nextI][prevJ][nextK].matrix[2][0] / (deltaY * deltaZ)));
-		elementY = cthetadt2 * (-(0.0625 / (deltaX * deltaX)) - (0.0625 / (deltaY * deltaY)) - (0.0625 / (deltaZ * deltaZ)) + (0.0625 * dielectricTensor[nextI][prevJ][nextK].matrix[1][1] / (deltaY * deltaY)) - (0.0625 * dielectricTensor[nextI][prevJ][nextK].matrix[0][1] / (deltaX * deltaY)) + (0.0625 * dielectricTensor[nextI][prevJ][nextK].matrix[2][1] / (deltaY * deltaZ)));
+		elementY = cthetadt2 * ( + (0.0625 * dielectricTensor[nextI][prevJ][nextK].matrix[1][1] / (deltaY * deltaY)) - (0.0625 * dielectricTensor[nextI][prevJ][nextK].matrix[0][1] / (deltaX * deltaY)) + (0.0625 * dielectricTensor[nextI][prevJ][nextK].matrix[2][1] / (deltaY * deltaZ)));
 		elementZ = cthetadt2 * (-(0.0625 * dielectricTensor[nextI][prevJ][nextK].matrix[1][2] / (deltaY * deltaY)) + (0.0625 * dielectricTensor[nextI][prevJ][nextK].matrix[0][2] / (deltaX * deltaY)) + (0.0625 * dielectricTensor[nextI][prevJ][nextK].matrix[2][2] / (deltaY * deltaZ)));
 		maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementX, nextI, prevJ, nextK, 0));
 		maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementY, nextI, prevJ, nextK, 1));
@@ -1000,7 +1000,7 @@ void Simulation::createInternalEquationY(int i, int j, int k, Vector3d& rightPar
 	//E i+1 j-1 k-1
 	if (boundaryConditionType == SUPERCONDUCTERLEFT) {
 		elementX = cthetadt2 * (-(0.0625 * dielectricTensor[i + 1][prevJ][prevK].matrix[1][0] / (deltaY * deltaY)) - (0.0625 * dielectricTensor[i + 1][prevJ][prevK].matrix[0][0] / (deltaX * deltaY)) - (0.0625 * dielectricTensor[i + 1][prevJ][prevK].matrix[2][0] / (deltaY * deltaZ)));
-		elementY = cthetadt2 * (-(0.0625 / (deltaX * deltaX)) - (0.0625 / (deltaY * deltaY)) - (0.0625 / (deltaZ * deltaZ)) - (0.0625 * dielectricTensor[i + 1][prevJ][prevK].matrix[1][1] / (deltaY * deltaY)) - (0.0625 * dielectricTensor[i + 1][prevJ][prevK].matrix[0][1] / (deltaX * deltaY)) - (0.0625 * dielectricTensor[i + 1][prevJ][prevK].matrix[2][1] / (deltaY * deltaZ)));
+		elementY = cthetadt2 * ( - (0.0625 * dielectricTensor[i + 1][prevJ][prevK].matrix[1][1] / (deltaY * deltaY)) - (0.0625 * dielectricTensor[i + 1][prevJ][prevK].matrix[0][1] / (deltaX * deltaY)) - (0.0625 * dielectricTensor[i + 1][prevJ][prevK].matrix[2][1] / (deltaY * deltaZ)));
 		elementZ = cthetadt2 * (-(0.0625 * dielectricTensor[i + 1][prevJ][prevK].matrix[1][2] / (deltaY * deltaY)) - (0.0625 * dielectricTensor[i + 1][prevJ][prevK].matrix[0][2] / (deltaX * deltaY)) - (0.0625 * dielectricTensor[i + 1][prevJ][prevK].matrix[2][2] / (deltaY * deltaZ)));
 		if (i < xnumber - 1) {
 			maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementX, i + 1, prevJ, prevK, 0));
@@ -1014,7 +1014,7 @@ void Simulation::createInternalEquationY(int i, int j, int k, Vector3d& rightPar
 	}
 	if (boundaryConditionType == PERIODIC) {
 		elementX = cthetadt2 * (-(0.0625 * dielectricTensor[nextI][prevJ][prevK].matrix[1][0] / (deltaY * deltaY)) - (0.0625 * dielectricTensor[nextI][prevJ][prevK].matrix[0][0] / (deltaX * deltaY)) - (0.0625 * dielectricTensor[nextI][prevJ][prevK].matrix[2][0] / (deltaY * deltaZ)));
-		elementY = cthetadt2 * (-(0.0625 / (deltaX * deltaX)) - (0.0625 / (deltaY * deltaY)) - (0.0625 / (deltaZ * deltaZ)) - (0.0625 * dielectricTensor[nextI][prevJ][prevK].matrix[1][1] / (deltaY * deltaY)) - (0.0625 * dielectricTensor[nextI][prevJ][prevK].matrix[0][1] / (deltaX * deltaY)) - (0.0625 * dielectricTensor[nextI][prevJ][prevK].matrix[2][1] / (deltaY * deltaZ)));
+		elementY = cthetadt2 * ( - (0.0625 * dielectricTensor[nextI][prevJ][prevK].matrix[1][1] / (deltaY * deltaY)) - (0.0625 * dielectricTensor[nextI][prevJ][prevK].matrix[0][1] / (deltaX * deltaY)) - (0.0625 * dielectricTensor[nextI][prevJ][prevK].matrix[2][1] / (deltaY * deltaZ)));
 		elementZ = cthetadt2 * (-(0.0625 * dielectricTensor[nextI][prevJ][prevK].matrix[1][2] / (deltaY * deltaY)) - (0.0625 * dielectricTensor[nextI][prevJ][prevK].matrix[0][2] / (deltaX * deltaY)) - (0.0625 * dielectricTensor[nextI][prevJ][prevK].matrix[2][2] / (deltaY * deltaZ)));
 		maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementX, nextI, prevJ, prevK, 0));
 		maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementY, nextI, prevJ, prevK, 1));
@@ -1024,7 +1024,7 @@ void Simulation::createInternalEquationY(int i, int j, int k, Vector3d& rightPar
 	//E i-1 j+1 k+1
 	elementX = cthetadt2 * (-(0.0625 * dielectricTensor[prevI][nextJ][nextK].matrix[1][0] / (deltaY * deltaY)) + (0.0625 * dielectricTensor[prevI][nextJ][nextK].matrix[0][0] / (deltaX * deltaY)) - (0.0625 * dielectricTensor[prevI][nextJ][nextK].matrix[2][0] / (deltaY * deltaZ)));
 	maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementX, prevI, nextJ, nextK, 0));
-	elementY = cthetadt2 * (-(0.0625 / (deltaX * deltaX)) - (0.0625 / (deltaY * deltaY)) - (0.0625 / (deltaZ * deltaZ)) - (0.0625 * dielectricTensor[prevI][nextJ][nextK].matrix[1][1] / (deltaY * deltaY)) + (0.0625 * dielectricTensor[prevI][nextJ][nextK].matrix[0][1] / (deltaX * deltaY)) - (0.0625 * dielectricTensor[prevI][nextJ][nextK].matrix[2][1] / (deltaY * deltaZ)));
+	elementY = cthetadt2 * ( - (0.0625 * dielectricTensor[prevI][nextJ][nextK].matrix[1][1] / (deltaY * deltaY)) + (0.0625 * dielectricTensor[prevI][nextJ][nextK].matrix[0][1] / (deltaX * deltaY)) - (0.0625 * dielectricTensor[prevI][nextJ][nextK].matrix[2][1] / (deltaY * deltaZ)));
 	maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementY, prevI, nextJ, nextK, 1));
 	elementZ = cthetadt2 * (-(0.0625 * dielectricTensor[prevI][nextJ][nextK].matrix[1][2] / (deltaY * deltaY)) + (0.0625 * dielectricTensor[prevI][nextJ][nextK].matrix[0][2] / (deltaX * deltaY)) - (0.0625 * dielectricTensor[prevI][nextJ][nextK].matrix[2][2] / (deltaY * deltaZ)));
 	maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementZ, prevI, nextJ, nextK, 2));
@@ -1032,7 +1032,7 @@ void Simulation::createInternalEquationY(int i, int j, int k, Vector3d& rightPar
 	//E i-1 j+1 k-1
 	elementX = cthetadt2 * (-(0.0625 * dielectricTensor[prevI][nextJ][prevK].matrix[1][0] / (deltaY * deltaY)) + (0.0625 * dielectricTensor[prevI][nextJ][prevK].matrix[0][0] / (deltaX * deltaY)) + (0.0625 * dielectricTensor[prevI][nextJ][prevK].matrix[2][0] / (deltaY * deltaZ)));
 	maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementX, prevI, nextJ, prevK, 0));
-	elementY = cthetadt2 * (-(0.0625 / (deltaX * deltaX)) - (0.0625 / (deltaY * deltaY)) - (0.0625 / (deltaZ * deltaZ)) - (0.0625 * dielectricTensor[prevI][nextJ][prevK].matrix[1][1] / (deltaY * deltaY)) + (0.0625 * dielectricTensor[prevI][nextJ][prevK].matrix[0][1] / (deltaX * deltaY)) + (0.0625 * dielectricTensor[prevI][nextJ][prevK].matrix[2][1] / (deltaY * deltaZ)));
+	elementY = cthetadt2 * ( - (0.0625 * dielectricTensor[prevI][nextJ][prevK].matrix[1][1] / (deltaY * deltaY)) + (0.0625 * dielectricTensor[prevI][nextJ][prevK].matrix[0][1] / (deltaX * deltaY)) + (0.0625 * dielectricTensor[prevI][nextJ][prevK].matrix[2][1] / (deltaY * deltaZ)));
 	maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementY, prevI, nextJ, prevK, 1));
 	elementZ = cthetadt2 * (-(0.0625 * dielectricTensor[prevI][nextJ][prevK].matrix[1][2] / (deltaY * deltaY)) + (0.0625 * dielectricTensor[prevI][nextJ][prevK].matrix[0][2] / (deltaX * deltaY)) + (0.0625 * dielectricTensor[prevI][nextJ][prevK].matrix[2][2] / (deltaY * deltaZ)));
 	maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementZ, prevI, nextJ, prevK, 2));
@@ -1040,7 +1040,7 @@ void Simulation::createInternalEquationY(int i, int j, int k, Vector3d& rightPar
 	//E i-1 j-1 k+1
 	elementX = cthetadt2 * (-(0.0625 * dielectricTensor[prevI][prevJ][nextK].matrix[1][0] / (deltaY * deltaY)) - (0.0625 * dielectricTensor[prevI][prevJ][nextK].matrix[0][0] / (deltaX * deltaY)) + (0.0625 * dielectricTensor[prevI][prevJ][nextK].matrix[2][0] / (deltaY * deltaZ)));
 	maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementX, prevI, prevJ, nextK, 0));
-	elementY = cthetadt2 * (-(0.0625 / (deltaX * deltaX)) - (0.0625 / (deltaY * deltaY)) - (0.0625 / (deltaZ * deltaZ)) - (0.0625 * dielectricTensor[prevI][prevJ][nextK].matrix[1][1] / (deltaY * deltaY)) - (0.0625 * dielectricTensor[prevI][prevJ][nextK].matrix[0][1] / (deltaX * deltaY)) + (0.0625 * dielectricTensor[prevI][prevJ][nextK].matrix[2][1] / (deltaY * deltaZ)));
+	elementY = cthetadt2 * ( - (0.0625 * dielectricTensor[prevI][prevJ][nextK].matrix[1][1] / (deltaY * deltaY)) - (0.0625 * dielectricTensor[prevI][prevJ][nextK].matrix[0][1] / (deltaX * deltaY)) + (0.0625 * dielectricTensor[prevI][prevJ][nextK].matrix[2][1] / (deltaY * deltaZ)));
 	maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementY, prevI, prevJ, nextK, 1));
 	elementZ = cthetadt2 * (-(0.0625 * dielectricTensor[prevI][prevJ][nextK].matrix[1][2] / (deltaY * deltaY)) - (0.0625 * dielectricTensor[prevI][prevJ][nextK].matrix[0][2] / (deltaX * deltaY)) + (0.0625 * dielectricTensor[prevI][prevJ][nextK].matrix[2][2] / (deltaY * deltaZ)));
 	maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementZ, prevI, prevJ, nextK, 2));
@@ -1048,7 +1048,7 @@ void Simulation::createInternalEquationY(int i, int j, int k, Vector3d& rightPar
 	//E i-1 j-1 k-1
 	elementX = cthetadt2 * (-(0.0625 * dielectricTensor[prevI][prevJ][prevK].matrix[1][0] / (deltaY * deltaY)) - (0.0625 * dielectricTensor[prevI][prevJ][prevK].matrix[0][0] / (deltaX * deltaY)) - (0.0625 * dielectricTensor[prevI][prevJ][prevK].matrix[2][0] / (deltaY * deltaZ)));
 	maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementX, prevI, prevJ, prevK, 0));
-	elementY = cthetadt2 * (-(0.0625 / (deltaX * deltaX)) - (0.0625 / (deltaY * deltaY)) - (0.0625 / (deltaZ * deltaZ)) - (0.0625 * dielectricTensor[prevI][prevJ][prevK].matrix[1][1] / (deltaY * deltaY)) - (0.0625 * dielectricTensor[prevI][prevJ][prevK].matrix[0][1] / (deltaX * deltaY)) - (0.0625 * dielectricTensor[prevI][prevJ][prevK].matrix[2][1] / (deltaY * deltaZ)));
+	elementY = cthetadt2 * ( - (0.0625 * dielectricTensor[prevI][prevJ][prevK].matrix[1][1] / (deltaY * deltaY)) - (0.0625 * dielectricTensor[prevI][prevJ][prevK].matrix[0][1] / (deltaX * deltaY)) - (0.0625 * dielectricTensor[prevI][prevJ][prevK].matrix[2][1] / (deltaY * deltaZ)));
 	maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementY, prevI, prevJ, prevK, 1));
 	elementZ = cthetadt2 * (-(0.0625 * dielectricTensor[prevI][prevJ][prevK].matrix[1][2] / (deltaY * deltaY)) - (0.0625 * dielectricTensor[prevI][prevJ][prevK].matrix[0][2] / (deltaX * deltaY)) - (0.0625 * dielectricTensor[prevI][prevJ][prevK].matrix[2][2] / (deltaY * deltaZ)));
 	maxwellEquationMatrix[i][j][k][1].push_back(MatrixElement(elementZ, prevI, prevJ, prevK, 2));
@@ -1092,7 +1092,7 @@ void Simulation::createInternalEquationZ(int i, int j, int k, Vector3d& rightPar
 	maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementX, i, j, k, 0));
 	elementY = dielectricTensor[i][j][k].matrix[2][1] + cthetadt2 * (0.5 * dielectricTensor[i][j][k].matrix[2][1] / (deltaZ * deltaZ));
 	maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementY, i, j, k, 1));
-	elementZ = 1 + dielectricTensor[i][j][k].matrix[2][2] + cthetadt2 * ((0.5 / (deltaX * deltaX) + (0.5 / (deltaY * deltaY))) + (0.5 / (deltaZ * deltaZ)) + (0.5 * dielectricTensor[i][j][k].matrix[2][2] / (deltaZ * deltaZ)));
+	elementZ = 1 + dielectricTensor[i][j][k].matrix[2][2] + cthetadt2 * ((2 / (deltaX * deltaX) + (2 / (deltaY * deltaY))) + (2 / (deltaZ * deltaZ)) + (0.5 * dielectricTensor[i][j][k].matrix[2][2] / (deltaZ * deltaZ)));
 	maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementZ, i, j, k, 2));
 
 	//E i j k+1
@@ -1100,7 +1100,7 @@ void Simulation::createInternalEquationZ(int i, int j, int k, Vector3d& rightPar
 	maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementX, i, j, nextK, 0));
 	elementY = cthetadt2 * (- (0.25 * dielectricTensor[i][j][nextK].matrix[2][1] / (deltaZ * deltaZ)));
 	maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementY, i, j, nextK, 1));
-	elementZ = cthetadt2 * ((0.25 / (deltaX * deltaX)) - (0.25 / (deltaY * deltaY)) + (0.25 / (deltaZ * deltaZ)) - (0.25 * dielectricTensor[i][j][nextK].matrix[2][2] / (deltaZ * deltaZ)));
+	elementZ = cthetadt2 * ((1 / (deltaZ * deltaZ)) - (0.25 * dielectricTensor[i][j][nextK].matrix[2][2] / (deltaZ * deltaZ)));
 	maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementZ, i, j, nextK, 2));
 
 	//E i j k-1
@@ -1108,14 +1108,14 @@ void Simulation::createInternalEquationZ(int i, int j, int k, Vector3d& rightPar
 	maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementX, i, j, prevK, 0));
 	elementY = cthetadt2 * (- (0.25 * dielectricTensor[i][j][prevK].matrix[2][1] / (deltaZ * deltaZ)));
 	maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementY, i, j, prevK, 1));
-	elementZ = cthetadt2 * ((0.25 / (deltaX * deltaX)) - (0.25 / (deltaY * deltaY)) + (0.25 / (deltaZ * deltaZ)) - (0.25 * dielectricTensor[i][j][prevK].matrix[2][2] / (deltaZ * deltaZ)));
+	elementZ = cthetadt2 * ((1 / (deltaZ * deltaZ)) - (0.25 * dielectricTensor[i][j][prevK].matrix[2][2] / (deltaZ * deltaZ)));
 	maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementZ, i, j, prevK, 2));
 
 	//E i+1 j k
 	if (boundaryConditionType == SUPERCONDUCTERLEFT) {
 		elementX = cthetadt2 * ((0.25 * dielectricTensor[i + 1][j][k].matrix[2][0] / (deltaZ * deltaZ)));
 		elementY = cthetadt2 * ((0.25 * dielectricTensor[i + 1][j][k].matrix[2][1] / (deltaZ * deltaZ)));
-		elementZ = cthetadt2 * ((-0.25 / (deltaX * deltaX)) + (0.25 / (deltaY * deltaY)) + (0.25 / (deltaZ * deltaZ)) + (0.25 * dielectricTensor[i + 1][j][k].matrix[2][2] / (deltaZ * deltaZ)));
+		elementZ = cthetadt2 * ((-1 / (deltaX * deltaX)) + (0.25 * dielectricTensor[i + 1][j][k].matrix[2][2] / (deltaZ * deltaZ)));
 		if (i < xnumber - 1) {
 			maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementX, i + 1, j, k, 0));
 			maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementY, i + 1, j, k, 1));
@@ -1129,7 +1129,7 @@ void Simulation::createInternalEquationZ(int i, int j, int k, Vector3d& rightPar
 	if (boundaryConditionType == PERIODIC) {
 		elementX = cthetadt2 * ((0.25 * dielectricTensor[nextI][j][k].matrix[2][0] / (deltaZ * deltaZ)));
 		elementY = cthetadt2 * ((0.25 * dielectricTensor[nextI][j][k].matrix[2][1] / (deltaZ * deltaZ)));
-		elementZ = cthetadt2 * ((-0.25 / (deltaX * deltaX)) + (0.25 / (deltaY * deltaY)) + (0.25 / (deltaZ * deltaZ)) + (0.25 * dielectricTensor[nextI][j][k].matrix[2][2] / (deltaZ * deltaZ)));
+		elementZ = cthetadt2 * ((-1 / (deltaX * deltaX)) + (0.25 * dielectricTensor[nextI][j][k].matrix[2][2] / (deltaZ * deltaZ)));
 		maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementX, nextI, j, k, 0));
 		maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementY, nextI, j, k, 1));
 		maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementZ, nextI, j, k, 2));
@@ -1140,7 +1140,7 @@ void Simulation::createInternalEquationZ(int i, int j, int k, Vector3d& rightPar
 	maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementX, prevI, j, k, 0));
 	elementY = cthetadt2 * ((0.25 * dielectricTensor[prevI][j][k].matrix[2][1] / (deltaZ * deltaZ)));
 	maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementY, prevI, j, k, 1));
-	elementZ = cthetadt2 * ((-0.25 / (deltaX * deltaX)) + (0.25 / (deltaY * deltaY)) + (0.25 / (deltaZ * deltaZ)) + (0.25 * dielectricTensor[prevI][j][k].matrix[2][2] / (deltaZ * deltaZ)));
+	elementZ = cthetadt2 * ((-1 / (deltaX * deltaX)) + (0.25 * dielectricTensor[prevI][j][k].matrix[2][2] / (deltaZ * deltaZ)));
 	maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementZ, prevI, j, k, 2));
 
 	//E i j+1 k
@@ -1148,7 +1148,7 @@ void Simulation::createInternalEquationZ(int i, int j, int k, Vector3d& rightPar
 	maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementX, i, nextJ, k, 0));
 	elementY = cthetadt2 * ((0.25 * dielectricTensor[i][nextJ][k].matrix[2][1]) / (deltaZ * deltaZ));
 	maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementY, i, nextJ, k, 1));
-	elementZ = cthetadt2 * ((0.25 / (deltaX * deltaX)) - (0.25 / (deltaY * deltaY)) + (0.25 / (deltaZ * deltaZ)) + (0.25 * dielectricTensor[i][nextJ][k].matrix[2][2] / (deltaZ * deltaZ)));
+	elementZ = cthetadt2 * ( - (1 / (deltaY * deltaY)) + (0.25 * dielectricTensor[i][nextJ][k].matrix[2][2] / (deltaZ * deltaZ)));
 	maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementZ, i, nextJ, k, 2));
 
 	//E i j-1 k
@@ -1156,14 +1156,14 @@ void Simulation::createInternalEquationZ(int i, int j, int k, Vector3d& rightPar
 	maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementX, i, prevJ, k, 0));
 	elementY = cthetadt2 * ((0.25 * dielectricTensor[i][prevJ][k].matrix[2][1]) / (deltaZ * deltaZ));
 	maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementY, i, prevJ, k, 1));
-	elementZ = cthetadt2 * ((0.25 / (deltaX * deltaX)) - (0.25 / (deltaY * deltaY)) + (0.25 / (deltaZ * deltaZ)) + (0.25 * dielectricTensor[i][prevJ][k].matrix[2][2] / (deltaZ * deltaZ)));
+	elementZ = cthetadt2 * ( - (1 / (deltaY * deltaY)) + (0.25 * dielectricTensor[i][prevJ][k].matrix[2][2] / (deltaZ * deltaZ)));
 	maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementZ, i, prevJ, k, 2));
 
 	//E i+1 j k+1
 	if (boundaryConditionType == SUPERCONDUCTERLEFT) {
 		elementX = cthetadt2 * (- (0.125 * dielectricTensor[i + 1][j][nextK].matrix[2][0] / (deltaZ * deltaZ)) - (0.125 * dielectricTensor[i + 1][j][nextK].matrix[0][0] / (deltaX * deltaZ)));
 		elementY = cthetadt2 * (- (0.125 * dielectricTensor[i + 1][j][nextK].matrix[2][1] / (deltaZ * deltaZ)) - (0.125 * dielectricTensor[i + 1][j][nextK].matrix[0][1] / (deltaX * deltaZ)));
-		elementZ = cthetadt2 * (-(0.125 / (deltaX * deltaX)) + (0.125 / (deltaY * deltaY)) - (0.125 / (deltaZ * deltaZ)) - (0.125 * dielectricTensor[i + 1][j][nextK].matrix[2][2] / (deltaZ * deltaZ)) - (0.125 * dielectricTensor[i + 1][j][nextK].matrix[0][2] / (deltaX * deltaZ)));
+		elementZ = cthetadt2 * ( - (0.125 * dielectricTensor[i + 1][j][nextK].matrix[2][2] / (deltaZ * deltaZ)) - (0.125 * dielectricTensor[i + 1][j][nextK].matrix[0][2] / (deltaX * deltaZ)));
 		if (i < xnumber - 1) {
 			maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementX, i + 1, j, nextK, 0));
 			maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementY, i + 1, j, nextK, 1));
@@ -1177,7 +1177,7 @@ void Simulation::createInternalEquationZ(int i, int j, int k, Vector3d& rightPar
 	if (boundaryConditionType == PERIODIC) {
 		elementX = cthetadt2 * (- (0.125 * dielectricTensor[nextI][j][nextK].matrix[2][0] / (deltaZ * deltaZ)) - (0.125 * dielectricTensor[nextI][j][nextK].matrix[0][0] / (deltaX * deltaZ)));
 		elementY = cthetadt2 * (- (0.125 * dielectricTensor[nextI][j][nextK].matrix[2][1] / (deltaZ * deltaZ)) - (0.125 * dielectricTensor[nextI][j][nextK].matrix[0][1] / (deltaX * deltaZ)));
-		elementZ = cthetadt2 * (-(0.125 / (deltaX * deltaX)) + (0.125 / (deltaY * deltaY)) - (0.125 / (deltaZ * deltaZ)) - (0.125 * dielectricTensor[nextI][j][nextK].matrix[2][2] / (deltaZ * deltaZ)) - (0.125 * dielectricTensor[nextI][j][nextK].matrix[0][2] / (deltaX * deltaZ)));
+		elementZ = cthetadt2 * (- (0.125 * dielectricTensor[nextI][j][nextK].matrix[2][2] / (deltaZ * deltaZ)) - (0.125 * dielectricTensor[nextI][j][nextK].matrix[0][2] / (deltaX * deltaZ)));
 		maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementX, nextI, j, nextK, 0));
 		maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementY, nextI, j, nextK, 1));
 		maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementZ, nextI, j, nextK, 2));
@@ -1187,7 +1187,7 @@ void Simulation::createInternalEquationZ(int i, int j, int k, Vector3d& rightPar
 	if (boundaryConditionType == SUPERCONDUCTERLEFT) {
 		elementX = cthetadt2 * (- (0.125 * dielectricTensor[i + 1][j][prevK].matrix[2][0] / (deltaZ * deltaZ)) + (0.125 * dielectricTensor[i + 1][j][prevK].matrix[0][0] / (deltaX * deltaZ)));
 		elementY = cthetadt2 * (- (0.125 * dielectricTensor[i + 1][j][prevK].matrix[2][1] / (deltaZ * deltaZ)) + (0.125 * dielectricTensor[i + 1][j][prevK].matrix[0][1] / (deltaX * deltaZ)));
-		elementZ = cthetadt2 * (-(0.125 / (deltaX * deltaX)) + (0.125 / (deltaY * deltaY)) - (0.125 / (deltaZ * deltaZ)) - (0.125 * dielectricTensor[i + 1][j][prevK].matrix[2][2] / (deltaZ * deltaZ)) + (0.125 * dielectricTensor[i + 1][j][prevK].matrix[0][2] / (deltaX * deltaZ)));
+		elementZ = cthetadt2 * ( - (0.125 * dielectricTensor[i + 1][j][prevK].matrix[2][2] / (deltaZ * deltaZ)) + (0.125 * dielectricTensor[i + 1][j][prevK].matrix[0][2] / (deltaX * deltaZ)));
 		if (i < xnumber - 1) {
 			maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementX, i + 1, j, prevK, 0));
 			maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementY, i + 1, j, prevK, 1));
@@ -1201,7 +1201,7 @@ void Simulation::createInternalEquationZ(int i, int j, int k, Vector3d& rightPar
 	if (boundaryConditionType == PERIODIC) {
 		elementX = cthetadt2 * (- (0.125 * dielectricTensor[nextI][j][prevK].matrix[2][0] / (deltaZ * deltaZ)) + (0.125 * dielectricTensor[nextI][j][prevK].matrix[0][0] / (deltaX * deltaZ)));
 		elementY = cthetadt2 * (- (0.125 * dielectricTensor[nextI][j][prevK].matrix[2][1] / (deltaZ * deltaZ)) + (0.125 * dielectricTensor[nextI][j][prevK].matrix[0][1] / (deltaX * deltaZ)));
-		elementZ = cthetadt2 * (-(0.125 / (deltaX * deltaX)) + (0.125 / (deltaY * deltaY)) - (0.125 / (deltaZ * deltaZ)) - (0.125 * dielectricTensor[nextI][j][prevK].matrix[2][2] / (deltaZ * deltaZ)) + (0.125 * dielectricTensor[nextI][j][prevK].matrix[0][2] / (deltaX * deltaZ)));
+		elementZ = cthetadt2 * ( - (0.125 * dielectricTensor[nextI][j][prevK].matrix[2][2] / (deltaZ * deltaZ)) + (0.125 * dielectricTensor[nextI][j][prevK].matrix[0][2] / (deltaX * deltaZ)));
 		maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementX, nextI, j, prevK, 0));
 		maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementY, nextI, j, prevK, 1));
 		maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementZ, nextI, j, prevK, 2));
@@ -1212,7 +1212,7 @@ void Simulation::createInternalEquationZ(int i, int j, int k, Vector3d& rightPar
 	maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementX, prevI, j, nextK, 0));
 	elementY = cthetadt2 * (- (0.125 * dielectricTensor[prevI][j][nextK].matrix[2][1] / (deltaZ * deltaZ)) + (0.125 * dielectricTensor[prevI][j][nextK].matrix[0][1] / (deltaX * deltaZ)));
 	maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementY, prevI, j, nextK, 1));
-	elementZ = cthetadt2 * (-(0.125 / (deltaX * deltaX)) + (0.125 / (deltaY * deltaY)) - (0.125 / (deltaZ * deltaZ)) - (0.125 * dielectricTensor[prevI][j][nextK].matrix[2][2] / (deltaZ * deltaZ)) + (0.125 * dielectricTensor[prevI][j][nextK].matrix[0][2] / (deltaX * deltaZ)));
+	elementZ = cthetadt2 * ( - (0.125 * dielectricTensor[prevI][j][nextK].matrix[2][2] / (deltaZ * deltaZ)) + (0.125 * dielectricTensor[prevI][j][nextK].matrix[0][2] / (deltaX * deltaZ)));
 	maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementZ, prevI, j, nextK, 2));
 
 	//E i-1 j k-1
@@ -1220,7 +1220,7 @@ void Simulation::createInternalEquationZ(int i, int j, int k, Vector3d& rightPar
 	maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementX, prevI, j, prevK, 0));
 	elementY = cthetadt2 * (- (0.125 * dielectricTensor[prevI][j][prevK].matrix[2][1] / (deltaZ * deltaZ)) - (0.125 * dielectricTensor[prevI][j][prevK].matrix[0][1] / (deltaX * deltaZ)));
 	maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementY, prevI, j, prevK, 1));
-	elementZ = cthetadt2 * (-(0.125 / (deltaX * deltaX)) + (0.125 / (deltaY * deltaY)) - (0.125 / (deltaZ * deltaZ)) - (0.125 * dielectricTensor[prevI][j][prevK].matrix[2][2] / (deltaZ * deltaZ)) - (0.125 * dielectricTensor[prevI][j][prevK].matrix[0][2] / (deltaX * deltaZ)));
+	elementZ = cthetadt2 * ( - (0.125 * dielectricTensor[prevI][j][prevK].matrix[2][2] / (deltaZ * deltaZ)) - (0.125 * dielectricTensor[prevI][j][prevK].matrix[0][2] / (deltaX * deltaZ)));
 	maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementZ, prevI, j, prevK, 2));
 
 	//E i j+1 k+1
@@ -1228,7 +1228,7 @@ void Simulation::createInternalEquationZ(int i, int j, int k, Vector3d& rightPar
 	maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementX, i, nextJ, nextK, 0));
 	elementY = cthetadt2 * (- (0.125 * dielectricTensor[i][nextJ][nextK].matrix[2][1] / (deltaZ * deltaZ)) - (0.125 * dielectricTensor[i][nextJ][nextK].matrix[1][1] / (deltaZ * deltaY)));
 	maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementY, i, nextJ, nextK, 1));
-	elementZ = cthetadt2 * ((0.125 / (deltaX * deltaX)) - (0.125 / (deltaY * deltaY)) - (0.125 / (deltaZ * deltaZ)) - (0.125 * dielectricTensor[i][nextJ][nextK].matrix[2][2] / (deltaZ * deltaZ)) - (0.125 * dielectricTensor[i][nextJ][nextK].matrix[1][2] / (deltaZ * deltaY)));
+	elementZ = cthetadt2 * ( - (0.125 * dielectricTensor[i][nextJ][nextK].matrix[2][2] / (deltaZ * deltaZ)) - (0.125 * dielectricTensor[i][nextJ][nextK].matrix[1][2] / (deltaZ * deltaY)));
 	maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementZ, i, nextJ, nextK, 2));
 
 	//E i j+1 k-1
@@ -1236,7 +1236,7 @@ void Simulation::createInternalEquationZ(int i, int j, int k, Vector3d& rightPar
 	maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementX, i, nextJ, prevK, 0));
 	elementY = cthetadt2 * (- (0.125 * dielectricTensor[i][nextJ][prevK].matrix[2][1] / (deltaZ * deltaZ)) + (0.125 * dielectricTensor[i][nextJ][prevK].matrix[1][1] / (deltaZ * deltaY)));
 	maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementY, i, nextJ, prevK, 1));
-	elementZ = cthetadt2 * ((0.125 / (deltaX * deltaX)) - (0.125 / (deltaY * deltaY)) - (0.125 / (deltaZ * deltaZ)) - (0.125 * dielectricTensor[i][nextJ][prevK].matrix[2][2] / (deltaZ * deltaZ)) + (0.125 * dielectricTensor[i][nextJ][prevK].matrix[1][2] / (deltaZ * deltaY)));
+	elementZ = cthetadt2 * ( - (0.125 * dielectricTensor[i][nextJ][prevK].matrix[2][2] / (deltaZ * deltaZ)) + (0.125 * dielectricTensor[i][nextJ][prevK].matrix[1][2] / (deltaZ * deltaY)));
 	maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementZ, i, nextJ, prevK, 2));
 
 	//E i j-1 k+1
@@ -1244,7 +1244,7 @@ void Simulation::createInternalEquationZ(int i, int j, int k, Vector3d& rightPar
 	maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementX, i, prevJ, nextK, 0));
 	elementY = cthetadt2 * (- (0.125 * dielectricTensor[i][prevJ][nextK].matrix[2][1] / (deltaZ * deltaZ)) + (0.125 * dielectricTensor[i][prevJ][nextK].matrix[1][1] / (deltaZ * deltaY)));
 	maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementY, i, prevJ, nextK, 1));
-	elementZ = cthetadt2 * ((0.125 / (deltaX * deltaX)) - (0.125 / (deltaY * deltaY)) - (0.125 / (deltaZ * deltaZ)) - (0.125 * dielectricTensor[i][prevJ][nextK].matrix[2][2] / (deltaZ * deltaZ)) + (0.125 * dielectricTensor[i][prevJ][nextK].matrix[1][2] / (deltaZ * deltaY)));
+	elementZ = cthetadt2 * ( - (0.125 * dielectricTensor[i][prevJ][nextK].matrix[2][2] / (deltaZ * deltaZ)) + (0.125 * dielectricTensor[i][prevJ][nextK].matrix[1][2] / (deltaZ * deltaY)));
 	maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementZ, i, prevJ, nextK, 2));
 
 	//E i j-1 k-1
@@ -1252,14 +1252,14 @@ void Simulation::createInternalEquationZ(int i, int j, int k, Vector3d& rightPar
 	maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementX, i, prevJ, prevK, 0));
 	elementY = cthetadt2 * (- (0.125 * dielectricTensor[i][prevJ][prevK].matrix[2][1] / (deltaZ * deltaZ)) - (0.125 * dielectricTensor[i][prevJ][prevK].matrix[1][1] / (deltaZ * deltaY)));
 	maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementY, i, prevJ, prevK, 1));
-	elementZ = cthetadt2 * ((0.125 / (deltaX * deltaX)) - (0.125 / (deltaY * deltaY)) - (0.125 / (deltaZ * deltaZ)) - (0.125 * dielectricTensor[i][prevJ][prevK].matrix[2][2] / (deltaZ * deltaZ)) - (0.125 * dielectricTensor[i][prevJ][prevK].matrix[1][2] / (deltaZ * deltaY)));
+	elementZ = cthetadt2 * ( - (0.125 * dielectricTensor[i][prevJ][prevK].matrix[2][2] / (deltaZ * deltaZ)) - (0.125 * dielectricTensor[i][prevJ][prevK].matrix[1][2] / (deltaZ * deltaY)));
 	maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementZ, i, prevJ, prevK, 2));
 
 	//E i+1 j+1 k
 	if (boundaryConditionType == SUPERCONDUCTERLEFT) {
 		elementX = cthetadt2 * ((0.125 * dielectricTensor[i + 1][nextJ][k].matrix[2][0] / (deltaZ * deltaZ)));
 		elementY = cthetadt2 * ((0.125 * dielectricTensor[i + 1][nextJ][k].matrix[2][1] / (deltaZ * deltaZ)));
-		elementZ = cthetadt2 * (-(0.125 / (deltaX * deltaX)) - (0.125 / (deltaY * deltaY)) + (0.125 / (deltaZ * deltaZ)) + (0.125 * dielectricTensor[i + 1][nextJ][k].matrix[2][2] / (deltaZ * deltaZ)));
+		elementZ = cthetadt2 * ( + (0.125 * dielectricTensor[i + 1][nextJ][k].matrix[2][2] / (deltaZ * deltaZ)));
 		if (i < xnumber - 1) {
 			maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementX, i + 1, nextJ, k, 0));
 			maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementY, i + 1, nextJ, k, 1));
@@ -1273,7 +1273,7 @@ void Simulation::createInternalEquationZ(int i, int j, int k, Vector3d& rightPar
 	if (boundaryConditionType == PERIODIC) {
 		elementX = cthetadt2 * ((0.125 * dielectricTensor[nextI][nextJ][k].matrix[2][0] / (deltaZ * deltaZ)));
 		elementY = cthetadt2 * ((0.125 * dielectricTensor[nextI][nextJ][k].matrix[2][1] / (deltaZ * deltaZ)));
-		elementZ = cthetadt2 * (-(0.125 / (deltaX * deltaX)) - (0.125 / (deltaY * deltaY)) + (0.125 / (deltaZ * deltaZ)) + (0.125 * dielectricTensor[nextI][nextJ][k].matrix[2][2] / (deltaZ * deltaZ)));
+		elementZ = cthetadt2 * ( + (0.125 * dielectricTensor[nextI][nextJ][k].matrix[2][2] / (deltaZ * deltaZ)));
 		maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementX, nextI, nextJ, k, 0));
 		maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementY, nextI, nextJ, k, 1));
 		maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementZ, nextI, nextJ, k, 2));
@@ -1283,7 +1283,7 @@ void Simulation::createInternalEquationZ(int i, int j, int k, Vector3d& rightPar
 	if (boundaryConditionType == SUPERCONDUCTERLEFT) {
 		elementX = cthetadt2 * ((0.125 * dielectricTensor[i + 1][prevJ][k].matrix[2][0] / (deltaZ * deltaZ)));
 		elementY = cthetadt2 * ((0.125 * dielectricTensor[i + 1][prevJ][k].matrix[2][1] / (deltaZ * deltaZ)));
-		elementZ = cthetadt2 * (-(0.125 / (deltaX * deltaX)) - (0.125 / (deltaY * deltaY)) + (0.125 / (deltaZ * deltaZ)) + (0.125 * dielectricTensor[i + 1][prevJ][k].matrix[2][2] / (deltaZ * deltaZ)));
+		elementZ = cthetadt2 * ( + (0.125 * dielectricTensor[i + 1][prevJ][k].matrix[2][2] / (deltaZ * deltaZ)));
 		if (i < xnumber - 1) {
 			maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementX, i + 1, prevJ, k, 0));
 			maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementY, i + 1, prevJ, k, 1));
@@ -1297,7 +1297,7 @@ void Simulation::createInternalEquationZ(int i, int j, int k, Vector3d& rightPar
 	if (boundaryConditionType == PERIODIC) {
 		elementX = cthetadt2 * ((0.125 * dielectricTensor[i + 1][prevJ][k].matrix[2][0] / (deltaZ * deltaZ)));
 		elementY = cthetadt2 * ((0.125 * dielectricTensor[i + 1][prevJ][k].matrix[2][1] / (deltaZ * deltaZ)));
-		elementZ = cthetadt2 * (-(0.125 / (deltaX * deltaX)) - (0.125 / (deltaY * deltaY)) + (0.125 / (deltaZ * deltaZ)) + (0.125 * dielectricTensor[i + 1][prevJ][k].matrix[2][2] / (deltaZ * deltaZ)));
+		elementZ = cthetadt2 * ( + (0.125 * dielectricTensor[i + 1][prevJ][k].matrix[2][2] / (deltaZ * deltaZ)));
 		maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementX, nextI, prevJ, k, 0));
 		maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementY, nextI, prevJ, k, 1));
 		maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementZ, nextI, prevJ, k, 2));
@@ -1308,7 +1308,7 @@ void Simulation::createInternalEquationZ(int i, int j, int k, Vector3d& rightPar
 	maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementX, prevI, nextJ, k, 0));
 	elementY = cthetadt2 * ((0.125 * dielectricTensor[prevI][nextJ][k].matrix[2][1] / (deltaZ * deltaZ)));
 	maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementY, prevI, nextJ, k, 1));
-	elementZ = cthetadt2 * (-(0.125 / (deltaX * deltaX)) - (0.125 / (deltaY * deltaY)) + (0.125 / (deltaZ * deltaZ)) + (0.125 * dielectricTensor[prevI][nextJ][k].matrix[2][2] / (deltaZ * deltaZ)));
+	elementZ = cthetadt2 * ( + (0.125 * dielectricTensor[prevI][nextJ][k].matrix[2][2] / (deltaZ * deltaZ)));
 	maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementZ, prevI, nextJ, k, 2));
 
 	//E i-1 j-1 k
@@ -1316,14 +1316,14 @@ void Simulation::createInternalEquationZ(int i, int j, int k, Vector3d& rightPar
 	maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementX, prevI, prevJ, k, 0));
 	elementY = cthetadt2 * ((0.125 * dielectricTensor[prevI][prevJ][k].matrix[2][1] / (deltaZ * deltaZ)));
 	maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementY, prevI, prevJ, k, 1));
-	elementZ = cthetadt2 * (-(0.125 / (deltaX * deltaX)) - (0.125 / (deltaY * deltaY)) + (0.125 / (deltaZ * deltaZ)) + (0.125 * dielectricTensor[prevI][prevJ][k].matrix[2][2] / (deltaZ * deltaZ)));
+	elementZ = cthetadt2 * ( + (0.125 * dielectricTensor[prevI][prevJ][k].matrix[2][2] / (deltaZ * deltaZ)));
 	maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementZ, prevI, prevJ, k, 2));
 
 	//E i+1 j+1 k+1
 	if (boundaryConditionType == SUPERCONDUCTERLEFT) {
 		elementX = cthetadt2 * (- (0.0625 * dielectricTensor[i + 1][nextJ][nextK].matrix[2][0] / (deltaX * deltaX)) - (0.0625 * dielectricTensor[i + 1][nextJ][nextK].matrix[1][0] / (deltaZ * deltaY)) - (0.0625 * dielectricTensor[i + 1][nextJ][nextK].matrix[0][0] / (deltaX * deltaZ)));
 		elementY = cthetadt2 * (- (0.0625 * dielectricTensor[i + 1][nextJ][nextK].matrix[2][1] / (deltaX * deltaX)) - (0.0625 * dielectricTensor[i + 1][nextJ][nextK].matrix[1][1] / (deltaZ * deltaY)) - (0.0625 * dielectricTensor[i + 1][nextJ][nextK].matrix[0][1] / (deltaX * deltaZ)));
-		elementZ = cthetadt2 * (-(0.0625 / (deltaX * deltaX)) - (0.0625 / (deltaY * deltaY)) - (0.0625 / (deltaZ * deltaZ)) - (0.0625 * dielectricTensor[i + 1][nextJ][nextK].matrix[2][2] / (deltaX * deltaX)) - (0.0625 * dielectricTensor[i + 1][nextJ][nextK].matrix[1][2] / (deltaZ * deltaY)) - (0.0625 * dielectricTensor[i + 1][nextJ][nextK].matrix[0][2] / (deltaX * deltaZ)));
+		elementZ = cthetadt2 * ( - (0.0625 * dielectricTensor[i + 1][nextJ][nextK].matrix[2][2] / (deltaX * deltaX)) - (0.0625 * dielectricTensor[i + 1][nextJ][nextK].matrix[1][2] / (deltaZ * deltaY)) - (0.0625 * dielectricTensor[i + 1][nextJ][nextK].matrix[0][2] / (deltaX * deltaZ)));
 		if (i < xnumber - 1) {
 			maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementX, i + 1, nextJ, nextK, 0));
 			maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementY, i + 1, nextJ, nextK, 1));
@@ -1337,7 +1337,7 @@ void Simulation::createInternalEquationZ(int i, int j, int k, Vector3d& rightPar
 	if (boundaryConditionType == PERIODIC) {
 		elementX = cthetadt2 * (- (0.0625 * dielectricTensor[nextI][nextJ][nextK].matrix[2][0] / (deltaX * deltaX)) - (0.0625 * dielectricTensor[nextI][nextJ][nextK].matrix[1][0] / (deltaZ * deltaY)) - (0.0625 * dielectricTensor[nextI][nextJ][nextK].matrix[0][0] / (deltaX * deltaZ)));
 		elementY = cthetadt2 * (- (0.0625 * dielectricTensor[nextI][nextJ][nextK].matrix[2][1] / (deltaX * deltaX)) - (0.0625 * dielectricTensor[nextI][nextJ][nextK].matrix[1][1] / (deltaZ * deltaY)) - (0.0625 * dielectricTensor[nextI][nextJ][nextK].matrix[0][1] / (deltaX * deltaZ)));
-		elementZ = cthetadt2 * (-(0.0625 / (deltaX * deltaX)) - (0.0625 / (deltaY * deltaY)) - (0.0625 / (deltaZ * deltaZ)) - (0.0625 * dielectricTensor[nextI][nextJ][nextK].matrix[2][2] / (deltaX * deltaX)) - (0.0625 * dielectricTensor[nextI][nextJ][nextK].matrix[1][2] / (deltaZ * deltaY)) - (0.0625 * dielectricTensor[nextI][nextJ][nextK].matrix[0][2] / (deltaX * deltaZ)));
+		elementZ = cthetadt2 * ( - (0.0625 * dielectricTensor[nextI][nextJ][nextK].matrix[2][2] / (deltaX * deltaX)) - (0.0625 * dielectricTensor[nextI][nextJ][nextK].matrix[1][2] / (deltaZ * deltaY)) - (0.0625 * dielectricTensor[nextI][nextJ][nextK].matrix[0][2] / (deltaX * deltaZ)));
 		maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementX, nextI, nextJ, nextK, 0));
 		maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementY, nextI, nextJ, nextK, 1));
 		maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementZ, nextI, nextJ, nextK, 2));
@@ -1347,7 +1347,7 @@ void Simulation::createInternalEquationZ(int i, int j, int k, Vector3d& rightPar
 	if (boundaryConditionType == SUPERCONDUCTERLEFT) {
 		elementX = cthetadt2 * (- (0.0625 * dielectricTensor[i + 1][nextJ][prevK].matrix[2][0] / (deltaX * deltaX)) + (0.0625 * dielectricTensor[i + 1][nextJ][prevK].matrix[1][0] / (deltaZ * deltaY)) + (0.0625 * dielectricTensor[i + 1][nextJ][prevK].matrix[0][0] / (deltaX * deltaZ)));
 		elementY = cthetadt2 * (- (0.0625 * dielectricTensor[i + 1][nextJ][prevK].matrix[2][1] / (deltaX * deltaX)) + (0.0625 * dielectricTensor[i + 1][nextJ][prevK].matrix[1][1] / (deltaZ * deltaY)) + (0.0625 * dielectricTensor[i + 1][nextJ][prevK].matrix[0][1] / (deltaX * deltaZ)));
-		elementZ = cthetadt2 * (-(0.0625 / (deltaX * deltaX)) - (0.0625 / (deltaY * deltaY)) - (0.0625 / (deltaZ * deltaZ)) - (0.0625 * dielectricTensor[i + 1][nextJ][prevK].matrix[2][2] / (deltaX * deltaX)) + (0.0625 * dielectricTensor[i + 1][nextJ][prevK].matrix[1][2] / (deltaZ * deltaY)) + (0.0625 * dielectricTensor[i + 1][nextJ][prevK].matrix[0][2] / (deltaX * deltaZ)));
+		elementZ = cthetadt2 * ( - (0.0625 * dielectricTensor[i + 1][nextJ][prevK].matrix[2][2] / (deltaX * deltaX)) + (0.0625 * dielectricTensor[i + 1][nextJ][prevK].matrix[1][2] / (deltaZ * deltaY)) + (0.0625 * dielectricTensor[i + 1][nextJ][prevK].matrix[0][2] / (deltaX * deltaZ)));
 		if (i < xnumber - 1) {
 			maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementX, i + 1, nextJ, prevK, 0));
 			maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementY, i + 1, nextJ, prevK, 1));
@@ -1361,7 +1361,7 @@ void Simulation::createInternalEquationZ(int i, int j, int k, Vector3d& rightPar
 	if (boundaryConditionType == PERIODIC) {
 		elementX = cthetadt2 * (- (0.0625 * dielectricTensor[nextI][nextJ][prevK].matrix[2][0] / (deltaX * deltaX)) + (0.0625 * dielectricTensor[nextI][nextJ][prevK].matrix[1][0] / (deltaZ * deltaY)) + (0.0625 * dielectricTensor[nextI][nextJ][prevK].matrix[0][0] / (deltaX * deltaZ)));
 		elementY = cthetadt2 * (- (0.0625 * dielectricTensor[nextI][nextJ][prevK].matrix[2][1] / (deltaX * deltaX)) + (0.0625 * dielectricTensor[nextI][nextJ][prevK].matrix[1][1] / (deltaZ * deltaY)) + (0.0625 * dielectricTensor[nextI][nextJ][prevK].matrix[0][1] / (deltaX * deltaZ)));
-		elementZ = cthetadt2 * (-(0.0625 / (deltaX * deltaX)) - (0.0625 / (deltaY * deltaY)) - (0.0625 / (deltaZ * deltaZ)) - (0.0625 * dielectricTensor[nextI][nextJ][prevK].matrix[2][2] / (deltaX * deltaX)) + (0.0625 * dielectricTensor[nextI][nextJ][prevK].matrix[1][2] / (deltaZ * deltaY)) + (0.0625 * dielectricTensor[nextI][nextJ][prevK].matrix[0][2] / (deltaX * deltaZ)));
+		elementZ = cthetadt2 * ( - (0.0625 * dielectricTensor[nextI][nextJ][prevK].matrix[2][2] / (deltaX * deltaX)) + (0.0625 * dielectricTensor[nextI][nextJ][prevK].matrix[1][2] / (deltaZ * deltaY)) + (0.0625 * dielectricTensor[nextI][nextJ][prevK].matrix[0][2] / (deltaX * deltaZ)));
 		maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementX, nextI, nextJ, prevK, 0));
 		maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementY, nextI, nextJ, prevK, 1));
 		maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementZ, nextI, nextJ, prevK, 2));
@@ -1371,7 +1371,7 @@ void Simulation::createInternalEquationZ(int i, int j, int k, Vector3d& rightPar
 	if (boundaryConditionType == SUPERCONDUCTERLEFT) {
 		elementX = cthetadt2 * (- (0.0625 * dielectricTensor[i + 1][prevJ][nextK].matrix[2][0] / (deltaX * deltaX)) + (0.0625 * dielectricTensor[i + 1][prevJ][nextK].matrix[1][0] / (deltaZ * deltaY)) - (0.0625 * dielectricTensor[i + 1][prevJ][nextK].matrix[0][0] / (deltaX * deltaZ)));
 		elementY = cthetadt2 * (- (0.0625 * dielectricTensor[i + 1][prevJ][nextK].matrix[2][1] / (deltaX * deltaX)) + (0.0625 * dielectricTensor[i + 1][prevJ][nextK].matrix[1][1] / (deltaZ * deltaY)) - (0.0625 * dielectricTensor[i + 1][prevJ][nextK].matrix[0][1] / (deltaX * deltaZ)));
-		elementZ = cthetadt2 * (-(0.0625 / (deltaX * deltaX)) - (0.0625 / (deltaY * deltaY)) - (0.0625 / (deltaZ * deltaZ)) - (0.0625 * dielectricTensor[i + 1][prevJ][nextK].matrix[2][2] / (deltaX * deltaX)) + (0.0625 * dielectricTensor[i + 1][prevJ][nextK].matrix[1][2] / (deltaZ * deltaY)) - (0.0625 * dielectricTensor[i + 1][prevJ][nextK].matrix[0][2] / (deltaX * deltaZ)));
+		elementZ = cthetadt2 * ( - (0.0625 * dielectricTensor[i + 1][prevJ][nextK].matrix[2][2] / (deltaX * deltaX)) + (0.0625 * dielectricTensor[i + 1][prevJ][nextK].matrix[1][2] / (deltaZ * deltaY)) - (0.0625 * dielectricTensor[i + 1][prevJ][nextK].matrix[0][2] / (deltaX * deltaZ)));
 		if (i < xnumber - 1) {
 			maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementX, i + 1, prevJ, nextK, 0));
 			maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementY, i + 1, prevJ, nextK, 1));
@@ -1385,7 +1385,7 @@ void Simulation::createInternalEquationZ(int i, int j, int k, Vector3d& rightPar
 	if (boundaryConditionType == PERIODIC) {
 		elementX = cthetadt2 * (- (0.0625 * dielectricTensor[nextI][prevJ][nextK].matrix[2][0] / (deltaX * deltaX)) + (0.0625 * dielectricTensor[nextI][prevJ][nextK].matrix[1][0] / (deltaZ * deltaY)) - (0.0625 * dielectricTensor[nextI][prevJ][nextK].matrix[0][0] / (deltaX * deltaZ)));
 		elementY = cthetadt2 * (- (0.0625 * dielectricTensor[nextI][prevJ][nextK].matrix[2][1] / (deltaX * deltaX)) + (0.0625 * dielectricTensor[nextI][prevJ][nextK].matrix[1][1] / (deltaZ * deltaY)) - (0.0625 * dielectricTensor[nextI][prevJ][nextK].matrix[0][1] / (deltaX * deltaZ)));
-		elementZ = cthetadt2 * (-(0.0625 / (deltaX * deltaX)) - (0.0625 / (deltaY * deltaY)) - (0.0625 / (deltaZ * deltaZ)) - (0.0625 * dielectricTensor[nextI][prevJ][nextK].matrix[2][2] / (deltaX * deltaX)) + (0.0625 * dielectricTensor[nextI][prevJ][nextK].matrix[1][2] / (deltaZ * deltaY)) - (0.0625 * dielectricTensor[nextI][prevJ][nextK].matrix[0][2] / (deltaX * deltaZ)));
+		elementZ = cthetadt2 * ( - (0.0625 * dielectricTensor[nextI][prevJ][nextK].matrix[2][2] / (deltaX * deltaX)) + (0.0625 * dielectricTensor[nextI][prevJ][nextK].matrix[1][2] / (deltaZ * deltaY)) - (0.0625 * dielectricTensor[nextI][prevJ][nextK].matrix[0][2] / (deltaX * deltaZ)));
 		maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementX, nextI, prevJ, nextK, 0));
 		maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementY, nextI, prevJ, nextK, 1));
 		maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementZ, nextI, prevJ, nextK, 2));
@@ -1395,7 +1395,7 @@ void Simulation::createInternalEquationZ(int i, int j, int k, Vector3d& rightPar
 	if (boundaryConditionType == SUPERCONDUCTERLEFT) {
 		elementX = cthetadt2 * (- (0.0625 * dielectricTensor[i + 1][prevJ][prevK].matrix[2][0] / (deltaX * deltaX)) - (0.0625 * dielectricTensor[i + 1][prevJ][prevK].matrix[1][0] / (deltaZ * deltaY)) + (0.0625 * dielectricTensor[i + 1][prevJ][prevK].matrix[0][0] / (deltaX * deltaZ)));
 		elementY = cthetadt2 * (- (0.0625 * dielectricTensor[i + 1][prevJ][prevK].matrix[2][1] / (deltaX * deltaX)) - (0.0625 * dielectricTensor[i + 1][prevJ][prevK].matrix[1][1] / (deltaZ * deltaY)) + (0.0625 * dielectricTensor[i + 1][prevJ][prevK].matrix[0][1] / (deltaX * deltaZ)));
-		elementZ = cthetadt2 * (-(0.0625 / (deltaX * deltaX)) - (0.0625 / (deltaY * deltaY)) - (0.0625 / (deltaZ * deltaZ)) - (0.0625 * dielectricTensor[i + 1][prevJ][prevK].matrix[2][2] / (deltaX * deltaX)) - (0.0625 * dielectricTensor[i + 1][prevJ][prevK].matrix[1][2] / (deltaZ * deltaY)) + (0.0625 * dielectricTensor[i + 1][prevJ][prevK].matrix[0][2] / (deltaX * deltaZ)));
+		elementZ = cthetadt2 * ( - (0.0625 * dielectricTensor[i + 1][prevJ][prevK].matrix[2][2] / (deltaX * deltaX)) - (0.0625 * dielectricTensor[i + 1][prevJ][prevK].matrix[1][2] / (deltaZ * deltaY)) + (0.0625 * dielectricTensor[i + 1][prevJ][prevK].matrix[0][2] / (deltaX * deltaZ)));
 		if (i < xnumber - 1) {
 			maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementX, i + 1, prevJ, prevK, 0));
 			maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementY, i + 1, prevJ, prevK, 1));
@@ -1409,7 +1409,7 @@ void Simulation::createInternalEquationZ(int i, int j, int k, Vector3d& rightPar
 	if (boundaryConditionType == PERIODIC) {
 		elementX = cthetadt2 * (- (0.0625 * dielectricTensor[nextI][prevJ][prevK].matrix[2][0] / (deltaX * deltaX)) - (0.0625 * dielectricTensor[nextI][prevJ][prevK].matrix[1][0] / (deltaZ * deltaY)) + (0.0625 * dielectricTensor[nextI][prevJ][prevK].matrix[0][0] / (deltaX * deltaZ)));
 		elementY = cthetadt2 * (- (0.0625 * dielectricTensor[nextI][prevJ][prevK].matrix[2][1] / (deltaX * deltaX)) - (0.0625 * dielectricTensor[nextI][prevJ][prevK].matrix[1][1] / (deltaZ * deltaY)) + (0.0625 * dielectricTensor[nextI][prevJ][prevK].matrix[0][1] / (deltaX * deltaZ)));
-		elementZ = cthetadt2 * (-(0.0625 / (deltaX * deltaX)) - (0.0625 / (deltaY * deltaY)) - (0.0625 / (deltaZ * deltaZ)) - (0.0625 * dielectricTensor[nextI][prevJ][prevK].matrix[2][2] / (deltaX * deltaX)) - (0.0625 * dielectricTensor[nextI][prevJ][prevK].matrix[1][2] / (deltaZ * deltaY)) + (0.0625 * dielectricTensor[nextI][prevJ][prevK].matrix[0][2] / (deltaX * deltaZ)));
+		elementZ = cthetadt2 * ( - (0.0625 * dielectricTensor[nextI][prevJ][prevK].matrix[2][2] / (deltaX * deltaX)) - (0.0625 * dielectricTensor[nextI][prevJ][prevK].matrix[1][2] / (deltaZ * deltaY)) + (0.0625 * dielectricTensor[nextI][prevJ][prevK].matrix[0][2] / (deltaX * deltaZ)));
 		maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementX, nextI, prevJ, prevK, 0));
 		maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementY, nextI, prevJ, prevK, 1));
 		maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementZ, nextI, prevJ, prevK, 2));
@@ -1420,7 +1420,7 @@ void Simulation::createInternalEquationZ(int i, int j, int k, Vector3d& rightPar
 	maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementX, prevI, nextJ, nextK, 0));
 	elementY = cthetadt2 * (- (0.0625 * dielectricTensor[prevI][nextJ][nextK].matrix[2][1] / (deltaX * deltaX)) - (0.0625 * dielectricTensor[prevI][nextJ][nextK].matrix[1][1] / (deltaZ * deltaY)) + (0.0625 * dielectricTensor[prevI][nextJ][nextK].matrix[0][1] / (deltaX * deltaZ)));
 	maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementY, prevI, nextJ, nextK, 1));
-	elementZ = cthetadt2 * (-(0.0625 / (deltaX * deltaX)) - (0.0625 / (deltaY * deltaY)) - (0.0625 / (deltaZ * deltaZ)) - (0.0625 * dielectricTensor[prevI][nextJ][nextK].matrix[2][2] / (deltaX * deltaX)) - (0.0625 * dielectricTensor[prevI][nextJ][nextK].matrix[1][2] / (deltaZ * deltaY)) + (0.0625 * dielectricTensor[prevI][nextJ][nextK].matrix[0][2] / (deltaX * deltaZ)));
+	elementZ = cthetadt2 * ( - (0.0625 * dielectricTensor[prevI][nextJ][nextK].matrix[2][2] / (deltaX * deltaX)) - (0.0625 * dielectricTensor[prevI][nextJ][nextK].matrix[1][2] / (deltaZ * deltaY)) + (0.0625 * dielectricTensor[prevI][nextJ][nextK].matrix[0][2] / (deltaX * deltaZ)));
 	maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementZ, prevI, nextJ, nextK, 2));
 
 	//E i-1 j+1 k-1
@@ -1428,7 +1428,7 @@ void Simulation::createInternalEquationZ(int i, int j, int k, Vector3d& rightPar
 	maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementX, prevI, nextJ, prevK, 0));
 	elementY = cthetadt2 * (- (0.0625 * dielectricTensor[prevI][nextJ][prevK].matrix[2][1] / (deltaX * deltaX)) + (0.0625 * dielectricTensor[prevI][nextJ][prevK].matrix[1][1] / (deltaZ * deltaY)) - (0.0625 * dielectricTensor[prevI][nextJ][prevK].matrix[0][1] / (deltaX * deltaZ)));
 	maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementY, prevI, nextJ, prevK, 1));
-	elementZ = cthetadt2 * (-(0.0625 / (deltaX * deltaX)) - (0.0625 / (deltaY * deltaY)) - (0.0625 / (deltaZ * deltaZ)) - (0.0625 * dielectricTensor[prevI][nextJ][prevK].matrix[2][2] / (deltaX * deltaX)) + (0.0625 * dielectricTensor[prevI][nextJ][prevK].matrix[1][2] / (deltaZ * deltaY)) - (0.0625 * dielectricTensor[prevI][nextJ][prevK].matrix[0][2] / (deltaX * deltaZ)));
+	elementZ = cthetadt2 * ( - (0.0625 * dielectricTensor[prevI][nextJ][prevK].matrix[2][2] / (deltaX * deltaX)) + (0.0625 * dielectricTensor[prevI][nextJ][prevK].matrix[1][2] / (deltaZ * deltaY)) - (0.0625 * dielectricTensor[prevI][nextJ][prevK].matrix[0][2] / (deltaX * deltaZ)));
 	maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementZ, prevI, nextJ, prevK, 2));
 
 	//E i-1 j-1 k+1
@@ -1436,7 +1436,7 @@ void Simulation::createInternalEquationZ(int i, int j, int k, Vector3d& rightPar
 	maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementX, prevI, prevJ, nextK, 0));
 	elementY = cthetadt2 * (- (0.0625 * dielectricTensor[prevI][prevJ][nextK].matrix[2][1] / (deltaX * deltaX)) + (0.0625 * dielectricTensor[prevI][prevJ][nextK].matrix[1][1] / (deltaZ * deltaY)) + (0.0625 * dielectricTensor[prevI][prevJ][nextK].matrix[0][1] / (deltaX * deltaZ)));
 	maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementY, prevI, prevJ, nextK, 1));
-	elementZ = cthetadt2 * (-(0.0625 / (deltaX * deltaX)) - (0.0625 / (deltaY * deltaY)) - (0.0625 / (deltaZ * deltaZ)) - (0.0625 * dielectricTensor[prevI][prevJ][nextK].matrix[2][2] / (deltaX * deltaX)) + (0.0625 * dielectricTensor[prevI][prevJ][nextK].matrix[1][2] / (deltaZ * deltaY)) + (0.0625 * dielectricTensor[prevI][prevJ][nextK].matrix[0][2] / (deltaX * deltaZ)));
+	elementZ = cthetadt2 * ( - (0.0625 * dielectricTensor[prevI][prevJ][nextK].matrix[2][2] / (deltaX * deltaX)) + (0.0625 * dielectricTensor[prevI][prevJ][nextK].matrix[1][2] / (deltaZ * deltaY)) + (0.0625 * dielectricTensor[prevI][prevJ][nextK].matrix[0][2] / (deltaX * deltaZ)));
 	maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementZ, prevI, prevJ, nextK, 2));
 
 	//E i-1 j-1 k-1
@@ -1444,7 +1444,7 @@ void Simulation::createInternalEquationZ(int i, int j, int k, Vector3d& rightPar
 	maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementX, prevI, prevJ, prevK, 0));
 	elementY = cthetadt2 * (- (0.0625 * dielectricTensor[prevI][prevJ][prevK].matrix[2][1] / (deltaX * deltaX)) - (0.0625 * dielectricTensor[prevI][prevJ][prevK].matrix[1][1] / (deltaZ * deltaY)) - (0.0625 * dielectricTensor[prevI][prevJ][prevK].matrix[0][1] / (deltaX * deltaZ)));
 	maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementY, prevI, prevJ, prevK, 1));
-	elementZ = cthetadt2 * (-(0.0625 / (deltaX * deltaX)) - (0.0625 / (deltaY * deltaY)) - (0.0625 / (deltaZ * deltaZ)) - (0.0625 * dielectricTensor[prevI][prevJ][prevK].matrix[2][2] / (deltaX * deltaX)) - (0.0625 * dielectricTensor[prevI][prevJ][prevK].matrix[1][2] / (deltaZ * deltaY)) - (0.0625 * dielectricTensor[prevI][prevJ][prevK].matrix[0][2] / (deltaX * deltaZ)));
+	elementZ = cthetadt2 * ( - (0.0625 * dielectricTensor[prevI][prevJ][prevK].matrix[2][2] / (deltaX * deltaX)) - (0.0625 * dielectricTensor[prevI][prevJ][prevK].matrix[1][2] / (deltaZ * deltaY)) - (0.0625 * dielectricTensor[prevI][prevJ][prevK].matrix[0][2] / (deltaX * deltaZ)));
 	maxwellEquationMatrix[i][j][k][2].push_back(MatrixElement(elementZ, prevI, prevJ, prevK, 2));
 }
 
