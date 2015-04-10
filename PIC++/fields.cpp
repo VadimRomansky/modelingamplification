@@ -78,7 +78,6 @@ void Simulation::updateFields() {
 }
 
 void Simulation::evaluateMaxwellEquationMatrix() {
-#pragma omp parallel for
 	for (int i = 0; i < xnumber; ++i) {
 		for (int j = 0; j < ynumber; ++j) {
 			for (int k = 0; k < znumber; ++k) {
@@ -300,7 +299,7 @@ void Simulation::createInternalEquationX(int i, int j, int k, Vector3d& rightPar
 	double elementZ;
 
 	//E i j k
-	elementX = 1 + dielectricTensor[i][j][k].matrix[0][0] + cthetadt2 * ((0.5 / (deltaX * deltaX) + (0.5 / (deltaY * deltaY))) + (0.5 / (deltaZ * deltaZ)) + (0.5 * dielectricTensor[i][j][k].matrix[0][0] / (deltaX * deltaX)));
+	elementX = 1 + dielectricTensor[i][j][k].matrix[0][0] + cthetadt2 * ((0.5 / (deltaX * deltaX)) + (0.5 / (deltaY * deltaY)) + (0.5 / (deltaZ * deltaZ)) + (0.5 * dielectricTensor[i][j][k].matrix[0][0] / (deltaX * deltaX)));
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(elementX, i, j, k, 0));
 	elementY = dielectricTensor[i][j][k].matrix[0][1] + cthetadt2 * (0.5 * dielectricTensor[i][j][k].matrix[0][1] / (deltaX * deltaX));
 	maxwellEquationMatrix[i][j][k][0].push_back(MatrixElement(elementY, i, j, k, 1));
@@ -1743,9 +1742,9 @@ Vector3d Simulation::evaluateDivPressureTensor(int i, int j, int k) {
 	Matrix3d tensorDerY = (getPressureTensor(i, j, k) + getPressureTensor(i - 1, j, k) + getPressureTensor(i, j, k - 1) + getPressureTensor(i - 1, j, k - 1) - getPressureTensor(i, j - 1, k) - getPressureTensor(i - 1, j - 1, k) - getPressureTensor(i, j - 1, k - 1) - getPressureTensor(i - 1, j - 1, k - 1)) / (4 * deltaY);
 	Matrix3d tensorDerZ = (getPressureTensor(i, j, k) + getPressureTensor(i - 1, j, k) + getPressureTensor(i, j - 1, k) + getPressureTensor(i - 1, j - 1, k) - getPressureTensor(i, j, k - 1) - getPressureTensor(i - 1, j, k - 1) - getPressureTensor(i, j - 1, k - 1) - getPressureTensor(i - 1, j - 1, k - 1)) / (4 * deltaZ);
 
-	result.x = tensorDerX.matrix[0][0] + tensorDerY.matrix[1][0] + tensorDerZ.matrix[2][0];
-	result.y = tensorDerX.matrix[0][1] + tensorDerY.matrix[1][1] + tensorDerZ.matrix[2][1];
-	result.z = tensorDerX.matrix[0][2] + tensorDerY.matrix[1][2] + tensorDerZ.matrix[2][2];
+	result.x = tensorDerX.matrix[0][0] + tensorDerY.matrix[0][1] + tensorDerZ.matrix[0][2];
+	result.y = tensorDerX.matrix[1][0] + tensorDerY.matrix[1][1] + tensorDerZ.matrix[1][2];
+	result.z = tensorDerX.matrix[2][0] + tensorDerY.matrix[2][1] + tensorDerZ.matrix[2][2];
 
 	return result;
 }

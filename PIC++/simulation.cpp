@@ -102,7 +102,7 @@ Simulation::Simulation(double xn, double yn, double zn, double xsizev, double ys
 	momentum = Vector3d(0, 0, 0);
 
 
-	theta = 0.5;
+	theta = 0.2;
 
 	xnumber = xn;
 	ynumber = yn;
@@ -673,14 +673,14 @@ void Simulation::createFiles() {
 void Simulation::simulate() {
 	createArrays();
 	initialize();
-	//initializeSimpleElectroMagneticWave();
 	createFiles();
 	createParticles();
 	initializeAlfvenWave();
+	//initializeSimpleElectroMagneticWave();
 	collectParticlesIntoBins();
 	updateDensityParameters();
 	//updateElectroMagneticParameters();
-	cleanupDivergence();
+	//cleanupDivergence();
 	updateEnergy();
 
 	//updateDeltaT();
@@ -1123,7 +1123,7 @@ void Simulation::checkParticleInBox(Particle& particle) {
 
 void Simulation::updateElectroMagneticParameters() {
 	printf("updating flux, density snd dielectric tensor\n");
-	collectParticlesIntoBins();
+	//collectParticlesIntoBins();
 	for (int i = 0; i < xnumber + 1; ++i) {
 		for (int j = 0; j < ynumber + 1; ++j) {
 			for (int k = 0; k < znumber + 1; ++k) {
