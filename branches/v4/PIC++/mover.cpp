@@ -57,7 +57,7 @@ void Simulation::moveParticle(Particle* particle){
 
 	if(coordinateDifference(tempCoordinates, newCoordinates, deltaT, particle->mass) > error){
 	//if(true){
-		printf("ERROR newton method did not converge\n");
+		//printf("ERROR newton method did not converge\n");
 		//*particle = newparticle;
 		//return;
 
