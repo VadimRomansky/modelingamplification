@@ -13,9 +13,9 @@ const double speed_of_light = 2.99792458E10;
 const double electron_charge = 4.803529695E-10;
 const double pi = 3.1415926535897932384626433832795028841971693993751;
 const double epsilon = 1E-16;
-const double maxErrorLevel = 1E-10;
+const double maxErrorLevel = 1E-12;
 const int pnumber = 1000;
-const int writeParameter = 1;
+const int writeParameter = 5;
 const int maxNewtonIterations = 1;
 const int maxGMRESIterations = 1000;
 

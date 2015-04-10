@@ -18,7 +18,7 @@ Simulation::Simulation() {
 	time = 0;
 	particlesNumber = 0;
 
-	theta = 0.5;
+	theta = 0.9;
 
 	particleEnergy = 0;
 	electricFieldEnergy = 0;
@@ -674,9 +674,9 @@ void Simulation::simulate() {
 	createArrays();
 	initialize();
 	createFiles();
-	createParticles();
-	initializeAlfvenWave();
-	//initializeSimpleElectroMagneticWave();
+	//createParticles();
+	//initializeAlfvenWave();
+	initializeSimpleElectroMagneticWave();
 	collectParticlesIntoBins();
 	updateDensityParameters();
 	//updateElectroMagneticParameters();
@@ -699,7 +699,7 @@ void Simulation::simulate() {
 		moveParticles();
 		updateFields();
 		updateDensityParameters();
-		cleanupDivergence();
+		//cleanupDivergence();
 		updateEnergy();
 
 		time += deltaT;
