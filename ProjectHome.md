@@ -1,0 +1,1 @@
+Modeling Magnetic Field Amplification in Nonlinear Diffusive Shock Acceleration
